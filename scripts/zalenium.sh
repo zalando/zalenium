@@ -13,6 +13,13 @@ PID_PATH_SAUCE_LABS_NODE=/tmp/sauce-labs-node-pid
 
 StartUp()
 {
+
+    DOCKER_SELENIUM_IMAGE_COUNT=$(docker images elgalu/selenium -q | wc -l)
+    if [ ${DOCKER_SELENIUM_IMAGE_COUNT} -eq 0 ]; then
+        echo "Seems that docker-selenium's image has not been downloaded yet, please run 'docker pull elgalu/selenium' first"
+        exit 1
+    fi
+
     if ! [[ ${CHROME_CONTAINERS} =~ ^-?[0-9]+$ ]]; then
         echo "Parameter --chromeContainers must be an integer. Exiting..."
         exit 1
