@@ -4,7 +4,7 @@
 
     <groupId>de.zalando.tip</groupId>
     <artifactId>zalenium</artifactId>
-    <version>0.0.1</version>
+    <version>0.0.2-SNAPSHOT</version>
     <name>Zalenium</name>
     <description>A Selenium Grid extension to extend a dynamic local grid with a cloud testing platform.</description>
 
@@ -26,7 +26,7 @@
         <url>https://github.com/diemol/zalenium</url>
         <connection>scm:git:https://github.com/diemol/zalenium</connection>
         <developerConnection>scm:git:git@github.com:diemol/zalenium.git</developerConnection>
-      <tag>0.0.1</tag>
+      <tag>HEAD</tag>
   </scm>
 
     <developers>
