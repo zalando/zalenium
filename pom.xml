@@ -254,7 +254,7 @@
                                 <argument>--maxDockerSeleniumContainers</argument>
                                 <argument>10</argument>
                                 <argument>--seleniumArtifact</argument>
-                                <argument>${basedir}/selenium-server-standalone-${selenium-server.version}.jar</argument>
+                                <argument>${basedir}/selenium/selenium-server-standalone-${selenium-server.version}.jar</argument>
                                 <argument>--zaleniumArtifact</argument>
                                 <argument>${basedir}/target/zalenium-${project.version}.jar</argument>
                                 <argument>--sauceLabsEnabled</argument>
