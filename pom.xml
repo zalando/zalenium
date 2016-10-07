@@ -7,6 +7,45 @@
     <groupId>de.zalando.tip</groupId>
     <artifactId>zalenium</artifactId>
     <version>1.0-SNAPSHOT</version>
+    <name>Zalenium</name>
+    <description>A Selenium Grid extension to extend a dynamic local grid with a cloud testing platform.</description>
+
+    <organization>
+        <name>Zalando SE</name>
+    </organization>
+
+    <inceptionYear>2016</inceptionYear>
+
+    <licenses>
+        <license>
+            <name>Apache License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <scm>
+        <url>https://github.com/zalando-incubator/zalenium</url>
+        <connection>scm:git:https://github.com/zalando-incubator/zalenium</connection>
+        <developerConnection>scm:git:git@github.com:zalando-incubator/zalenium.git</developerConnection>
+    </scm>
+
+    <developers>
+        <developer>
+            <name>Diego Molina</name>
+            <email>diemol@gmail.com</email>
+            <url>https://github.com/diemol</url>
+            <organization>Zalando SE</organization>
+            <organizationUrl>https://tech.zalando.com/</organizationUrl>
+        </developer>
+        <developer>
+            <name>Leo Gallucci</name>
+            <email>elgalu3@gmail.com</email>
+            <url>https://github.com/elgalu</url>
+            <organization>Zalando SE</organization>
+            <organizationUrl>https://tech.zalando.com/</organizationUrl>
+        </developer>
+    </developers>
 
     <properties>
         <selenium-server.version>2.53.1</selenium-server.version>
@@ -15,6 +54,8 @@
         <mockito.version>1.10.19</mockito.version>
         <testng.version>6.9.10</testng.version>
         <slf4j.version>1.7.12</slf4j.version>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <threadCountProperty>1</threadCountProperty>
@@ -64,6 +105,15 @@
 
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.5.1</version>
+                <configuration>
+                    <source>1.8</source>
+                    <target>1.8</target>
+                </configuration>
+            </plugin>
             <!-- Plugin to build the fat jar -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
