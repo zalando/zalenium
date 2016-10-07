@@ -25,9 +25,9 @@
     </licenses>
 
     <scm>
-        <url>https://github.com/zalando-incubator/zalenium</url>
-        <connection>scm:git:https://github.com/zalando-incubator/zalenium</connection>
-        <developerConnection>scm:git:git@github.com:zalando-incubator/zalenium.git</developerConnection>
+        <url>https://github.com/diemol/zalenium</url>
+        <connection>scm:git:https://github.com/diemol/zalenium</connection>
+        <developerConnection>scm:git:git@github.com:diemol/zalenium.git</developerConnection>
     </scm>
 
     <developers>
@@ -107,11 +107,22 @@
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-release-plugin</artifactId>
+                <version>2.5.3</version>
+                <configuration>
+                    <tagNameFormat>@{project.version}</tagNameFormat>
+                    <arguments>-Dmaven.javadoc.skip=true</arguments>
+                    <scmCommentPrefix>ZALENIUM-${line.separator}</scmCommentPrefix>
+                </configuration>
+            </plugin>            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.5.1</version>
                 <configuration>
                     <source>1.8</source>
                     <target>1.8</target>
+                    <showDeprecation>true</showDeprecation>
+                    <showWarnings>true</showWarnings>
                 </configuration>
             </plugin>
             <!-- Plugin to build the fat jar -->
