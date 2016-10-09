@@ -6,7 +6,7 @@
 
     <groupId>de.zalando.tip</groupId>
     <artifactId>zalenium</artifactId>
-    <version>0.3.0-SNAPSHOT</version>
+    <version>0.1.0</version>
     <name>Zalenium</name>
     <description>A Selenium Grid extension to extend a dynamic local grid with a cloud testing platform.</description>
 
