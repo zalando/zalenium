@@ -297,7 +297,7 @@
                         <artifactId>maven-assembly-plugin</artifactId>
                         <configuration>
                             <descriptor>assembly/assembly.xml</descriptor>
-                            <finalName>zalenium-release-${project.version}</finalName>
+                            <finalName>zalenium-release-v${project.version}</finalName>
                         </configuration>
                         <executions>
                             <execution>
