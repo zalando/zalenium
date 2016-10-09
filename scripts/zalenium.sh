@@ -4,7 +4,7 @@ CHROME_CONTAINERS=1
 FIREFOX_CONTAINERS=1
 MAX_DOCKER_SELENIUM_CONTAINERS=10
 SELENIUM_ARTIFACT="$(pwd)/selenium-server-standalone-2.53.1.jar"
-ZALENIUM_ARTIFACT="$(pwd)/zalenium-1.0-SNAPSHOT.jar"
+ZALENIUM_ARTIFACT="$(pwd)/${project.build.finalName}.jar"
 SAUCE_LABS_ENABLED=true
 
 PID_PATH_SELENIUM=/tmp/selenium-pid
