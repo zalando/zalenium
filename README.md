@@ -21,6 +21,7 @@ You can use the Zalenium already, but it is still under development and open for
 * JDK8+
 * *nix platform (tested only in OSX and Ubuntu, not tested on Windows yet).
 * An account in [Sauce Labs](https://saucelabs.com/).
+* Dowload the [docker-selenium](https://github.com/elgalu/docker-selenium) image. `docker pull elgalu/selenium`
 
 #### Setting it up
 * Make sure your docker daemon is running

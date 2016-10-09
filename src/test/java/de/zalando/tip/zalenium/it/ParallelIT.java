@@ -89,36 +89,5 @@ public class ParallelIT  {
         Assert.assertEquals(getWebDriver().getTitle(), "Google", "Page title is not the expected one");
     }
 
-    @Test(dataProvider = "browsersAndPlatforms")
-    public void loadFacebookPageAndCheckTitle(String browserType, Platform platform) {
-
-        // Go to the homepage
-        getWebDriver().get("http://www.facebook.com");
-
-        // Assert that the title is the expected one
-        Assert.assertEquals(getWebDriver().getTitle(), "Facebook - Log In or Sign Up", "Page title is not the expected one");
-    }
-
-    @Test(dataProvider = "browsersAndPlatforms")
-    public void loadSeleniumPageAndCheckTitle(String browserType, Platform platform) {
-
-        // Go to the homepage
-        getWebDriver().get("http://www.seleniumhq.org");
-
-        // Assert that the title is the expected one
-        Assert.assertEquals(getWebDriver().getTitle(), "Selenium - Web Browser Automation", "Page title is not the expected one");
-    }
-
-    @Test(dataProvider = "browsersAndPlatforms")
-    public void loadStackOverflowPageAndCheckTitle(String browserType, Platform platform) {
-
-        // Go to the homepage
-        getWebDriver().get("http://www.stackoverflow.com");
-
-        // Assert that the title is the expected one
-        Assert.assertEquals(getWebDriver().getTitle(), "Stack Overflow", "Page title is not the expected one");
-    }
-
-
 
 }
