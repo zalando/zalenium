@@ -104,6 +104,12 @@
     </dependencies>
 
     <build>
+        <resources>
+            <resource>
+                <directory>scripts</directory>
+                <filtering>true</filtering>
+            </resource>
+        </resources>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -157,7 +163,7 @@
                 <version>1.9.5</version>
                 <configuration>
                     <pushChanges>false</pushChanges>
-                    <tag>${project.version}</tag>
+                    <tag>v${project.version}</tag>
                 </configuration>
             </plugin>
             <plugin>

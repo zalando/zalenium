@@ -2,9 +2,8 @@
 
 set -e
 
-DEFAULT_VERSION=1.0-SNAPSHOT
 RELEASE_VERSION=${1?"Usage $0 release-version [next-version]"}
-NEXT_VERSION=${2-${DEFAULT_VERSION}}
+NEXT_VERSION=${2?"Usage $0 release-version [next-version]. Parameter 'next-version' is missing."}
 
 # release
 mvn scm:check-local-modification versions:set -DnewVersion=${RELEASE_VERSION} scm:add -Dincludes="**/pom.xml" scm:checkin -Dmessage="Release $RELEASE_VERSION"
