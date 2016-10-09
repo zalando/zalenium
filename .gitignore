@@ -1,4 +1,3 @@
-*.jar
 *.iml
 .idea
 target
