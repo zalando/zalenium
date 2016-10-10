@@ -226,6 +226,9 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
             envVariables.add("SELENIUM_HUB_PORT=4444");
             envVariables.add("SELENIUM_NODE_HOST=" + hostIpAddress);
             envVariables.add("GRID=false");
+            envVariables.add("RC_CHROME=false");
+            envVariables.add("RC_FIREFOX=false");
+            envVariables.add("WAIT_TIMEOUT=20s");
             envVariables.add("SELENIUM_NODE_REGISTER_CYCLE=0");
             envVariables.add("SELENIUM_NODE_PROXY_PARAMS=de.zalando.tip.zalenium.proxy.DockerSeleniumRemoteProxy");
             if (BrowserType.CHROME.equalsIgnoreCase(browser)) {
