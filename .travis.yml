@@ -1,0 +1,25 @@
+language: java
+
+matrix:
+  inlude:
+    - os: linux
+      language: java
+      jdk:
+        -oralclejdk8
+      sudo: required
+      services:
+        - docker
+      env:
+        - DOCKER_VERSION="1.12.1"
+  inlude:
+    - os: osx
+      language: java
+      jdk:
+        -oralclejdk8
+      sudo: required
+      services:
+        - docker
+      env:
+        - DOCKER_VERSION="1.12.1"
+
+script: mvn clean verify
