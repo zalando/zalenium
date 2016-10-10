@@ -3,7 +3,7 @@ jdk:
   - oraclejdk8
 
 matrix:
-  inlude:
+  include:
     - os: linux
       language: java
       jdk:
@@ -13,7 +13,6 @@ matrix:
         - docker
       env:
         - DOCKER_VERSION="1.12.1"
-  inlude:
     - os: osx
       language: java
       jdk:
