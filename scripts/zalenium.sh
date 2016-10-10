@@ -90,12 +90,7 @@ StartUp()
 
     echo "Starting DockerSeleniumStarter node..."
 
-    SELENIUM_HUB_HOST=localhost
-    if [ "${IN_TRAVIS}" = "true" ]; then
-        SELENIUM_HUB_HOST=10.0.3.1
-    fi
-
-    nohup java -jar ${SELENIUM_ARTIFACT} -role node -hub http://${SELENIUM_HUB_HOST}:4444/grid/register \
+    nohup java -jar ${SELENIUM_ARTIFACT} -role node -hub http://localhost:4444/grid/register \
      -proxy de.zalando.tip.zalenium.proxy.DockerSeleniumStarterRemoteProxy \
      -port 30000 > logs/stdout.zalenium.docker.node.log 2>&1 </dev/null &
     echo $! > ${PID_PATH_DOCKER_SELENIUM_NODE}
@@ -109,7 +104,7 @@ StartUp()
 
     if [ "$SAUCE_LABS_ENABLED" = true ]; then
         echo "Starting Sauce Labs node..."
-        nohup java -jar ${SELENIUM_ARTIFACT} -role node -hub http://${SELENIUM_HUB_HOST}:4444/grid/register \
+        nohup java -jar ${SELENIUM_ARTIFACT} -role node -hub http://localhost:4444/grid/register \
          -proxy de.zalando.tip.zalenium.proxy.SauceLabsRemoteProxy \
          -port 30001 > logs/stdout.zalenium.sauce.node.log 2>&1 </dev/null &
         echo $! > ${PID_PATH_SAUCE_LABS_NODE}
