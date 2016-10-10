@@ -220,70 +220,6 @@
                     </systemPropertyVariables>
                 </configuration>
             </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-failsafe-plugin</artifactId>
-                <version>2.19.1</version>
-                <configuration>
-                    <parallel>methods</parallel>
-                    <threadCount>${threadCountProperty}</threadCount>
-                </configuration>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>integration-test</goal>
-                            <goal>verify</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>exec-maven-plugin</artifactId>
-                <version>1.5.0</version>
-                <executions>
-                    <!-- START Zalenium-->
-                    <execution>
-                        <id>start-zalenium</id>
-                        <phase>pre-integration-test</phase>
-                        <goals>
-                            <goal>exec</goal>
-                        </goals>
-                        <configuration>
-                            <executable>${basedir}/scripts/zalenium.sh</executable>
-                            <arguments>
-                                <argument>start</argument>
-                                <argument>--chromeContainers</argument>
-                                <argument>1</argument>
-                                <argument>--firefoxContainers</argument>
-                                <argument>1</argument>
-                                <argument>--maxDockerSeleniumContainers</argument>
-                                <argument>10</argument>
-                                <argument>--seleniumArtifact</argument>
-                                <argument>${basedir}/selenium/selenium-server-standalone-${selenium-server.version}.jar</argument>
-                                <argument>--zaleniumArtifact</argument>
-                                <argument>${basedir}/target/zalenium-${project.version}.jar</argument>
-                                <argument>--sauceLabsEnabled</argument>
-                                <argument>true</argument>
-                            </arguments>
-                        </configuration>
-                    </execution>
-                    <!-- STOP Selenium with Zalenium in it (HUB) -->
-                    <execution>
-                        <id>stop-zalenium</id>
-                        <phase>post-integration-test</phase>
-                        <goals>
-                            <goal>exec</goal>
-                        </goals>
-                        <configuration>
-                            <executable>${basedir}/scripts/zalenium.sh</executable>
-                            <arguments>
-                                <argument>stop</argument>
-                            </arguments>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
         </plugins>
     </build>
 
@@ -305,6 +241,93 @@
                                 <goals>
                                     <goal>single</goal>
                                 </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>integration-test</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-failsafe-plugin</artifactId>
+                        <version>2.19.1</version>
+                        <configuration>
+                            <parallel>methods</parallel>
+                            <threadCount>${threadCountProperty}</threadCount>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>integration-test</goal>
+                                    <goal>verify</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>exec-maven-plugin</artifactId>
+                        <version>1.5.0</version>
+                        <executions>
+                            <!-- Make zalenium.sh executable -->
+                            <execution>
+                                <id>enable-zalenium</id>
+                                <phase>pre-integration-test</phase>
+                                <goals>
+                                    <goal>exec</goal>
+                                </goals>
+                                <configuration>
+                                    <workingDirectory>${basedir}/target</workingDirectory>
+                                    <executable>chmod</executable>
+                                    <arguments>
+                                        <argument>+x</argument>
+                                        <argument>zalenium.sh</argument>
+                                    </arguments>
+                                </configuration>
+                            </execution>
+                            <!-- START Zalenium-->
+                            <execution>
+                                <id>start-zalenium</id>
+                                <phase>pre-integration-test</phase>
+                                <goals>
+                                    <goal>exec</goal>
+                                </goals>
+                                <configuration>
+                                    <executable>${basedir}/target/zalenium.sh</executable>
+                                    <arguments>
+                                        <argument>start</argument>
+                                        <argument>--chromeContainers</argument>
+                                        <argument>1</argument>
+                                        <argument>--firefoxContainers</argument>
+                                        <argument>1</argument>
+                                        <argument>--maxDockerSeleniumContainers</argument>
+                                        <argument>10</argument>
+                                        <argument>--seleniumArtifact</argument>
+                                        <argument>${basedir}/target/selenium-server-standalone-${selenium-server.version}.jar</argument>
+                                        <argument>--zaleniumArtifact</argument>
+                                        <argument>${basedir}/target/zalenium-${project.version}.jar</argument>
+                                        <argument>--sauceLabsEnabled</argument>
+                                        <argument>true</argument>
+                                    </arguments>
+                                </configuration>
+                            </execution>
+                            <!-- STOP Selenium with Zalenium in it (HUB) -->
+                            <execution>
+                                <id>stop-zalenium</id>
+                                <phase>post-integration-test</phase>
+                                <goals>
+                                    <goal>exec</goal>
+                                </goals>
+                                <configuration>
+                                    <executable>${basedir}/target/zalenium.sh</executable>
+                                    <arguments>
+                                        <argument>stop</argument>
+                                    </arguments>
+                                </configuration>
                             </execution>
                         </executions>
                     </plugin>
