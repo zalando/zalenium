@@ -17,3 +17,5 @@ script: mvn -Prelease clean verify
 
 after_script:
   - cat ./logs/stdout.zalenium.hub.log
+  - cat ./logs/stdout.zalenium.docker.node.log
+  - cat ./logs/stdout.zalenium.sauce.node.log
