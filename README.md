@@ -18,16 +18,15 @@ You can use the Zalenium already, but it is still under development and open for
 
 #### Prerequisites 
 * Docker engine running, version 1.12.1 (probably works with earlier versions, not tested yet).
+* Dowload the [docker-selenium](https://github.com/elgalu/docker-selenium) image. `docker pull elgalu/selenium`
 * JDK8+
 * *nix platform (tested only in OSX and Ubuntu, not tested on Windows yet).
-* An account in [Sauce Labs](https://saucelabs.com/).
-* Dowload the [docker-selenium](https://github.com/elgalu/docker-selenium) image. `docker pull elgalu/selenium`
+* If you want to use the [Sauce Labs](https://saucelabs.com/) feature, you need an account with them.
 
 #### Setting it up
 * Make sure your docker daemon is running
-* Download the start/stop [script](./scripts/zalenium.sh)
-* Download the Selenium v. 2.53.1 and Zalenium JAR from the latest release and put the in the same folder as the script.
-* Export your Sauce Labs user and API key as environment variables
+* Download the `tar.gz` file from our latest [release](https://github.com/zalando-incubator/zalenium/releases/latest) and uncompress it.
+* If you want to use [Sauce Labs](https://saucelabs.com/), export your user and API key as environment variables
 ```sh
   export SAUCE_USERNAME=<your Sauce Labs username>
   export SAUCE_ACCESS_KEY=<your Sauce Labs access key>
