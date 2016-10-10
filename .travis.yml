@@ -14,3 +14,6 @@ before_install:
   - docker pull elgalu/selenium
 
 script: mvn -Prelease clean verify
+
+after_script:
+  - cat ./logs/stdout.zalenium.hub.log

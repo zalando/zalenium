@@ -80,7 +80,7 @@ StartUp()
 
     IN_TRAVIS="${CI:=false}"
     if [ "${IN_TRAVIS}" = "true" ]; then
-        sleep 15
+        sleep 45
     else
         sleep 1
     fi
@@ -96,7 +96,7 @@ StartUp()
     echo $! > ${PID_PATH_DOCKER_SELENIUM_NODE}
 
     if [ "${IN_TRAVIS}" = "true" ]; then
-        sleep 15
+        sleep 40
     else
         sleep 2
     fi
@@ -110,7 +110,7 @@ StartUp()
         echo $! > ${PID_PATH_SAUCE_LABS_NODE}
 
         if [ "${IN_TRAVIS}" = "true" ]; then
-            sleep 15
+            sleep 40
         else
             sleep 2
         fi
