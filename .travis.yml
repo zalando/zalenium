@@ -13,4 +13,4 @@ env:
 before_install:
   - docker pull elgalu/selenium
 
-script: mvn clean verify
+script: mvn -Prelease clean verify
