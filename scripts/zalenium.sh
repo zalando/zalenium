@@ -78,7 +78,12 @@ StartUp()
     -role hub -throwOnCapabilityNotPresent true > logs/stdout.zalenium.hub.log 2>&1 </dev/null &
     echo $! > ${PID_PATH_SELENIUM}
 
-    sleep 1
+    IN_TRAVIS="${CI:=false}"
+    if [ "${IN_TRAVIS}" = "true" ]; then
+        sleep 15
+    else
+        sleep 1
+    fi
     echo "Selenium Hub started!"
 
     rm logs/*node*.log
@@ -90,7 +95,11 @@ StartUp()
      -port 30000 > logs/stdout.zalenium.docker.node.log 2>&1 </dev/null &
     echo $! > ${PID_PATH_DOCKER_SELENIUM_NODE}
 
-    sleep 2
+    if [ "${IN_TRAVIS}" = "true" ]; then
+        sleep 15
+    else
+        sleep 2
+    fi
     echo "DockerSeleniumStarter node started!"
 
     if [ "$SAUCE_LABS_ENABLED" = true ]; then
@@ -100,7 +109,11 @@ StartUp()
          -port 30001 > logs/stdout.zalenium.sauce.node.log 2>&1 </dev/null &
         echo $! > ${PID_PATH_SAUCE_LABS_NODE}
 
-        sleep 2
+        if [ "${IN_TRAVIS}" = "true" ]; then
+            sleep 15
+        else
+            sleep 2
+        fi
         echo "Sauce Labs node started!"
     else
         echo "Sauce Labs not enabled..."
