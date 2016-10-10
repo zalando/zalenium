@@ -7,16 +7,7 @@ sudo: required
 services:
   - docker
 
-env:
-  - DOCKER_VERSION: 1.12.1
-
 before_install:
   - docker pull elgalu/selenium
 
 script: mvn clean verify -Pintegration-test
-
-after_script:
-  - cat ./logs/stdout.zalenium.hub.log
-  - cat ./logs/stdout.zalenium.docker.node.log
-  - cat ./logs/stdout.zalenium.sauce.node.log
-  - docker --version
