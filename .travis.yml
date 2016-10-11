@@ -10,4 +10,4 @@ services:
 before_install:
   - docker pull elgalu/selenium
 
-script: mvn clean verify -Pintegration-test
+script: mvn clean verify -Pintegration-test -DthreadCountProperty=2
