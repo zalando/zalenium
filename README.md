@@ -72,7 +72,7 @@ If you want to verify your changes locally with the existing tests (please doubl
 * Unit and integration tests (_it will also generate the jar_). You can specify the number of threads used to run the integration tests. If you omit the property, the default is one.
 
     ```sh
-        mvn clean verify -DthreadCountProperty={numberOfThreads}
+        mvn clean verify -Pintegration-test -DthreadCountProperty={numberOfThreads}
     ```
 
 
