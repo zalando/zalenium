@@ -59,6 +59,10 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <threadCountProperty>1</threadCountProperty>
+        <sonar.sources>src/main</sonar.sources>
+        <sonar.tests>src/test</sonar.tests>
+        <sonar.junit.reportsPath>reports/java/surefire-reports</sonar.junit.reportsPath>
+        <sonar.jacoco.reportPath>reports/java/jacoco.exec</sonar.jacoco.reportPath>
     </properties>
 
     <dependencies>
@@ -123,7 +127,6 @@
                             <goal>copy-resources</goal>
                         </goals>
                         <configuration>
-                            <enconding>UTF-8</enconding>
                             <outputDirectory>${project.build.directory}</outputDirectory>
                             <resources>
                                 <resource>
