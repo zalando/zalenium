@@ -18,6 +18,3 @@ cache:
   directories:
     - '$HOME/.m2/repository'
     - '$HOME/.sonar/cache'
-
-after_script:
-  - ls -lah ./target/**
