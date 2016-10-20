@@ -52,6 +52,7 @@
         <docker-client.version>5.0.2</docker-client.version>
         <junit.version>4.12</junit.version>
         <mockito.version>1.10.19</mockito.version>
+        <awaitility.version>2.0.0</awaitility.version>
         <testng.version>6.9.10</testng.version>
         <slf4j.version>1.7.12</slf4j.version>
         <surefire.version>2.19.1</surefire.version>
@@ -104,6 +105,12 @@
             <groupId>org.testng</groupId>
             <artifactId>testng</artifactId>
             <version>${testng.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.awaitility</groupId>
+            <artifactId>awaitility</artifactId>
+            <version>${awaitility.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

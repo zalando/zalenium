@@ -19,7 +19,10 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static org.hamcrest.Matchers.equalTo;
 import static org.mockito.Mockito.*;
+import static org.awaitility.Awaitility.*;
 
 public class DockerSeleniumRemoteProxyTest {
 
@@ -128,11 +131,10 @@ public class DockerSeleniumRemoteProxyTest {
 
         // After running one test, the node shouldn't be busy and also down
         Assert.assertFalse(proxy.isBusy());
+        long sleepTime = proxy.getDockerSeleniumNodePollerThread().getSleepTimeBetweenChecks();
+        await().atMost(sleepTime + 1, MILLISECONDS).untilCall(to(proxy).isDown(), equalTo(true));
         Thread.sleep(proxy.getDockerSeleniumNodePollerThread().getSleepTimeBetweenChecks() + 1);
         Assert.assertTrue(proxy.isDown());
-
-
-
     }
 
 

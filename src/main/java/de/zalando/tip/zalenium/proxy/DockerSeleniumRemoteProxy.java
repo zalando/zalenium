@@ -119,13 +119,13 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
             return sleepTimeBetweenChecks;
         }
 
+        public DockerSeleniumNodePoller(DockerSeleniumRemoteProxy dockerSeleniumRemoteProxy) {
+            this.dockerSeleniumRemoteProxy = dockerSeleniumRemoteProxy;
+        }
+
         @VisibleForTesting
         protected void setClient(HttpClient client) {
             this.client = client;
-        }
-
-        public DockerSeleniumNodePoller(DockerSeleniumRemoteProxy dockerSeleniumRemoteProxy) {
-            this.dockerSeleniumRemoteProxy = dockerSeleniumRemoteProxy;
         }
 
         @Override
