@@ -1,5 +1,9 @@
 package de.zalando.tip.zalenium.proxy;
 
+import org.apache.http.HttpResponse;
+import org.apache.http.StatusLine;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpPost;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -11,8 +15,14 @@ import org.openqa.selenium.Platform;
 import org.openqa.selenium.remote.BrowserType;
 import org.openqa.selenium.remote.CapabilityType;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static org.hamcrest.Matchers.equalTo;
+import static org.mockito.Mockito.*;
+import static org.awaitility.Awaitility.*;
 
 public class DockerSeleniumRemoteProxyTest {
 
@@ -77,5 +87,55 @@ public class DockerSeleniumRemoteProxyTest {
             Assert.assertNull(newSession);
         }
     }
+
+    @Test
+    public void noSessionIsCreatedWhenCapabilitiesAreNotSupported() {
+        // Non supported capabilities
+        Map<String, Object> requestedCapability = new HashMap<>();
+        requestedCapability.put(CapabilityType.BROWSER_NAME, BrowserType.IE);
+        requestedCapability.put(CapabilityType.PLATFORM, Platform.WIN10);
+
+        TestSession newSession = proxy.getNewSession(requestedCapability);
+        Assert.assertNull(newSession);
+    }
+
+    @Test
+    public void pollerThreadTearsDownNodeAfterTestIsCompleted() throws InterruptedException, IOException {
+        // Supported desired capability for the test session
+        Map<String, Object> requestedCapability = new HashMap<>();
+        requestedCapability.put(CapabilityType.BROWSER_NAME, BrowserType.CHROME);
+        requestedCapability.put(CapabilityType.PLATFORM, Platform.LINUX);
+
+        // Start poller thread
+        proxy.startPolling();
+
+        // Mock the poller HttpClient to avoid exceptions due to failed connections
+        HttpClient client = mock(HttpClient.class);
+        HttpResponse httpResponse = mock(HttpResponse.class);
+        StatusLine statusLine = mock(StatusLine.class);
+        when(statusLine.getStatusCode()).thenReturn(200);
+        when(httpResponse.getStatusLine()).thenReturn(statusLine);
+        when(client.execute(any(HttpPost.class))).thenReturn(httpResponse);
+        proxy.getDockerSeleniumNodePollerThread().setClient(client);
+
+
+        // Get a test session
+        TestSession newSession = proxy.getNewSession(requestedCapability);
+        Assert.assertNotNull(newSession);
+
+        // The node should be busy since there is a session in it
+        Assert.assertTrue(proxy.isBusy());
+
+        // We release the session, the node should be free
+        newSession.getSlot().doFinishRelease();
+
+        // After running one test, the node shouldn't be busy and also down
+        Assert.assertFalse(proxy.isBusy());
+        long sleepTime = proxy.getDockerSeleniumNodePollerThread().getSleepTimeBetweenChecks();
+        await().atMost(sleepTime + 1, MILLISECONDS).untilCall(to(proxy).isDown(), equalTo(true));
+        Thread.sleep(proxy.getDockerSeleniumNodePollerThread().getSleepTimeBetweenChecks() + 1);
+        Assert.assertTrue(proxy.isDown());
+    }
+
 
 }
