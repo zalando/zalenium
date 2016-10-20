@@ -79,7 +79,7 @@ If you want to verify your changes locally with the existing tests (please doubl
 
 ## How it works
 
-![Zalenium Concept](./images/zalenium_structure.png)
+![How it works](./images/how_it_works.gif)
 
 Zalenium works conceptually in a simple way:
 
