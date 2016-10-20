@@ -23,6 +23,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
 
     // Amount of tests that can be executed in the node
     private final static int MAX_UNIQUE_TEST_SESSIONS = 1;
+
     private int amountOfExecutedTests;
 
     private DockerSeleniumNodePoller dockerSeleniumNodePollerThread = null;
@@ -92,7 +93,11 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         Method to decide if the node can be removed based on the amount of executed tests.
      */
     public synchronized boolean isTestSessionLimitReached() {
-        return amountOfExecutedTests >= MAX_UNIQUE_TEST_SESSIONS;
+        return getAmountOfExecutedTests() >= MAX_UNIQUE_TEST_SESSIONS;
+    }
+
+    public int getAmountOfExecutedTests() {
+        return amountOfExecutedTests;
     }
 
     /*
