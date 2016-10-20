@@ -25,17 +25,12 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     private final static int MAX_UNIQUE_TEST_SESSIONS = 1;
     private int amountOfExecutedTests;
 
-    // Time that the node has been idle, after the max allowed the node will be killed.
-    private final static long MAX_IDLE_TIME = 30 * 1000;
-    private long lastActivityTime;
-
     private DockerSeleniumNodePoller dockerSeleniumNodePollerThread = null;
 
 
     public DockerSeleniumRemoteProxy(RegistrationRequest request, Registry registry) {
         super(request, registry);
         this.amountOfExecutedTests = 0;
-        this.lastActivityTime = System.currentTimeMillis();
     }
 
     /*
@@ -81,10 +76,6 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
 
     public String getNodeIpAndPort() { return getRemoteHost().getHost() + ":" + getRemoteHost().getPort(); }
 
-    public void updateLastActivityTime() {
-        this.lastActivityTime = System.currentTimeMillis();
-    }
-
     /*
         Incrementing variable to count the number of tests executed, if possible.
      */
@@ -103,14 +94,6 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     public synchronized boolean isTestSessionLimitReached() {
         return amountOfExecutedTests >= MAX_UNIQUE_TEST_SESSIONS;
     }
-
-    /*
-        Method to decide if the node can be removed based on how long the node has been idle.
-    */
-    public synchronized boolean isIdleTimeLimitReached() {
-        return (System.currentTimeMillis() - this.lastActivityTime) > MAX_IDLE_TIME;
-    }
-
 
     /*
         Class to poll continuously the node status regarding the amount of tests executed. If MAX_UNIQUE_TEST_SESSIONS
@@ -132,24 +115,8 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                     then the node executes its teardown.
                 */
                 if (!dockerSeleniumRemoteProxy.isBusy() && dockerSeleniumRemoteProxy.isTestSessionLimitReached()) {
-                    shutdownNode("maxTests");
+                    shutdownNode();
                     return;
-                }
-
-                /*
-                    If the proxy is not busy and it can be released since it has been idle longer than the MAX_IDLE_TIME,
-                    then the node executes its teardown.
-                */
-                if (!dockerSeleniumRemoteProxy.isBusy() && dockerSeleniumRemoteProxy.isIdleTimeLimitReached()) {
-                    shutdownNode("maxIdle");
-                    return;
-                }
-
-                /*
-                    If the node is busy, we update the last activity time.
-                 */
-                if (dockerSeleniumRemoteProxy.isBusy()) {
-                    dockerSeleniumRemoteProxy.updateLastActivityTime();
                 }
 
                 try {
@@ -163,16 +130,9 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
             }
         }
 
-        private void shutdownNode(String source) {
-            String shutdownReason;
-            if ("maxTests".equalsIgnoreCase(source)) {
-                shutdownReason = String.format("%s Marking the node as down because it was stopped after %s tests.",
+        private void shutdownNode() {
+            String shutdownReason = String.format("%s Marking the node as down because it was stopped after %s tests.",
                         dockerSeleniumRemoteProxy.getNodeIpAndPort(), MAX_UNIQUE_TEST_SESSIONS);
-            } else {
-                long seconds = MAX_IDLE_TIME / 1000;
-                shutdownReason = String.format("%s Marking the node as down because it has been idle for %s seconds.",
-                        dockerSeleniumRemoteProxy.getNodeIpAndPort(), seconds);
-            }
 
             HttpClient client = HttpClientBuilder.create().build();
             String shutDownUrl = dockerSeleniumRemoteProxy.getNodeUrl() +
