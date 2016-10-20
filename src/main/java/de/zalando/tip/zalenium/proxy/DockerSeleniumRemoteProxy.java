@@ -1,5 +1,6 @@
 package de.zalando.tip.zalenium.proxy;
 
+import com.google.common.annotations.VisibleForTesting;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.HttpClientBuilder;
@@ -22,7 +23,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     private static final Logger LOGGER = Logger.getLogger(DockerSeleniumRemoteProxy.class.getName());
 
     // Amount of tests that can be executed in the node
-    private final static int MAX_UNIQUE_TEST_SESSIONS = 1;
+    private static final int MAX_UNIQUE_TEST_SESSIONS = 1;
 
     private int amountOfExecutedTests;
 
@@ -40,9 +41,9 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     @Override
     public TestSession getNewSession(Map<String, Object> requestedCapability) {
         /*
-            Validate first if the capability is matched and if there are slots available
+            Validate first if the capability is matched
          */
-        if (!hasCapability(requestedCapability) || getTotalUsed() >= getMaxNumberOfConcurrentTestSessions()) {
+        if (!hasCapability(requestedCapability)) {
             return null;
         }
         if (increaseCounter()) {
@@ -100,6 +101,10 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         return amountOfExecutedTests;
     }
 
+    public DockerSeleniumNodePoller getDockerSeleniumNodePollerThread() {
+        return dockerSeleniumNodePollerThread;
+    }
+
     /*
         Class to poll continuously the node status regarding the amount of tests executed. If MAX_UNIQUE_TEST_SESSIONS
         have been executed, then the node is removed from the grid (this should trigger the docker container to stop).
@@ -107,9 +112,20 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     static class DockerSeleniumNodePoller extends Thread {
 
         private DockerSeleniumRemoteProxy dockerSeleniumRemoteProxy = null;
+        private HttpClient client;
+        private static long sleepTimeBetweenChecks = 500;
+
+        public long getSleepTimeBetweenChecks() {
+            return sleepTimeBetweenChecks;
+        }
 
         public DockerSeleniumNodePoller(DockerSeleniumRemoteProxy dockerSeleniumRemoteProxy) {
             this.dockerSeleniumRemoteProxy = dockerSeleniumRemoteProxy;
+        }
+
+        @VisibleForTesting
+        protected void setClient(HttpClient client) {
+            this.client = client;
         }
 
         @Override
@@ -125,7 +141,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                 }
 
                 try {
-                    Thread.sleep(500);
+                    Thread.sleep(getSleepTimeBetweenChecks());
                 } catch (InterruptedException e) {
                     LOGGER.log(Level.SEVERE, dockerSeleniumRemoteProxy.getNodeIpAndPort() + " Error while sleeping the " +
                             "thread, stopping thread execution.", e);
@@ -139,7 +155,10 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
             String shutdownReason = String.format("%s Marking the node as down because it was stopped after %s tests.",
                         dockerSeleniumRemoteProxy.getNodeIpAndPort(), MAX_UNIQUE_TEST_SESSIONS);
 
-            HttpClient client = HttpClientBuilder.create().build();
+            if (client == null) {
+                client = HttpClientBuilder.create().build();
+            }
+
             String shutDownUrl = dockerSeleniumRemoteProxy.getNodeUrl() +
                     "/selenium-server/driver/?cmd=shutDownSeleniumServer";
             HttpPost post = new HttpPost(shutDownUrl);
