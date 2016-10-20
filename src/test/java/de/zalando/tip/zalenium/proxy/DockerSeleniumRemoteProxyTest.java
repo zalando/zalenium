@@ -54,8 +54,29 @@ public class DockerSeleniumRemoteProxyTest {
 
         Assert.assertNotNull(newSession);
 
-        // One test is/has been executed.
+        // One test is/has been executed and the session amount limit was reached.
         Assert.assertEquals(1, proxy.getAmountOfExecutedTests());
+        Assert.assertTrue(proxy.isTestSessionLimitReached());
+    }
+
+    @Test
+    public void secondRequestGetsANullTestRequest() {
+        // Supported desired capability for the test session
+        Map<String, Object> requestedCapability = new HashMap<>();
+        requestedCapability.put(CapabilityType.BROWSER_NAME, BrowserType.CHROME);
+        requestedCapability.put(CapabilityType.PLATFORM, Platform.LINUX);
+
+        {
+            TestSession newSession = proxy.getNewSession(requestedCapability);
+            Assert.assertNotNull(newSession);
+        }
+
+        // Since only one test should be executed, the second request should come null
+        {
+            TestSession newSession = proxy.getNewSession(requestedCapability);
+            Assert.assertNull(newSession);
+        }
+
     }
 
 }
