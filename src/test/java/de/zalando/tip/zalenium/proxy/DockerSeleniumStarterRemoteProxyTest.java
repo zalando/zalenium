@@ -66,7 +66,7 @@ public class DockerSeleniumStarterRemoteProxyTest {
     public void noContainerIsStartedWhenCapabilitiesAreNotSupported() throws DockerException, InterruptedException {
 
         // Non supported desired capability for the test session
-        Map<String, Object> nonSupportedCapability = new HashMap<String, Object>();
+        Map<String, Object> nonSupportedCapability = new HashMap<>();
         nonSupportedCapability.put(CapabilityType.BROWSER_NAME, BrowserType.SAFARI);
         nonSupportedCapability.put(CapabilityType.PLATFORM, Platform.MAC);
         TestSession testSession = spyProxy.getNewSession(nonSupportedCapability);
@@ -78,7 +78,7 @@ public class DockerSeleniumStarterRemoteProxyTest {
     @Test
     public void noContainerIsStartedWhenPlatformIsNotSupported() {
         // Non supported desired capability for the test session
-        Map<String, Object> nonSupportedCapability = new HashMap<String, Object>();
+        Map<String, Object> nonSupportedCapability = new HashMap<>();
         nonSupportedCapability.put(CapabilityType.BROWSER_NAME, BrowserType.CHROME);
         nonSupportedCapability.put(CapabilityType.PLATFORM, Platform.WINDOWS);
         TestSession testSession = spyProxy.getNewSession(nonSupportedCapability);
@@ -91,7 +91,7 @@ public class DockerSeleniumStarterRemoteProxyTest {
     public void containerIsStartedWhenChromeCapabilitiesAreSupported() {
 
         // Supported desired capability for the test session
-        Map<String, Object> supportedCapability = new HashMap<String, Object>();
+        Map<String, Object> supportedCapability = new HashMap<>();
         supportedCapability.put(CapabilityType.BROWSER_NAME, BrowserType.CHROME);
         supportedCapability.put(CapabilityType.PLATFORM, Platform.LINUX);
         TestSession testSession = spyProxy.getNewSession(supportedCapability);
@@ -104,7 +104,7 @@ public class DockerSeleniumStarterRemoteProxyTest {
     public void containerIsStartedWhenFirefoxCapabilitiesAreSupported() {
 
         // Supported desired capability for the test session
-        Map<String, Object> supportedCapability = new HashMap<String, Object>();
+        Map<String, Object> supportedCapability = new HashMap<>();
         supportedCapability.put(CapabilityType.BROWSER_NAME, BrowserType.FIREFOX);
         supportedCapability.put(CapabilityType.PLATFORM, Platform.LINUX);
         TestSession testSession = spyProxy.getNewSession(supportedCapability);
