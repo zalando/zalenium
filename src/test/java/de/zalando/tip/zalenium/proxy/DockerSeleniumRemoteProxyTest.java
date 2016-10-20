@@ -76,7 +76,6 @@ public class DockerSeleniumRemoteProxyTest {
             TestSession newSession = proxy.getNewSession(requestedCapability);
             Assert.assertNull(newSession);
         }
-
     }
 
 }
