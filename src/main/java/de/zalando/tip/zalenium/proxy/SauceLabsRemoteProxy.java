@@ -49,7 +49,6 @@ public class SauceLabsRemoteProxy extends DefaultRemoteProxy {
                 for (JsonElement cap : slCapabilities.getAsJsonArray()) {
                     JsonObject capAsJsonObject = cap.getAsJsonObject();
                     DesiredCapabilities desiredCapabilities = new DesiredCapabilities();
-                    // TODO: How to determine the MAX_INSTANCES?
                     desiredCapabilities.setCapability(RegistrationRequest.MAX_INSTANCES, 1);
                     desiredCapabilities.setBrowserName(capAsJsonObject.get("api_name").getAsString());
                     if ("windows 2012".equalsIgnoreCase(capAsJsonObject.get("os").getAsString())) {
@@ -108,10 +107,9 @@ public class SauceLabsRemoteProxy extends DefaultRemoteProxy {
 
     public boolean canDockerSeleniumProcessIt(Map<String, Object> requestedCapability) {
         for (RemoteProxy remoteProxy : getRegistry().getAllProxies()) {
-            if (remoteProxy instanceof DockerSeleniumStarterRemoteProxy) {
-                if (remoteProxy.hasCapability(requestedCapability)) {
-                    return true;
-                }
+            if ((remoteProxy instanceof DockerSeleniumStarterRemoteProxy) &&
+                    remoteProxy.hasCapability(requestedCapability)) {
+                return true;
             }
         }
         return false;
