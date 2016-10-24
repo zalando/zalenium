@@ -121,6 +121,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     /*
         Starting a few containers (Firefox, Chrome), so they are ready when the tests come.
     */
+    @Override
     public void beforeRegistration() {
         readConfigurationFromEnvVariables();
         if (getChromeContainersOnStartup() > 0 || getFirefoxContainersOnStartup() > 0) {
@@ -137,7 +138,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
 
     /*
         Making the node seem as heavily used, in order to get it listed after the 'docker-selenium' nodes.
-        99% used.
+        98% used.
      */
     @Override
     public float getResourceUsageInPercent() {
@@ -207,12 +208,12 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     }
 
     public static List<DesiredCapabilities> getCapabilities(String url) {
-        if (dockerSeleniumCapabilities.size() > 0) {
+        if (!dockerSeleniumCapabilities.isEmpty()) {
             return dockerSeleniumCapabilities;
         }
 
         dockerSeleniumCapabilities = getDockerSeleniumCapabilitiesFromGitHub(url);
-        if (dockerSeleniumCapabilities.size() == 0) {
+        if (dockerSeleniumCapabilities.isEmpty()) {
             dockerSeleniumCapabilities = getDockerSeleniumFallbackCapabilities();
             LOGGER.log(Level.WARNING, "[DS] Could not fetch capabilities from {0}, falling back to defaults.", url);
             return dockerSeleniumCapabilities;
@@ -436,18 +437,18 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
                     try {
                         socket.close();
                     } catch (IOException e) {
-                        // Ignore IOException on close()
+                        LOGGER.log(Level.SEVERE, "[DS] " + e.toString(), e);
                     }
                     allocatedPorts.add(freePort);
                     return freePort;
                 } catch (IOException e) {
-                    // Ignore IOException since probably port was used
+                    LOGGER.log(Level.SEVERE, "[DS] " + e.toString(), e);
                 } finally {
                     if (socket != null) {
                         try {
                             socket.close();
                         } catch (IOException e) {
-                            // Ignore IOException on close()
+                            LOGGER.log(Level.SEVERE, "[DS] " + e.toString(), e);
                         }
                     }
                 }
