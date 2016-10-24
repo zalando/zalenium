@@ -133,7 +133,6 @@ public class DockerSeleniumRemoteProxyTest {
         Assert.assertFalse(proxy.isBusy());
         long sleepTime = proxy.getDockerSeleniumNodePollerThread().getSleepTimeBetweenChecks();
         await().atMost(sleepTime + 1, MILLISECONDS).untilCall(to(proxy).isDown(), equalTo(true));
-        Thread.sleep(proxy.getDockerSeleniumNodePollerThread().getSleepTimeBetweenChecks() + 1);
         Assert.assertTrue(proxy.isDown());
     }
 

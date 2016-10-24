@@ -45,29 +45,34 @@ public class SauceLabsRemoteProxy extends DefaultRemoteProxy {
 
         try {
             registrationRequest.getCapabilities().clear();
-            if (slCapabilities != null) {
-                for (JsonElement cap : slCapabilities.getAsJsonArray()) {
-                    JsonObject capAsJsonObject = cap.getAsJsonObject();
-                    DesiredCapabilities desiredCapabilities = new DesiredCapabilities();
-                    desiredCapabilities.setCapability(RegistrationRequest.MAX_INSTANCES, 1);
-                    desiredCapabilities.setBrowserName(capAsJsonObject.get("api_name").getAsString());
-                    if ("windows 2012".equalsIgnoreCase(capAsJsonObject.get("os").getAsString())) {
-                        desiredCapabilities.setPlatform(Platform.WIN8);
-                    } else {
-                        desiredCapabilities.setPlatform(Platform.extractFromSysProperty(capAsJsonObject.get("os").getAsString()));
-                    }
-                    desiredCapabilities.setVersion(capAsJsonObject.get("long_version").getAsString());
-                    if (!registrationRequest.getCapabilities().contains(desiredCapabilities)) {
-                        registrationRequest.addDesiredCapability(desiredCapabilities);
-                    }
-
+            if (slCapabilities == null) {
+                LOGGER.log(Level.SEVERE, "[SL] Capabilities were NOT fetched from {0}", url);
+                return registrationRequest;
+            }
+            for (JsonElement cap : slCapabilities.getAsJsonArray()) {
+                JsonObject capAsJsonObject = cap.getAsJsonObject();
+                DesiredCapabilities desiredCapabilities = new DesiredCapabilities();
+                desiredCapabilities.setCapability(RegistrationRequest.MAX_INSTANCES, 1);
+                desiredCapabilities.setBrowserName(capAsJsonObject.get("api_name").getAsString());
+                desiredCapabilities.setPlatform(getPlatform(capAsJsonObject.get("os").getAsString()));
+                desiredCapabilities.setVersion(capAsJsonObject.get("long_version").getAsString());
+                if (!registrationRequest.getCapabilities().contains(desiredCapabilities)) {
+                    registrationRequest.addDesiredCapability(desiredCapabilities);
                 }
+
             }
             LOGGER.log(Level.INFO, "[SL] Capabilities fetched from {0}", url);
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, e.toString(), e);
         }
         return registrationRequest;
+    }
+
+    private static Platform getPlatform(String os) {
+        if ("windows 2012".equalsIgnoreCase(os)) {
+            return Platform.WIN8;
+        }
+        return Platform.extractFromSysProperty(os);
     }
 
     @Override
@@ -91,7 +96,7 @@ public class SauceLabsRemoteProxy extends DefaultRemoteProxy {
 
     @Override
     public void beforeCommand(TestSession session, HttpServletRequest request, HttpServletResponse response) {
-        if (request instanceof WebDriverRequest && request.getMethod().equals("POST")) {
+        if (request instanceof WebDriverRequest && "POST".equalsIgnoreCase(request.getMethod())) {
             WebDriverRequest seleniumRequest = (WebDriverRequest) request;
             if (seleniumRequest.getRequestType().equals(RequestType.START_SESSION)) {
                 String body = seleniumRequest.getBody();
