@@ -12,6 +12,7 @@ import com.spotify.docker.client.messages.ContainerCreation;
 import com.spotify.docker.client.messages.HostConfig;
 import com.spotify.docker.client.messages.PortBinding;
 import de.zalando.tip.zalenium.util.CommonProxyUtilities;
+import de.zalando.tip.zalenium.util.Environment;
 import org.openqa.grid.common.RegistrationRequest;
 import org.openqa.grid.internal.Registry;
 import org.openqa.grid.internal.TestSession;
@@ -48,20 +49,34 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
 
     private static final String DOCKER_SELENIUM_IMAGE = "elgalu/selenium";
     private static final String DOCKER_SELENIUM_CAPABILITIES_URL = "https://raw.githubusercontent.com/elgalu/docker-selenium/latest/capabilities.json";
-    private static final int DEFAULT_AMOUNT_CHROME_CONTAINERS = 0;
-    private static final int DEFAULT_AMOUNT_FIREFOX_CONTAINERS = 0;
-    private static final int DEFAULT_AMOUNT_DOCKER_SELENIUM_CONTAINERS_RUNNING = 10;
 
-    private static List<DesiredCapabilities> dockerSeleniumCapabilities = new ArrayList<DesiredCapabilities>();
+    private static List<DesiredCapabilities> dockerSeleniumCapabilities = new ArrayList<>();
 
     private static final int LOWER_PORT_BOUNDARY = 40000;
     private static final int UPPER_PORT_BOUNDARY = 50000;
 
 
-    private static List<Integer> allocatedPorts = new ArrayList<Integer>();
+    private static List<Integer> allocatedPorts = new ArrayList<>();
 
     private static final DockerClient defaultDockerClient = new DefaultDockerClient("unix:///var/run/docker.sock");
     private static DockerClient dockerClient = defaultDockerClient;
+
+    private static final Environment defaultEnvironment = new Environment();
+    private static Environment environment = defaultEnvironment;
+
+    @VisibleForTesting
+    protected static final int DEFAULT_AMOUNT_CHROME_CONTAINERS = 0;
+    @VisibleForTesting
+    protected static final int DEFAULT_AMOUNT_FIREFOX_CONTAINERS = 0;
+    @VisibleForTesting
+    protected static final int DEFAULT_AMOUNT_DOCKER_SELENIUM_CONTAINERS_RUNNING = 10;
+
+    @VisibleForTesting
+    protected static final String ZALENIUM_CHROME_CONTAINERS = "ZALENIUM_CHROME_CONTAINERS";
+    @VisibleForTesting
+    protected static final String ZALENIUM_FIREFOX_CONTAINERS = "ZALENIUM_FIREFOX_CONTAINERS";
+    @VisibleForTesting
+    protected static final String ZALENIUM_MAX_DOCKER_SELENIUM_CONTAINERS = "ZALENIUM_MAX_DOCKER_SELENIUM_CONTAINERS";
 
     /*
         Amount of containers launched when the proxy is starting.
@@ -107,7 +122,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
         Starting a few containers (Firefox, Chrome), so they are ready when the tests come.
     */
     public void beforeRegistration() {
-        readConfigurationFromFile();
+        readConfigurationFromEnvVariables();
         if (getChromeContainersOnStartup() > 0 || getFirefoxContainersOnStartup() > 0) {
             LOGGER.log(Level.INFO, "[DS] Setting up {0} Firefox nodes and {1} Chrome nodes ready to use.",
                     new Object[]{getFirefoxContainersOnStartup(), getChromeContainersOnStartup()});
@@ -132,50 +147,50 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     /*
      * Reading configuration values from the environment variables, if a value was not provided it falls back to defaults.
      */
-    private static void readConfigurationFromFile() {
+    private static void readConfigurationFromEnvVariables() {
 
-        if (System.getenv("ZALENIUM_CHROME_CONTAINERS") != null) {
+        String envVarIsNotSetMessage = "[DS] Env. variable %s value is not set, falling back to default: %s.";
+        String envVarIsNotAValidIntMessage = "[DS] Env. variable %s is not a valid integer.";
+
+        if (environment.getEnvVariable(ZALENIUM_CHROME_CONTAINERS) != null) {
             try {
-                int chromeContainers = Integer.parseInt(System.getenv("ZALENIUM_CHROME_CONTAINERS"));
+                int chromeContainers = Integer.parseInt(environment.getEnvVariable(ZALENIUM_CHROME_CONTAINERS));
                 setChromeContainersOnStartup(chromeContainers);
             } catch (Exception e) {
-                LOGGER.log(Level.WARNING, "[DS] ZALENIUM_CHROME_CONTAINERS {} is not a valid integer",
-                        System.getenv("ZALENIUM_CHROME_CONTAINERS"));
+                LOGGER.log(Level.WARNING, String.format(envVarIsNotAValidIntMessage, ZALENIUM_CHROME_CONTAINERS), e);
                 setChromeContainersOnStartup(DEFAULT_AMOUNT_CHROME_CONTAINERS);
             }
         } else {
-            LOGGER.log(Level.FINE, "[DS] ZALENIUM_CHROME_CONTAINERS value is not set, falling back to default {}.",
-                    DEFAULT_AMOUNT_CHROME_CONTAINERS);
+            LOGGER.log(Level.FINE, String.format(envVarIsNotSetMessage, ZALENIUM_CHROME_CONTAINERS,
+                    DEFAULT_AMOUNT_CHROME_CONTAINERS));
             setChromeContainersOnStartup(DEFAULT_AMOUNT_CHROME_CONTAINERS);
         }
 
-        if (System.getenv("ZALENIUM_FIREFOX_CONTAINERS") != null) {
+        if (environment.getEnvVariable(ZALENIUM_FIREFOX_CONTAINERS) != null) {
             try {
-                int firefoxContainers = Integer.parseInt(System.getenv("ZALENIUM_FIREFOX_CONTAINERS"));
+                int firefoxContainers = Integer.parseInt(environment.getEnvVariable(ZALENIUM_FIREFOX_CONTAINERS));
                 setFirefoxContainersOnStartup(firefoxContainers);
             } catch (Exception e) {
-                LOGGER.log(Level.WARNING, "[DS] ZALENIUM_FIREFOX_CONTAINERS {} is not a valid integer",
-                        System.getenv("ZALENIUM_FIREFOX_CONTAINERS"));
+                LOGGER.log(Level.WARNING, String.format(envVarIsNotAValidIntMessage, ZALENIUM_FIREFOX_CONTAINERS), e);
                 setFirefoxContainersOnStartup(DEFAULT_AMOUNT_FIREFOX_CONTAINERS);
             }
         } else {
-            LOGGER.log(Level.FINE, "[DS] ZALENIUM_FIREFOX_CONTAINERS value is not set, falling back to default {}.",
-                    DEFAULT_AMOUNT_FIREFOX_CONTAINERS);
+            LOGGER.log(Level.FINE, String.format(envVarIsNotSetMessage, ZALENIUM_FIREFOX_CONTAINERS,
+                    DEFAULT_AMOUNT_FIREFOX_CONTAINERS));
             setFirefoxContainersOnStartup(DEFAULT_AMOUNT_FIREFOX_CONTAINERS);
         }
 
-        if (System.getenv("ZALENIUM_MAX_DOCKER_SELENIUM_CONTAINERS") != null) {
+        if (environment.getEnvVariable(ZALENIUM_MAX_DOCKER_SELENIUM_CONTAINERS) != null) {
             try {
-                int maxDSContainers = Integer.parseInt(System.getenv("ZALENIUM_MAX_DOCKER_SELENIUM_CONTAINERS"));
+                int maxDSContainers = Integer.parseInt(environment.getEnvVariable(ZALENIUM_MAX_DOCKER_SELENIUM_CONTAINERS));
                 setMaxDockerSeleniumContainers(maxDSContainers);
             } catch (Exception e) {
-                LOGGER.log(Level.WARNING, "[DS] ZALENIUM_MAX_DOCKER_SELENIUM_CONTAINERS {} is not a valid integer",
-                        System.getenv("ZALENIUM_MAX_DOCKER_SELENIUM_CONTAINERS"));
+                LOGGER.log(Level.WARNING, String.format(envVarIsNotAValidIntMessage, ZALENIUM_MAX_DOCKER_SELENIUM_CONTAINERS), e);
                 setMaxDockerSeleniumContainers(DEFAULT_AMOUNT_DOCKER_SELENIUM_CONTAINERS_RUNNING);
             }
         } else {
-            LOGGER.log(Level.FINE, "[DS] ZALENIUM_MAX_DOCKER_SELENIUM_CONTAINERS value is not set, falling back to default {}.",
-                    DEFAULT_AMOUNT_DOCKER_SELENIUM_CONTAINERS_RUNNING);
+            LOGGER.log(Level.FINE, String.format(envVarIsNotSetMessage, ZALENIUM_MAX_DOCKER_SELENIUM_CONTAINERS,
+                    DEFAULT_AMOUNT_DOCKER_SELENIUM_CONTAINERS_RUNNING));
             setMaxDockerSeleniumContainers(DEFAULT_AMOUNT_DOCKER_SELENIUM_CONTAINERS_RUNNING);
         }
     }
@@ -221,7 +236,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
 
             final int nodePort = findFreePortInRange(LOWER_PORT_BOUNDARY, UPPER_PORT_BOUNDARY);
 
-            List<String> envVariables = new ArrayList<String>();
+            List<String> envVariables = new ArrayList<>();
             envVariables.add("SELENIUM_HUB_HOST=" + hostIpAddress);
             envVariables.add("SELENIUM_HUB_PORT=4444");
             envVariables.add("SELENIUM_NODE_HOST=" + hostIpAddress);
@@ -279,6 +294,15 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
         dockerClient = defaultDockerClient;
     }
 
+    @VisibleForTesting
+    protected static void setEnvironment(final Environment env) {
+        environment = env;
+    }
+
+    protected static void restoreEnvironment() {
+        environment = defaultEnvironment;
+    }
+
     public static int getFirefoxContainersOnStartup() {
         return firefoxContainersOnStartup;
     }
@@ -308,7 +332,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
 
     private static List<DesiredCapabilities> getDockerSeleniumCapabilitiesFromGitHub(String url) {
         JsonElement dsCapabilities = CommonProxyUtilities.readJSONFromUrl(url);
-        List<DesiredCapabilities> desiredCapabilitiesArrayList = new ArrayList<DesiredCapabilities>();
+        List<DesiredCapabilities> desiredCapabilitiesArrayList = new ArrayList<>();
         try {
             if (dsCapabilities != null) {
                 for (JsonElement cap : dsCapabilities.getAsJsonObject().getAsJsonArray("caps")) {
@@ -329,7 +353,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
 
     @VisibleForTesting
     protected static List<DesiredCapabilities> getDockerSeleniumFallbackCapabilities() {
-        List<DesiredCapabilities> dsCapabilities = new ArrayList<DesiredCapabilities>();
+        List<DesiredCapabilities> dsCapabilities = new ArrayList<>();
         DesiredCapabilities desiredCapabilities = new DesiredCapabilities();
         desiredCapabilities.setBrowserName(BrowserType.FIREFOX);
         desiredCapabilities.setPlatform(Platform.LINUX);
