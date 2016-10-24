@@ -6,6 +6,7 @@ import com.google.gson.JsonParser;
 import java.io.*;
 import java.net.URL;
 import java.nio.charset.Charset;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class CommonProxyUtilities {
@@ -23,7 +24,7 @@ public class CommonProxyUtilities {
             is.close();
             return new JsonParser().parse(jsonText);
         } catch (Exception e) {
-            LOG.info(e.toString());
+            LOG.log(Level.SEVERE, e.toString(), e);
         }
         return null;
     }

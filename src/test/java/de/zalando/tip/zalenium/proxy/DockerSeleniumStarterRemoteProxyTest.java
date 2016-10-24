@@ -160,10 +160,14 @@ public class DockerSeleniumStarterRemoteProxyTest {
      */
 
     @Test
-    public void fallbackToDefaultAmountOfChromeContainersWhenVariableIsNotSet() {
+    public void fallbackToDefaultAmountOfValuesWhenVariablesAreNotSet() {
         // Mock the environment class that serves as proxy to retrieve env variables
         Environment environment = mock(Environment.class);
         when(environment.getEnvVariable(DockerSeleniumStarterRemoteProxy.ZALENIUM_CHROME_CONTAINERS))
+                .thenReturn(null);
+        when(environment.getEnvVariable(DockerSeleniumStarterRemoteProxy.ZALENIUM_FIREFOX_CONTAINERS))
+                .thenReturn(null);
+        when(environment.getEnvVariable(DockerSeleniumStarterRemoteProxy.ZALENIUM_MAX_DOCKER_SELENIUM_CONTAINERS))
                 .thenReturn(null);
         DockerSeleniumStarterRemoteProxy.setEnvironment(environment);
 
@@ -171,13 +175,21 @@ public class DockerSeleniumStarterRemoteProxyTest {
 
         Assert.assertEquals(DockerSeleniumStarterRemoteProxy.DEFAULT_AMOUNT_CHROME_CONTAINERS,
                 DockerSeleniumStarterRemoteProxy.getChromeContainersOnStartup());
+        Assert.assertEquals(DockerSeleniumStarterRemoteProxy.DEFAULT_AMOUNT_FIREFOX_CONTAINERS,
+                DockerSeleniumStarterRemoteProxy.getFirefoxContainersOnStartup());
+        Assert.assertEquals(DockerSeleniumStarterRemoteProxy.DEFAULT_AMOUNT_DOCKER_SELENIUM_CONTAINERS_RUNNING,
+                DockerSeleniumStarterRemoteProxy.getMaxDockerSeleniumContainers());
     }
 
     @Test
-    public void fallbackToDefaultAmountOfChromeContainersWhenVariableIsNotAnInteger() {
+    public void fallbackToDefaultAmountValuesWhenVariablesAreNotIntegers() {
         // Mock the environment class that serves as proxy to retrieve env variables
         Environment environment = mock(Environment.class);
         when(environment.getEnvVariable(DockerSeleniumStarterRemoteProxy.ZALENIUM_CHROME_CONTAINERS))
+                .thenReturn("ABC_NON_INTEGER");
+        when(environment.getEnvVariable(DockerSeleniumStarterRemoteProxy.ZALENIUM_FIREFOX_CONTAINERS))
+                .thenReturn("ABC_NON_INTEGER");
+        when(environment.getEnvVariable(DockerSeleniumStarterRemoteProxy.ZALENIUM_MAX_DOCKER_SELENIUM_CONTAINERS))
                 .thenReturn("ABC_NON_INTEGER");
         DockerSeleniumStarterRemoteProxy.setEnvironment(environment);
 
@@ -185,108 +197,51 @@ public class DockerSeleniumStarterRemoteProxyTest {
 
         Assert.assertEquals(DockerSeleniumStarterRemoteProxy.DEFAULT_AMOUNT_CHROME_CONTAINERS,
                 DockerSeleniumStarterRemoteProxy.getChromeContainersOnStartup());
+        Assert.assertEquals(DockerSeleniumStarterRemoteProxy.DEFAULT_AMOUNT_FIREFOX_CONTAINERS,
+                DockerSeleniumStarterRemoteProxy.getFirefoxContainersOnStartup());
+        Assert.assertEquals(DockerSeleniumStarterRemoteProxy.DEFAULT_AMOUNT_DOCKER_SELENIUM_CONTAINERS_RUNNING,
+                DockerSeleniumStarterRemoteProxy.getMaxDockerSeleniumContainers());
     }
 
     @Test
-    public void amountOfChromeContainersVariableGrabsTheConfiguredEnvironmentVariable() {
+    public void variablesGrabTheConfiguredEnvironmentVariables() {
         // Mock the environment class that serves as proxy to retrieve env variables
         Environment environment = mock(Environment.class);
-        String randomAmountOfContainers = String.valueOf(anyInt());
+        int amountOfChromeContainers = 4;
+        int amountOfFirefoxContainers = 3;
+        int amountOfMaxContainers = 8;
         when(environment.getEnvVariable(DockerSeleniumStarterRemoteProxy.ZALENIUM_CHROME_CONTAINERS))
-                .thenReturn(randomAmountOfContainers);
-        DockerSeleniumStarterRemoteProxy.setEnvironment(environment);
-
-        registry.add(spyProxy);
-
-        Assert.assertEquals(Integer.parseInt(randomAmountOfContainers),
-                DockerSeleniumStarterRemoteProxy.getChromeContainersOnStartup());
-    }
-
-    @Test
-    public void fallbackToDefaultAmountOfFirefoxContainersWhenVariableIsNotSet() {
-        // Mock the environment class that serves as proxy to retrieve env variables
-        Environment environment = mock(Environment.class);
+                .thenReturn(String.valueOf(amountOfChromeContainers));
         when(environment.getEnvVariable(DockerSeleniumStarterRemoteProxy.ZALENIUM_FIREFOX_CONTAINERS))
-                .thenReturn(null);
+                .thenReturn(String.valueOf(amountOfFirefoxContainers));
+        when(environment.getEnvVariable(DockerSeleniumStarterRemoteProxy.ZALENIUM_MAX_DOCKER_SELENIUM_CONTAINERS))
+                .thenReturn(String.valueOf(amountOfMaxContainers));
         DockerSeleniumStarterRemoteProxy.setEnvironment(environment);
 
         registry.add(spyProxy);
 
-        Assert.assertEquals(DockerSeleniumStarterRemoteProxy.DEFAULT_AMOUNT_FIREFOX_CONTAINERS,
-                DockerSeleniumStarterRemoteProxy.getFirefoxContainersOnStartup());
+        Assert.assertEquals(amountOfChromeContainers, DockerSeleniumStarterRemoteProxy.getChromeContainersOnStartup());
+        Assert.assertEquals(amountOfFirefoxContainers, DockerSeleniumStarterRemoteProxy.getFirefoxContainersOnStartup());
+        Assert.assertEquals(amountOfMaxContainers, DockerSeleniumStarterRemoteProxy.getMaxDockerSeleniumContainers());
     }
 
     @Test
-    public void fallbackToDefaultAmountOfFirefoxContainersWhenVariableIsNotAnInteger() {
+    public void amountOfCreatedContainersIsTheConfiguredOne() {
         // Mock the environment class that serves as proxy to retrieve env variables
         Environment environment = mock(Environment.class);
+        int amountOfChromeContainers = 3;
+        int amountOfFirefoxContainers = 4;
+        when(environment.getEnvVariable(DockerSeleniumStarterRemoteProxy.ZALENIUM_CHROME_CONTAINERS))
+                .thenReturn(String.valueOf(amountOfChromeContainers));
         when(environment.getEnvVariable(DockerSeleniumStarterRemoteProxy.ZALENIUM_FIREFOX_CONTAINERS))
-                .thenReturn("ABC_NON_INTEGER");
+                .thenReturn(String.valueOf(amountOfFirefoxContainers));
+
         DockerSeleniumStarterRemoteProxy.setEnvironment(environment);
 
         registry.add(spyProxy);
 
-        Assert.assertEquals(DockerSeleniumStarterRemoteProxy.DEFAULT_AMOUNT_FIREFOX_CONTAINERS,
-                DockerSeleniumStarterRemoteProxy.getFirefoxContainersOnStartup());
-    }
-
-    @Test
-    public void amountOfFirefoxContainersVariableGrabsTheConfiguredEnvironmentVariable() {
-        // Mock the environment class that serves as proxy to retrieve env variables
-        Environment environment = mock(Environment.class);
-        String randomAmountOfContainers = String.valueOf(anyInt());
-        when(environment.getEnvVariable(DockerSeleniumStarterRemoteProxy.ZALENIUM_FIREFOX_CONTAINERS))
-                .thenReturn(randomAmountOfContainers);
-        DockerSeleniumStarterRemoteProxy.setEnvironment(environment);
-
-        registry.add(spyProxy);
-
-        Assert.assertEquals(Integer.parseInt(randomAmountOfContainers),
-                DockerSeleniumStarterRemoteProxy.getFirefoxContainersOnStartup());
-    }
-
-
-    @Test
-    public void fallbackToDefaultAmountOfMaxDockerContainersWhenVariableIsNotSet() {
-        // Mock the environment class that serves as proxy to retrieve env variables
-        Environment environment = mock(Environment.class);
-        when(environment.getEnvVariable(DockerSeleniumStarterRemoteProxy.ZALENIUM_MAX_DOCKER_SELENIUM_CONTAINERS))
-                .thenReturn(null);
-        DockerSeleniumStarterRemoteProxy.setEnvironment(environment);
-
-        registry.add(spyProxy);
-
-        Assert.assertEquals(DockerSeleniumStarterRemoteProxy.DEFAULT_AMOUNT_DOCKER_SELENIUM_CONTAINERS_RUNNING,
-                DockerSeleniumStarterRemoteProxy.getMaxDockerSeleniumContainers());
-    }
-
-    @Test
-    public void fallbackToDefaultAmountOfMaxDockerContainersContainersWhenVariableIsNotAnInteger() {
-        // Mock the environment class that serves as proxy to retrieve env variables
-        Environment environment = mock(Environment.class);
-        when(environment.getEnvVariable(DockerSeleniumStarterRemoteProxy.ZALENIUM_MAX_DOCKER_SELENIUM_CONTAINERS))
-                .thenReturn("ABC_NON_INTEGER");
-        DockerSeleniumStarterRemoteProxy.setEnvironment(environment);
-
-        registry.add(spyProxy);
-
-        Assert.assertEquals(DockerSeleniumStarterRemoteProxy.DEFAULT_AMOUNT_DOCKER_SELENIUM_CONTAINERS_RUNNING,
-                DockerSeleniumStarterRemoteProxy.getMaxDockerSeleniumContainers());
-    }
-
-    @Test
-    public void maxAmountOfDockerContainersVariableGrabsTheConfiguredEnvironmentVariable() {
-        // Mock the environment class that serves as proxy to retrieve env variables
-        Environment environment = mock(Environment.class);
-        String randomAmountOfContainers = String.valueOf(anyInt());
-        when(environment.getEnvVariable(DockerSeleniumStarterRemoteProxy.ZALENIUM_MAX_DOCKER_SELENIUM_CONTAINERS))
-                .thenReturn(randomAmountOfContainers);
-        DockerSeleniumStarterRemoteProxy.setEnvironment(environment);
-
-        registry.add(spyProxy);
-
-        Assert.assertEquals(Integer.parseInt(randomAmountOfContainers),
-                DockerSeleniumStarterRemoteProxy.getMaxDockerSeleniumContainers());
+        verify(spyProxy, times(amountOfChromeContainers)).startDockerSeleniumContainer(BrowserType.CHROME);
+        verify(spyProxy, times(amountOfFirefoxContainers)).startDockerSeleniumContainer(BrowserType.FIREFOX);
     }
 
 }

@@ -78,6 +78,8 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     @VisibleForTesting
     protected static final String ZALENIUM_MAX_DOCKER_SELENIUM_CONTAINERS = "ZALENIUM_MAX_DOCKER_SELENIUM_CONTAINERS";
 
+    private static final String LOGGING_PREFIX = "[DS] ";
+
     /*
         Amount of containers launched when the proxy is starting.
      */
@@ -103,11 +105,11 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     public TestSession getNewSession(Map<String, Object> requestedCapability) {
 
         if (!hasCapability(requestedCapability)) {
-            LOGGER.log(Level.FINE, "[DS] Capability not supported {0}", requestedCapability);
+            LOGGER.log(Level.FINE, LOGGING_PREFIX + "Capability not supported {0}", requestedCapability);
             return null;
         }
 
-        LOGGER.log(Level.INFO, "[DS] Starting new node for {0}.", requestedCapability);
+        LOGGER.log(Level.INFO, LOGGING_PREFIX + "Starting new node for {0}.", requestedCapability);
 
         String browserName = requestedCapability.get(CapabilityType.BROWSER_NAME).toString();
 
@@ -121,10 +123,11 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     /*
         Starting a few containers (Firefox, Chrome), so they are ready when the tests come.
     */
+    @Override
     public void beforeRegistration() {
         readConfigurationFromEnvVariables();
         if (getChromeContainersOnStartup() > 0 || getFirefoxContainersOnStartup() > 0) {
-            LOGGER.log(Level.INFO, "[DS] Setting up {0} Firefox nodes and {1} Chrome nodes ready to use.",
+            LOGGER.log(Level.INFO, LOGGING_PREFIX + "Setting up {0} Firefox nodes and {1} Chrome nodes ready to use.",
                     new Object[]{getFirefoxContainersOnStartup(), getChromeContainersOnStartup()});
             for (int i = 0; i < getChromeContainersOnStartup(); i++) {
                 startDockerSeleniumContainer(BrowserType.CHROME);
@@ -137,7 +140,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
 
     /*
         Making the node seem as heavily used, in order to get it listed after the 'docker-selenium' nodes.
-        99% used.
+        98% used.
      */
     @Override
     public float getResourceUsageInPercent() {
@@ -149,8 +152,8 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
      */
     private static void readConfigurationFromEnvVariables() {
 
-        String envVarIsNotSetMessage = "[DS] Env. variable %s value is not set, falling back to default: %s.";
-        String envVarIsNotAValidIntMessage = "[DS] Env. variable %s is not a valid integer.";
+        String envVarIsNotSetMessage = LOGGING_PREFIX + "Env. variable %s value is not set, falling back to default: %s.";
+        String envVarIsNotAValidIntMessage = LOGGING_PREFIX + "Env. variable %s is not a valid integer.";
 
         if (environment.getEnvVariable(ZALENIUM_CHROME_CONTAINERS) != null) {
             try {
@@ -207,17 +210,17 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     }
 
     public static List<DesiredCapabilities> getCapabilities(String url) {
-        if (dockerSeleniumCapabilities.size() > 0) {
+        if (!dockerSeleniumCapabilities.isEmpty()) {
             return dockerSeleniumCapabilities;
         }
 
         dockerSeleniumCapabilities = getDockerSeleniumCapabilitiesFromGitHub(url);
-        if (dockerSeleniumCapabilities.size() == 0) {
+        if (dockerSeleniumCapabilities.isEmpty()) {
             dockerSeleniumCapabilities = getDockerSeleniumFallbackCapabilities();
-            LOGGER.log(Level.WARNING, "[DS] Could not fetch capabilities from {0}, falling back to defaults.", url);
+            LOGGER.log(Level.WARNING, LOGGING_PREFIX + "Could not fetch capabilities from {0}, falling back to defaults.", url);
             return dockerSeleniumCapabilities;
         }
-        LOGGER.log(Level.INFO, "[DS] Capabilities fetched from {0}", url);
+        LOGGER.log(Level.INFO, LOGGING_PREFIX + "Capabilities fetched from {0}", url);
         return dockerSeleniumCapabilities;
     }
 
@@ -275,7 +278,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
                 final ContainerCreation dockerSeleniumContainer = dockerClient.createContainer(containerConfig);
                 dockerClient.startContainer(dockerSeleniumContainer.id());
             } catch (Exception e) {
-                LOGGER.log(Level.SEVERE, "[DS] " + e.toString(), e);
+                LOGGER.log(Level.SEVERE, LOGGING_PREFIX + e.toString(), e);
             }
         }
         /*
@@ -346,7 +349,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
                 }
             }
         } catch (Exception e) {
-            LOGGER.log(Level.WARNING, "[DS] " + e.toString(), e);
+            LOGGER.log(Level.WARNING, LOGGING_PREFIX + e.toString(), e);
         }
         return desiredCapabilitiesArrayList;
     }
@@ -378,7 +381,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
                 }
             }
         } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "[DS] " + e.toString(), e);
+            LOGGER.log(Level.SEVERE, LOGGING_PREFIX + e.toString(), e);
         }
     }
 
@@ -402,23 +405,21 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
             int tolerableDifference = 4;
             int numberOfProxies = (getRegistry().getAllProxies().size() + tolerableDifference);
             if (numberOfDockerSeleniumContainers > numberOfProxies) {
-                LOGGER.log(Level.FINE, "[DS] More docker-selenium containers running than proxies, {0} vs. {1}",
+                LOGGER.log(Level.FINE, LOGGING_PREFIX + "More docker-selenium containers running than proxies, {0} vs. {1}",
                         new Object[]{numberOfDockerSeleniumContainers, numberOfProxies});
                 Thread.sleep(500);
                 return false;
             }
 
-            if (numberOfDockerSeleniumContainers > 0) {
-                LOGGER.log(Level.FINE, "[DS] {0} docker-selenium containers running", containerList.size());
-                if (numberOfDockerSeleniumContainers >= getMaxDockerSeleniumContainers()) {
-                    LOGGER.log(Level.FINE, "[DS] Max. number of docker-selenium containers has been reached, no more " +
-                            "will be created until the number decreases below {0}.", getMaxDockerSeleniumContainers());
-                    return false;
-                }
+            LOGGER.log(Level.FINE, LOGGING_PREFIX + "{0} docker-selenium containers running", containerList.size());
+            if (numberOfDockerSeleniumContainers >= getMaxDockerSeleniumContainers()) {
+                LOGGER.log(Level.FINE, LOGGING_PREFIX + "Max. number of docker-selenium containers has been reached, no more " +
+                        "will be created until the number decreases below {0}.", getMaxDockerSeleniumContainers());
+                return false;
             }
             return true;
         } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "[DS] " + e.toString(), e);
+            LOGGER.log(Level.SEVERE, LOGGING_PREFIX + e.toString(), e);
         }
         return false;
     }
@@ -436,24 +437,24 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
                     try {
                         socket.close();
                     } catch (IOException e) {
-                        // Ignore IOException on close()
+                        LOGGER.log(Level.SEVERE, LOGGING_PREFIX + e.toString(), e);
                     }
                     allocatedPorts.add(freePort);
                     return freePort;
                 } catch (IOException e) {
-                    // Ignore IOException since probably port was used
+                    LOGGER.log(Level.SEVERE, LOGGING_PREFIX + e.toString(), e);
                 } finally {
                     if (socket != null) {
                         try {
                             socket.close();
                         } catch (IOException e) {
-                            // Ignore IOException on close()
+                            LOGGER.log(Level.SEVERE, LOGGING_PREFIX + e.toString(), e);
                         }
                     }
                 }
             }
         }
-        throw new IllegalStateException("Could not find a free TCP/IP port to start embedded Jetty HTTP Server on");
+        throw new IllegalStateException("Could not find a free TCP/IP port to use for docker-selenium");
     }
 
 }
