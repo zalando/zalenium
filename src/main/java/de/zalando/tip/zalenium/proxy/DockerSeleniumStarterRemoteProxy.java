@@ -421,7 +421,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
             }
             return true;
         } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "[DS] " + e.toString(), e);
+            LOGGER.log(Level.SEVERE, LOGGING_PREFIX + e.toString(), e);
         }
         return false;
     }
