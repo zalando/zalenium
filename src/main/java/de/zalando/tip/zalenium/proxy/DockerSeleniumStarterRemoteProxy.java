@@ -411,13 +411,11 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
                 return false;
             }
 
-            if (numberOfDockerSeleniumContainers > 0) {
-                LOGGER.log(Level.FINE, LOGGING_PREFIX + "{0} docker-selenium containers running", containerList.size());
-                if (numberOfDockerSeleniumContainers >= getMaxDockerSeleniumContainers()) {
-                    LOGGER.log(Level.FINE, LOGGING_PREFIX + "Max. number of docker-selenium containers has been reached, no more " +
-                            "will be created until the number decreases below {0}.", getMaxDockerSeleniumContainers());
-                    return false;
-                }
+            LOGGER.log(Level.FINE, LOGGING_PREFIX + "{0} docker-selenium containers running", containerList.size());
+            if (numberOfDockerSeleniumContainers >= getMaxDockerSeleniumContainers()) {
+                LOGGER.log(Level.FINE, LOGGING_PREFIX + "Max. number of docker-selenium containers has been reached, no more " +
+                        "will be created until the number decreases below {0}.", getMaxDockerSeleniumContainers());
+                return false;
             }
             return true;
         } catch (Exception e) {
