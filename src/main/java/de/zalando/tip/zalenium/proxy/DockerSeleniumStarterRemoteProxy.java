@@ -403,7 +403,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
                 process all the registrations fast enough, causing many unexpected errors.
             */
             int tolerableDifference = 4;
-            int numberOfProxies = (getRegistry().getAllProxies().size() + tolerableDifference);
+            int numberOfProxies = getRegistry().getAllProxies().size() + tolerableDifference;
             if (numberOfDockerSeleniumContainers > numberOfProxies) {
                 LOGGER.log(Level.FINE, LOGGING_PREFIX + "More docker-selenium containers running than proxies, {0} vs. {1}",
                         new Object[]{numberOfDockerSeleniumContainers, numberOfProxies});
@@ -428,29 +428,19 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
         Method adapted from https://gist.github.com/vorburger/3429822
      */
     private static int findFreePortInRange(int lowerBoundary, int upperBoundary) throws IllegalStateException {
-        ServerSocket socket = null;
         for (int portNumber = lowerBoundary; portNumber <= upperBoundary; portNumber++) {
             if (!allocatedPorts.contains(portNumber)) {
-                try {
-                    socket = new ServerSocket(portNumber);
-                    int freePort = socket.getLocalPort();
-                    try {
-                        socket.close();
-                    } catch (IOException e) {
-                        LOGGER.log(Level.SEVERE, LOGGING_PREFIX + e.toString(), e);
-                    }
-                    allocatedPorts.add(freePort);
-                    return freePort;
+                int freePort = -1;
+
+                try(ServerSocket serverSocket = new ServerSocket(portNumber)) {
+                    freePort = serverSocket.getLocalPort();
                 } catch (IOException e) {
                     LOGGER.log(Level.SEVERE, LOGGING_PREFIX + e.toString(), e);
-                } finally {
-                    if (socket != null) {
-                        try {
-                            socket.close();
-                        } catch (IOException e) {
-                            LOGGER.log(Level.SEVERE, LOGGING_PREFIX + e.toString(), e);
-                        }
-                    }
+                }
+
+                if (freePort != -1) {
+                    allocatedPorts.add(freePort);
+                    return freePort;
                 }
             }
         }
