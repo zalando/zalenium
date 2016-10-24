@@ -149,18 +149,20 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
      */
     private static void readConfigurationFromEnvVariables() {
 
+        String envVarIsNotSetMessage = "[DS] Env. variable %s value is not set, falling back to default: %s.";
+        String envVarIsNotAValidIntMessage = "[DS] Env. variable %s is not a valid integer.";
+
         if (environment.getEnvVariable(ZALENIUM_CHROME_CONTAINERS) != null) {
             try {
                 int chromeContainers = Integer.parseInt(environment.getEnvVariable(ZALENIUM_CHROME_CONTAINERS));
                 setChromeContainersOnStartup(chromeContainers);
             } catch (Exception e) {
-                LOGGER.log(Level.WARNING, "[DS] Env. variable " + ZALENIUM_CHROME_CONTAINERS +
-                        " is not a valid integer", e);
+                LOGGER.log(Level.WARNING, String.format(envVarIsNotAValidIntMessage, ZALENIUM_CHROME_CONTAINERS), e);
                 setChromeContainersOnStartup(DEFAULT_AMOUNT_CHROME_CONTAINERS);
             }
         } else {
-            LOGGER.log(Level.FINE, "[DS] Env. variable " +  ZALENIUM_CHROME_CONTAINERS + " value is not set, " +
-                    "falling back to default: {}.", DEFAULT_AMOUNT_CHROME_CONTAINERS);
+            LOGGER.log(Level.FINE, String.format(envVarIsNotSetMessage, ZALENIUM_CHROME_CONTAINERS,
+                    DEFAULT_AMOUNT_CHROME_CONTAINERS));
             setChromeContainersOnStartup(DEFAULT_AMOUNT_CHROME_CONTAINERS);
         }
 
@@ -169,13 +171,12 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
                 int firefoxContainers = Integer.parseInt(environment.getEnvVariable(ZALENIUM_FIREFOX_CONTAINERS));
                 setFirefoxContainersOnStartup(firefoxContainers);
             } catch (Exception e) {
-                LOGGER.log(Level.WARNING, "[DS] Env. variable " + ZALENIUM_FIREFOX_CONTAINERS +
-                        " is not a valid integer", e);
+                LOGGER.log(Level.WARNING, String.format(envVarIsNotAValidIntMessage, ZALENIUM_FIREFOX_CONTAINERS), e);
                 setFirefoxContainersOnStartup(DEFAULT_AMOUNT_FIREFOX_CONTAINERS);
             }
         } else {
-            LOGGER.log(Level.FINE, "[DS] Env. variable " +  ZALENIUM_FIREFOX_CONTAINERS + " value is not set, " +
-                    "falling back to default: {}.", DEFAULT_AMOUNT_FIREFOX_CONTAINERS);
+            LOGGER.log(Level.FINE, String.format(envVarIsNotSetMessage, ZALENIUM_FIREFOX_CONTAINERS,
+                    DEFAULT_AMOUNT_FIREFOX_CONTAINERS));
             setFirefoxContainersOnStartup(DEFAULT_AMOUNT_FIREFOX_CONTAINERS);
         }
 
@@ -184,13 +185,12 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
                 int maxDSContainers = Integer.parseInt(environment.getEnvVariable(ZALENIUM_MAX_DOCKER_SELENIUM_CONTAINERS));
                 setMaxDockerSeleniumContainers(maxDSContainers);
             } catch (Exception e) {
-                LOGGER.log(Level.WARNING, "[DS] Env. variable " + ZALENIUM_MAX_DOCKER_SELENIUM_CONTAINERS +
-                        " is not a valid integer", e);
+                LOGGER.log(Level.WARNING, String.format(envVarIsNotAValidIntMessage, ZALENIUM_MAX_DOCKER_SELENIUM_CONTAINERS), e);
                 setMaxDockerSeleniumContainers(DEFAULT_AMOUNT_DOCKER_SELENIUM_CONTAINERS_RUNNING);
             }
         } else {
-            LOGGER.log(Level.FINE, "[DS] Env. variable " +  ZALENIUM_MAX_DOCKER_SELENIUM_CONTAINERS + " value is not set, " +
-                    "falling back to default: {}.", DEFAULT_AMOUNT_DOCKER_SELENIUM_CONTAINERS_RUNNING);
+            LOGGER.log(Level.FINE, String.format(envVarIsNotSetMessage, ZALENIUM_MAX_DOCKER_SELENIUM_CONTAINERS,
+                    DEFAULT_AMOUNT_DOCKER_SELENIUM_CONTAINERS_RUNNING));
             setMaxDockerSeleniumContainers(DEFAULT_AMOUNT_DOCKER_SELENIUM_CONTAINERS_RUNNING);
         }
     }
