@@ -403,7 +403,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
                 process all the registrations fast enough, causing many unexpected errors.
             */
             int tolerableDifference = 4;
-            int numberOfProxies = (getRegistry().getAllProxies().size() + tolerableDifference);
+            int numberOfProxies = getRegistry().getAllProxies().size() + tolerableDifference;
             if (numberOfDockerSeleniumContainers > numberOfProxies) {
                 LOGGER.log(Level.FINE, LOGGING_PREFIX + "More docker-selenium containers running than proxies, {0} vs. {1}",
                         new Object[]{numberOfDockerSeleniumContainers, numberOfProxies});
