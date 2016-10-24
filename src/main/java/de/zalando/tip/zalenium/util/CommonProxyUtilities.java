@@ -10,7 +10,12 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class CommonProxyUtilities {
+
     private static final Logger LOG = Logger.getLogger(CommonProxyUtilities.class.getName());
+
+    private CommonProxyUtilities() {
+        throw new IllegalAccessError("Utility class");
+    }
 
     /*
         Reading a JSON with DockerSelenium capabilities from a given URL
