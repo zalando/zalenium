@@ -173,25 +173,33 @@ function usage()
     echo "Usage:"
     echo ""
     echo "./zalenium.sh"
-    echo "\t-h --help"
-    echo "\t start <options, see below>"
-    echo "\t--chromeContainers=Number of Chrome containers created on startup. Default is 1 when parameter is absent."
-    echo "\t--firefoxContainers=Number of Firefox containers created on startup. Default is 1 when parameter is absent."
-    echo "\t--maxDockerSeleniumContainers=Max number of docker-selenium containers running at the same time. Default is 10 when parameter is absent."
-    echo "\t--seleniumArtifact=Absolute path of the Selenium JAR. If parameter absent, the JAR is expected to be in the same folder."
-    echo "\t--zaleniumArtifact=Absolute path of the Zalenium JAR. If parameter absent, the JAR is expected to be in the same folder."
-    echo "\t--sauceLabsEnabled=Determines if the Sauce Labs node is started. Defaults to 'true' when parameter absent."
-    echo "\t stop"
+    echo -e "\t -h --help"
+    echo -e "\t start <options, see below>"
+    echo -e "\t --chromeContainers -> Number of Chrome containers created on startup. Default is 1 when parameter is absent."
+    echo -e "\t --firefoxContainers -> Number of Firefox containers created on startup. Default is 1 when parameter is absent."
+    echo -e "\t --maxDockerSeleniumContainers -> Max number of docker-selenium containers running at the same time. Default is 10 when parameter is absent."
+    echo -e "\t --seleniumArtifact -> Absolute path of the Selenium JAR. If parameter absent, the JAR is expected to be in the same folder."
+    echo -e "\t --zaleniumArtifact -> Absolute path of the Zalenium JAR. If parameter absent, the JAR is expected to be in the same folder."
+    echo -e "\t --sauceLabsEnabled -> Determines if the Sauce Labs node is started. Defaults to 'true' when parameter absent."
+    echo -e "\t stop"
     echo ""
+    echo -e "\t Example: Starting Zalenium with 2 Chrome containers and without Sauce Labs"
+    echo -e "\t ./zalenium.sh start --chromeContainers 2 --sauceLabsEnabled false"
 }
 
 SCRIPT_ACTION=$1
 shift
 case ${SCRIPT_ACTION} in
     start)
+        NUM_PARAMETERS=$#
+        if [ $((NUM_PARAMETERS % 2)) -ne 0 ]; then
+            echo "Uneven amount of parameters entered, please check your input."
+            usage
+            exit 1
+        fi
         while [ "$1" != "" ]; do
-            PARAM=`echo $1 | awk -F= '{print $1}'`
-            VALUE=`echo $2 | awk -F= '{print $1}'`
+            PARAM=`echo $1`
+            VALUE=`echo $2`
             case ${PARAM} in
                 -h | --help)
                     usage
