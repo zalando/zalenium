@@ -47,6 +47,17 @@ You can use the Zalenium already, but it is still under development and open for
     * `--sauceLabsEnabled` -> Start Sauce Labs node or not. Defaults to 'true'.
 * Stop it: `./zalenium.sh stop`
 
+Examples:
+* Starting Zalenium with 2 Chrome containers and without Sauce Labs
+  ```sh
+  ./zalenium.sh start --chromeContainers 2 --sauceLabsEnabled false
+  ```
+
+* Starting Zalenium overwriting all parameters
+  ```sh
+  ./zalenium.sh stop --chromeContainers 2 --firefoxContainers 2 --maxDockerSeleniumContainers 10 --seleniumArtifact /path/to/jar/selenium-server-standalone-2.53.1.jar --zaleniumArtifact /path/to/jar/zalenium.jar
+  ```
+
 #### Using it
 * Just point your Selenium tests to http://localhost:4444/wd/hub and that's it!
 * You can use the [integration tests](./src/test/java/de/zalando/tip/zalenium/it/ParallelIT.java) we have to try Zalenium.
