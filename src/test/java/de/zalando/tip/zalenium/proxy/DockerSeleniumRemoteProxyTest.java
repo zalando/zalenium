@@ -5,6 +5,8 @@ import com.spotify.docker.client.LogStream;
 import com.spotify.docker.client.exceptions.DockerException;
 import com.spotify.docker.client.messages.Container;
 import com.spotify.docker.client.messages.ExecCreation;
+import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
+import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.http.HttpResponse;
 import org.apache.http.StatusLine;
 import org.apache.http.client.HttpClient;
@@ -16,6 +18,7 @@ import org.openqa.grid.common.GridRole;
 import org.openqa.grid.common.RegistrationRequest;
 import org.openqa.grid.internal.Registry;
 import org.openqa.grid.internal.TestSession;
+import org.openqa.grid.internal.TestSlot;
 import org.openqa.selenium.Platform;
 import org.openqa.selenium.remote.BrowserType;
 import org.openqa.selenium.remote.CapabilityType;
@@ -160,6 +163,14 @@ public class DockerSeleniumRemoteProxyTest {
             when(logStream.readFully()).thenReturn("");
             when(dockerClient.execStart(execCreation.id())).thenReturn(logStream);
 
+            TarArchiveInputStream tarArchiveInputStream = mock(TarArchiveInputStream.class);
+            TarArchiveEntry directoryEntry = mock(TarArchiveEntry.class);
+            TarArchiveEntry fileEntry = mock(TarArchiveEntry.class);
+            when(directoryEntry.isDirectory()).thenReturn(true);
+            when(fileEntry.getName()).thenReturn("file.mkv");
+            when(tarArchiveInputStream.getNextTarEntry()).thenReturn(directoryEntry);
+            when(dockerClient.archiveContainer(dockerContainer.id(), "/videos/")).thenReturn(tarArchiveInputStream);
+
             DockerSeleniumRemoteProxy.setDockerClient(dockerClient);
 
             // Supported desired capability for the test session
@@ -180,11 +191,19 @@ public class DockerSeleniumRemoteProxyTest {
             verify(spyProxy, times(1)).processVideoAction(DockerSeleniumRemoteProxy.VideoRecordingAction.START_RECORDING,
                     dockerContainer.id());
 
+            // We release the sessions, the node should be free
+            spyProxy.getTestSlots().forEach(TestSlot::doFinishRelease);
+
+            Assert.assertFalse(spyProxy.isBusy());
+            long sleepTime = spyProxy.getDockerSeleniumNodePollerThread().getSleepTimeBetweenChecks();
+            verify(spyProxy, timeout(sleepTime + 1))
+                    .videoRecording(DockerSeleniumRemoteProxy.VideoRecordingAction.STOP_RECORDING);
+            verify(spyProxy, timeout(sleepTime + 1)).copyVideos(dockerContainer.id());
         } finally {
             DockerSeleniumRemoteProxy.restoreDockerClient();
         }
     }
-
+    
     private Map<String, Object> getCapabilitySupportedByDockerSelenium() {
         Map<String, Object> requestedCapability = new HashMap<>();
         requestedCapability.put(CapabilityType.BROWSER_NAME, BrowserType.CHROME);
