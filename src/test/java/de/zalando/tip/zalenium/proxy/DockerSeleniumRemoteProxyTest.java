@@ -1,5 +1,10 @@
 package de.zalando.tip.zalenium.proxy;
 
+import com.spotify.docker.client.DockerClient;
+import com.spotify.docker.client.LogStream;
+import com.spotify.docker.client.exceptions.DockerException;
+import com.spotify.docker.client.messages.Container;
+import com.spotify.docker.client.messages.ExecCreation;
 import org.apache.http.HttpResponse;
 import org.apache.http.StatusLine;
 import org.apache.http.client.HttpClient;
@@ -16,9 +21,13 @@ import org.openqa.selenium.remote.BrowserType;
 import org.openqa.selenium.remote.CapabilityType;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
+import static com.spotify.docker.client.DockerClient.*;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.hamcrest.Matchers.equalTo;
 import static org.mockito.Mockito.*;
@@ -53,9 +62,7 @@ public class DockerSeleniumRemoteProxyTest {
     @Test
     public void dockerSeleniumOnlyRunsOneTestPerContainer() {
         // Supported desired capability for the test session
-        Map<String, Object> requestedCapability = new HashMap<>();
-        requestedCapability.put(CapabilityType.BROWSER_NAME, BrowserType.CHROME);
-        requestedCapability.put(CapabilityType.PLATFORM, Platform.LINUX);
+        Map<String, Object> requestedCapability = getCapabilitySupportedByDockerSelenium();
 
         // Not tests have been executed.
         Assert.assertEquals(0, proxy.getAmountOfExecutedTests());
@@ -72,9 +79,7 @@ public class DockerSeleniumRemoteProxyTest {
     @Test
     public void secondRequestGetsANullTestRequest() {
         // Supported desired capability for the test session
-        Map<String, Object> requestedCapability = new HashMap<>();
-        requestedCapability.put(CapabilityType.BROWSER_NAME, BrowserType.CHROME);
-        requestedCapability.put(CapabilityType.PLATFORM, Platform.LINUX);
+        Map<String, Object> requestedCapability = getCapabilitySupportedByDockerSelenium();
 
         {
             TestSession newSession = proxy.getNewSession(requestedCapability);
@@ -102,22 +107,13 @@ public class DockerSeleniumRemoteProxyTest {
     @Test
     public void pollerThreadTearsDownNodeAfterTestIsCompleted() throws InterruptedException, IOException {
         // Supported desired capability for the test session
-        Map<String, Object> requestedCapability = new HashMap<>();
-        requestedCapability.put(CapabilityType.BROWSER_NAME, BrowserType.CHROME);
-        requestedCapability.put(CapabilityType.PLATFORM, Platform.LINUX);
+        Map<String, Object> requestedCapability = getCapabilitySupportedByDockerSelenium();
 
         // Start poller thread
         proxy.startPolling();
 
         // Mock the poller HttpClient to avoid exceptions due to failed connections
-        HttpClient client = mock(HttpClient.class);
-        HttpResponse httpResponse = mock(HttpResponse.class);
-        StatusLine statusLine = mock(StatusLine.class);
-        when(statusLine.getStatusCode()).thenReturn(200);
-        when(httpResponse.getStatusLine()).thenReturn(statusLine);
-        when(client.execute(any(HttpPost.class))).thenReturn(httpResponse);
-        proxy.getDockerSeleniumNodePollerThread().setClient(client);
-
+        proxy.getDockerSeleniumNodePollerThread().setClient(getMockedClient());
 
         // Get a test session
         TestSession newSession = proxy.getNewSession(requestedCapability);
@@ -133,7 +129,77 @@ public class DockerSeleniumRemoteProxyTest {
         Assert.assertFalse(proxy.isBusy());
         long sleepTime = proxy.getDockerSeleniumNodePollerThread().getSleepTimeBetweenChecks();
         await().atMost(sleepTime + 1, MILLISECONDS).untilCall(to(proxy).isDown(), equalTo(true));
-        Assert.assertTrue(proxy.isDown());
+    }
+
+    @Test
+    public void videoRecordingIsStartedAndStopped() throws IOException, DockerException, InterruptedException,
+            URISyntaxException {
+        try {
+            // Creating a spy proxy to verify the invoked methods
+            DockerSeleniumRemoteProxy spyProxy = spy(proxy);
+
+            // Mock the docker client to get some listed containers
+            DockerClient dockerClient = mock(DockerClient.class);
+            Container dockerContainer = mock(Container.class);
+            List<String> containerNames = new ArrayList<>();
+            containerNames.add("/ZALENIUM_4444");
+
+            when(dockerContainer.names()).thenReturn(containerNames);
+            when(dockerContainer.id()).thenReturn("ZALENIUM_CONTAINER_ID");
+
+            List<Container> containerList = new ArrayList<>();
+            containerList.add(dockerContainer);
+            ExecCreation execCreation = mock(ExecCreation.class);
+            LogStream logStream = mock(LogStream.class);
+
+            when(execCreation.id()).thenReturn(anyString());
+            when(dockerClient.listContainers(ListContainersParam.allContainers())).thenReturn(containerList);
+            when(dockerClient.execCreate(anyString(), any(String[].class), any(ExecCreateParam.class),
+                    any(ExecCreateParam.class)))
+                    .thenReturn(execCreation);
+            when(logStream.readFully()).thenReturn("");
+            when(dockerClient.execStart(execCreation.id())).thenReturn(logStream);
+
+            DockerSeleniumRemoteProxy.setDockerClient(dockerClient);
+
+            // Supported desired capability for the test session
+            Map<String, Object> requestedCapability = getCapabilitySupportedByDockerSelenium();
+
+            // Start poller thread
+            spyProxy.startPolling();
+
+            // Mock the poller HttpClient to avoid exceptions due to failed connections
+            spyProxy.getDockerSeleniumNodePollerThread().setClient(getMockedClient());
+
+            // Get a test session
+            TestSession newSession = spyProxy.getNewSession(requestedCapability);
+            Assert.assertNotNull(newSession);
+
+            // Assert video recording started
+            verify(spyProxy, times(1)).videoRecording(DockerSeleniumRemoteProxy.VideoRecordingAction.START_RECORDING);
+            verify(spyProxy, times(1)).processVideoAction(DockerSeleniumRemoteProxy.VideoRecordingAction.START_RECORDING,
+                    dockerContainer.id());
+
+        } finally {
+            DockerSeleniumRemoteProxy.restoreDockerClient();
+        }
+    }
+
+    private Map<String, Object> getCapabilitySupportedByDockerSelenium() {
+        Map<String, Object> requestedCapability = new HashMap<>();
+        requestedCapability.put(CapabilityType.BROWSER_NAME, BrowserType.CHROME);
+        requestedCapability.put(CapabilityType.PLATFORM, Platform.LINUX);
+        return requestedCapability;
+    }
+
+    private HttpClient getMockedClient() throws IOException {
+        HttpClient client = mock(HttpClient.class);
+        HttpResponse httpResponse = mock(HttpResponse.class);
+        StatusLine statusLine = mock(StatusLine.class);
+        when(statusLine.getStatusCode()).thenReturn(200);
+        when(httpResponse.getStatusLine()).thenReturn(statusLine);
+        when(client.execute(any(HttpPost.class))).thenReturn(httpResponse);
+        return client;
     }
 
 
