@@ -49,7 +49,7 @@
 
     <properties>
         <selenium-server.version>2.53.1</selenium-server.version>
-        <docker-client.version>5.0.2</docker-client.version>
+        <docker-client.version>6.0.0</docker-client.version>
         <junit.version>4.12</junit.version>
         <mockito.version>1.10.19</mockito.version>
         <awaitility.version>2.0.0</awaitility.version>
