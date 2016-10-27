@@ -21,7 +21,7 @@ DockerTerminate()
 {
   echo "Trapped SIGTERM/SIGINT so shutting down Zalenium gracefully..."
   ShutDown
-  wait
+  [ "${DOCKER_ALONGSIDE_DOCKER}" = "true" ] && wait
   exit 0
 }
 
@@ -137,9 +137,7 @@ StartUp()
     fi
 
     # When running in docker do not exit this script
-    if [ "${DOCKER_ALONGSIDE_DOCKER}" = "true" ]; then
-        wait
-    fi
+    [ "${DOCKER_ALONGSIDE_DOCKER}" = "true" ] && wait
 }
 
 ShutDown()

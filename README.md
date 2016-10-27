@@ -5,9 +5,9 @@
 A Selenium Grid extension to scale up and down your local grid dynamically with docker containers. It uses [docker-selenium](https://github.com/elgalu/docker-selenium) to run your tests in Firefox and Chrome locally, and when you need a different browser, your tests get redirected to [Sauce Labs](https://saucelabs.com/).
 
 ### Why Zalenium?
-We know how complicated is to have a stable grid to run UI tests with Selenium, and moreover how hard is to maintain it over time. It is also very difficult to have a local grid with enough capabilities to cover all browsers and platforms. 
+We know how complicated is to have a stable grid to run UI tests with Selenium, and moreover how hard is to maintain it over time. It is also very difficult to have a local grid with enough capabilities to cover all browsers and platforms.
 
-Therefore we are trying this approach where [docker-selenium](https://github.com/elgalu/docker-selenium) nodes are created, used and disposed on demand when possible. With this, you can run faster your UI tests with Firefox and Chrome since they are running on a local grid, on a node created from scratch and disposed after the test finishes. 
+Therefore we are trying this approach where [docker-selenium](https://github.com/elgalu/docker-selenium) nodes are created, used and disposed on demand when possible. With this, you can run faster your UI tests with Firefox and Chrome since they are running on a local grid, on a node created from scratch and disposed after the test finishes.
 
 And whenever you need a capability that cannot be fulfilled by [docker-selenium](https://github.com/elgalu/docker-selenium), then the test gets redirected to [Sauce Labs](https://saucelabs.com/).
 
@@ -19,8 +19,8 @@ You can use the Zalenium already, but it is still under development and open for
 
 ## Getting Started
 
-#### Prerequisites 
-* Docker engine running, version 1.12.1 (probably works with earlier versions, not tested yet).
+#### Prerequisites
+* Docker engine running, version >= 1.12.1 (probably works with earlier versions, not tested yet).
 * Dowload the [docker-selenium](https://github.com/elgalu/docker-selenium) image. `docker pull elgalu/selenium`
 * JDK8+
 * *nix platform (tested only in OSX and Ubuntu, not tested on Windows yet).
@@ -33,7 +33,7 @@ You can use the Zalenium already, but it is still under development and open for
 ```sh
   export SAUCE_USERNAME=<your Sauce Labs username>
   export SAUCE_ACCESS_KEY=<your Sauce Labs access key>
-``` 
+```
 
 #### Running it
 * Start it: `./zalenium.sh start`
@@ -62,7 +62,7 @@ Examples:
 * Just point your Selenium tests to http://localhost:4444/wd/hub and that's it!
 * You can use the [integration tests](./src/test/java/de/zalando/tip/zalenium/it/ParallelIT.java) we have to try Zalenium.
 
-## Contributions 
+## Contributions
 Any feedback or contributions are welcome! Please check our [guidelines](CONTRIBUTING.md), they just follow the general GitHub issue/PR flow.
 
 #### TODOs
