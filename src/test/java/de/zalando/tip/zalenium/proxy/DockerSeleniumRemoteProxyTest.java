@@ -203,7 +203,7 @@ public class DockerSeleniumRemoteProxyTest {
             DockerSeleniumRemoteProxy.restoreDockerClient();
         }
     }
-    
+
     private Map<String, Object> getCapabilitySupportedByDockerSelenium() {
         Map<String, Object> requestedCapability = new HashMap<>();
         requestedCapability.put(CapabilityType.BROWSER_NAME, BrowserType.CHROME);

@@ -6,22 +6,25 @@ import org.junit.Test;
 import org.openqa.grid.common.GridRole;
 import org.openqa.grid.common.RegistrationRequest;
 import org.openqa.grid.internal.Registry;
+import org.openqa.grid.internal.RemoteProxy;
 import org.openqa.grid.internal.TestSession;
 import org.openqa.selenium.Platform;
 import org.openqa.selenium.remote.BrowserType;
 import org.openqa.selenium.remote.CapabilityType;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class SauceLabsRemoteProxyTest {
 
     private static SauceLabsRemoteProxy sauceLabsProxy;
+    private static Registry registry;
 
 
     @BeforeClass
     public static void setup() {
-        Registry registry = Registry.newInstance();
+        registry = Registry.newInstance();
         // Creating the configuration and the registration request of the proxy (node)
         RegistrationRequest request = new RegistrationRequest();
         request.setRole(GridRole.NODE);
@@ -89,6 +92,15 @@ public class SauceLabsRemoteProxyTest {
         TestSession testSession = sauceLabsProxy.getNewSession(requestedCapability);
 
         Assert.assertNotNull(testSession);
+    }
+
+    @Test
+    public void checkProxyOrdering() {
+        // Checking that the DockerSeleniumStarterProxy should come before SauceLabsProxy
+        List<RemoteProxy> sorted = registry.getAllProxies().getSorted();
+        Assert.assertEquals(2, sorted.size());
+        Assert.assertEquals(DockerSeleniumStarterRemoteProxy.class, sorted.get(0).getClass());
+        Assert.assertEquals(SauceLabsRemoteProxy.class, sorted.get(1).getClass());
     }
 
 }
