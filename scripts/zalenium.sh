@@ -11,6 +11,23 @@ PID_PATH_SELENIUM=/tmp/selenium-pid
 PID_PATH_DOCKER_SELENIUM_NODE=/tmp/docker-selenium-node-pid
 PID_PATH_SAUCE_LABS_NODE=/tmp/sauce-labs-node-pid
 
+# Omit output only when running outsided of dockerized Zalenium
+if [ "${DOCKER_ALONGSIDE_DOCKER}" != "true" ]; then
+    export NO_HUP="nohup"
+    export REDIRECT_OUTPUT="2>&1 </dev/null"
+fi
+
+DockerTerminate()
+{
+  echo "Trapped SIGTERM/SIGINT so shutting down Zalenium gracefully..."
+  ShutDown
+  wait
+  exit 0
+}
+
+# Run function DockerTerminate() when this process receives a killing signal
+trap DockerTerminate SIGTERM SIGINT SIGKILL
+
 StartUp()
 {
 
@@ -74,8 +91,8 @@ StartUp()
 
     mkdir -p logs
     rm logs/*hub*.log
-    nohup java -cp ${SELENIUM_ARTIFACT}:${ZALENIUM_ARTIFACT} org.openqa.grid.selenium.GridLauncher \
-    -role hub -throwOnCapabilityNotPresent true > logs/stdout.zalenium.hub.log 2>&1 </dev/null &
+    ${NO_HUP} java -cp ${SELENIUM_ARTIFACT}:${ZALENIUM_ARTIFACT} org.openqa.grid.selenium.GridLauncher \
+    -role hub -throwOnCapabilityNotPresent true > logs/stdout.zalenium.hub.log ${REDIRECT_OUTPUT} &
     echo $! > ${PID_PATH_SELENIUM}
 
     IN_TRAVIS="${CI:=false}"
@@ -90,9 +107,9 @@ StartUp()
 
     echo "Starting DockerSeleniumStarter node..."
 
-    nohup java -jar ${SELENIUM_ARTIFACT} -role node -hub http://localhost:4444/grid/register \
+    ${NO_HUP} java -jar ${SELENIUM_ARTIFACT} -role node -hub http://localhost:4444/grid/register \
      -proxy de.zalando.tip.zalenium.proxy.DockerSeleniumStarterRemoteProxy \
-     -port 30000 > logs/stdout.zalenium.docker.node.log 2>&1 </dev/null &
+     -port 30000 > logs/stdout.zalenium.docker.node.log ${REDIRECT_OUTPUT} &
     echo $! > ${PID_PATH_DOCKER_SELENIUM_NODE}
 
     if [ "${IN_TRAVIS}" = "true" ]; then
@@ -104,9 +121,9 @@ StartUp()
 
     if [ "$SAUCE_LABS_ENABLED" = true ]; then
         echo "Starting Sauce Labs node..."
-        nohup java -jar ${SELENIUM_ARTIFACT} -role node -hub http://localhost:4444/grid/register \
+        ${NO_HUP} java -jar ${SELENIUM_ARTIFACT} -role node -hub http://localhost:4444/grid/register \
          -proxy de.zalando.tip.zalenium.proxy.SauceLabsRemoteProxy \
-         -port 30001 > logs/stdout.zalenium.sauce.node.log 2>&1 </dev/null &
+         -port 30001 > logs/stdout.zalenium.sauce.node.log ${REDIRECT_OUTPUT} &
         echo $! > ${PID_PATH_SAUCE_LABS_NODE}
 
         if [ "${IN_TRAVIS}" = "true" ]; then
@@ -119,6 +136,10 @@ StartUp()
         echo "Sauce Labs not enabled..."
     fi
 
+    # When running in docker do not exit this script
+    if [ "${DOCKER_ALONGSIDE_DOCKER}" = "true" ]; then
+        wait
+    fi
 }
 
 ShutDown()
