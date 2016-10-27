@@ -6,10 +6,12 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.spotify.docker.client.DefaultDockerClient;
 import com.spotify.docker.client.DockerClient;
+import com.spotify.docker.client.exceptions.DockerException;
 import com.spotify.docker.client.messages.Container;
 import com.spotify.docker.client.messages.ContainerConfig;
 import com.spotify.docker.client.messages.ContainerCreation;
 import com.spotify.docker.client.messages.HostConfig;
+import com.spotify.docker.client.messages.Image;
 import com.spotify.docker.client.messages.PortBinding;
 import de.zalando.tip.zalenium.util.CommonProxyUtilities;
 import de.zalando.tip.zalenium.util.Environment;
@@ -267,14 +269,14 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
                     .portBindings(ImmutableMap.of(nodePort + "/tcp", Collections.singletonList(PortBinding.of("", nodePort))))
                     .build();
 
-            final ContainerConfig containerConfig = ContainerConfig.builder()
-                    .image(DOCKER_SELENIUM_IMAGE)
-                    .env(envVariables)
-                    .hostConfig(hostConfig)
-                    .exposedPorts(nodePort + "/tcp")
-                    .build();
-
             try {
+                final ContainerConfig containerConfig = ContainerConfig.builder()
+                        .image(getLatestDownloadedImage(DOCKER_SELENIUM_IMAGE))
+                        .env(envVariables)
+                        .hostConfig(hostConfig)
+                        .exposedPorts(nodePort + "/tcp")
+                        .build();
+
                 String containerName = String.format("%s_%s", "ZALENIUM", nodePort);
                 final ContainerCreation dockerSeleniumContainer = dockerClient.createContainer(containerConfig,
                         containerName);
@@ -287,6 +289,12 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
             Temporal method implemented until https://github.com/spotify/docker-client/issues/488 gets solved.
          */
         removeExitedDockerSeleniumContainers();
+    }
+
+    private String getLatestDownloadedImage(String imageName) throws DockerException, InterruptedException {
+        List<Image> images = dockerClient.listImages(DockerClient.ListImagesParam.byName(imageName));
+        images.sort((o1, o2) -> o2.created().compareTo(o1.created()));
+        return images.get(0).repoTags().get(0);
     }
 
     @VisibleForTesting
