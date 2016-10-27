@@ -187,6 +187,16 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         }
     }
 
+    @VisibleForTesting
+    protected static void setDockerClient(final DockerClient client) {
+        dockerClient = client;
+    }
+
+    @VisibleForTesting
+    protected static void restoreDockerClient() {
+        dockerClient = defaultDockerClient;
+    }
+
     public DockerSeleniumNodePoller getDockerSeleniumNodePollerThread() {
         return dockerSeleniumNodePollerThread;
     }
