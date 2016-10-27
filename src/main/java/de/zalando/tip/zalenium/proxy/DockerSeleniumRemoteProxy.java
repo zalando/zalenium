@@ -1,7 +1,6 @@
 package de.zalando.tip.zalenium.proxy;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.ImmutableSet;
 import com.spotify.docker.client.DefaultDockerClient;
 import com.spotify.docker.client.DockerClient;
 import com.spotify.docker.client.LogStream;
@@ -53,7 +52,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
 
         private String recordingAction;
 
-        private VideoRecordingAction(String action) {
+        VideoRecordingAction(String action) {
             recordingAction = action;
         }
 
@@ -142,20 +141,25 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
             for (Container container : containerList) {
                 String containerName = "/ZALENIUM_" + getRemoteHost().getPort();
                 if (containerName.equalsIgnoreCase(container.names().get(0))) {
-                    final String[] command = {"bash", "-c", action.getRecordingAction()};
-                    final ExecCreation execCreation = dockerClient.execCreate(container.id(), command,
-                            DockerClient.ExecCreateParam.attachStdout(), DockerClient.ExecCreateParam.attachStderr());
-                    final LogStream output = dockerClient.execStart(execCreation.id());
-                    LOGGER.log(Level.INFO, "{0} {1} {2}", new Object[]{getNodeIpAndPort(),
-                            action.getRecordingAction(), output.readFully()});
-
-                    if (VideoRecordingAction.STOP_RECORDING == action) {
-                        copyVideos(container.id());
-                    }
+                    processVideoAction(action, container.id());
                 }
             }
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, getNodeIpAndPort() + e.toString(), e);
+        }
+    }
+
+    private void processVideoAction(final VideoRecordingAction action, final String containerId) throws DockerException,
+            InterruptedException, IOException, URISyntaxException {
+        final String[] command = {"bash", "-c", action.getRecordingAction()};
+        final ExecCreation execCreation = dockerClient.execCreate(containerId, command,
+                DockerClient.ExecCreateParam.attachStdout(), DockerClient.ExecCreateParam.attachStderr());
+        final LogStream output = dockerClient.execStart(execCreation.id());
+        LOGGER.log(Level.INFO, "{0} {1} {2}", new Object[]{getNodeIpAndPort(),
+                action.getRecordingAction(), output.readFully()});
+
+        if (VideoRecordingAction.STOP_RECORDING == action) {
+            copyVideos(containerId);
         }
     }
 
