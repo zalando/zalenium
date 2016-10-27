@@ -27,7 +27,7 @@ public class ParallelIT  {
     public static final String DOCKER_SELENIUM_URL = "http://localhost:4444/wd/hub";
 
     // We need a thread safe environment to handle the webDriver variable in each thread separately
-    private ThreadLocal<WebDriver> webDriver = new ThreadLocal<WebDriver>();
+    private ThreadLocal<WebDriver> webDriver = new ThreadLocal<>();
 
     // Data provider which returns the browsers that will be used to run the tests
     @DataProvider(name = "browsersAndPlatforms")
