@@ -149,7 +149,8 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         }
     }
 
-    private void processVideoAction(final VideoRecordingAction action, final String containerId) throws DockerException,
+    @VisibleForTesting
+    protected void processVideoAction(final VideoRecordingAction action, final String containerId) throws DockerException,
             InterruptedException, IOException, URISyntaxException {
         final String[] command = {"bash", "-c", action.getRecordingAction()};
         final ExecCreation execCreation = dockerClient.execCreate(containerId, command,
@@ -164,7 +165,8 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     }
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
-    private void copyVideos(final String containerId) throws IOException, DockerException, InterruptedException, URISyntaxException {
+    @VisibleForTesting
+    protected void copyVideos(final String containerId) throws IOException, DockerException, InterruptedException, URISyntaxException {
         File jarLocation = new File(this.getClass().getProtectionDomain().getCodeSource().getLocation().toURI().getPath());
         String localPath = jarLocation.getParent();
         LOGGER.log(Level.INFO, "{0} Copying files to: {1}", new Object[]{getNodeIpAndPort(), localPath});
@@ -185,6 +187,16 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                 outputStream.close();
             }
         }
+    }
+
+    @VisibleForTesting
+    protected static void setDockerClient(final DockerClient client) {
+        dockerClient = client;
+    }
+
+    @VisibleForTesting
+    protected static void restoreDockerClient() {
+        dockerClient = defaultDockerClient;
     }
 
     public DockerSeleniumNodePoller getDockerSeleniumNodePollerThread() {
