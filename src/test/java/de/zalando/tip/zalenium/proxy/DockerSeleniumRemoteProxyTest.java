@@ -196,9 +196,9 @@ public class DockerSeleniumRemoteProxyTest {
 
             Assert.assertFalse(spyProxy.isBusy());
             long sleepTime = spyProxy.getDockerSeleniumNodePollerThread().getSleepTimeBetweenChecks();
-            verify(spyProxy, timeout(sleepTime + 1))
+            verify(spyProxy, timeout(sleepTime + 1000))
                     .videoRecording(DockerSeleniumRemoteProxy.VideoRecordingAction.STOP_RECORDING);
-            verify(spyProxy, timeout(sleepTime + 1)).copyVideos(dockerContainer.id());
+            verify(spyProxy, timeout(sleepTime + 1000)).copyVideos(dockerContainer.id());
         } finally {
             DockerSeleniumRemoteProxy.restoreDockerClient();
         }
