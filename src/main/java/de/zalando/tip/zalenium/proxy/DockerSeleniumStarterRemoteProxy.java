@@ -249,6 +249,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
             envVariables.add("RC_CHROME=false");
             envVariables.add("RC_FIREFOX=false");
             envVariables.add("WAIT_TIMEOUT=20s");
+            envVariables.add("VIDEO_STOP_SLEEP_SECS=4");
             envVariables.add("SELENIUM_NODE_REGISTER_CYCLE=0");
             envVariables.add("SELENIUM_NODE_PROXY_PARAMS=de.zalando.tip.zalenium.proxy.DockerSeleniumRemoteProxy");
             if (BrowserType.CHROME.equalsIgnoreCase(browser)) {
@@ -293,6 +294,15 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
 
     private String getLatestDownloadedImage(String imageName) throws DockerException, InterruptedException {
         List<Image> images = dockerClient.listImages(DockerClient.ListImagesParam.byName(imageName));
+        if (images.isEmpty()) {
+            LOGGER.log(Level.SEVERE, "A downloaded docker-selenium image was not found!");
+            return DOCKER_SELENIUM_IMAGE;
+        }
+        for (int i = images.size() - 1; i >= 0; i--) {
+            if (images.get(i).repoTags() == null) {
+                images.remove(i);
+            }
+        }
         images.sort((o1, o2) -> o2.created().compareTo(o1.created()));
         return images.get(0).repoTags().get(0);
     }
@@ -386,7 +396,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
         try {
             List<Container> containerList = dockerClient.listContainers(DockerClient.ListContainersParam.withStatusExited());
             for (Container container : containerList) {
-                if (DOCKER_SELENIUM_IMAGE.equalsIgnoreCase(container.image())) {
+                if (container.image().contains(DOCKER_SELENIUM_IMAGE)) {
                     dockerClient.removeContainer(container.id());
                 }
             }
@@ -401,7 +411,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
             List<Container> containerList = dockerClient.listContainers(DockerClient.ListContainersParam.allContainers());
             int numberOfDockerSeleniumContainers = 0;
             for (Container container : containerList) {
-                if (DOCKER_SELENIUM_IMAGE.equalsIgnoreCase(container.image()) &&
+                if (container.image().contains(DOCKER_SELENIUM_IMAGE) &&
                         !"exited".equalsIgnoreCase(container.status())) {
                     numberOfDockerSeleniumContainers++;
                 }
