@@ -65,7 +65,7 @@
         <sonar.tests>src/test</sonar.tests>
         <sonar.junit.reportsPath>target/surefire-reports</sonar.junit.reportsPath>
         <sonar.jacoco.reportPath>target/jacoco.exec</sonar.jacoco.reportPath>
-        <skip.surefire.tests>false</skip.surefire.tests>
+        <skip.surefire.tests>${skipTests}</skip.surefire.tests>
     </properties>
 
     <dependencies>
