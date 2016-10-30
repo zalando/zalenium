@@ -31,7 +31,7 @@ trap DockerTerminate SIGTERM SIGINT SIGKILL
 StartUp()
 {
 
-    DOCKER_SELENIUM_IMAGE_COUNT=$(docker images elgalu/selenium -q | wc -l)
+    DOCKER_SELENIUM_IMAGE_COUNT=$(docker images | grep "elgalu/selenium" | wc -l)
     if [ ${DOCKER_SELENIUM_IMAGE_COUNT} -eq 0 ]; then
         echo "Seems that docker-selenium's image has not been downloaded yet, please run 'docker pull elgalu/selenium' first"
         exit 1
