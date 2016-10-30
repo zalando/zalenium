@@ -61,6 +61,7 @@ Examples:
 #### Using it
 * Just point your Selenium tests to http://localhost:4444/wd/hub and that's it!
 * You can use the [integration tests](./src/test/java/de/zalando/tip/zalenium/it/ParallelIT.java) we have to try Zalenium.
+* To see the recorded videos, check the `videos` subfolder, located where the JARs are running. 
 
 ## Contributions
 Any feedback or contributions are welcome! Please check our [guidelines](CONTRIBUTING.md), they just follow the general GitHub issue/PR flow.

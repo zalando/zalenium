@@ -115,7 +115,7 @@ StartUp()
     if [ "${IN_TRAVIS}" = "true" ]; then
         sleep 20
     else
-        sleep 2
+        sleep 10
     fi
     echo "DockerSeleniumStarter node started!"
 

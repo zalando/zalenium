@@ -1,6 +1,15 @@
 package de.zalando.tip.zalenium.proxy;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.spotify.docker.client.DefaultDockerClient;
+import com.spotify.docker.client.DockerClient;
+import com.spotify.docker.client.LogStream;
+import com.spotify.docker.client.exceptions.DockerException;
+import com.spotify.docker.client.messages.Container;
+import com.spotify.docker.client.messages.ExecCreation;
+import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
+import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
+import org.apache.commons.compress.utils.IOUtils;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.HttpClientBuilder;
@@ -11,6 +20,12 @@ import org.openqa.grid.internal.Registry;
 import org.openqa.grid.internal.TestSession;
 import org.openqa.grid.selenium.proxy.DefaultRemoteProxy;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.net.URISyntaxException;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -28,6 +43,23 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     private int amountOfExecutedTests;
 
     private DockerSeleniumNodePoller dockerSeleniumNodePollerThread = null;
+
+    private static final DockerClient defaultDockerClient = new DefaultDockerClient("unix:///var/run/docker.sock");
+    private static DockerClient dockerClient = defaultDockerClient;
+
+    public enum VideoRecordingAction {
+        START_RECORDING("start-video"), STOP_RECORDING("stop-video");
+
+        private String recordingAction;
+
+        VideoRecordingAction(String action) {
+            recordingAction = action;
+        }
+
+        public String getRecordingAction() {
+            return recordingAction;
+        }
+    }
 
 
     public DockerSeleniumRemoteProxy(RegistrationRequest request, Registry registry) {
@@ -47,7 +79,9 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
             return null;
         }
         if (increaseCounter()) {
-            return super.getNewSession(requestedCapability);
+            TestSession newSession = super.getNewSession(requestedCapability);
+            videoRecording(VideoRecordingAction.START_RECORDING);
+            return newSession;
         }
         LOGGER.log(Level.FINE, "{0} No more sessions allowed", getNodeIpAndPort());
         return null;
@@ -101,6 +135,70 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         return amountOfExecutedTests;
     }
 
+    public void videoRecording(final VideoRecordingAction action) {
+        try {
+            List<Container> containerList = dockerClient.listContainers(DockerClient.ListContainersParam.allContainers());
+            for (Container container : containerList) {
+                String containerName = "/ZALENIUM_" + getRemoteHost().getPort();
+                if (containerName.equalsIgnoreCase(container.names().get(0))) {
+                    processVideoAction(action, container.id());
+                }
+            }
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, getNodeIpAndPort() + e.toString(), e);
+        }
+    }
+
+    @VisibleForTesting
+    protected void processVideoAction(final VideoRecordingAction action, final String containerId) throws DockerException,
+            InterruptedException, IOException, URISyntaxException {
+        final String[] command = {"bash", "-c", action.getRecordingAction()};
+        final ExecCreation execCreation = dockerClient.execCreate(containerId, command,
+                DockerClient.ExecCreateParam.attachStdout(), DockerClient.ExecCreateParam.attachStderr());
+        final LogStream output = dockerClient.execStart(execCreation.id());
+        LOGGER.log(Level.INFO, "{0} {1} {2}", new Object[]{getNodeIpAndPort(),
+                action.getRecordingAction(), output.readFully()});
+
+        if (VideoRecordingAction.STOP_RECORDING == action) {
+            copyVideos(containerId);
+        }
+    }
+
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    @VisibleForTesting
+    protected void copyVideos(final String containerId) throws IOException, DockerException, InterruptedException, URISyntaxException {
+        File jarLocation = new File(this.getClass().getProtectionDomain().getCodeSource().getLocation().toURI().getPath());
+        String localPath = jarLocation.getParent();
+        LOGGER.log(Level.INFO, "{0} Copying files to: {1}", new Object[]{getNodeIpAndPort(), localPath});
+        try(TarArchiveInputStream tarStream = new TarArchiveInputStream(dockerClient.archiveContainer(containerId,
+                "/videos/"))) {
+            TarArchiveEntry entry;
+            while ((entry = tarStream.getNextTarEntry()) != null) {
+                if (entry.isDirectory()) {
+                    continue;
+                }
+                File curFile = new File(localPath, entry.getName());
+                File parent = curFile.getParentFile();
+                if (!parent.exists()) {
+                    parent.mkdirs();
+                }
+                OutputStream outputStream = new FileOutputStream(curFile);
+                IOUtils.copy(tarStream, outputStream);
+                outputStream.close();
+            }
+        }
+    }
+
+    @VisibleForTesting
+    protected static void setDockerClient(final DockerClient client) {
+        dockerClient = client;
+    }
+
+    @VisibleForTesting
+    protected static void restoreDockerClient() {
+        dockerClient = defaultDockerClient;
+    }
+
     public DockerSeleniumNodePoller getDockerSeleniumNodePollerThread() {
         return dockerSeleniumNodePollerThread;
     }
@@ -137,6 +235,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                     then the node executes its teardown.
                 */
                 if (!dockerSeleniumRemoteProxy.isBusy() && dockerSeleniumRemoteProxy.isTestSessionLimitReached()) {
+                    dockerSeleniumRemoteProxy.videoRecording(VideoRecordingAction.STOP_RECORDING);
                     shutdownNode();
                     return;
                 }
