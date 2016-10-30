@@ -188,11 +188,11 @@ public class DockerSeleniumRemoteProxyTest {
             newSession.getSlot().doFinishRelease();
 
             Assert.assertFalse(spyProxy.isBusy());
-            verify(spyProxy, timeout(20000))
+            verify(spyProxy, timeout(40000))
                     .videoRecording(DockerSeleniumRemoteProxy.VideoRecordingAction.STOP_RECORDING);
-            verify(spyProxy, timeout(20000))
+            verify(spyProxy, timeout(40000))
                     .processVideoAction(DockerSeleniumRemoteProxy.VideoRecordingAction.STOP_RECORDING, containerId);
-            verify(spyProxy, timeout(20000)).copyVideos(containerId);
+            verify(spyProxy, timeout(40000)).copyVideos(containerId);
         } finally {
             DockerSeleniumStarterRemoteProxy.setMaxDockerSeleniumContainers(0);
             if (containerId != null) {
