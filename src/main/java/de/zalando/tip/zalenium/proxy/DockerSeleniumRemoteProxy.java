@@ -156,14 +156,18 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     }
 
     @VisibleForTesting
-    protected void processVideoAction(final VideoRecordingAction action, final String containerId) throws DockerException,
-            InterruptedException, IOException, URISyntaxException {
+    protected void processVideoAction(final VideoRecordingAction action, final String containerId) throws
+            DockerException, InterruptedException, IOException, URISyntaxException {
         final String[] command = {"bash", "-c", action.getRecordingAction()};
         final ExecCreation execCreation = dockerClient.execCreate(containerId, command,
                 DockerClient.ExecCreateParam.attachStdout(), DockerClient.ExecCreateParam.attachStderr());
         final LogStream output = dockerClient.execStart(execCreation.id());
         LOGGER.log(Level.INFO, "{0} {1}", new Object[]{getNodeIpAndPort(), action.getRecordingAction()});
-        LOGGER.log(Level.INFO, "{0} {1}", new Object[]{getNodeIpAndPort(), output.readFully()});
+        try {
+            LOGGER.log(Level.INFO, "{0} {1}", new Object[]{getNodeIpAndPort(), output.readFully()});
+        } catch (RuntimeException e) {
+            LOGGER.log(Level.FINE, getNodeIpAndPort() + " " + e.toString(), e);
+        }
 
         if (VideoRecordingAction.STOP_RECORDING == action) {
             copyVideos(containerId);

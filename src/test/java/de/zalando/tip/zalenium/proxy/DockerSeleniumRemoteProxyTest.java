@@ -25,6 +25,8 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.hamcrest.Matchers.equalTo;
@@ -33,6 +35,7 @@ import static org.awaitility.Awaitility.*;
 
 public class DockerSeleniumRemoteProxyTest {
 
+    private static final Logger LOGGER = Logger.getLogger(DockerSeleniumRemoteProxyTest.class.getName());
     private DockerSeleniumRemoteProxy proxy;
     private Registry registry;
 
@@ -163,10 +166,11 @@ public class DockerSeleniumRemoteProxyTest {
             final ExecCreation execCreation = dockerClient.execCreate(containerId, command,
                     DockerClient.ExecCreateParam.attachStdout(), DockerClient.ExecCreateParam.attachStderr());
             final LogStream output = dockerClient.execStart(execCreation.id());
+            // Try catch because somehow this fails in Travis
             try {
                 output.readFully();
             } catch (RuntimeException e) {
-                System.out.println(e.toString());
+                LOGGER.log(Level.FINE, e.toString(), e);
             }
 
             // Start poller thread
