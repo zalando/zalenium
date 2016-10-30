@@ -11,7 +11,7 @@ before_install:
   - docker pull elgalu/selenium
 
 script:
-  - mvn clean verify -Pintegration-test -DthreadCountProperty=2
+  - mvn clean verify -Pintegration-test -DthreadCountProperty=2 -Dskip.surefire.tests=true
   - ./runSonarQubeAnalysis.sh
 
 cache:
