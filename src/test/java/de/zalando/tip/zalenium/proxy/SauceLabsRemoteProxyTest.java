@@ -133,8 +133,13 @@ public class SauceLabsRemoteProxyTest {
         testSession.forward(request, response, true);
 
         // The body should now have the SauceLabs variables
-        String expectedBody = String.format("{\"desiredCapabilities\":{\"browserName\":\"safari\",\"platform\":" +
-                "\"MAC\",\"username\":%s,\"accessKey\":%s}}", System.getenv("SAUCE_USERNAME"), System.getenv("SAUCE_ACCESS_KEY"));
+        String expectedBody = System.getenv("SAUCE_USERNAME") == null ?
+                String.format("{\"desiredCapabilities\":{\"browserName\":\"safari\",\"platform\":" +
+                        "\"MAC\",\"username\":%s,\"accessKey\":%s}}", System.getenv("SAUCE_USERNAME"),
+                        System.getenv("SAUCE_ACCESS_KEY")) :
+                String.format("{\"desiredCapabilities\":{\"browserName\":\"safari\",\"platform\":" +
+                                "\"MAC\",\"username\":\"%s\",\"accessKey\":\"%s\"}}", System.getenv("SAUCE_USERNAME"),
+                        System.getenv("SAUCE_ACCESS_KEY"));
         verify(request).setBody(expectedBody);
     }
 
