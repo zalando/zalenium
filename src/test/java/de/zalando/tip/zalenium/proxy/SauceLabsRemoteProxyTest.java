@@ -132,9 +132,13 @@ public class SauceLabsRemoteProxyTest {
 
         testSession.forward(request, response, true);
 
+        // User and api key depend on the environment where the test is running, in Travis they are setted up
+        String username = System.getenv("CI") == null ? System.getenv("SAUCE_USERNAME") : null;
+        String accessKey = System.getenv("CI") == null ? System.getenv("SAUCE_ACCESS_KEY") : null;
+
         // The body should now have the SauceLabs variables
-        String expectedBody = "{\"desiredCapabilities\":{\"browserName\":\"safari\",\"platform\":\"MAC\"," +
-                "\"username\":null,\"accessKey\":null}}";
+        String expectedBody = String.format("{\"desiredCapabilities\":{\"browserName\":\"safari\",\"platform\":" +
+                "\"MAC\",\"username\":%s,\"accessKey\":%s}}", username, accessKey);
         verify(request).setBody(expectedBody);
     }
 
