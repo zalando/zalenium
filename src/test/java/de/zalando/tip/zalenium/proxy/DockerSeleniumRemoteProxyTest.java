@@ -140,8 +140,8 @@ public class DockerSeleniumRemoteProxyTest {
     }
 
     @Test
-    public void videoRecordingIsStartedAndStopped() throws IOException, DockerException, InterruptedException,
-            URISyntaxException {
+    public void videoRecordingIsStartedAndStopped() throws DockerException, InterruptedException,
+            URISyntaxException, IOException {
 
         DockerClient dockerClient = new DefaultDockerClient("unix:///var/run/docker.sock");
         String containerId = null;
@@ -163,7 +163,11 @@ public class DockerSeleniumRemoteProxyTest {
             final ExecCreation execCreation = dockerClient.execCreate(containerId, command,
                     DockerClient.ExecCreateParam.attachStdout(), DockerClient.ExecCreateParam.attachStderr());
             final LogStream output = dockerClient.execStart(execCreation.id());
-            output.readFully();
+            try {
+                output.readFully();
+            } catch (RuntimeException e) {
+                System.out.println(e.toString());
+            }
 
             // Start poller thread
             spyProxy.startPolling();
