@@ -137,27 +137,37 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
 
     public void videoRecording(final VideoRecordingAction action) {
         try {
-            List<Container> containerList = dockerClient.listContainers(DockerClient.ListContainersParam.allContainers());
-            for (Container container : containerList) {
-                String containerName = "/ZALENIUM_" + getRemoteHost().getPort();
-                if (containerName.equalsIgnoreCase(container.names().get(0))) {
-                    processVideoAction(action, container.id());
-                }
-            }
+            String containerId = getContainerId();
+            processVideoAction(action, containerId);
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, getNodeIpAndPort() + e.toString(), e);
         }
     }
 
+    protected String getContainerId() throws DockerException, InterruptedException {
+        List<Container> containerList = dockerClient.listContainers(DockerClient.ListContainersParam.allContainers());
+        for (Container container : containerList) {
+            String containerName = "/ZALENIUM_" + getRemoteHost().getPort();
+            if (containerName.equalsIgnoreCase(container.names().get(0))) {
+                return container.id();
+            }
+        }
+        return null;
+    }
+
     @VisibleForTesting
-    protected void processVideoAction(final VideoRecordingAction action, final String containerId) throws DockerException,
-            InterruptedException, IOException, URISyntaxException {
+    protected void processVideoAction(final VideoRecordingAction action, final String containerId) throws
+            DockerException, InterruptedException, IOException, URISyntaxException {
         final String[] command = {"bash", "-c", action.getRecordingAction()};
         final ExecCreation execCreation = dockerClient.execCreate(containerId, command,
                 DockerClient.ExecCreateParam.attachStdout(), DockerClient.ExecCreateParam.attachStderr());
         final LogStream output = dockerClient.execStart(execCreation.id());
-        LOGGER.log(Level.INFO, "{0} {1} {2}", new Object[]{getNodeIpAndPort(),
-                action.getRecordingAction(), output.readFully()});
+        LOGGER.log(Level.INFO, "{0} {1}", new Object[]{getNodeIpAndPort(), action.getRecordingAction()});
+        try {
+            LOGGER.log(Level.INFO, "{0} {1}", new Object[]{getNodeIpAndPort(), output.readFully()});
+        } catch (RuntimeException e) {
+            LOGGER.log(Level.FINE, getNodeIpAndPort() + " " + e.toString(), e);
+        }
 
         if (VideoRecordingAction.STOP_RECORDING == action) {
             copyVideos(containerId);
@@ -169,7 +179,6 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     protected void copyVideos(final String containerId) throws IOException, DockerException, InterruptedException, URISyntaxException {
         File jarLocation = new File(this.getClass().getProtectionDomain().getCodeSource().getLocation().toURI().getPath());
         String localPath = jarLocation.getParent();
-        LOGGER.log(Level.INFO, "{0} Copying files to: {1}", new Object[]{getNodeIpAndPort(), localPath});
         try(TarArchiveInputStream tarStream = new TarArchiveInputStream(dockerClient.archiveContainer(containerId,
                 "/videos/"))) {
             TarArchiveEntry entry;
@@ -187,6 +196,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                 outputStream.close();
             }
         }
+        LOGGER.log(Level.INFO, "{0} Video files copies to: {1}", new Object[]{getNodeIpAndPort(), localPath});
     }
 
     @VisibleForTesting
