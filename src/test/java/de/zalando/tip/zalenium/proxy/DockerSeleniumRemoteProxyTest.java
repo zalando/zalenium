@@ -1,65 +1,82 @@
 package de.zalando.tip.zalenium.proxy;
 
+import com.spotify.docker.client.DefaultDockerClient;
 import com.spotify.docker.client.DockerClient;
 import com.spotify.docker.client.LogStream;
 import com.spotify.docker.client.exceptions.DockerException;
-import com.spotify.docker.client.messages.Container;
 import com.spotify.docker.client.messages.ExecCreation;
-import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
-import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
+import de.zalando.tip.zalenium.util.TestUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.StatusLine;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.openqa.grid.common.GridRole;
 import org.openqa.grid.common.RegistrationRequest;
 import org.openqa.grid.internal.Registry;
 import org.openqa.grid.internal.TestSession;
-import org.openqa.grid.internal.TestSlot;
 import org.openqa.selenium.Platform;
 import org.openqa.selenium.remote.BrowserType;
 import org.openqa.selenium.remote.CapabilityType;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-import static com.spotify.docker.client.DockerClient.*;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.hamcrest.Matchers.equalTo;
-import static org.mockito.Mockito.*;
-import static org.awaitility.Awaitility.*;
+import static org.awaitility.Awaitility.await;
+import static org.awaitility.Awaitility.to;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.timeout;
+import static org.mockito.Mockito.times;
 
 public class DockerSeleniumRemoteProxyTest {
 
+    private static final Logger LOGGER = Logger.getLogger(DockerSeleniumRemoteProxyTest.class.getName());
     private DockerSeleniumRemoteProxy proxy;
+    private Registry registry;
 
     @Before
-    public void setup() {
-        Registry registry = Registry.newInstance();
+    public void setup() throws DockerException, InterruptedException, IOException {
+        registry = Registry.newInstance();
 
         // Creating the configuration and the registration request of the proxy (node)
-        RegistrationRequest request = new RegistrationRequest();
-        request.setRole(GridRole.NODE);
-        request.getConfiguration().put(RegistrationRequest.MAX_SESSION, 5);
-        request.getConfiguration().put(RegistrationRequest.AUTO_REGISTER, true);
-        request.getConfiguration().put(RegistrationRequest.REGISTER_CYCLE, 5000);
-        request.getConfiguration().put(RegistrationRequest.HUB_HOST, "localhost");
-        request.getConfiguration().put(RegistrationRequest.HUB_PORT, 4444);
-        request.getConfiguration().put(RegistrationRequest.PORT, 40000);
-        request.getConfiguration().put(RegistrationRequest.PROXY_CLASS, "de.zalando.tip.zalenium.proxy.DockerSeleniumRemoteProxy");
-        request.getConfiguration().put(RegistrationRequest.REMOTE_HOST, "http://localhost:4444");
+        RegistrationRequest request = TestUtils.getRegistrationRequestForTesting(40000,
+                DockerSeleniumRemoteProxy.class.getCanonicalName());
         request.getCapabilities().clear();
         request.getCapabilities().addAll(DockerSeleniumStarterRemoteProxy.getDockerSeleniumFallbackCapabilities());
 
         // Creating the proxy
         proxy = DockerSeleniumRemoteProxy.getNewInstance(request, registry);
+
+        DockerClient dockerClient = mock(DockerClient.class);
+        ExecCreation execCreation = mock(ExecCreation.class);
+        LogStream logStream = mock(LogStream.class);
+        when(logStream.readFully()).thenReturn("ANY_STRING");
+        when(execCreation.id()).thenReturn("ANY_ID");
+        when(dockerClient.execCreate(anyString(), any(String[].class), any(DockerClient.ExecCreateParam.class),
+                any(DockerClient.ExecCreateParam.class))).thenReturn(execCreation);
+        when(dockerClient.execStart(anyString())).thenReturn(logStream);
+
+        DockerSeleniumRemoteProxy.setDockerClient(dockerClient);
+    }
+
+    @After
+    public void tearDown() {
+        DockerSeleniumRemoteProxy.restoreDockerClient();
     }
 
     @Test
@@ -108,7 +125,8 @@ public class DockerSeleniumRemoteProxyTest {
     }
 
     @Test
-    public void pollerThreadTearsDownNodeAfterTestIsCompleted() throws InterruptedException, IOException {
+    public void pollerThreadTearsDownNodeAfterTestIsCompleted() throws IOException {
+
         // Supported desired capability for the test session
         Map<String, Object> requestedCapability = getCapabilitySupportedByDockerSelenium();
 
@@ -131,50 +149,39 @@ public class DockerSeleniumRemoteProxyTest {
         // After running one test, the node shouldn't be busy and also down
         Assert.assertFalse(proxy.isBusy());
         long sleepTime = proxy.getDockerSeleniumNodePollerThread().getSleepTimeBetweenChecks();
-        await().atMost(sleepTime + 1, MILLISECONDS).untilCall(to(proxy).isDown(), equalTo(true));
+        await().atMost(sleepTime + 2000, MILLISECONDS).untilCall(to(proxy).isDown(), equalTo(true));
     }
 
     @Test
-    public void videoRecordingIsStartedAndStopped() throws IOException, DockerException, InterruptedException,
-            URISyntaxException {
+    public void videoRecordingIsStartedAndStopped() throws DockerException, InterruptedException,
+            URISyntaxException, IOException {
+
+        DockerClient dockerClient = new DefaultDockerClient("unix:///var/run/docker.sock");
+        String containerId = null;
         try {
+            // Create a docker-selenium container
+            RegistrationRequest request = TestUtils.getRegistrationRequestForTesting(30000,
+                    DockerSeleniumStarterRemoteProxy.class.getCanonicalName());
+            DockerSeleniumStarterRemoteProxy dsProxy = new DockerSeleniumStarterRemoteProxy(request, registry);
+            DockerSeleniumStarterRemoteProxy.setMaxDockerSeleniumContainers(1);
+            dsProxy.getNewSession(getCapabilitySupportedByDockerSelenium());
+
             // Creating a spy proxy to verify the invoked methods
             DockerSeleniumRemoteProxy spyProxy = spy(proxy);
-
-            // Mock the docker client to get some listed containers
-            DockerClient dockerClient = mock(DockerClient.class);
-            Container dockerContainer = mock(Container.class);
-            List<String> containerNames = new ArrayList<>();
-            containerNames.add("/ZALENIUM_4444");
-
-            when(dockerContainer.names()).thenReturn(containerNames);
-            when(dockerContainer.id()).thenReturn("ZALENIUM_CONTAINER_ID");
-
-            List<Container> containerList = new ArrayList<>();
-            containerList.add(dockerContainer);
-            ExecCreation execCreation = mock(ExecCreation.class);
-            LogStream logStream = mock(LogStream.class);
-
-            when(execCreation.id()).thenReturn(anyString());
-            when(dockerClient.listContainers(ListContainersParam.allContainers())).thenReturn(containerList);
-            when(dockerClient.execCreate(anyString(), any(String[].class), any(ExecCreateParam.class),
-                    any(ExecCreateParam.class)))
-                    .thenReturn(execCreation);
-            when(logStream.readFully()).thenReturn("");
-            when(dockerClient.execStart(execCreation.id())).thenReturn(logStream);
-
-            TarArchiveInputStream tarArchiveInputStream = mock(TarArchiveInputStream.class);
-            TarArchiveEntry directoryEntry = mock(TarArchiveEntry.class);
-            TarArchiveEntry fileEntry = mock(TarArchiveEntry.class);
-            when(directoryEntry.isDirectory()).thenReturn(true);
-            when(fileEntry.getName()).thenReturn("file.mkv");
-            when(tarArchiveInputStream.getNextTarEntry()).thenReturn(directoryEntry);
-            when(dockerClient.archiveContainer(dockerContainer.id(), "/videos/")).thenReturn(tarArchiveInputStream);
-
             DockerSeleniumRemoteProxy.setDockerClient(dockerClient);
 
-            // Supported desired capability for the test session
-            Map<String, Object> requestedCapability = getCapabilitySupportedByDockerSelenium();
+            // Wait for the container to be ready
+            containerId = spyProxy.getContainerId();
+            final String[] command = {"bash", "-c", "wait_all_done 30s"};
+            final ExecCreation execCreation = dockerClient.execCreate(containerId, command,
+                    DockerClient.ExecCreateParam.attachStdout(), DockerClient.ExecCreateParam.attachStderr());
+            dockerClient.execStart(execCreation.id());
+
+            // Waiting until the container is ready
+            final String finalContainerId = containerId;
+            Callable<Boolean> callable = () ->
+                    !dockerClient.topContainer(finalContainerId).processes().toString().contains("wait_all_done");
+            await().atMost(40, SECONDS).pollInterval(2, SECONDS).until(callable);
 
             // Start poller thread
             spyProxy.startPolling();
@@ -183,24 +190,29 @@ public class DockerSeleniumRemoteProxyTest {
             spyProxy.getDockerSeleniumNodePollerThread().setClient(getMockedClient());
 
             // Get a test session
-            TestSession newSession = spyProxy.getNewSession(requestedCapability);
+            TestSession newSession = spyProxy.getNewSession(getCapabilitySupportedByDockerSelenium());
             Assert.assertNotNull(newSession);
 
             // Assert video recording started
             verify(spyProxy, times(1)).videoRecording(DockerSeleniumRemoteProxy.VideoRecordingAction.START_RECORDING);
             verify(spyProxy, times(1)).processVideoAction(DockerSeleniumRemoteProxy.VideoRecordingAction.START_RECORDING,
-                    dockerContainer.id());
+                    containerId);
 
             // We release the sessions, the node should be free
-            spyProxy.getTestSlots().forEach(TestSlot::doFinishRelease);
+            newSession.getSlot().doFinishRelease();
 
             Assert.assertFalse(spyProxy.isBusy());
-            long sleepTime = spyProxy.getDockerSeleniumNodePollerThread().getSleepTimeBetweenChecks();
-            verify(spyProxy, timeout(sleepTime + 1000))
+            verify(spyProxy, timeout(40000))
                     .videoRecording(DockerSeleniumRemoteProxy.VideoRecordingAction.STOP_RECORDING);
-            verify(spyProxy, timeout(sleepTime + 1000)).copyVideos(dockerContainer.id());
+            verify(spyProxy, timeout(40000))
+                    .processVideoAction(DockerSeleniumRemoteProxy.VideoRecordingAction.STOP_RECORDING, containerId);
+            verify(spyProxy, timeout(40000)).copyVideos(containerId);
         } finally {
-            DockerSeleniumRemoteProxy.restoreDockerClient();
+            DockerSeleniumStarterRemoteProxy.setMaxDockerSeleniumContainers(0);
+            if (containerId != null) {
+                dockerClient.stopContainer(containerId, 5);
+                dockerClient.removeContainer(containerId);
+            }
         }
     }
 
