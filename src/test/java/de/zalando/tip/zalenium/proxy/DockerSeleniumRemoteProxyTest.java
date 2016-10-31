@@ -25,13 +25,23 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.Callable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.hamcrest.Matchers.equalTo;
-import static org.mockito.Mockito.*;
-import static org.awaitility.Awaitility.*;
+import static org.awaitility.Awaitility.await;
+import static org.awaitility.Awaitility.to;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.timeout;
+import static org.mockito.Mockito.times;
 
 public class DockerSeleniumRemoteProxyTest {
 
@@ -165,13 +175,13 @@ public class DockerSeleniumRemoteProxyTest {
             final String[] command = {"bash", "-c", "wait_all_done 30s"};
             final ExecCreation execCreation = dockerClient.execCreate(containerId, command,
                     DockerClient.ExecCreateParam.attachStdout(), DockerClient.ExecCreateParam.attachStderr());
-            final LogStream output = dockerClient.execStart(execCreation.id());
-            // Try catch because somehow this fails in Travis
-            try {
-                output.readFully();
-            } catch (RuntimeException e) {
-                LOGGER.log(Level.FINE, e.toString(), e);
-            }
+            dockerClient.execStart(execCreation.id());
+
+            // Waiting until the container is ready
+            final String finalContainerId = containerId;
+            Callable<Boolean> callable = () ->
+                    !dockerClient.topContainer(finalContainerId).processes().toString().contains("wait_all_done");
+            await().atMost(40, SECONDS).pollInterval(2, SECONDS).until(callable);
 
             // Start poller thread
             spyProxy.startPolling();
