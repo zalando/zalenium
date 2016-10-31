@@ -5,9 +5,9 @@ import com.spotify.docker.client.exceptions.DockerException;
 import com.spotify.docker.client.messages.ContainerConfig;
 import com.spotify.docker.client.messages.ContainerCreation;
 import de.zalando.tip.zalenium.util.Environment;
+import de.zalando.tip.zalenium.util.TestUtils;
 import org.hamcrest.CoreMatchers;
 import org.junit.*;
-import org.openqa.grid.common.GridRole;
 import org.openqa.grid.common.RegistrationRequest;
 import org.openqa.grid.internal.Registry;
 import org.openqa.grid.internal.TestSession;
@@ -30,24 +30,17 @@ public class DockerSeleniumStarterRemoteProxyTest {
         registry = Registry.newInstance();
 
         // Creating the configuration and the registration request of the proxy (node)
-        RegistrationRequest request = new RegistrationRequest();
-        request.setRole(GridRole.NODE);
-        request.getConfiguration().put(RegistrationRequest.MAX_SESSION, 5);
-        request.getConfiguration().put(RegistrationRequest.AUTO_REGISTER, true);
-        request.getConfiguration().put(RegistrationRequest.REGISTER_CYCLE, 5000);
-        request.getConfiguration().put(RegistrationRequest.HUB_HOST, "localhost");
-        request.getConfiguration().put(RegistrationRequest.HUB_PORT, 4444);
-        request.getConfiguration().put(RegistrationRequest.PORT, 30000);
-        request.getConfiguration().put(RegistrationRequest.PROXY_CLASS, "de.zalando.tip.zalenium.proxy.DockerSeleniumStarterRemoteProxy");
-        request.getConfiguration().put(RegistrationRequest.REMOTE_HOST, "http://localhost:4444");
+        RegistrationRequest request = TestUtils.getRegistrationRequestForTesting(30000,
+                DockerSeleniumStarterRemoteProxy.class.getCanonicalName());
 
         // Creating the proxy
         DockerSeleniumStarterRemoteProxy proxy = DockerSeleniumStarterRemoteProxy.getNewInstance(request, registry);
 
         // Mock the docker client
         DockerClient dockerClient = mock(DockerClient.class);
-        ContainerCreation containerCreation = new ContainerCreation("ANY_STRING");
-        when(dockerClient.createContainer((ContainerConfig)notNull())).thenReturn(containerCreation);
+        ContainerCreation containerCreation = mock(ContainerCreation.class);
+        when(containerCreation.id()).thenReturn("ANY_CONTAINER_ID");
+        when(dockerClient.createContainer(any(ContainerConfig.class), anyString())).thenReturn(containerCreation);
 
         DockerSeleniumStarterRemoteProxy.setDockerClient(dockerClient);
 
