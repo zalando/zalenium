@@ -141,9 +141,10 @@ RUN  mkdir -p ${SEL_HOME} \
 # Zalenium
 #==========
 ENV DOCKER_ALONGSIDE_DOCKER="true"
-ENV ZAL_VER="0.4.0-SNAPSHOT"
+ENV ZAL_VER="0.5.0-SNAPSHOT"
 ADD ./scripts/entry.sh /usr/bin/
 ADD ./target/zalenium.sh ${SEL_HOME}/
+RUN sudo chmod +x ${SEL_HOME}/zalenium.sh
 ADD ./target/zalenium-${ZAL_VER}.jar ${SEL_HOME}/zalenium-${ZAL_VER}.jar
 # https://github.com/zalando-incubator/zalenium/releases/download/v${ZAL_VER}/zalenium-release-v${ZAL_VER}.tar.gz
 
