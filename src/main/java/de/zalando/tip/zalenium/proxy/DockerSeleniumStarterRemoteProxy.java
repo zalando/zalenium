@@ -270,7 +270,6 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
                         .image(getLatestDownloadedImage(DOCKER_SELENIUM_IMAGE))
                         .env(envVariables)
                         .hostConfig(hostConfig)
-                        .exposedPorts(nodePort + "/tcp")
                         .build();
 
                 String containerName = String.format("%s_%s", "ZALENIUM", nodePort);
