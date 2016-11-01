@@ -180,10 +180,10 @@ ShutDown()
         fi
     fi
 
-    CONTAINERS=$(docker ps -a -f ancestor=elgalu/selenium -q | wc -l)
+    CONTAINERS=$(docker ps -a -f name=ZALENIUM -q | wc -l)
     if [ ${CONTAINERS} -gt 0 ]; then
         echo "Removing exited docker-selenium containers..."
-        docker rm -f $(docker ps -a -f ancestor=elgalu/selenium -q)
+        docker rm -f $(docker ps -a -f name=ZALENIUM -q)
     fi
 }
 
