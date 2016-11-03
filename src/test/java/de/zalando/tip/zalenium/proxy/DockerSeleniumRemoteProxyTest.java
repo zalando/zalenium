@@ -51,7 +51,7 @@ public class DockerSeleniumRemoteProxyTest {
     private Registry registry;
 
     @Before
-    public void setup() throws DockerException, InterruptedException, IOException {
+    public void setUp() throws DockerException, InterruptedException, IOException {
         registry = Registry.newInstance();
 
         // Creating the configuration and the registration request of the proxy (node)
