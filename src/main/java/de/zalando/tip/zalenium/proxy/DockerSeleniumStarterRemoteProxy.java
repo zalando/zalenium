@@ -273,7 +273,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
                         .hostConfig(hostConfig)
                         .build();
 
-                String containerName = String.format("%s_%s", "ZALENIUM", nodePort);
+                String containerName = String.format("%s_%s", "zalenium", nodePort);
                 final ContainerCreation dockerSeleniumContainer = dockerClient.createContainer(containerConfig,
                         containerName);
                 dockerClient.startContainer(dockerSeleniumContainer.id());

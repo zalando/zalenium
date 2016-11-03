@@ -9,10 +9,17 @@ services:
 
 before_install:
   - docker pull elgalu/selenium
+  - curl https://www.jpm4j.org/install/script | sh
+  - jpm install com.codacy:codacy-coverage-reporter:assembly
 
 script:
-  - mvn clean verify -Pintegration-test -DthreadCountProperty=2 -Dskip.surefire.tests=true
-  - ./runSonarQubeAnalysis.sh
+#  - mvn clean verify -Pintegration-test -DthreadCountProperty=2 -Dskip.surefire.tests=true
+  - mvn clean org.jacoco:jacoco-maven-plugin:prepare-agent package
+#  - ./runSonarQubeAnalysis.sh
+
+after_script:
+  - codacy-coverage-reporter -l Java -r ./target/jacoco/jacoco.xml --prefix ./src/main/java/
+  - ls **/**
 
 cache:
   directories:

@@ -4,6 +4,9 @@ import com.spotify.docker.client.DefaultDockerClient;
 import com.spotify.docker.client.DockerClient;
 import com.spotify.docker.client.LogStream;
 import com.spotify.docker.client.exceptions.DockerException;
+import com.spotify.docker.client.messages.Container;
+import com.spotify.docker.client.messages.ContainerConfig;
+import com.spotify.docker.client.messages.ContainerCreation;
 import com.spotify.docker.client.messages.ExecCreation;
 import de.zalando.tip.zalenium.util.TestUtils;
 import org.apache.http.HttpResponse;
@@ -24,6 +27,7 @@ import org.openqa.selenium.remote.CapabilityType;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.logging.Level;
@@ -158,7 +162,31 @@ public class DockerSeleniumRemoteProxyTest {
 
         DockerClient dockerClient = new DefaultDockerClient("unix:///var/run/docker.sock");
         String containerId = null;
+        String zaleniumContainerId = null;
+        String busyboxLatestImage = "busybox:latest";
         try {
+            // Removing first all docker-selenium containers
+            List<Container> containerList = dockerClient.listContainers(DockerClient.ListContainersParam.allContainers());
+            for (Container container : containerList) {
+                String containerName = "zalenium";
+                if (container.names().get(0).contains(containerName)) {
+                    dockerClient.stopContainer(container.id(), 5);
+                    dockerClient.removeContainer(container.id());
+                }
+            }
+
+            // We create another container first with the name "zalenium", so the container creation in the
+            // next step works
+            dockerClient.pull(busyboxLatestImage);
+            final ContainerConfig containerConfig = ContainerConfig.builder()
+                    .image(busyboxLatestImage)
+                    // make sure the container's busy doing something upon startup
+                    .cmd("sh", "-c", "while :; do sleep 1; done")
+                    .build();
+            final ContainerCreation containerCreation = dockerClient.createContainer(containerConfig, "zalenium");
+            zaleniumContainerId = containerCreation.id();
+            dockerClient.startContainer(zaleniumContainerId);
+
             // Create a docker-selenium container
             RegistrationRequest request = TestUtils.getRegistrationRequestForTesting(30000,
                     DockerSeleniumStarterRemoteProxy.class.getCanonicalName());
@@ -172,6 +200,8 @@ public class DockerSeleniumRemoteProxyTest {
 
             // Wait for the container to be ready
             containerId = spyProxy.getContainerId();
+            LOGGER.info(zaleniumContainerId);
+            LOGGER.info(containerId);
             final String[] command = {"bash", "-c", "wait_all_done 30s"};
             final ExecCreation execCreation = dockerClient.execCreate(containerId, command,
                     DockerClient.ExecCreateParam.attachStdout(), DockerClient.ExecCreateParam.attachStderr());
@@ -213,6 +243,11 @@ public class DockerSeleniumRemoteProxyTest {
                 dockerClient.stopContainer(containerId, 5);
                 dockerClient.removeContainer(containerId);
             }
+            if (zaleniumContainerId != null) {
+                dockerClient.stopContainer(zaleniumContainerId, 5);
+                dockerClient.removeContainer(zaleniumContainerId);
+            }
+            dockerClient.removeImage(busyboxLatestImage);
         }
     }
 

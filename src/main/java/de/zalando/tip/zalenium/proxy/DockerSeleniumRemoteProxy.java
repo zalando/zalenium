@@ -147,7 +147,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     protected String getContainerId() throws DockerException, InterruptedException {
         List<Container> containerList = dockerClient.listContainers(DockerClient.ListContainersParam.allContainers());
         for (Container container : containerList) {
-            String containerName = "/ZALENIUM_" + getRemoteHost().getPort();
+            String containerName = "/zalenium" + getRemoteHost().getPort();
             if (containerName.equalsIgnoreCase(container.names().get(0))) {
                 return container.id();
             }
