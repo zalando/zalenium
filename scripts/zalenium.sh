@@ -217,8 +217,8 @@ case ${SCRIPT_ACTION} in
             exit 1
         fi
         while [ "$1" != "" ]; do
-            PARAM=`echo $1`
-            VALUE=`echo $2`
+            PARAM=$(echo $1)
+            VALUE=$(echo $2)
             case ${PARAM} in
                 -h | --help)
                     usage
