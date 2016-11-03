@@ -15,12 +15,11 @@ before_install:
 
 script:
 #  - mvn clean verify -Pintegration-test -DthreadCountProperty=2 -Dskip.surefire.tests=true
-  - mvn clean org.jacoco:jacoco-maven-plugin:report package
+  - mvn clean package -Pcoverage-report
 #  - ./runSonarQubeAnalysis.sh
 
 after_script:
-  - ${HOME}/jpm/bin/codacy-coverage-reporter -l Java -r ./target/jacoco/jacoco.xml --prefix ./src/main/java/
-  - ls **/**
+  - ${HOME}/jpm/bin/codacy-coverage-reporter -l Java -r ./target/site/jacoco/jacoco.xml --prefix ./src/main/java/
 
 cache:
   directories:

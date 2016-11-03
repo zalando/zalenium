@@ -30,8 +30,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -49,7 +47,6 @@ import static org.mockito.Mockito.times;
 
 public class DockerSeleniumRemoteProxyTest {
 
-    private static final Logger LOGGER = Logger.getLogger(DockerSeleniumRemoteProxyTest.class.getName());
     private DockerSeleniumRemoteProxy proxy;
     private Registry registry;
 
@@ -199,9 +196,9 @@ public class DockerSeleniumRemoteProxyTest {
             DockerSeleniumRemoteProxy.setDockerClient(dockerClient);
 
             // Wait for the container to be ready
+            Callable<Boolean> callable = () -> spyProxy.getContainerId() != null;
+            await().atMost(10, SECONDS).pollInterval(500, MILLISECONDS).until(callable);
             containerId = spyProxy.getContainerId();
-            LOGGER.info(zaleniumContainerId);
-            LOGGER.info(containerId);
             final String[] command = {"bash", "-c", "wait_all_done 30s"};
             final ExecCreation execCreation = dockerClient.execCreate(containerId, command,
                     DockerClient.ExecCreateParam.attachStdout(), DockerClient.ExecCreateParam.attachStderr());
@@ -209,7 +206,7 @@ public class DockerSeleniumRemoteProxyTest {
 
             // Waiting until the container is ready
             final String finalContainerId = containerId;
-            Callable<Boolean> callable = () ->
+            callable = () ->
                     !dockerClient.topContainer(finalContainerId).processes().toString().contains("wait_all_done");
             await().atMost(40, SECONDS).pollInterval(2, SECONDS).until(callable);
 

@@ -270,6 +270,37 @@
             </build>
         </profile>
         <profile>
+            <id>coverage-report</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.jacoco</groupId>
+                        <artifactId>jacoco-maven-plugin</artifactId>
+                        <version>0.7.7.201606060606</version>
+                        <configuration>
+                            <destFile>${basedir}/target/coverage-reports/coverage-unit.exec</destFile>
+                            <dataFile>${basedir}/target/coverage-reports/coverage-unit.exec</dataFile>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>coverage-initialize</id>
+                                <goals>
+                                    <goal>prepare-agent</goal>
+                                </goals>
+                            </execution>
+                            <execution>
+                                <id>coverage-site</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>report</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
             <id>integration-test</id>
             <build>
                 <plugins>
