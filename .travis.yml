@@ -9,8 +9,9 @@ services:
 
 before_install:
   - docker pull elgalu/selenium
-  - curl https://www.jpm4j.org/install/script | sh
-  - jpm install com.codacy:codacy-coverage-reporter:assembly
+  - curl -sL https://bndtools.ci.cloudbees.com/job/bnd.master/lastSuccessfulBuild/artifact/biz.aQute.jpm/generated/biz.aQute.jpm.run.jar >jpm4j.jar
+  - java -jar jpm4j.jar --user init
+  - ${HOME}/jpm/bin/jpm install com.codacy:codacy-coverage-reporter:assembly
 
 script:
 #  - mvn clean verify -Pintegration-test -DthreadCountProperty=2 -Dskip.surefire.tests=true
@@ -18,7 +19,7 @@ script:
 #  - ./runSonarQubeAnalysis.sh
 
 after_script:
-  - codacy-coverage-reporter -l Java -r ./target/jacoco/jacoco.xml --prefix ./src/main/java/
+  - ${HOME}/jpm/bin/codacy-coverage-reporter -l Java -r ./target/jacoco/jacoco.xml --prefix ./src/main/java/
   - ls **/**
 
 cache:
