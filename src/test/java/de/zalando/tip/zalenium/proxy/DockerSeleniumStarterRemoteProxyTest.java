@@ -239,4 +239,17 @@ public class DockerSeleniumStarterRemoteProxyTest {
         Assert.assertEquals(amountOfFirefoxContainers, DockerSeleniumStarterRemoteProxy.getFirefoxContainersOnStartup());
     }
 
+    @Test
+    public void noNegativeValuesAreAllowedForStartup() {
+        DockerSeleniumStarterRemoteProxy.setChromeContainersOnStartup(-1);
+        DockerSeleniumStarterRemoteProxy.setFirefoxContainersOnStartup(-1);
+        DockerSeleniumStarterRemoteProxy.setMaxDockerSeleniumContainers(-1);
+        Assert.assertEquals(DockerSeleniumStarterRemoteProxy.DEFAULT_AMOUNT_CHROME_CONTAINERS,
+                DockerSeleniumStarterRemoteProxy.getChromeContainersOnStartup());
+        Assert.assertEquals(DockerSeleniumStarterRemoteProxy.DEFAULT_AMOUNT_FIREFOX_CONTAINERS,
+                DockerSeleniumStarterRemoteProxy.getFirefoxContainersOnStartup());
+        Assert.assertEquals(DockerSeleniumStarterRemoteProxy.DEFAULT_AMOUNT_DOCKER_SELENIUM_CONTAINERS_RUNNING,
+                DockerSeleniumStarterRemoteProxy.getMaxDockerSeleniumContainers());
+    }
+
 }
