@@ -11,9 +11,9 @@ before_install:
   - docker pull elgalu/selenium
 
 script:
+  - ./runSonarQubeAnalysis.sh
 #  - mvn clean verify -Pintegration-test -DthreadCountProperty=2 -Dskip.surefire.tests=true
   - mvn clean package -Pcoverage-report
-  - ./runSonarQubeAnalysis.sh
 
 after_script:
   - bash <(curl -s https://codecov.io/bash)
