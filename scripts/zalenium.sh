@@ -3,7 +3,7 @@
 CHROME_CONTAINERS=1
 FIREFOX_CONTAINERS=1
 MAX_DOCKER_SELENIUM_CONTAINERS=10
-SELENIUM_ARTIFACT="$(pwd)/selenium-server-standalone-2.53.1.jar"
+SELENIUM_ARTIFACT="$(pwd)/selenium-server-standalone-${selenium-server.major-minor.version}.${selenium-server.patch-level.version}.jar"
 ZALENIUM_ARTIFACT="$(pwd)/${project.build.finalName}.jar"
 SAUCE_LABS_ENABLED=true
 
@@ -180,10 +180,10 @@ ShutDown()
         fi
     fi
 
-    CONTAINERS=$(docker ps -a -f name=ZALENIUM -q | wc -l)
+    CONTAINERS=$(docker ps -a -f name=zalenium_ -q | wc -l)
     if [ ${CONTAINERS} -gt 0 ]; then
         echo "Removing exited docker-selenium containers..."
-        docker rm -f $(docker ps -a -f name=ZALENIUM -q)
+        docker rm -f $(docker ps -a -f name=zalenium_ -q)
     fi
 }
 
@@ -197,8 +197,6 @@ function usage()
     echo -e "\t --chromeContainers -> Number of Chrome containers created on startup. Default is 1 when parameter is absent."
     echo -e "\t --firefoxContainers -> Number of Firefox containers created on startup. Default is 1 when parameter is absent."
     echo -e "\t --maxDockerSeleniumContainers -> Max number of docker-selenium containers running at the same time. Default is 10 when parameter is absent."
-    echo -e "\t --seleniumArtifact -> Absolute path of the Selenium JAR. If parameter absent, the JAR is expected to be in the same folder."
-    echo -e "\t --zaleniumArtifact -> Absolute path of the Zalenium JAR. If parameter absent, the JAR is expected to be in the same folder."
     echo -e "\t --sauceLabsEnabled -> Determines if the Sauce Labs node is started. Defaults to 'true' when parameter absent."
     echo -e "\t stop"
     echo ""
@@ -232,12 +230,6 @@ case ${SCRIPT_ACTION} in
                     ;;
                 --maxDockerSeleniumContainers)
                     MAX_DOCKER_SELENIUM_CONTAINERS=${VALUE}
-                    ;;
-                --seleniumArtifact)
-                    SELENIUM_ARTIFACT=${VALUE}
-                    ;;
-                --zaleniumArtifact)
-                    ZALENIUM_ARTIFACT=${VALUE}
                     ;;
                 --sauceLabsEnabled)
                     SAUCE_LABS_ENABLED=${VALUE}
