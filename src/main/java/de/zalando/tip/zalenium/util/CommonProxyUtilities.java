@@ -36,11 +36,9 @@ public class CommonProxyUtilities {
     }
 
     public static JsonElement readJSONFromFile(String fileName) {
-        try {
-            FileReader fr = new FileReader(new File(currentLocalPath(), fileName));
+        try(FileReader fr = new FileReader(new File(currentLocalPath(), fileName))) {
             BufferedReader rd = new BufferedReader(fr);
             String jsonText = readAll(rd);
-            fr.close();
             return new JsonParser().parse(jsonText);
         } catch (Exception e) {
             LOG.log(Level.SEVERE, e.toString(), e);
