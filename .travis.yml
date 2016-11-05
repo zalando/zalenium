@@ -12,7 +12,7 @@ before_install:
 
 script:
   - ./runSonarQubeAnalysis.sh
-#  - mvn clean verify -Pintegration-test -DthreadCountProperty=2 -Dskip.surefire.tests=true
+  - mvn clean verify -Pintegration-test -DthreadCountProperty=2 -Dskip.surefire.tests=true
   - mvn clean package -Pcoverage-report
 
 after_script:
