@@ -64,7 +64,7 @@ RUN locale-gen ${LANGUAGE} \
 # Timezone settings
 #===================
 # Full list at https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
-#  e.g. "US/Pacific" for Los Angeles, California, USA
+# e.g. "US/Pacific" for Los Angeles, California, USA
 # e.g. ENV TZ "US/Pacific"
 ENV TZ "Europe/Berlin"
 # Apply TimeZone
@@ -147,21 +147,27 @@ WORKDIR ${SEL_HOME}
 #===========
 # Selenium 2
 #===========
-ENV SEL_MAJOR_MINOR_VER="2.53" \
-    SEL_PATCH_LEVEL_VER="1"
+ENV SEL_MAJOR_MINOR_VER="${selenium-server.major-minor.version}" \
+    SEL_PATCH_LEVEL_VER="${selenium-server.patch-level.version}"
 RUN  mkdir -p ${SEL_HOME} \
   && export SELBASE="https://selenium-release.storage.googleapis.com" \
   && export SELPATH="${SEL_MAJOR_MINOR_VER}/selenium-server-standalone-${SEL_MAJOR_MINOR_VER}.${SEL_PATCH_LEVEL_VER}.jar" \
   && wget -nv ${SELBASE}/${SELPATH}
 
+#===========
+# Make a backup of Sauce Labs capabilities, in case the online fetch does not work
+#===========
+RUN  export SAUCE_LABS_CAPABILITIES="https://saucelabs.com/rest/v1/info/platforms/webdriver" \
+  && wget -nv ${SAUCE_LABS_CAPABILITIES} -O saucelabs_capabilities.json
+
 #==========
 # Zalenium
 #==========
 ENV DOCKER_ALONGSIDE_DOCKER="true"
-ENV ZAL_VER="0.5.0-SNAPSHOT"
-ADD ./scripts/entry.sh /usr/bin/
-ADD ./target/zalenium.sh ${SEL_HOME}/
-ADD ./target/zalenium-${ZAL_VER}.jar ${SEL_HOME}/zalenium-${ZAL_VER}.jar
+ENV ZAL_VER="${project.build.finalName}"
+ADD entry.sh /usr/bin/
+ADD zalenium.sh ${SEL_HOME}/
+ADD ${ZAL_VER}.jar ${SEL_HOME}/${ZAL_VER}.jar
 # https://github.com/zalando-incubator/zalenium/releases/download/v${ZAL_VER}/zalenium-release-v${ZAL_VER}.tar.gz
 
 #-----------------#
@@ -169,7 +175,8 @@ ADD ./target/zalenium-${ZAL_VER}.jar ${SEL_HOME}/zalenium-${ZAL_VER}.jar
 #-----------------#
 RUN  sudo chown -R seluser:seluser ${SEL_HOME} \
   && sudo chown -R seluser:seluser ${USR_HOME} \
-  && chmod +x ${SEL_HOME}/zalenium.sh
+  && sudo chmod +x ${SEL_HOME}/zalenium.sh \
+  && sudo chmod +x /usr/bin/entry.sh
 
 # IMPORTANT: Using the string form `CMD "entry.sh"` without
 # brackets [] causes Docker to run your process
