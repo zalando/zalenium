@@ -1,7 +1,7 @@
 ## Build
 
     mvn package -DskipTest=true -Dskip.surefire.tests=true
-    docker build -t zalenium .
+    cd target && docker build -t zalenium . ; cd ..
 
 ## Run
 Because Zalenium uses docker to scale on-demand we need to give it the `docker.sock` full access, this is known as "Docker alongside docker".
