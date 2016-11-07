@@ -8,7 +8,7 @@
     <artifactId>zalenium</artifactId>
     <version>0.5.0-SNAPSHOT</version>
     <name>Zalenium</name>
-    <description>A Selenium Grid extension to extend a dynamic local grid with a cloud testing platform.</description>
+    <description>An on-demand, dynamic local Selenium Grid with an extension to a cloud testing platform.</description>
 
     <organization>
         <name>Zalando SE</name>
@@ -48,7 +48,8 @@
     </developers>
 
     <properties>
-        <selenium-server.version>2.53.1</selenium-server.version>
+        <selenium-server.major-minor.version>2.53</selenium-server.major-minor.version>
+        <selenium-server.patch-level.version>1</selenium-server.patch-level.version>
         <docker-client.version>6.0.0</docker-client.version>
         <junit.version>4.12</junit.version>
         <mockito.version>1.10.19</mockito.version>
@@ -73,7 +74,7 @@
         <dependency>
             <groupId>org.seleniumhq.selenium</groupId>
             <artifactId>selenium-server</artifactId>
-            <version>${selenium-server.version}</version>
+            <version>${selenium-server.major-minor.version}.${selenium-server.patch-level.version}</version>
         </dependency>
         <dependency>
             <groupId>com.spotify</groupId>
@@ -118,12 +119,6 @@
     </dependencies>
 
     <build>
-        <resources>
-            <resource>
-                <directory>scripts</directory>
-                <filtering>true</filtering>
-            </resource>
-        </resources>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -143,20 +138,12 @@
                                     <directory>scripts</directory>
                                     <filtering>true</filtering>
                                 </resource>
-                            </resources>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>selenium-jar</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>copy-resources</goal>
-                        </goals>
-                        <configuration>
-                            <outputDirectory>${project.build.directory}</outputDirectory>
-                            <resources>
                                 <resource>
-                                    <directory>selenium</directory>
+                                    <directory>docker</directory>
+                                    <filtering>true</filtering>
+                                    <includes>
+                                        <include>Dockerfile</include>
+                                    </includes>
                                 </resource>
                             </resources>
                         </configuration>
@@ -176,7 +163,7 @@
                 <version>1.9.5</version>
                 <configuration>
                     <pushChanges>false</pushChanges>
-                    <tag>v${project.version}</tag>
+                    <tag>${project.version}</tag>
                 </configuration>
             </plugin>
             <plugin>
@@ -247,21 +234,29 @@
 
     <profiles>
         <profile>
-            <id>release</id>
+            <id>coverage-report</id>
             <build>
                 <plugins>
                     <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-assembly-plugin</artifactId>
+                        <groupId>org.jacoco</groupId>
+                        <artifactId>jacoco-maven-plugin</artifactId>
+                        <version>0.7.7.201606060606</version>
                         <configuration>
-                            <descriptor>assembly/assembly.xml</descriptor>
-                            <finalName>zalenium-release-v${project.version}</finalName>
+                            <destFile>${basedir}/target/coverage-reports/coverage-unit.exec</destFile>
+                            <dataFile>${basedir}/target/coverage-reports/coverage-unit.exec</dataFile>
                         </configuration>
                         <executions>
                             <execution>
+                                <id>coverage-initialize</id>
+                                <goals>
+                                    <goal>prepare-agent</goal>
+                                </goals>
+                            </execution>
+                            <execution>
+                                <id>coverage-site</id>
                                 <phase>package</phase>
                                 <goals>
-                                    <goal>single</goal>
+                                    <goal>report</goal>
                                 </goals>
                             </execution>
                         </executions>
@@ -295,57 +290,64 @@
                         <artifactId>exec-maven-plugin</artifactId>
                         <version>1.5.0</version>
                         <executions>
-                            <!-- Make zalenium.sh executable -->
+                            <!-- docker build -->
                             <execution>
-                                <id>enable-zalenium</id>
+                                <id>docker-build-zalenium</id>
                                 <phase>pre-integration-test</phase>
                                 <goals>
                                     <goal>exec</goal>
                                 </goals>
                                 <configuration>
-                                    <workingDirectory>${basedir}/target</workingDirectory>
+                                    <workingDirectory>${project.build.directory}</workingDirectory>
+                                    <executable>docker</executable>
+                                    <arguments>
+                                        <argument>build</argument>
+                                        <argument>-t</argument>
+                                        <argument>${project.artifactId}:${project.version}</argument>
+                                        <argument>.</argument>
+                                    </arguments>
+                                </configuration>
+                            </execution>
+                            <!-- Make zalenium_in_docker.sh executable -->
+                            <execution>
+                                <id>enable-zalenium_in_docker</id>
+                                <phase>pre-integration-test</phase>
+                                <goals>
+                                    <goal>exec</goal>
+                                </goals>
+                                <configuration>
+                                    <workingDirectory>${project.build.directory}</workingDirectory>
                                     <executable>chmod</executable>
                                     <arguments>
                                         <argument>+x</argument>
-                                        <argument>zalenium.sh</argument>
+                                        <argument>zalenium_in_docker.sh</argument>
                                     </arguments>
                                 </configuration>
                             </execution>
-                            <!-- START Zalenium-->
+                            <!-- docker run -->
                             <execution>
-                                <id>start-zalenium</id>
+                                <id>docker-run-zalenium</id>
                                 <phase>pre-integration-test</phase>
                                 <goals>
                                     <goal>exec</goal>
                                 </goals>
                                 <configuration>
-                                    <executable>${basedir}/target/zalenium.sh</executable>
+                                    <executable>${project.build.directory}/zalenium_in_docker.sh</executable>
                                     <arguments>
                                         <argument>start</argument>
-                                        <argument>--chromeContainers</argument>
-                                        <argument>1</argument>
-                                        <argument>--firefoxContainers</argument>
-                                        <argument>1</argument>
-                                        <argument>--maxDockerSeleniumContainers</argument>
-                                        <argument>10</argument>
-                                        <argument>--seleniumArtifact</argument>
-                                        <argument>${basedir}/target/selenium-server-standalone-${selenium-server.version}.jar</argument>
-                                        <argument>--zaleniumArtifact</argument>
-                                        <argument>${basedir}/target/zalenium-${project.version}.jar</argument>
-                                        <argument>--sauceLabsEnabled</argument>
-                                        <argument>true</argument>
+                                        <argument>${project.artifactId}:${project.version}</argument>
                                     </arguments>
                                 </configuration>
                             </execution>
-                            <!-- STOP Selenium with Zalenium in it (HUB) -->
+                            <!-- docker stop -->
                             <execution>
-                                <id>stop-zalenium</id>
+                                <id>docker-stop-zalenium</id>
                                 <phase>post-integration-test</phase>
                                 <goals>
                                     <goal>exec</goal>
                                 </goals>
                                 <configuration>
-                                    <executable>${basedir}/target/zalenium.sh</executable>
+                                    <executable>${project.build.directory}/zalenium_in_docker.sh</executable>
                                     <arguments>
                                         <argument>stop</argument>
                                     </arguments>

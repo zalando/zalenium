@@ -31,6 +31,7 @@ public class SauceLabsRemoteProxy extends DefaultRemoteProxy {
 
     private static final Logger LOGGER = Logger.getLogger(SauceLabsRemoteProxy.class.getName());
     private static final String SAUCE_LABS_CAPABILITIES_URL = "http://saucelabs.com/rest/v1/info/platforms/webdriver";
+    private static final String SAUCE_LABS_CAPABILITIES_BK_FILE = "saucelabs_capabilities.json";
 
     public static final String SAUCE_LABS_USER_NAME = System.getenv("SAUCE_USERNAME");
     public static final String SAUCE_LABS_ACCESS_KEY = System.getenv("SAUCE_ACCESS_KEY");
@@ -45,25 +46,30 @@ public class SauceLabsRemoteProxy extends DefaultRemoteProxy {
 
         try {
             registrationRequest.getCapabilities().clear();
-            if (slCapabilities == null) {
-                LOGGER.log(Level.SEVERE, "[SL] Capabilities were NOT fetched from {0}", url);
-                return registrationRequest;
+            if (slCapabilities != null) {
+                LOGGER.log(Level.INFO, "[SL] Capabilities fetched from {0}", url);
+            } else {
+                LOGGER.log(Level.SEVERE, "[SL] Capabilities were NOT fetched from {0}, loading from backup file", url);
+                slCapabilities = CommonProxyUtilities.readJSONFromFile(SAUCE_LABS_CAPABILITIES_BK_FILE);
             }
-            for (JsonElement cap : slCapabilities.getAsJsonArray()) {
-                JsonObject capAsJsonObject = cap.getAsJsonObject();
-                DesiredCapabilities desiredCapabilities = new DesiredCapabilities();
-                desiredCapabilities.setCapability(RegistrationRequest.MAX_INSTANCES, 10);
-                desiredCapabilities.setBrowserName(capAsJsonObject.get("api_name").getAsString());
-                desiredCapabilities.setPlatform(getPlatform(capAsJsonObject.get("os").getAsString()));
-                desiredCapabilities.setVersion(capAsJsonObject.get("long_version").getAsString());
-                if (!registrationRequest.getCapabilities().contains(desiredCapabilities)) {
-                    registrationRequest.addDesiredCapability(desiredCapabilities);
-                }
-
-            }
-            LOGGER.log(Level.INFO, "[SL] Capabilities fetched from {0}", url);
+            return addCapabilitiesToRegistrationRequest(registrationRequest, slCapabilities);
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, e.toString(), e);
+        }
+        return registrationRequest;
+    }
+
+    private static RegistrationRequest addCapabilitiesToRegistrationRequest(RegistrationRequest registrationRequest, JsonElement slCapabilities) {
+        for (JsonElement cap : slCapabilities.getAsJsonArray()) {
+            JsonObject capAsJsonObject = cap.getAsJsonObject();
+            DesiredCapabilities desiredCapabilities = new DesiredCapabilities();
+            desiredCapabilities.setCapability(RegistrationRequest.MAX_INSTANCES, 10);
+            desiredCapabilities.setBrowserName(capAsJsonObject.get("api_name").getAsString());
+            desiredCapabilities.setPlatform(getPlatform(capAsJsonObject.get("os").getAsString()));
+            desiredCapabilities.setVersion(capAsJsonObject.get("long_version").getAsString());
+            if (!registrationRequest.getCapabilities().contains(desiredCapabilities)) {
+                registrationRequest.addDesiredCapability(desiredCapabilities);
+            }
         }
         return registrationRequest;
     }

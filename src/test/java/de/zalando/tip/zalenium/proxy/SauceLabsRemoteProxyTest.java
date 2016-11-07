@@ -35,7 +35,7 @@ public class SauceLabsRemoteProxyTest {
 
 
     @BeforeClass
-    public static void setup() {
+    public static void setUp() {
         registry = Registry.newInstance();
         // Creating the configuration and the registration request of the proxy (node)
         RegistrationRequest request = TestUtils.getRegistrationRequestForTesting(30001,

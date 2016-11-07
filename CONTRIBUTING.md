@@ -26,7 +26,7 @@ This is a rough outline of what the workflow for code contributions looks like:
 - Check the list of open [issues] (https://github.bus.zalan.do/TIP/zalenium/issues). Either assign an existing issue to yourself, or create a new one that you would like work on and discuss your ideas and use cases.
 - Fork the repository on GHE
 - Create a topic branch from where you want to base your work. This is usually master.
-- Make commits of logical units.m
+- Make commits of logical units.
 - Write good commit messages (see below).
 - Push your changes to a topic branch in your fork of the repository.
 - Submit a pull request

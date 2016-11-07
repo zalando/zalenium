@@ -7,6 +7,7 @@ import com.spotify.docker.client.LogStream;
 import com.spotify.docker.client.exceptions.DockerException;
 import com.spotify.docker.client.messages.Container;
 import com.spotify.docker.client.messages.ExecCreation;
+import de.zalando.tip.zalenium.util.CommonProxyUtilities;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.compress.utils.IOUtils;
@@ -147,7 +148,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     protected String getContainerId() throws DockerException, InterruptedException {
         List<Container> containerList = dockerClient.listContainers(DockerClient.ListContainersParam.allContainers());
         for (Container container : containerList) {
-            String containerName = "/ZALENIUM_" + getRemoteHost().getPort();
+            String containerName = "/zalenium_" + getRemoteHost().getPort();
             if (containerName.equalsIgnoreCase(container.names().get(0))) {
                 return container.id();
             }
@@ -177,8 +178,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     @SuppressWarnings("ResultOfMethodCallIgnored")
     @VisibleForTesting
     protected void copyVideos(final String containerId) throws IOException, DockerException, InterruptedException, URISyntaxException {
-        File jarLocation = new File(this.getClass().getProtectionDomain().getCodeSource().getLocation().toURI().getPath());
-        String localPath = jarLocation.getParent();
+        String localPath = CommonProxyUtilities.currentLocalPath();
         try(TarArchiveInputStream tarStream = new TarArchiveInputStream(dockerClient.archiveContainer(containerId,
                 "/videos/"))) {
             TarArchiveEntry entry;
