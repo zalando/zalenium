@@ -11,12 +11,20 @@ before_install:
   - docker pull elgalu/selenium
 
 script:
-  - ./runSonarQubeAnalysis.sh
+  # Run SonarQube analysis
+  - ./run_sonar_qube_analysis.sh
+  # Run integration tests
   - mvn clean verify -Pintegration-test -DthreadCountProperty=2 -Dskip.surefire.tests=true
+  # Run unit tests for coverage
   - mvn clean package -Pcoverage-report
 
 after_script:
+  # Report coverage results to Codecov
   - bash <(curl -s https://codecov.io/bash)
+
+after_success:
+  # When a tag is set and a release is being done, the image is pushed
+  - ./push_image.sh
 
 cache:
   directories:

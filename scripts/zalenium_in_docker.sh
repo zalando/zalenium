@@ -17,6 +17,19 @@ StartUp()
         docker rm -f $(docker ps -a -f name=zalenium -q)
     fi
 
+    SAUCE_USERNAME="${SAUCE_USERNAME:=abc}"
+    SAUCE_ACCESS_KEY="${SAUCE_ACCESS_KEY:=abc}"
+
+    if [ "$SAUCE_USERNAME" = abc ]; then
+        echo "SAUCE_USERNAME environment variable is not set, cannot start Sauce Labs node, exiting..."
+        exit 1
+    fi
+
+    if [ "$SAUCE_ACCESS_KEY" = abc ]; then
+        echo "SAUCE_ACCESS_KEY environment variable is not set, cannot start Sauce Labs node, exiting..."
+        exit 1
+    fi
+
     echo "Starting Zalenium in docker..."
 
     docker run -d -ti --name zalenium -p 4444:4444 \
@@ -24,7 +37,6 @@ StartUp()
           -v /tmp/videos:/home/seluser/videos \
           -v /var/run/docker.sock:/var/run/docker.sock \
           ${ZALENIUM_DOCKER_IMAGE} start
-
 
     sleep 20
 
@@ -37,31 +49,11 @@ ShutDown()
     docker rm zalenium
 }
 
-function usage()
-{
-    echo "Usage:"
-    echo ""
-    echo "./zalenium.sh"
-    echo -e "\t -h --help"
-    echo -e "\t start <options, see below>"
-    echo -e "\t --chromeContainers -> Number of Chrome containers created on startup. Default is 1 when parameter is absent."
-    echo -e "\t --firefoxContainers -> Number of Firefox containers created on startup. Default is 1 when parameter is absent."
-    echo -e "\t --maxDockerSeleniumContainers -> Max number of docker-selenium containers running at the same time. Default is 10 when parameter is absent."
-    echo -e "\t --sauceLabsEnabled -> Determines if the Sauce Labs node is started. Defaults to 'true' when parameter absent."
-    echo -e "\t stop"
-    echo ""
-    echo -e "\t Example: Starting Zalenium with 2 Chrome containers and without Sauce Labs"
-    echo -e "\t ./zalenium.sh start --chromeContainers 2 --sauceLabsEnabled false"
-}
-
 case ${SCRIPT_ACTION} in
     start)
         StartUp
     ;;
     stop)
         ShutDown
-        ;;
-    *)
-        usage
     ;;
 esac
