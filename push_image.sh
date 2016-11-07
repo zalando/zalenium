@@ -6,9 +6,9 @@ set -e
 # Push docker image when a tag is set and it is the master branch.
 # The tag will be set locally in one of the developer's machine.
 
-echo "docker tag and docker push using TRAVIS_TAG=${TRAVIS_TAG}"
+echo "TRAVIS_TAG=${TRAVIS_TAG}"
 
-if [ "$TRAVIS_BRANCH" = "master" ] && [ "$TRAVIS_PULL_REQUEST" = "false" ] && [ -n "${TRAVIS_TAG}" ] && [ "${TRAVIS_TAG}" != "latest" ]; then
+if [ "$TRAVIS_PULL_REQUEST" = "false" ] && [ -n "${TRAVIS_TAG}" ] && [ "${TRAVIS_TAG}" != "latest" ]; then
 	echo "Starting to push Zalenium image..."
 	docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
     echo "Logged in to docker with user '${DOCKER_USERNAME}'"
