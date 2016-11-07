@@ -13,8 +13,8 @@ if [ "$TRAVIS_PULL_REQUEST" = "false" ] && [ -n "${TRAVIS_TAG}" ] && [ "${TRAVIS
 	docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
     echo "Logged in to docker with user '${DOCKER_USERNAME}'"
     echo "docker tag and docker push using TRAVIS_TAG=${TRAVIS_TAG}"
-    docker tag zalenium:latest dosel/zalenium:${TRAVIS_TAG}
-    docker tag zalenium:latest dosel/zalenium:latest
+    docker tag zalenium:${TRAVIS_TAG} dosel/zalenium:${TRAVIS_TAG}
+    docker tag zalenium:${TRAVIS_TAG} dosel/zalenium:latest
     docker push dosel/zalenium:${TRAVIS_TAG} | tee docker_push.log
     docker push dosel/zalenium:latest
 else
