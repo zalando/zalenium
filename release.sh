@@ -10,5 +10,5 @@ mvn scm:check-local-modification versions:set -DnewVersion=${RELEASE_VERSION} sc
 
 mvn scm:tag
 
-# next development version
+# next development version, since it only updates the pom.xml, we skip the Travis build
 mvn versions:set -DnewVersion=${NEXT_VERSION} scm:add -Dincludes="**/pom.xml" scm:checkin -Dmessage="[skip ci]Develop $NEXT_VERSION"
