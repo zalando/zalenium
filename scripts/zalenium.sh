@@ -11,17 +11,20 @@ PID_PATH_SELENIUM=/tmp/selenium-pid
 PID_PATH_DOCKER_SELENIUM_NODE=/tmp/docker-selenium-node-pid
 PID_PATH_SAUCE_LABS_NODE=/tmp/sauce-labs-node-pid
 
-# Omit output only when running outsided of dockerized Zalenium
-if [ "${DOCKER_ALONGSIDE_DOCKER}" != "true" ]; then
-    export NO_HUP="nohup"
-    export REDIRECT_OUTPUT="2>&1 </dev/null"
-fi
+EnsureCleanEnv()
+{
+    CONTAINERS=$(docker ps -a -f name=zalenium_ -q | wc -l)
+    if [ ${CONTAINERS} -gt 0 ]; then
+        echo "Removing exited docker-selenium containers..."
+        docker rm -f $(docker ps -a -f name=zalenium_ -q)
+    fi
+}
 
 DockerTerminate()
 {
   echo "Trapped SIGTERM/SIGINT so shutting down Zalenium gracefully..."
   ShutDown
-  [ "${DOCKER_ALONGSIDE_DOCKER}" = "true" ] && wait
+  wait
   exit 0
 }
 
@@ -30,6 +33,7 @@ trap DockerTerminate SIGTERM SIGINT SIGKILL
 
 StartUp()
 {
+    EnsureCleanEnv
 
     DOCKER_SELENIUM_IMAGE_COUNT=$(docker images | grep "elgalu/selenium" | wc -l)
     if [ ${DOCKER_SELENIUM_IMAGE_COUNT} -eq 0 ]; then
@@ -91,8 +95,8 @@ StartUp()
 
     mkdir -p logs
     rm logs/*hub*.log
-    ${NO_HUP} java -cp ${SELENIUM_ARTIFACT}:${ZALENIUM_ARTIFACT} org.openqa.grid.selenium.GridLauncher \
-    -role hub -throwOnCapabilityNotPresent true > logs/stdout.zalenium.hub.log ${REDIRECT_OUTPUT} &
+    java -cp ${SELENIUM_ARTIFACT}:${ZALENIUM_ARTIFACT} org.openqa.grid.selenium.GridLauncher \
+    -role hub -throwOnCapabilityNotPresent true > logs/stdout.zalenium.hub.log &
     echo $! > ${PID_PATH_SELENIUM}
 
     IN_TRAVIS="${CI:=false}"
@@ -107,9 +111,9 @@ StartUp()
 
     echo "Starting DockerSeleniumStarter node..."
 
-    ${NO_HUP} java -jar ${SELENIUM_ARTIFACT} -role node -hub http://localhost:4444/grid/register \
+    java -jar ${SELENIUM_ARTIFACT} -role node -hub http://localhost:4444/grid/register \
      -proxy de.zalando.tip.zalenium.proxy.DockerSeleniumStarterRemoteProxy \
-     -port 30000 > logs/stdout.zalenium.docker.node.log ${REDIRECT_OUTPUT} &
+     -port 30000 > logs/stdout.zalenium.docker.node.log &
     echo $! > ${PID_PATH_DOCKER_SELENIUM_NODE}
 
     if [ "${IN_TRAVIS}" = "true" ]; then
@@ -121,9 +125,9 @@ StartUp()
 
     if [ "$SAUCE_LABS_ENABLED" = true ]; then
         echo "Starting Sauce Labs node..."
-        ${NO_HUP} java -jar ${SELENIUM_ARTIFACT} -role node -hub http://localhost:4444/grid/register \
+        java -jar ${SELENIUM_ARTIFACT} -role node -hub http://localhost:4444/grid/register \
          -proxy de.zalando.tip.zalenium.proxy.SauceLabsRemoteProxy \
-         -port 30001 > logs/stdout.zalenium.sauce.node.log ${REDIRECT_OUTPUT} &
+         -port 30001 > logs/stdout.zalenium.sauce.node.log &
         echo $! > ${PID_PATH_SAUCE_LABS_NODE}
 
         if [ "${IN_TRAVIS}" = "true" ]; then
@@ -137,7 +141,7 @@ StartUp()
     fi
 
     # When running in docker do not exit this script
-    [ "${DOCKER_ALONGSIDE_DOCKER}" = "true" ] && wait
+    wait
 }
 
 ShutDown()
@@ -180,11 +184,7 @@ ShutDown()
         fi
     fi
 
-    CONTAINERS=$(docker ps -a -f name=zalenium_ -q | wc -l)
-    if [ ${CONTAINERS} -gt 0 ]; then
-        echo "Removing exited docker-selenium containers..."
-        docker rm -f $(docker ps -a -f name=zalenium_ -q)
-    fi
+    EnsureCleanEnv
 }
 
 function usage()
