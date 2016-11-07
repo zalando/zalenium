@@ -22,14 +22,14 @@ You can use the Zalenium already, but it is still under development and open for
 
 #### Prerequisites
 * Docker engine running, version >= 1.12.1 (probably works with earlier versions, not tested yet).
-* Dowload the [docker-selenium](https://github.com/elgalu/docker-selenium) image. `docker pull elgalu/selenium`
+* Download the [docker-selenium](https://github.com/elgalu/docker-selenium) image. `docker pull elgalu/selenium`
 * JDK8+
 * *nix platform (tested only in OSX and Ubuntu, not tested on Windows yet).
 * If you want to use the [Sauce Labs](https://saucelabs.com/) feature, you need an account with them.
 
 #### Setting it up
 * Make sure your docker daemon is running
-* Download the `tar.gz` file from our latest [release](https://github.com/zalando-incubator/zalenium/releases/latest) and uncompress it.
+* `docker pull dosel/zalenium`
 * If you want to use [Sauce Labs](https://saucelabs.com/), export your user and API key as environment variables
 ```sh
   export SAUCE_USERNAME=<your Sauce Labs username>
@@ -37,32 +37,40 @@ You can use the Zalenium already, but it is still under development and open for
 ```
 
 #### Running it
-* Start it: `./zalenium.sh start`
-  * After the output, you should see the DockerSeleniumStarter node and the SauceLabs node in the [grid](http://localhost:4444/grid/console)
-  * The script can receive different parameters:
-    * `--chromeContainers` -> Chrome nodes created on startup. Default is 1.
-    * `--firefoxContainers` -> Firefox nodes created on startup. Default is 1.
-    * `--maxDockerSeleniumContainers` -> Max number of docker-selenium containers running at the same time. Default is 10.
-    * `--seleniumArtifact` -> Absolute path of the Selenium JAR. The default is that the JAR should be in the same folder.
-    * `--zaleniumArtifact` -> Absolute path of the Zalenium JAR. The default is that the the JAR should be in the same folder.
-    * `--sauceLabsEnabled` -> Start Sauce Labs node or not. Defaults to 'true'.
-* Stop it: `./zalenium.sh stop`
-
-Examples:
-* Starting Zalenium with 2 Chrome containers and without Sauce Labs
+Zalenium uses docker to scale on-demand, therefore we need to give it the `docker.sock` full access, this is known as "Docker alongside docker".
+* Start it with Sauce Labs enabled:
   ```sh
-  ./zalenium.sh start --chromeContainers 2 --sauceLabsEnabled false
+    export SAUCE_USERNAME="<yourUser>"
+    export SAUCE_ACCESS_KEY="<yourSecret>"
+    docker run --rm -ti --name zalenium -p 4444:4444 \
+      -e SAUCE_USERNAME -e SAUCE_ACCESS_KEY \
+      -v /tmp/videos:/home/seluser/videos \
+      -v /var/run/docker.sock:/var/run/docker.sock \
+      dosel/zalenium start
   ```
 
-* Starting Zalenium overwriting all parameters
+* Start it without Sauce Labs enabled:
   ```sh
-  ./zalenium.sh stop --chromeContainers 2 --firefoxContainers 2 --maxDockerSeleniumContainers 10 --seleniumArtifact /path/to/jar/selenium-server-standalone-2.53.1.jar --zaleniumArtifact /path/to/jar/zalenium.jar
+    docker run --rm -ti --name zalenium -p 4444:4444 \
+      -v /var/run/docker.sock:/var/run/docker.sock \
+      -v /tmp/videos:/home/seluser/videos \
+      dosel/zalenium start --sauceLabsEnabled false
   ```
+
+* After the output, you should see the DockerSeleniumStarter node and the SauceLabs node in the [grid](http://localhost:4444/grid/console)
+
+* The startup can receive different parameters:
+  * `--chromeContainers` -> Chrome nodes created on startup. Default is 1.
+  * `--firefoxContainers` -> Firefox nodes created on startup. Default is 1.
+  * `--maxDockerSeleniumContainers` -> Max number of docker-selenium containers running at the same time. Default is 10.
+  * `--sauceLabsEnabled` -> Start Sauce Labs node or not. Defaults to 'true'.
+
+* Stop it: `docker stop zalenium`
 
 #### Using it
 * Just point your Selenium tests to http://localhost:4444/wd/hub and that's it!
 * You can use the [integration tests](./src/test/java/de/zalando/tip/zalenium/it/ParallelIT.java) we have to try Zalenium.
-* To see the recorded videos, check the `videos` subfolder, located where the JARs are running. 
+* To see the recorded videos, check the `videos` subfolder, located where the JARs are running.
 
 ## Contributions
 Any feedback or contributions are welcome! Please check our [guidelines](CONTRIBUTING.md), they just follow the general GitHub issue/PR flow.
@@ -83,7 +91,7 @@ If you want to verify your changes locally with the existing tests (please doubl
     ```sh
         mvn test
     ```
-* Unit and integration tests (_it will also generate the jar_). You can specify the number of threads used to run the integration tests. If you omit the property, the default is one.
+* Unit and integration tests. You can specify the number of threads used to run the integration tests. If you omit the property, the default is one.
 
     ```sh
         mvn clean verify -Pintegration-test -DthreadCountProperty={numberOfThreads}
