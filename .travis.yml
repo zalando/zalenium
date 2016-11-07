@@ -31,7 +31,3 @@ cache:
     - '$HOME/.m2/repository'
     - '$HOME/.sonar/cache'
 
-# branches safe list to build
-branches:
-  only:
-  - master
