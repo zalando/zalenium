@@ -44,15 +44,21 @@ public class ParallelIT  {
     public void startWebDriverAndGetBaseUrl(Method method, Object[] testArgs) throws MalformedURLException {
         String browserType = testArgs[0].toString();
         Platform platform = (Platform) testArgs[1];
+        LOGGER.info("STARTING {} on {} - {}", method.getName(), browserType, platform.name());
+
         DesiredCapabilities desiredCapabilities = new DesiredCapabilities();
         desiredCapabilities.setCapability(CapabilityType.BROWSER_NAME, browserType);
         desiredCapabilities.setCapability(CapabilityType.PLATFORM, platform);
         desiredCapabilities.setCapability("name", method.getName());
 
-        webDriver.set(new RemoteWebDriver(new URL(DOCKER_SELENIUM_URL), desiredCapabilities));
+        try {
+            webDriver.set(new RemoteWebDriver(new URL(DOCKER_SELENIUM_URL), desiredCapabilities));
+        } catch (Exception e) {
+            LOGGER.warn("FAILED {} on {} - {}", method.getName(), browserType, platform.name());
+            throw e;
+        }
 
         webDriver.get().manage().window().maximize();
-        LOGGER.info("STARTING {} on {} - {}", method.getName(), browserType, platform.name());
     }
 
     @AfterMethod

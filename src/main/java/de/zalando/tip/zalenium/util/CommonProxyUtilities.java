@@ -4,6 +4,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 
 import java.io.*;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.util.logging.Level;
@@ -29,6 +30,28 @@ public class CommonProxyUtilities {
             is.close();
             return new JsonParser().parse(jsonText);
         } catch (Exception e) {
+            LOG.log(Level.SEVERE, e.toString(), e);
+        }
+        return null;
+    }
+
+    public static JsonElement readJSONFromFile(String fileName) {
+        try(FileReader fr = new FileReader(new File(currentLocalPath(), fileName))) {
+            BufferedReader rd = new BufferedReader(fr);
+            String jsonText = readAll(rd);
+            return new JsonParser().parse(jsonText);
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, e.toString(), e);
+        }
+        return null;
+    }
+
+    public static String currentLocalPath() {
+        try {
+            File jarLocation = new File(CommonProxyUtilities.class.getProtectionDomain().getCodeSource()
+                    .getLocation().toURI().getPath());
+            return jarLocation.getParent();
+        } catch (URISyntaxException e) {
             LOG.log(Level.SEVERE, e.toString(), e);
         }
         return null;

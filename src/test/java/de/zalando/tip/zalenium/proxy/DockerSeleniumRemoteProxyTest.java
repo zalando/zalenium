@@ -4,6 +4,9 @@ import com.spotify.docker.client.DefaultDockerClient;
 import com.spotify.docker.client.DockerClient;
 import com.spotify.docker.client.LogStream;
 import com.spotify.docker.client.exceptions.DockerException;
+import com.spotify.docker.client.messages.Container;
+import com.spotify.docker.client.messages.ContainerConfig;
+import com.spotify.docker.client.messages.ContainerCreation;
 import com.spotify.docker.client.messages.ExecCreation;
 import de.zalando.tip.zalenium.util.TestUtils;
 import org.apache.http.HttpResponse;
@@ -24,10 +27,9 @@ import org.openqa.selenium.remote.CapabilityType;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -45,12 +47,11 @@ import static org.mockito.Mockito.times;
 
 public class DockerSeleniumRemoteProxyTest {
 
-    private static final Logger LOGGER = Logger.getLogger(DockerSeleniumRemoteProxyTest.class.getName());
     private DockerSeleniumRemoteProxy proxy;
     private Registry registry;
 
     @Before
-    public void setup() throws DockerException, InterruptedException, IOException {
+    public void setUp() throws DockerException, InterruptedException, IOException {
         registry = Registry.newInstance();
 
         // Creating the configuration and the registration request of the proxy (node)
@@ -158,7 +159,31 @@ public class DockerSeleniumRemoteProxyTest {
 
         DockerClient dockerClient = new DefaultDockerClient("unix:///var/run/docker.sock");
         String containerId = null;
+        String zaleniumContainerId = null;
+        String busyboxLatestImage = "busybox:latest";
         try {
+            // Removing first all docker-selenium containers
+            List<Container> containerList = dockerClient.listContainers(DockerClient.ListContainersParam.allContainers());
+            for (Container container : containerList) {
+                String containerName = "zalenium";
+                if (container.names().get(0).contains(containerName)) {
+                    dockerClient.stopContainer(container.id(), 5);
+                    dockerClient.removeContainer(container.id());
+                }
+            }
+
+            // We create another container first with the name "zalenium", so the container creation in the
+            // next step works
+            dockerClient.pull(busyboxLatestImage);
+            final ContainerConfig containerConfig = ContainerConfig.builder()
+                    .image(busyboxLatestImage)
+                    // make sure the container's busy doing something upon startup
+                    .cmd("sh", "-c", "while :; do sleep 1; done")
+                    .build();
+            final ContainerCreation containerCreation = dockerClient.createContainer(containerConfig, "zalenium");
+            zaleniumContainerId = containerCreation.id();
+            dockerClient.startContainer(zaleniumContainerId);
+
             // Create a docker-selenium container
             RegistrationRequest request = TestUtils.getRegistrationRequestForTesting(30000,
                     DockerSeleniumStarterRemoteProxy.class.getCanonicalName());
@@ -171,6 +196,8 @@ public class DockerSeleniumRemoteProxyTest {
             DockerSeleniumRemoteProxy.setDockerClient(dockerClient);
 
             // Wait for the container to be ready
+            Callable<Boolean> callable = () -> spyProxy.getContainerId() != null;
+            await().atMost(10, SECONDS).pollInterval(500, MILLISECONDS).until(callable);
             containerId = spyProxy.getContainerId();
             final String[] command = {"bash", "-c", "wait_all_done 30s"};
             final ExecCreation execCreation = dockerClient.execCreate(containerId, command,
@@ -179,7 +206,7 @@ public class DockerSeleniumRemoteProxyTest {
 
             // Waiting until the container is ready
             final String finalContainerId = containerId;
-            Callable<Boolean> callable = () ->
+            callable = () ->
                     !dockerClient.topContainer(finalContainerId).processes().toString().contains("wait_all_done");
             await().atMost(40, SECONDS).pollInterval(2, SECONDS).until(callable);
 
@@ -213,6 +240,11 @@ public class DockerSeleniumRemoteProxyTest {
                 dockerClient.stopContainer(containerId, 5);
                 dockerClient.removeContainer(containerId);
             }
+            if (zaleniumContainerId != null) {
+                dockerClient.stopContainer(zaleniumContainerId, 5);
+                dockerClient.removeContainer(zaleniumContainerId);
+            }
+            dockerClient.removeImage(busyboxLatestImage);
         }
     }
 

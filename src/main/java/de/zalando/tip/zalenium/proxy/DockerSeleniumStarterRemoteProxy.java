@@ -1,7 +1,6 @@
 package de.zalando.tip.zalenium.proxy;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.ImmutableMap;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.spotify.docker.client.DefaultDockerClient;
@@ -12,7 +11,6 @@ import com.spotify.docker.client.messages.ContainerConfig;
 import com.spotify.docker.client.messages.ContainerCreation;
 import com.spotify.docker.client.messages.HostConfig;
 import com.spotify.docker.client.messages.Image;
-import com.spotify.docker.client.messages.PortBinding;
 import de.zalando.tip.zalenium.util.CommonProxyUtilities;
 import de.zalando.tip.zalenium.util.Environment;
 import org.openqa.grid.common.RegistrationRequest;
@@ -21,7 +19,6 @@ import org.openqa.grid.internal.TestSession;
 import org.openqa.grid.internal.listeners.RegistrationListener;
 import org.openqa.grid.selenium.proxy.DefaultRemoteProxy;
 import org.openqa.selenium.Platform;
-import org.openqa.selenium.net.NetworkUtils;
 import org.openqa.selenium.remote.BrowserType;
 import org.openqa.selenium.remote.CapabilityType;
 import org.openqa.selenium.remote.DesiredCapabilities;
@@ -29,7 +26,6 @@ import org.openqa.selenium.remote.DesiredCapabilities;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -231,8 +227,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
 
         if (validateAmountOfDockerSeleniumContainers()) {
 
-            NetworkUtils networkUtils = new NetworkUtils();
-            String hostIpAddress = networkUtils.getIp4NonLoopbackAddressOfThisMachine().getHostAddress();
+            String hostIpAddress = "localhost";
 
             /*
                 Building the docker command, depending if Chrome or Firefox is requested.
@@ -249,6 +244,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
             envVariables.add("RC_CHROME=false");
             envVariables.add("RC_FIREFOX=false");
             envVariables.add("WAIT_TIMEOUT=20s");
+            envVariables.add("PICK_ALL_RANDMON_PORTS=true");
             envVariables.add("VIDEO_STOP_SLEEP_SECS=4");
             envVariables.add("SELENIUM_NODE_REGISTER_CYCLE=0");
             envVariables.add("SELENIUM_NODE_PROXY_PARAMS=de.zalando.tip.zalenium.proxy.DockerSeleniumRemoteProxy");
@@ -267,7 +263,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
 
             HostConfig hostConfig = HostConfig.builder()
                     .appendBinds("/dev/shm:/dev/shm")
-                    .portBindings(ImmutableMap.of(nodePort + "/tcp", Collections.singletonList(PortBinding.of("", nodePort))))
+                    .networkMode("container:zalenium")
                     .build();
 
             try {
@@ -275,10 +271,9 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
                         .image(getLatestDownloadedImage(DOCKER_SELENIUM_IMAGE))
                         .env(envVariables)
                         .hostConfig(hostConfig)
-                        .exposedPorts(nodePort + "/tcp")
                         .build();
 
-                String containerName = String.format("%s_%s", "ZALENIUM", nodePort);
+                String containerName = String.format("%s_%s", "zalenium", nodePort);
                 final ContainerCreation dockerSeleniumContainer = dockerClient.createContainer(containerConfig,
                         containerName);
                 dockerClient.startContainer(dockerSeleniumContainer.id());

@@ -26,7 +26,7 @@ public class DockerSeleniumStarterRemoteProxyTest {
     private Registry registry;
 
     @Before
-    public void setup() throws DockerException, InterruptedException {
+    public void setUp() throws DockerException, InterruptedException {
         registry = Registry.newInstance();
 
         // Creating the configuration and the registration request of the proxy (node)
@@ -235,6 +235,21 @@ public class DockerSeleniumStarterRemoteProxyTest {
 
         verify(spyProxy, times(amountOfChromeContainers)).startDockerSeleniumContainer(BrowserType.CHROME);
         verify(spyProxy, times(amountOfFirefoxContainers)).startDockerSeleniumContainer(BrowserType.FIREFOX);
+        Assert.assertEquals(amountOfChromeContainers, DockerSeleniumStarterRemoteProxy.getChromeContainersOnStartup());
+        Assert.assertEquals(amountOfFirefoxContainers, DockerSeleniumStarterRemoteProxy.getFirefoxContainersOnStartup());
+    }
+
+    @Test
+    public void noNegativeValuesAreAllowedForStartup() {
+        DockerSeleniumStarterRemoteProxy.setChromeContainersOnStartup(-1);
+        DockerSeleniumStarterRemoteProxy.setFirefoxContainersOnStartup(-1);
+        DockerSeleniumStarterRemoteProxy.setMaxDockerSeleniumContainers(-1);
+        Assert.assertEquals(DockerSeleniumStarterRemoteProxy.DEFAULT_AMOUNT_CHROME_CONTAINERS,
+                DockerSeleniumStarterRemoteProxy.getChromeContainersOnStartup());
+        Assert.assertEquals(DockerSeleniumStarterRemoteProxy.DEFAULT_AMOUNT_FIREFOX_CONTAINERS,
+                DockerSeleniumStarterRemoteProxy.getFirefoxContainersOnStartup());
+        Assert.assertEquals(DockerSeleniumStarterRemoteProxy.DEFAULT_AMOUNT_DOCKER_SELENIUM_CONTAINERS_RUNNING,
+                DockerSeleniumStarterRemoteProxy.getMaxDockerSeleniumContainers());
     }
 
 }
