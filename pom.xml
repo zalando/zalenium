@@ -175,7 +175,7 @@
                 <artifactId>maven-scm-plugin</artifactId>
                 <version>1.9.5</version>
                 <configuration>
-                    <pushChanges>true</pushChanges>
+                    <pushChanges>false</pushChanges>
                     <tag>v${project.version}</tag>
                 </configuration>
             </plugin>
