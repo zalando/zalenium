@@ -8,6 +8,7 @@ import com.spotify.docker.client.exceptions.DockerException;
 import com.spotify.docker.client.messages.Container;
 import com.spotify.docker.client.messages.ExecCreation;
 import de.zalando.tip.zalenium.util.CommonProxyUtilities;
+import de.zalando.tip.zalenium.util.Environment;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.compress.utils.IOUtils;
@@ -41,12 +42,23 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     // Amount of tests that can be executed in the node
     private static final int MAX_UNIQUE_TEST_SESSIONS = 1;
 
+    @VisibleForTesting
+    protected static final String ZALENIUM_VIDEO_RECORDING_ENABLED = "ZALENIUM_VIDEO_RECORDING_ENABLED";
+
+    @VisibleForTesting
+    protected static final boolean DEFAULT_VIDEO_RECORDING_ENABLED = true;
+
+    private static boolean videoRecordingEnabled;
+
     private int amountOfExecutedTests;
 
     private DockerSeleniumNodePoller dockerSeleniumNodePollerThread = null;
 
     private static final DockerClient defaultDockerClient = new DefaultDockerClient("unix:///var/run/docker.sock");
     private static DockerClient dockerClient = defaultDockerClient;
+
+    private static final Environment defaultEnvironment = new Environment();
+    private static Environment environment = defaultEnvironment;
 
     public enum VideoRecordingAction {
         START_RECORDING("start-video"), STOP_RECORDING("stop-video");
@@ -66,6 +78,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     public DockerSeleniumRemoteProxy(RegistrationRequest request, Registry registry) {
         super(request, registry);
         this.amountOfExecutedTests = 0;
+        readEnvVarForVideoRecording(this);
     }
 
     /*
@@ -137,11 +150,16 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     }
 
     public void videoRecording(final VideoRecordingAction action) {
-        try {
-            String containerId = getContainerId();
-            processVideoAction(action, containerId);
-        } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, getNodeIpAndPort() + e.toString(), e);
+        if (isVideoRecordingEnabled()) {
+            try {
+                String containerId = getContainerId();
+                processVideoAction(action, containerId);
+            } catch (Exception e) {
+                LOGGER.log(Level.SEVERE, getNodeIpAndPort() + e.toString(), e);
+            }
+        } else {
+            String message = String.format("%s: Video recording is disabled", action.getRecordingAction());
+            LOGGER.log(Level.INFO, "{0} {1}", new Object[]{getNodeIpAndPort(), message});
         }
     }
 
@@ -199,6 +217,24 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         LOGGER.log(Level.INFO, "{0} Video files copies to: {1}", new Object[]{getNodeIpAndPort(), localPath});
     }
 
+    private static void readEnvVarForVideoRecording(DockerSeleniumRemoteProxy proxy) {
+        if (environment.getEnvVariable(ZALENIUM_VIDEO_RECORDING_ENABLED) != null) {
+            try {
+                boolean videoEnabled = Boolean.parseBoolean(environment.getEnvVariable(ZALENIUM_VIDEO_RECORDING_ENABLED));
+                setVideoRecordingEnabled(videoEnabled);
+            } catch (Exception e) {
+                String message = String.format("Env. variable %s is not a valid boolean.", ZALENIUM_VIDEO_RECORDING_ENABLED);
+                LOGGER.log(Level.WARNING, "{0} {1}", new Object[]{proxy.getNodeIpAndPort(), message});
+                setVideoRecordingEnabled(DEFAULT_VIDEO_RECORDING_ENABLED);
+            }
+        } else {
+            String message = String.format("Env. variable %s value is not set, falling back to default: %s.",
+                    ZALENIUM_VIDEO_RECORDING_ENABLED, DEFAULT_VIDEO_RECORDING_ENABLED);
+            LOGGER.log(Level.WARNING, "{0} {1}", new Object[]{proxy.getNodeIpAndPort(), message});
+            setVideoRecordingEnabled(DEFAULT_VIDEO_RECORDING_ENABLED);
+        }
+    }
+
     @VisibleForTesting
     protected static void setDockerClient(final DockerClient client) {
         dockerClient = client;
@@ -209,8 +245,26 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         dockerClient = defaultDockerClient;
     }
 
+    @VisibleForTesting
+    protected static void setEnvironment(final Environment env) {
+        environment = env;
+    }
+
+    @VisibleForTesting
+    protected static void restoreEnvironment() {
+        environment = defaultEnvironment;
+    }
+
     public DockerSeleniumNodePoller getDockerSeleniumNodePollerThread() {
         return dockerSeleniumNodePollerThread;
+    }
+
+    public static boolean isVideoRecordingEnabled() {
+        return videoRecordingEnabled;
+    }
+
+    public static void setVideoRecordingEnabled(boolean videoRecordingEnabled) {
+        DockerSeleniumRemoteProxy.videoRecordingEnabled = videoRecordingEnabled;
     }
 
     /*

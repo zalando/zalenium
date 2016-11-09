@@ -317,6 +317,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
         environment = env;
     }
 
+    @VisibleForTesting
     protected static void restoreEnvironment() {
         environment = defaultEnvironment;
     }

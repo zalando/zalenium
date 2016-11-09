@@ -6,6 +6,7 @@ MAX_DOCKER_SELENIUM_CONTAINERS=10
 SELENIUM_ARTIFACT="$(pwd)/selenium-server-standalone-${selenium-server.major-minor.version}.${selenium-server.patch-level.version}.jar"
 ZALENIUM_ARTIFACT="$(pwd)/${project.build.finalName}.jar"
 SAUCE_LABS_ENABLED=true
+VIDEO_RECORDING_ENABLED=true
 
 PID_PATH_SELENIUM=/tmp/selenium-pid
 PID_PATH_DOCKER_SELENIUM_NODE=/tmp/docker-selenium-node-pid
@@ -56,6 +57,11 @@ StartUp()
         exit 1
     fi
 
+    if [ "$VIDEO_RECORDING_ENABLED" != true && "$VIDEO_RECORDING_ENABLED" != false ]; then
+        echo "Parameter --videoRecordingEnabled must be a boolean value. Exiting..."
+        exit 1
+    fi
+
     if [ ! -f ${SELENIUM_ARTIFACT} ];
     then
         echo "Selenium JAR not present, exiting start script."
@@ -90,6 +96,7 @@ StartUp()
     export ZALENIUM_CHROME_CONTAINERS=${CHROME_CONTAINERS}
     export ZALENIUM_FIREFOX_CONTAINERS=${FIREFOX_CONTAINERS}
     export ZALENIUM_MAX_DOCKER_SELENIUM_CONTAINERS=${MAX_DOCKER_SELENIUM_CONTAINERS}
+    export ZALENIUM_VIDEO_RECORDING_ENABLED=${VIDEO_RECORDING_ENABLED}
 
     echo "Starting Selenium Hub..."
 
@@ -198,6 +205,7 @@ function usage()
     echo -e "\t --firefoxContainers -> Number of Firefox containers created on startup. Default is 1 when parameter is absent."
     echo -e "\t --maxDockerSeleniumContainers -> Max number of docker-selenium containers running at the same time. Default is 10 when parameter is absent."
     echo -e "\t --sauceLabsEnabled -> Determines if the Sauce Labs node is started. Defaults to 'true' when parameter absent."
+    echo -e "\t --videoRecordingEnabled -> Sets if video is recorded in every test. Defaults to 'true' when parameter absent."
     echo -e "\t stop"
     echo ""
     echo -e "\t Example: Starting Zalenium with 2 Chrome containers and without Sauce Labs"
@@ -233,6 +241,9 @@ case ${SCRIPT_ACTION} in
                     ;;
                 --sauceLabsEnabled)
                     SAUCE_LABS_ENABLED=${VALUE}
+                    ;;
+                --videoRecordingEnabled)
+                    VIDEO_RECORDING_ENABLED=${VALUE}
                     ;;
                 *)
                     echo "ERROR: unknown parameter \"$PARAM\""

@@ -64,6 +64,7 @@ Zalenium uses docker to scale on-demand, therefore we need to give it the `docke
   * `--firefoxContainers` -> Firefox nodes created on startup. Default is 1.
   * `--maxDockerSeleniumContainers` -> Max number of docker-selenium containers running at the same time. Default is 10.
   * `--sauceLabsEnabled` -> Start Sauce Labs node or not. Defaults to 'true'.
+  * `--videoRecordingEnabled` -> Sets if video is recorded in every test. Defaults to 'true'.
 
 * Stop it: `docker stop zalenium`
 
