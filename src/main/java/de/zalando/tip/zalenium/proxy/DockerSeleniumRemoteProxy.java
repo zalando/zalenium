@@ -223,14 +223,15 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                 boolean videoEnabled = Boolean.parseBoolean(environment.getEnvVariable(ZALENIUM_VIDEO_RECORDING_ENABLED));
                 setVideoRecordingEnabled(videoEnabled);
             } catch (Exception e) {
-                String message = String.format("Env. variable %s is not a valid boolean.", ZALENIUM_VIDEO_RECORDING_ENABLED);
-                LOGGER.log(Level.WARNING, "{0} {1}", new Object[]{proxy.getNodeIpAndPort(), message});
+                String message = String.format("%s Env. variable %s is not a valid boolean.",
+                        proxy.getNodeIpAndPort(), ZALENIUM_VIDEO_RECORDING_ENABLED);
+                LOGGER.log(Level.WARNING, message, e);
                 setVideoRecordingEnabled(DEFAULT_VIDEO_RECORDING_ENABLED);
             }
         } else {
-            String message = String.format("Env. variable %s value is not set, falling back to default: %s.",
-                    ZALENIUM_VIDEO_RECORDING_ENABLED, DEFAULT_VIDEO_RECORDING_ENABLED);
-            LOGGER.log(Level.WARNING, "{0} {1}", new Object[]{proxy.getNodeIpAndPort(), message});
+            String message = String.format("%s Env. variable %s value is not set, falling back to default: %s.",
+                    proxy.getNodeIpAndPort(), ZALENIUM_VIDEO_RECORDING_ENABLED, DEFAULT_VIDEO_RECORDING_ENABLED);
+            LOGGER.log(Level.FINE, message);
             setVideoRecordingEnabled(DEFAULT_VIDEO_RECORDING_ENABLED);
         }
     }
