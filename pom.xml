@@ -68,6 +68,7 @@
         <sonar.jacoco.reportPath>target/jacoco.exec</sonar.jacoco.reportPath>
         <skipTests>false</skipTests>
         <skip.surefire.tests>${skipTests}</skip.surefire.tests>
+        <skip.failsafe.setup>false</skip.failsafe.setup>
     </properties>
 
     <dependencies>
@@ -298,6 +299,7 @@
                                     <goal>exec</goal>
                                 </goals>
                                 <configuration>
+                                    <skip>${skip.failsafe.setup}</skip>
                                     <workingDirectory>${project.build.directory}</workingDirectory>
                                     <executable>docker</executable>
                                     <arguments>
@@ -316,6 +318,7 @@
                                     <goal>exec</goal>
                                 </goals>
                                 <configuration>
+                                    <skip>${skip.failsafe.setup}</skip>
                                     <workingDirectory>${project.build.directory}</workingDirectory>
                                     <executable>chmod</executable>
                                     <arguments>
@@ -332,6 +335,7 @@
                                     <goal>exec</goal>
                                 </goals>
                                 <configuration>
+                                    <skip>${skip.failsafe.setup}</skip>
                                     <executable>${project.build.directory}/zalenium_in_docker.sh</executable>
                                     <arguments>
                                         <argument>start</argument>
@@ -347,6 +351,7 @@
                                     <goal>exec</goal>
                                 </goals>
                                 <configuration>
+                                    <skip>${skip.failsafe.setup}</skip>
                                     <executable>${project.build.directory}/zalenium_in_docker.sh</executable>
                                     <arguments>
                                         <argument>stop</argument>
