@@ -70,7 +70,7 @@ Zalenium uses docker to scale on-demand, therefore we need to give it the `docke
 #### Using it
 * Just point your Selenium tests to http://localhost:4444/wd/hub and that's it!
 * You can use the [integration tests](./src/test/java/de/zalando/tip/zalenium/it/ParallelIT.java) we have to try Zalenium.
-* To see the recorded videos, check the `videos` subfolder, located where the JARs are running.
+* To see the recorded videos, check the `/tmp/videos` folder (or the folder that you mapped when starting the container).
 
 ## Contributions
 Any feedback or contributions are welcome! Please check our [guidelines](CONTRIBUTING.md), they just follow the general GitHub issue/PR flow.
@@ -113,6 +113,11 @@ Zalenium works conceptually in a simple way:
 7. If the test cannot be executed in [docker-selenium](https://github.com/elgalu/docker-selenium), it is processed by [Sauce Labs](https://saucelabs.com/). It takes the HTTP request, adds the Sauce Labs user and api key to it, and forwards it to the cloud platform.
 
 Basically, the tool makes the grid expand or contract depending on the amount of requests received.
+
+## About the project versioning
+* To make life easy for people who want to use it, we are now using as a version number the Selenium version being supported.
+* E.g. This release is `2.53.1a`, this means that this version is built with and supports Selenium 2.53.1.
+* The versioning will be similar to the one used in [docker-selenium](https://github.com/elgalu/docker-selenium)
 
 License
 ===================
