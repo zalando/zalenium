@@ -34,7 +34,7 @@ StartUp()
 
     docker run -d -ti --name zalenium -p 4444:4444 \
           -e SAUCE_USERNAME -e SAUCE_ACCESS_KEY \
-          -v /tmp/videos:/home/seluser/videos \
+          -v ${project.build.directory}/videos:/home/seluser/videos \
           -v /var/run/docker.sock:/var/run/docker.sock \
           ${ZALENIUM_DOCKER_IMAGE} start
 
