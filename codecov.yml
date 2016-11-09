@@ -1,0 +1,10 @@
+comment:
+  layout: header, changes, diff
+
+coverage:
+  status:
+    # set a GitHub PR status for overall project coverage with an automatically
+    # calculated coverage target
+    project:
+      default:
+        target: auto
