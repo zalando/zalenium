@@ -158,8 +158,9 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                 LOGGER.log(Level.SEVERE, getNodeIpAndPort() + e.toString(), e);
             }
         } else {
-            String message = String.format("%s: Video recording is disabled", action.getRecordingAction());
-            LOGGER.log(Level.INFO, "{0} {1}", new Object[]{getNodeIpAndPort(), message});
+            String message = String.format("%s %s: Video recording is disabled", getNodeIpAndPort(),
+                    action.getRecordingAction());
+            LOGGER.log(Level.INFO, message);
         }
     }
 
@@ -181,9 +182,9 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         final ExecCreation execCreation = dockerClient.execCreate(containerId, command,
                 DockerClient.ExecCreateParam.attachStdout(), DockerClient.ExecCreateParam.attachStderr());
         final LogStream output = dockerClient.execStart(execCreation.id());
-        LOGGER.log(Level.INFO, "{0} {1}", new Object[]{getNodeIpAndPort(), action.getRecordingAction()});
+        LOGGER.log(Level.INFO, String.format("%s %s", getNodeIpAndPort(), action.getRecordingAction()));
         try {
-            LOGGER.log(Level.INFO, "{0} {1}", new Object[]{getNodeIpAndPort(), output.readFully()});
+            LOGGER.log(Level.INFO, String.format("%s %s", getNodeIpAndPort(), output.readFully()));
         } catch (RuntimeException e) {
             LOGGER.log(Level.FINE, getNodeIpAndPort() + " " + e.toString(), e);
         }
