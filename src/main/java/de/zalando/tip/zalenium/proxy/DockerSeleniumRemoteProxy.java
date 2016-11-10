@@ -218,7 +218,8 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         LOGGER.log(Level.INFO, "{0} Video files copies to: {1}", new Object[]{getNodeIpAndPort(), localPath});
     }
 
-    private static void readEnvVarForVideoRecording(DockerSeleniumRemoteProxy proxy) {
+    @VisibleForTesting
+    protected static void readEnvVarForVideoRecording(DockerSeleniumRemoteProxy proxy) {
         if (environment.getEnvVariable(ZALENIUM_VIDEO_RECORDING_ENABLED) != null) {
             try {
                 boolean videoEnabled = Boolean.parseBoolean(environment.getEnvVariable(ZALENIUM_VIDEO_RECORDING_ENABLED));

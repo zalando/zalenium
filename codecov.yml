@@ -3,8 +3,11 @@ comment:
 
 coverage:
   status:
-    # set a GitHub PR status for overall project coverage with an automatically
-    # calculated coverage target
     project:
       default:
         target: auto
+        threshold: 0%
+    patch:
+      default:
+        target: auto
+        threshold: 0%
