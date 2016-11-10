@@ -293,7 +293,7 @@ public class DockerSeleniumRemoteProxyTest {
     private String waitForContainerToBeReady(DockerClient dockerClient, DockerSeleniumRemoteProxy spyProxy)
             throws DockerException, InterruptedException {
         Callable<Boolean> callable = () -> spyProxy.getContainerId() != null;
-        await().atMost(10, SECONDS).pollInterval(500, MILLISECONDS).until(callable);
+        await().atMost(20, SECONDS).pollInterval(500, MILLISECONDS).until(callable);
         String containerId = spyProxy.getContainerId();
         final String[] command = {"bash", "-c", "wait_all_done 30s"};
         final ExecCreation execCreation = dockerClient.execCreate(containerId, command,

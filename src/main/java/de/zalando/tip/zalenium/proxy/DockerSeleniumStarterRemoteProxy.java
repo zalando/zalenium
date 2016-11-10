@@ -54,7 +54,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     private static final int UPPER_PORT_BOUNDARY = 50000;
 
 
-    private static List<Integer> allocatedPorts = new ArrayList<>();
+    private List<Integer> allocatedPorts = new ArrayList<>();
 
     private static final DockerClient defaultDockerClient = new DefaultDockerClient("unix:///var/run/docker.sock");
     private static DockerClient dockerClient = defaultDockerClient;
@@ -443,7 +443,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     /*
         Method adapted from https://gist.github.com/vorburger/3429822
      */
-    private static int findFreePortInRange(int lowerBoundary, int upperBoundary) throws IllegalStateException {
+    private int findFreePortInRange(int lowerBoundary, int upperBoundary) throws IllegalStateException {
         for (int portNumber = lowerBoundary; portNumber <= upperBoundary; portNumber++) {
             if (!allocatedPorts.contains(portNumber)) {
                 int freePort = -1;

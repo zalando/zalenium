@@ -31,3 +31,8 @@ cache:
     - '$HOME/.m2/repository'
     - '$HOME/.sonar/cache'
 
+branches:
+  only:
+    - master
+    # Regular expression for release branches -> 2.53.1a
+    - /^([0-9]|[0-9][0-9])[.]([0-9]|[0-9][0-9])[.]([0-9]|[0-9][0-9])[a-z]$/

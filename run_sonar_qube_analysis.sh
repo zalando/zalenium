@@ -18,7 +18,8 @@ if [ "$TRAVIS_BRANCH" = "master" ] && [ "$TRAVIS_PULL_REQUEST" = "false" ]; then
 	echo "Starting analysis by SonarQube..."
 	mvn clean package sonar:sonar -B -e -V \
 		-Dsonar.host.url=$SONAR_HOST_URL \
-		-Dsonar.login=$SONAR_TOKEN
+		-Dsonar.login=$SONAR_TOKEN \
+		-Dskip.surefire.tests=true
 
 elif [ "$TRAVIS_PULL_REQUEST" != "false" ] && [ -n "${GITHUB_TOKEN-}" ]; then
 	# => This will analyse the PR and display found issues as comments in the PR, but it won't push results to the SonarQube server
@@ -34,6 +35,7 @@ elif [ "$TRAVIS_PULL_REQUEST" != "false" ] && [ -n "${GITHUB_TOKEN-}" ]; then
 		-Dsonar.analysis.mode=preview \
 		-Dsonar.github.oauth=$GITHUB_TOKEN \
 		-Dsonar.github.repository=$TRAVIS_REPO_SLUG \
-		-Dsonar.github.pullRequest=$TRAVIS_PULL_REQUEST
+		-Dsonar.github.pullRequest=$TRAVIS_PULL_REQUEST \
+		-Dskip.surefire.tests=true
 fi
 # When neither on master branch nor on a non-external pull request => nothing to do
