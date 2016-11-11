@@ -4,10 +4,15 @@ import com.spotify.docker.client.DockerClient;
 import com.spotify.docker.client.exceptions.DockerException;
 import com.spotify.docker.client.messages.ContainerConfig;
 import com.spotify.docker.client.messages.ContainerCreation;
+import de.zalando.tip.zalenium.util.CommonProxyUtilities;
 import de.zalando.tip.zalenium.util.Environment;
 import de.zalando.tip.zalenium.util.TestUtils;
 import org.hamcrest.CoreMatchers;
-import org.junit.*;
+import org.junit.After;
+import org.junit.AfterClass;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
 import org.openqa.grid.common.RegistrationRequest;
 import org.openqa.grid.internal.Registry;
 import org.openqa.grid.internal.TestSession;
@@ -57,6 +62,7 @@ public class DockerSeleniumStarterRemoteProxyTest {
     public static void tearDown() {
         DockerSeleniumStarterRemoteProxy.restoreDockerClient();
         DockerSeleniumStarterRemoteProxy.restoreEnvironment();
+        DockerSeleniumStarterRemoteProxy.restoreCommonProxyUtilities();
     }
 
     @Test
@@ -117,6 +123,9 @@ public class DockerSeleniumStarterRemoteProxyTest {
 
     @Test
     public void fallBackToDefaultCapabilitiesWhenWebCapabilitiesUrlIsNotValid() {
+        // Clearing the current loaded capabilities in the class
+        DockerSeleniumStarterRemoteProxy.clearCapabilities();
+
         RegistrationRequest registrationRequest = new RegistrationRequest();
         String url = "this_is_not_a_url";
         registrationRequest = DockerSeleniumStarterRemoteProxy.updateDSCapabilities(registrationRequest, url);
@@ -128,6 +137,9 @@ public class DockerSeleniumStarterRemoteProxyTest {
 
     @Test
     public void fallBackToDefaultCapabilitiesWhenWebCapabilitiesUrlReturnsNoJson() {
+        // Clearing the current loaded capabilities in the class
+        DockerSeleniumStarterRemoteProxy.clearCapabilities();
+
         RegistrationRequest registrationRequest = new RegistrationRequest();
         String url = "https://www.google.com";
         registrationRequest = DockerSeleniumStarterRemoteProxy.updateDSCapabilities(registrationRequest, url);
@@ -139,6 +151,9 @@ public class DockerSeleniumStarterRemoteProxyTest {
 
     @Test
     public void fallBackToDefaultCapabilitiesWhenWebCapabilitiesUrlReturnsAJsonWithWrongFields() {
+        // Clearing the current loaded capabilities in the class
+        DockerSeleniumStarterRemoteProxy.clearCapabilities();
+
         RegistrationRequest registrationRequest = new RegistrationRequest();
         String url = "http://ip.jsontest.com/";
         registrationRequest = DockerSeleniumStarterRemoteProxy.updateDSCapabilities(registrationRequest, url);
@@ -250,6 +265,35 @@ public class DockerSeleniumStarterRemoteProxyTest {
                 DockerSeleniumStarterRemoteProxy.getFirefoxContainersOnStartup());
         Assert.assertEquals(DockerSeleniumStarterRemoteProxy.DEFAULT_AMOUNT_DOCKER_SELENIUM_CONTAINERS_RUNNING,
                 DockerSeleniumStarterRemoteProxy.getMaxDockerSeleniumContainers());
+    }
+
+    @Test
+    public void useDockerSeleniumFallbackCapabilitiesWhenTheOnesFromGitHubAreNotAvailable() {
+        // Mocking the utility class that fetches the json from a given url
+        CommonProxyUtilities commonProxyUtilities = mock(CommonProxyUtilities.class);
+        when(commonProxyUtilities.readJSONFromUrl(anyString())).thenReturn(null);
+        DockerSeleniumStarterRemoteProxy.setCommonProxyUtilities(commonProxyUtilities);
+
+        // Clearing the current loaded capabilities in the class
+        DockerSeleniumStarterRemoteProxy.clearCapabilities();
+
+        // Check that the registration request gets updated with after it is processed by the proxy
+        RegistrationRequest request = TestUtils.getRegistrationRequestForTesting(30000,
+                DockerSeleniumStarterRemoteProxy.class.getCanonicalName());
+
+        // Assuring the capabilities are empty
+        Assert.assertTrue(request.getCapabilities().isEmpty());
+
+        request = DockerSeleniumStarterRemoteProxy.updateDSCapabilities(request,
+                DockerSeleniumStarterRemoteProxy.DOCKER_SELENIUM_CAPABILITIES_URL);
+
+        // Now the capabilities should be filled even if the url was not fetched
+        Assert.assertFalse(request.getCapabilities().isEmpty());
+
+        Assert.assertEquals("Should return 2 capabilities", request.getCapabilities().size(), 2);
+        Assert.assertThat(request.getCapabilities().toString(), CoreMatchers.containsString(BrowserType.FIREFOX));
+        Assert.assertThat(request.getCapabilities().toString(), CoreMatchers.containsString(BrowserType.CHROME));
+        Assert.assertThat(request.getCapabilities().toString(), CoreMatchers.containsString(Platform.LINUX.name()));
     }
 
 }
