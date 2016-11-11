@@ -14,15 +14,11 @@ public class CommonProxyUtilities {
 
     private static final Logger LOG = Logger.getLogger(CommonProxyUtilities.class.getName());
 
-    private CommonProxyUtilities() {
-        throw new IllegalAccessError("Utility class");
-    }
-
     /*
         Reading a JSON with DockerSelenium capabilities from a given URL
         http://stackoverflow.com/questions/4308554/simplest-way-to-read-json-from-a-url-in-java
      */
-    public static JsonElement readJSONFromUrl(String url) {
+    public JsonElement readJSONFromUrl(String url) {
         try {
             InputStream is = new URL(url).openStream();
             BufferedReader rd = new BufferedReader(new InputStreamReader(is, Charset.forName("UTF-8")));
@@ -35,7 +31,7 @@ public class CommonProxyUtilities {
         return null;
     }
 
-    public static JsonElement readJSONFromFile(String fileName) {
+    public JsonElement readJSONFromFile(String fileName) {
         try(FileReader fr = new FileReader(new File(currentLocalPath(), fileName))) {
             BufferedReader rd = new BufferedReader(fr);
             String jsonText = readAll(rd);
@@ -46,7 +42,7 @@ public class CommonProxyUtilities {
         return null;
     }
 
-    public static String currentLocalPath() {
+    public String currentLocalPath() {
         try {
             File jarLocation = new File(CommonProxyUtilities.class.getProtectionDomain().getCodeSource()
                     .getLocation().toURI().getPath());

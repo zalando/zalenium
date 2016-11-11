@@ -1,6 +1,7 @@
 package de.zalando.tip.zalenium.proxy;
 
 import com.google.gson.JsonObject;
+import de.zalando.tip.zalenium.util.CommonProxyUtilities;
 import de.zalando.tip.zalenium.util.TestUtils;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -17,7 +18,9 @@ import org.openqa.selenium.remote.CapabilityType;
 
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
+import java.io.File;
 import java.io.IOException;
+import java.net.URL;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -27,6 +30,7 @@ import java.util.Map;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.anyString;
 
 public class SauceLabsRemoteProxyTest {
 
@@ -141,6 +145,34 @@ public class SauceLabsRemoteProxyTest {
                                 "\"MAC\",\"username\":\"%s\",\"accessKey\":\"%s\"}}", System.getenv("SAUCE_USERNAME"),
                         System.getenv("SAUCE_ACCESS_KEY"));
         verify(request).setBody(expectedBody);
+    }
+
+    @Test
+    public void useSauceLabsFallbackCapabilitiesFileWhenTheOnesFromSauceLabsAreNotAvailable() {
+        try {
+            // Mocking the utility class that fetches the json from a given url
+            URL resource = this.getClass().getClassLoader().getResource("saucelabs_capabilities.json");
+            File fileLocation = new File(resource.getPath());
+            CommonProxyUtilities commonProxyUtilities = mock(CommonProxyUtilities.class);
+            when(commonProxyUtilities.readJSONFromUrl(anyString())).thenReturn(null);
+            when(commonProxyUtilities.readJSONFromFile(anyString())).thenCallRealMethod();
+            when(commonProxyUtilities.currentLocalPath()).thenReturn(fileLocation.getParent());
+            SauceLabsRemoteProxy.setCommonProxyUtilities(commonProxyUtilities);
+
+            RegistrationRequest request = TestUtils.getRegistrationRequestForTesting(30001,
+                    SauceLabsRemoteProxy.class.getCanonicalName());
+
+            // Assuring the capabilities are empty
+            Assert.assertTrue(request.getCapabilities().isEmpty());
+
+            request = SauceLabsRemoteProxy.updateSLCapabilities(request,
+                    SauceLabsRemoteProxy.SAUCE_LABS_CAPABILITIES_URL);
+
+            // Now the capabilities should be filled even if the url was not fetched
+            Assert.assertFalse(request.getCapabilities().isEmpty());
+        } finally {
+            SauceLabsRemoteProxy.restoreCommonProxyUtilities();
+        }
     }
 
 }

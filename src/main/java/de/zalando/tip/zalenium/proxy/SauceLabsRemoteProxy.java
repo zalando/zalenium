@@ -1,5 +1,6 @@
 package de.zalando.tip.zalenium.proxy;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -30,8 +31,13 @@ import java.util.logging.Logger;
 public class SauceLabsRemoteProxy extends DefaultRemoteProxy {
 
     private static final Logger LOGGER = Logger.getLogger(SauceLabsRemoteProxy.class.getName());
-    private static final String SAUCE_LABS_CAPABILITIES_URL = "http://saucelabs.com/rest/v1/info/platforms/webdriver";
-    private static final String SAUCE_LABS_CAPABILITIES_BK_FILE = "saucelabs_capabilities.json";
+    private static final String SAUCE_LABS_DEFAULT_CAPABILITIES_BK_FILE = "saucelabs_capabilities.json";
+
+    @VisibleForTesting
+    protected static final String SAUCE_LABS_CAPABILITIES_URL = "http://saucelabs.com/rest/v1/info/platforms/webdriver";
+
+    private static final CommonProxyUtilities defaultCommonProxyUtilities = new CommonProxyUtilities();
+    private static CommonProxyUtilities commonProxyUtilities = defaultCommonProxyUtilities;
 
     public static final String SAUCE_LABS_USER_NAME = System.getenv("SAUCE_USERNAME");
     public static final String SAUCE_LABS_ACCESS_KEY = System.getenv("SAUCE_ACCESS_KEY");
@@ -41,8 +47,9 @@ public class SauceLabsRemoteProxy extends DefaultRemoteProxy {
         super(updateSLCapabilities(request, SAUCE_LABS_CAPABILITIES_URL), registry);
     }
 
-    private static RegistrationRequest updateSLCapabilities(RegistrationRequest registrationRequest, String url) {
-        JsonElement slCapabilities = CommonProxyUtilities.readJSONFromUrl(url);
+    @VisibleForTesting
+    protected static RegistrationRequest updateSLCapabilities(RegistrationRequest registrationRequest, String url) {
+        JsonElement slCapabilities = commonProxyUtilities.readJSONFromUrl(url);
 
         try {
             registrationRequest.getCapabilities().clear();
@@ -50,7 +57,7 @@ public class SauceLabsRemoteProxy extends DefaultRemoteProxy {
                 LOGGER.log(Level.INFO, "[SL] Capabilities fetched from {0}", url);
             } else {
                 LOGGER.log(Level.SEVERE, "[SL] Capabilities were NOT fetched from {0}, loading from backup file", url);
-                slCapabilities = CommonProxyUtilities.readJSONFromFile(SAUCE_LABS_CAPABILITIES_BK_FILE);
+                slCapabilities = commonProxyUtilities.readJSONFromFile(SAUCE_LABS_DEFAULT_CAPABILITIES_BK_FILE);
             }
             return addCapabilitiesToRegistrationRequest(registrationRequest, slCapabilities);
         } catch (Exception e) {
@@ -124,6 +131,16 @@ public class SauceLabsRemoteProxy extends DefaultRemoteProxy {
             }
         }
         return false;
+    }
+
+    @VisibleForTesting
+    protected static void setCommonProxyUtilities(final CommonProxyUtilities utilities) {
+        commonProxyUtilities = utilities;
+    }
+
+    @VisibleForTesting
+    protected static void restoreCommonProxyUtilities() {
+        commonProxyUtilities = defaultCommonProxyUtilities;
     }
 
     /*

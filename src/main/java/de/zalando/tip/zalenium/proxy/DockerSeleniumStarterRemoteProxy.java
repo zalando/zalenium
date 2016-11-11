@@ -46,7 +46,8 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     private static final Logger LOGGER = Logger.getLogger(DockerSeleniumStarterRemoteProxy.class.getName());
 
     private static final String DOCKER_SELENIUM_IMAGE = "elgalu/selenium";
-    private static final String DOCKER_SELENIUM_CAPABILITIES_URL = "https://raw.githubusercontent.com/elgalu/docker-selenium/latest/capabilities.json";
+    @VisibleForTesting
+    protected static final String DOCKER_SELENIUM_CAPABILITIES_URL = "https://raw.githubusercontent.com/elgalu/docker-selenium/latest/capabilities.json";
 
     private static List<DesiredCapabilities> dockerSeleniumCapabilities = new ArrayList<>();
 
@@ -54,13 +55,16 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     private static final int UPPER_PORT_BOUNDARY = 50000;
 
 
-    private static List<Integer> allocatedPorts = new ArrayList<>();
+    private List<Integer> allocatedPorts = new ArrayList<>();
 
     private static final DockerClient defaultDockerClient = new DefaultDockerClient("unix:///var/run/docker.sock");
     private static DockerClient dockerClient = defaultDockerClient;
 
     private static final Environment defaultEnvironment = new Environment();
     private static Environment environment = defaultEnvironment;
+
+    private static final CommonProxyUtilities defaultCommonProxyUtilities = new CommonProxyUtilities();
+    private static CommonProxyUtilities commonProxyUtilities = defaultCommonProxyUtilities;
 
     @VisibleForTesting
     protected static final int DEFAULT_AMOUNT_CHROME_CONTAINERS = 0;
@@ -207,6 +211,11 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
         return registrationRequest;
     }
 
+    @VisibleForTesting
+    protected static void clearCapabilities() {
+        dockerSeleniumCapabilities.clear();
+    }
+
     public static List<DesiredCapabilities> getCapabilities(String url) {
         if (!dockerSeleniumCapabilities.isEmpty()) {
             return dockerSeleniumCapabilities;
@@ -317,8 +326,19 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
         environment = env;
     }
 
+    @VisibleForTesting
     protected static void restoreEnvironment() {
         environment = defaultEnvironment;
+    }
+
+    @VisibleForTesting
+    protected static void setCommonProxyUtilities(final CommonProxyUtilities utilities) {
+        commonProxyUtilities = utilities;
+    }
+
+    @VisibleForTesting
+    protected static void restoreCommonProxyUtilities() {
+        commonProxyUtilities = defaultCommonProxyUtilities;
     }
 
     public static int getFirefoxContainersOnStartup() {
@@ -349,7 +369,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     }
 
     private static List<DesiredCapabilities> getDockerSeleniumCapabilitiesFromGitHub(String url) {
-        JsonElement dsCapabilities = CommonProxyUtilities.readJSONFromUrl(url);
+        JsonElement dsCapabilities = commonProxyUtilities.readJSONFromUrl(url);
         List<DesiredCapabilities> desiredCapabilitiesArrayList = new ArrayList<>();
         try {
             if (dsCapabilities != null) {
@@ -377,6 +397,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
         desiredCapabilities.setPlatform(Platform.LINUX);
         desiredCapabilities.setCapability(RegistrationRequest.MAX_INSTANCES, 1);
         dsCapabilities.add(desiredCapabilities);
+        desiredCapabilities = new DesiredCapabilities();
         desiredCapabilities.setBrowserName(BrowserType.CHROME);
         desiredCapabilities.setPlatform(Platform.LINUX);
         desiredCapabilities.setCapability(RegistrationRequest.MAX_INSTANCES, 1);
@@ -442,7 +463,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     /*
         Method adapted from https://gist.github.com/vorburger/3429822
      */
-    private static int findFreePortInRange(int lowerBoundary, int upperBoundary) throws IllegalStateException {
+    private int findFreePortInRange(int lowerBoundary, int upperBoundary) throws IllegalStateException {
         for (int portNumber = lowerBoundary; portNumber <= upperBoundary; portNumber++) {
             if (!allocatedPorts.contains(portNumber)) {
                 int freePort = -1;

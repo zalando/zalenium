@@ -14,7 +14,7 @@ script:
   # Run SonarQube analysis
   - ./run_sonar_qube_analysis.sh
   # Run integration tests
-  - mvn clean verify -Pintegration-test -DthreadCountProperty=2 -Dskip.surefire.tests=true
+  - travis_retry mvn clean verify -Pintegration-test -DthreadCountProperty=2 -Dskip.surefire.tests=true
   # Run unit tests for coverage
   - mvn clean package -Pcoverage-report
 
@@ -31,3 +31,8 @@ cache:
     - '$HOME/.m2/repository'
     - '$HOME/.sonar/cache'
 
+branches:
+  only:
+    - master
+    # Regular expression for release branches -> 2.53.1a
+    - /^([0-9]|[0-9][0-9])[.]([0-9]|[0-9][0-9])[.]([0-9]|[0-9][0-9])[a-z]$/

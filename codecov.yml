@@ -1,0 +1,13 @@
+comment:
+  layout: header, changes, diff
+
+coverage:
+  status:
+    project:
+      default:
+        target: auto
+        threshold: 0%
+    patch:
+      default:
+        target: auto
+        threshold: 0%
