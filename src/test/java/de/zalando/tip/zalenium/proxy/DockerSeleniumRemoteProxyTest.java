@@ -157,6 +157,18 @@ public class DockerSeleniumRemoteProxyTest {
     }
 
     @Test
+    public void fallbackToDefaultValueWhenEnvVariableIsNotABoolean() {
+        Environment environment = mock(Environment.class);
+        when(environment.getEnvVariable(DockerSeleniumRemoteProxy.ZALENIUM_VIDEO_RECORDING_ENABLED))
+                .thenReturn("any_nonsense_value");
+        DockerSeleniumRemoteProxy.setEnvironment(environment);
+        DockerSeleniumRemoteProxy.readEnvVarForVideoRecording(proxy);
+
+        Assert.assertEquals(DockerSeleniumRemoteProxy.DEFAULT_VIDEO_RECORDING_ENABLED,
+                DockerSeleniumRemoteProxy.isVideoRecordingEnabled());
+    }
+
+    @Test
     public void videoRecordingIsStartedAndStopped() throws DockerException, InterruptedException,
             URISyntaxException, IOException {
 

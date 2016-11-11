@@ -60,6 +60,8 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     private static final Environment defaultEnvironment = new Environment();
     private static Environment environment = defaultEnvironment;
 
+    private static CommonProxyUtilities commonProxyUtilities = new CommonProxyUtilities();
+
     public enum VideoRecordingAction {
         START_RECORDING("start-video"), STOP_RECORDING("stop-video");
 
@@ -197,7 +199,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     @SuppressWarnings("ResultOfMethodCallIgnored")
     @VisibleForTesting
     protected void copyVideos(final String containerId) throws IOException, DockerException, InterruptedException, URISyntaxException {
-        String localPath = CommonProxyUtilities.currentLocalPath();
+        String localPath = commonProxyUtilities.currentLocalPath();
         try(TarArchiveInputStream tarStream = new TarArchiveInputStream(dockerClient.archiveContainer(containerId,
                 "/videos/"))) {
             TarArchiveEntry entry;
@@ -221,13 +223,13 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     @VisibleForTesting
     protected static void readEnvVarForVideoRecording(DockerSeleniumRemoteProxy proxy) {
         if (environment.getEnvVariable(ZALENIUM_VIDEO_RECORDING_ENABLED) != null) {
-            try {
-                boolean videoEnabled = Boolean.parseBoolean(environment.getEnvVariable(ZALENIUM_VIDEO_RECORDING_ENABLED));
-                setVideoRecordingEnabled(videoEnabled);
-            } catch (Exception e) {
+            String videoEnabled = environment.getEnvVariable(ZALENIUM_VIDEO_RECORDING_ENABLED).toLowerCase();
+            if ("true".equalsIgnoreCase(videoEnabled) || "false".equalsIgnoreCase(videoEnabled)) {
+                setVideoRecordingEnabled(Boolean.parseBoolean(videoEnabled));
+            } else {
                 String message = String.format("%s Env. variable %s is not a valid boolean.",
                         proxy.getNodeIpAndPort(), ZALENIUM_VIDEO_RECORDING_ENABLED);
-                LOGGER.log(Level.WARNING, message, e);
+                LOGGER.log(Level.WARNING, message);
                 setVideoRecordingEnabled(DEFAULT_VIDEO_RECORDING_ENABLED);
             }
         } else {
