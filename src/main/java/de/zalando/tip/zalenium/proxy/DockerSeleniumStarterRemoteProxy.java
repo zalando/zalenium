@@ -111,6 +111,12 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
             return null;
         }
 
+        if (!requestedCapability.containsKey(CapabilityType.BROWSER_NAME)) {
+            LOGGER.log(Level.INFO, String.format("%s Capability %s does no contain %s key.", LOGGING_PREFIX,
+                    requestedCapability, CapabilityType.BROWSER_NAME));
+            return null;
+        }
+
         LOGGER.log(Level.INFO, LOGGING_PREFIX + "Starting new node for {0}.", requestedCapability);
 
         String browserName = requestedCapability.get(CapabilityType.BROWSER_NAME).toString();
