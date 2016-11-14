@@ -57,7 +57,7 @@ StartUp()
         exit 1
     fi
 
-    if [ "$VIDEO_RECORDING_ENABLED" != true && "$VIDEO_RECORDING_ENABLED" != false ]; then
+    if [ "$VIDEO_RECORDING_ENABLED" != true ] && [ "$VIDEO_RECORDING_ENABLED" != false ]; then
         echo "Parameter --videoRecordingEnabled must be a boolean value. Exiting..."
         exit 1
     fi
@@ -101,7 +101,7 @@ StartUp()
     echo "Starting Selenium Hub..."
 
     mkdir -p logs
-    rm logs/*hub*.log
+
     java -cp ${SELENIUM_ARTIFACT}:${ZALENIUM_ARTIFACT} org.openqa.grid.selenium.GridLauncher \
     -role hub -throwOnCapabilityNotPresent true > logs/stdout.zalenium.hub.log &
     echo $! > ${PID_PATH_SELENIUM}
@@ -113,8 +113,6 @@ StartUp()
         sleep 1
     fi
     echo "Selenium Hub started!"
-
-    rm logs/*node*.log
 
     echo "Starting DockerSeleniumStarter node..."
 
