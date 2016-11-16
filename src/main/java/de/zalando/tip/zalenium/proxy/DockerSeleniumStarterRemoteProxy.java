@@ -277,10 +277,6 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
                 LOGGER.log(Level.SEVERE, LOGGING_PREFIX + e.toString(), e);
             }
         }
-        /*
-            Temporal method implemented until https://github.com/spotify/docker-client/issues/488 gets solved.
-         */
-        removeExitedDockerSeleniumContainers();
     }
 
     private String getLatestDownloadedImage(String imageName) throws DockerException, InterruptedException {
@@ -419,23 +415,6 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
         dsCapabilities.add(desiredCapabilities);
         return dsCapabilities;
     }
-
-    /*
-        Temporal method implemented until https://github.com/spotify/docker-client/issues/488 gets solved.
-     */
-    private void removeExitedDockerSeleniumContainers(){
-        try {
-            List<Container> containerList = dockerClient.listContainers(DockerClient.ListContainersParam.withStatusExited());
-            for (Container container : containerList) {
-                if (container.image().contains(DOCKER_SELENIUM_IMAGE)) {
-                    dockerClient.removeContainer(container.id());
-                }
-            }
-        } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, LOGGING_PREFIX + e.toString(), e);
-        }
-    }
-
 
     private boolean validateAmountOfDockerSeleniumContainers() {
         try {
