@@ -7,10 +7,10 @@ import java.util.logging.Logger;
 
 public class Environment {
 
-    private final Logger LOGGER = Logger.getLogger(Environment.class.getName());
+    private final Logger logger = Logger.getLogger(Environment.class.getName());
 
-    private static final String envVarIsNotSetMessage = "Env. variable %s value is not set, falling back to default: %s.";
-    private static final String envVarIsNotAValidDataTypeMessage = "Env. variable %s is not a valid %s.";
+    private static final String ENV_VAR_IS_NOT_SET = "Env. variable %s value is not set, falling back to default: %s.";
+    private static final String ENV_VAR_IS_NOT_A_VALID_DATA_TYPE = "Env. variable %s is not a valid %s.";
 
     @VisibleForTesting
     public String getEnvVariable(String envVariableName) {
@@ -22,11 +22,11 @@ public class Environment {
             try {
                 return Integer.parseInt(getEnvVariable(envVariableName));
             } catch (Exception e) {
-                LOGGER.log(Level.WARNING, String.format(envVarIsNotAValidDataTypeMessage, envVariableName, "integer"), e);
+                logger.log(Level.WARNING, String.format(ENV_VAR_IS_NOT_A_VALID_DATA_TYPE, envVariableName, "integer"), e);
                 return defaultValue;
             }
         } else {
-            LOGGER.log(Level.FINE, String.format(envVarIsNotSetMessage, envVariableName, defaultValue));
+            logger.log(Level.FINE, String.format(ENV_VAR_IS_NOT_SET, envVariableName, defaultValue));
             return defaultValue;
         }
     }
@@ -36,11 +36,11 @@ public class Environment {
             try {
                 return String.valueOf(getEnvVariable(envVariableName));
             } catch (Exception e) {
-                LOGGER.log(Level.WARNING, String.format(envVarIsNotAValidDataTypeMessage, envVariableName, "String"), e);
+                logger.log(Level.WARNING, String.format(ENV_VAR_IS_NOT_A_VALID_DATA_TYPE, envVariableName, "String"), e);
                 return defaultValue;
             }
         } else {
-            LOGGER.log(Level.FINE, String.format(envVarIsNotSetMessage, envVariableName, defaultValue));
+            logger.log(Level.FINE, String.format(ENV_VAR_IS_NOT_SET, envVariableName, defaultValue));
             return defaultValue;
         }
     }
@@ -51,11 +51,11 @@ public class Environment {
             if("true".equalsIgnoreCase(var) || "false".equalsIgnoreCase(var)) {
                 return Boolean.parseBoolean(var);
             } else{
-                LOGGER.log(Level.WARNING, String.format(envVarIsNotAValidDataTypeMessage, envVariableName, "boolean"));
+                logger.log(Level.WARNING, String.format(ENV_VAR_IS_NOT_A_VALID_DATA_TYPE, envVariableName, "boolean"));
                 return defaultValue;
             }
         } else {
-            LOGGER.log(Level.FINE, String.format(envVarIsNotSetMessage, envVariableName, defaultValue));
+            logger.log(Level.FINE, String.format(ENV_VAR_IS_NOT_SET, envVariableName, defaultValue));
             return defaultValue;
         }
     }
