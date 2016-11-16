@@ -7,6 +7,9 @@ SELENIUM_ARTIFACT="$(pwd)/selenium-server-standalone-${selenium-server.major-min
 ZALENIUM_ARTIFACT="$(pwd)/${project.build.finalName}.jar"
 SAUCE_LABS_ENABLED=true
 VIDEO_RECORDING_ENABLED=true
+SCREEN_WIDTH=1900
+SCREEN_HEIGHT=1880
+TZ="Europe/Berlin"
 
 PID_PATH_SELENIUM=/tmp/selenium-pid
 PID_PATH_DOCKER_SELENIUM_NODE=/tmp/docker-selenium-node-pid
@@ -39,26 +42,6 @@ StartUp()
     DOCKER_SELENIUM_IMAGE_COUNT=$(docker images | grep "elgalu/selenium" | wc -l)
     if [ ${DOCKER_SELENIUM_IMAGE_COUNT} -eq 0 ]; then
         echo "Seems that docker-selenium's image has not been downloaded yet, please run 'docker pull elgalu/selenium' first"
-        exit 1
-    fi
-
-    if ! [[ ${CHROME_CONTAINERS} =~ ^-?[0-9]+$ ]]; then
-        echo "Parameter --chromeContainers must be an integer. Exiting..."
-        exit 1
-    fi
-
-    if ! [[ ${FIREFOX_CONTAINERS} =~ ^-?[0-9]+$ ]]; then
-        echo "Parameter --firefoxContainers must be an integer. Exiting..."
-        exit 1
-    fi
-
-    if ! [[ ${MAX_DOCKER_SELENIUM_CONTAINERS} =~ ^-?[0-9]+$ ]]; then
-        echo "Parameter --maxDockerSeleniumContainers must be an integer. Exiting..."
-        exit 1
-    fi
-
-    if [ "$VIDEO_RECORDING_ENABLED" != true ] && [ "$VIDEO_RECORDING_ENABLED" != false ]; then
-        echo "Parameter --videoRecordingEnabled must be a boolean value. Exiting..."
         exit 1
     fi
 
@@ -97,6 +80,9 @@ StartUp()
     export ZALENIUM_FIREFOX_CONTAINERS=${FIREFOX_CONTAINERS}
     export ZALENIUM_MAX_DOCKER_SELENIUM_CONTAINERS=${MAX_DOCKER_SELENIUM_CONTAINERS}
     export ZALENIUM_VIDEO_RECORDING_ENABLED=${VIDEO_RECORDING_ENABLED}
+    export ZALENIUM_TZ=${TZ}
+    export ZALENIUM_SCREEN_WIDTH=${SCREEN_WIDTH}
+    export ZALENIUM_SCREEN_HEIGHT=${SCREEN_HEIGHT}
 
     echo "Starting Selenium Hub..."
 
@@ -196,7 +182,7 @@ function usage()
 {
     echo "Usage:"
     echo ""
-    echo "./zalenium.sh"
+    echo "zalenium"
     echo -e "\t -h --help"
     echo -e "\t start <options, see below>"
     echo -e "\t --chromeContainers -> Number of Chrome containers created on startup. Default is 1 when parameter is absent."
@@ -204,10 +190,17 @@ function usage()
     echo -e "\t --maxDockerSeleniumContainers -> Max number of docker-selenium containers running at the same time. Default is 10 when parameter is absent."
     echo -e "\t --sauceLabsEnabled -> Determines if the Sauce Labs node is started. Defaults to 'true' when parameter absent."
     echo -e "\t --videoRecordingEnabled -> Sets if video is recorded in every test. Defaults to 'true' when parameter absent."
+    echo -e "\t --screenWidth -> Sets the screen width. Defaults to 1900"
+    echo -e "\t --screenHeight -> Sets the screen height. Defaults to 1880"
+    echo -e "\t --timeZone -> Sets the time zone in the containers. Defaults to \"Europe/Berlin\""
+    echo ""
     echo -e "\t stop"
     echo ""
-    echo -e "\t Example: Starting Zalenium with 2 Chrome containers and without Sauce Labs"
-    echo -e "\t ./zalenium.sh start --chromeContainers 2 --sauceLabsEnabled false"
+    echo -e "\t Examples:"
+    echo -e "\t - Starting Zalenium with 2 Chrome containers and without Sauce Labs"
+    echo -e "\t start --chromeContainers 2 --sauceLabsEnabled false"
+    echo -e "\t - Starting Zalenium screen width 1440 and height 810, time zone \"America/Montreal\""
+    echo -e "\t start --screenWidth 1440 --screenHeight 810 --timeZone \"America/Montreal\""
 }
 
 SCRIPT_ACTION=$1
@@ -242,6 +235,15 @@ case ${SCRIPT_ACTION} in
                     ;;
                 --videoRecordingEnabled)
                     VIDEO_RECORDING_ENABLED=${VALUE}
+                    ;;
+                --screenWidth)
+                    SCREEN_WIDTH=${VALUE}
+                    ;;
+                --screenHeight)
+                    SCREEN_HEIGHT=${VALUE}
+                    ;;
+                --timeZone)
+                    TZ=${VALUE}
                     ;;
                 *)
                     echo "ERROR: unknown parameter \"$PARAM\""
