@@ -46,6 +46,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.withSettings;
 
 public class DockerSeleniumRemoteProxyTest {
 
@@ -158,11 +159,12 @@ public class DockerSeleniumRemoteProxyTest {
 
     @Test
     public void fallbackToDefaultValueWhenEnvVariableIsNotABoolean() {
-        Environment environment = mock(Environment.class);
+        Environment environment = mock(Environment.class, withSettings().useConstructor());
         when(environment.getEnvVariable(DockerSeleniumRemoteProxy.ZALENIUM_VIDEO_RECORDING_ENABLED))
                 .thenReturn("any_nonsense_value");
-        DockerSeleniumRemoteProxy.setEnvironment(environment);
-        DockerSeleniumRemoteProxy.readEnvVarForVideoRecording(proxy);
+        when(environment.getBooleanEnvVariable(any(String.class), any(Boolean.class))).thenCallRealMethod();
+        DockerSeleniumRemoteProxy.setEnv(environment);
+        DockerSeleniumRemoteProxy.readEnvVarForVideoRecording();
 
         Assert.assertEquals(DockerSeleniumRemoteProxy.DEFAULT_VIDEO_RECORDING_ENABLED,
                 DockerSeleniumRemoteProxy.isVideoRecordingEnabled());
@@ -251,8 +253,8 @@ public class DockerSeleniumRemoteProxyTest {
             // Creating a spy proxy to verify the invoked methods
             DockerSeleniumRemoteProxy spyProxy = spy(proxy);
             DockerSeleniumRemoteProxy.setDockerClient(dockerClient);
-            DockerSeleniumRemoteProxy.setEnvironment(environment);
-            DockerSeleniumRemoteProxy.readEnvVarForVideoRecording(spyProxy);
+            DockerSeleniumRemoteProxy.setEnv(environment);
+            DockerSeleniumRemoteProxy.readEnvVarForVideoRecording();
 
             // Wait for the container to be ready
             containerId = waitForContainerToBeReady(dockerClient, spyProxy);

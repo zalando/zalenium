@@ -20,7 +20,7 @@ release_version()
 develop_version()
 {
     # next development version, since it only updates the pom.xml, we skip the Travis build
-    mvn versions:set -DnewVersion=${NEW_VERSION} scm:add -Dincludes="**/pom.xml" scm:checkin -Dmessage="[skip ci]Develop $NEW_VERSION"
+    mvn versions:set -DnewVersion=${NEW_VERSION} scm:add -Dincludes="**/pom.xml" scm:checkin -Dmessage="Develop $NEW_VERSION"
 }
 
 case ${SCRIPT_ACTION} in

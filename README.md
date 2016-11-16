@@ -57,6 +57,14 @@ Zalenium uses docker to scale on-demand, therefore we need to give it the `docke
       dosel/zalenium start --sauceLabsEnabled false
   ```
 
+* Start it with screen width and height, and time zone:
+  ```sh
+    docker run --rm -ti --name zalenium -p 4444:4444 \
+      -v /var/run/docker.sock:/var/run/docker.sock \
+      -v /tmp/videos:/home/seluser/videos \
+      dosel/zalenium start --screenWidth 1440 --screenHeight 810 --timeZone "America/Montreal"
+  ```
+
 * After the output, you should see the DockerSeleniumStarter node and the SauceLabs node in the [grid](http://localhost:4444/grid/console)
 
 * The startup can receive different parameters:
@@ -65,6 +73,9 @@ Zalenium uses docker to scale on-demand, therefore we need to give it the `docke
   * `--maxDockerSeleniumContainers` -> Max number of docker-selenium containers running at the same time. Default is 10.
   * `--sauceLabsEnabled` -> Start Sauce Labs node or not. Defaults to 'true'.
   * `--videoRecordingEnabled` -> Sets if video is recorded in every test. Defaults to 'true'.
+  * `--screenWidth` -> Sets the screen width. Defaults to 1900.
+  * `--screenHeight` -> Sets the screen height. Defaults to 1880.
+  * `--timeZone` -> Sets the time zone in the containers. Defaults to "Europe/Berlin".
 
 * Stop it: `docker stop zalenium`
 

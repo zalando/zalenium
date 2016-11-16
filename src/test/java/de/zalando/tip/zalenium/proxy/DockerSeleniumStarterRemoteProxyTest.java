@@ -23,7 +23,16 @@ import org.openqa.selenium.remote.CapabilityType;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.mockito.Mockito.*;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.withSettings;
+
 
 public class DockerSeleniumStarterRemoteProxyTest {
 
@@ -170,14 +179,11 @@ public class DockerSeleniumStarterRemoteProxyTest {
     @Test
     public void fallbackToDefaultAmountOfValuesWhenVariablesAreNotSet() {
         // Mock the environment class that serves as proxy to retrieve env variables
-        Environment environment = mock(Environment.class);
-        when(environment.getEnvVariable(DockerSeleniumStarterRemoteProxy.ZALENIUM_CHROME_CONTAINERS))
-                .thenReturn(null);
-        when(environment.getEnvVariable(DockerSeleniumStarterRemoteProxy.ZALENIUM_FIREFOX_CONTAINERS))
-                .thenReturn(null);
-        when(environment.getEnvVariable(DockerSeleniumStarterRemoteProxy.ZALENIUM_MAX_DOCKER_SELENIUM_CONTAINERS))
-                .thenReturn(null);
-        DockerSeleniumStarterRemoteProxy.setEnvironment(environment);
+        Environment environment = mock(Environment.class, withSettings().useConstructor());
+        when(environment.getEnvVariable(any(String.class))).thenReturn(null);
+        when(environment.getIntEnvVariable(any(String.class), any(Integer.class))).thenCallRealMethod();
+        when(environment.getStringEnvVariable(any(String.class), any(String.class))).thenCallRealMethod();
+        DockerSeleniumStarterRemoteProxy.setEnv(environment);
 
         registry.add(spyProxy);
 
@@ -187,19 +193,33 @@ public class DockerSeleniumStarterRemoteProxyTest {
                 DockerSeleniumStarterRemoteProxy.getFirefoxContainersOnStartup());
         Assert.assertEquals(DockerSeleniumStarterRemoteProxy.DEFAULT_AMOUNT_DOCKER_SELENIUM_CONTAINERS_RUNNING,
                 DockerSeleniumStarterRemoteProxy.getMaxDockerSeleniumContainers());
+        Assert.assertEquals(DockerSeleniumStarterRemoteProxy.DEFAULT_SCREEN_HEIGHT,
+                DockerSeleniumStarterRemoteProxy.getScreenHeight());
+        Assert.assertEquals(DockerSeleniumStarterRemoteProxy.DEFAULT_SCREEN_WIDTH,
+                DockerSeleniumStarterRemoteProxy.getScreenWidth());
+        Assert.assertEquals(DockerSeleniumStarterRemoteProxy.DEFAULT_TZ,
+                DockerSeleniumStarterRemoteProxy.getTimeZone());
     }
 
     @Test
     public void fallbackToDefaultAmountValuesWhenVariablesAreNotIntegers() {
         // Mock the environment class that serves as proxy to retrieve env variables
-        Environment environment = mock(Environment.class);
+        Environment environment = mock(Environment.class, withSettings().useConstructor());
         when(environment.getEnvVariable(DockerSeleniumStarterRemoteProxy.ZALENIUM_CHROME_CONTAINERS))
                 .thenReturn("ABC_NON_INTEGER");
         when(environment.getEnvVariable(DockerSeleniumStarterRemoteProxy.ZALENIUM_FIREFOX_CONTAINERS))
                 .thenReturn("ABC_NON_INTEGER");
         when(environment.getEnvVariable(DockerSeleniumStarterRemoteProxy.ZALENIUM_MAX_DOCKER_SELENIUM_CONTAINERS))
                 .thenReturn("ABC_NON_INTEGER");
-        DockerSeleniumStarterRemoteProxy.setEnvironment(environment);
+        when(environment.getEnvVariable(DockerSeleniumStarterRemoteProxy.ZALENIUM_SCREEN_HEIGHT))
+                .thenReturn("ABC_NON_INTEGER");
+        when(environment.getEnvVariable(DockerSeleniumStarterRemoteProxy.ZALENIUM_SCREEN_WIDTH))
+                .thenReturn("ABC_NON_INTEGER");
+        when(environment.getEnvVariable(DockerSeleniumStarterRemoteProxy.ZALENIUM_TZ))
+                .thenReturn("ABC_NON_STANDARD_TIME_ZONE");
+        when(environment.getIntEnvVariable(any(String.class), any(Integer.class))).thenCallRealMethod();
+        when(environment.getStringEnvVariable(any(String.class), any(String.class))).thenCallRealMethod();
+        DockerSeleniumStarterRemoteProxy.setEnv(environment);
 
         registry.add(spyProxy);
 
@@ -209,42 +229,60 @@ public class DockerSeleniumStarterRemoteProxyTest {
                 DockerSeleniumStarterRemoteProxy.getFirefoxContainersOnStartup());
         Assert.assertEquals(DockerSeleniumStarterRemoteProxy.DEFAULT_AMOUNT_DOCKER_SELENIUM_CONTAINERS_RUNNING,
                 DockerSeleniumStarterRemoteProxy.getMaxDockerSeleniumContainers());
+        Assert.assertEquals(DockerSeleniumStarterRemoteProxy.DEFAULT_SCREEN_WIDTH,
+                DockerSeleniumStarterRemoteProxy.getScreenWidth());
+        Assert.assertEquals(DockerSeleniumStarterRemoteProxy.DEFAULT_TZ,
+                DockerSeleniumStarterRemoteProxy.getTimeZone());
     }
 
     @Test
     public void variablesGrabTheConfiguredEnvironmentVariables() {
         // Mock the environment class that serves as proxy to retrieve env variables
-        Environment environment = mock(Environment.class);
+        Environment environment = mock(Environment.class, withSettings().useConstructor());
         int amountOfChromeContainers = 4;
         int amountOfFirefoxContainers = 3;
         int amountOfMaxContainers = 8;
+        int screenWidth = 1440;
+        int screenHeight = 810;
+        String timeZone = "America/Montreal";
         when(environment.getEnvVariable(DockerSeleniumStarterRemoteProxy.ZALENIUM_CHROME_CONTAINERS))
                 .thenReturn(String.valueOf(amountOfChromeContainers));
         when(environment.getEnvVariable(DockerSeleniumStarterRemoteProxy.ZALENIUM_FIREFOX_CONTAINERS))
                 .thenReturn(String.valueOf(amountOfFirefoxContainers));
         when(environment.getEnvVariable(DockerSeleniumStarterRemoteProxy.ZALENIUM_MAX_DOCKER_SELENIUM_CONTAINERS))
                 .thenReturn(String.valueOf(amountOfMaxContainers));
-        DockerSeleniumStarterRemoteProxy.setEnvironment(environment);
+        when(environment.getEnvVariable(DockerSeleniumStarterRemoteProxy.ZALENIUM_SCREEN_HEIGHT))
+                .thenReturn(String.valueOf(screenHeight));
+        when(environment.getEnvVariable(DockerSeleniumStarterRemoteProxy.ZALENIUM_SCREEN_WIDTH))
+                .thenReturn(String.valueOf(screenWidth));
+        when(environment.getEnvVariable(DockerSeleniumStarterRemoteProxy.ZALENIUM_TZ))
+                .thenReturn(timeZone);
+        when(environment.getIntEnvVariable(any(String.class), any(Integer.class))).thenCallRealMethod();
+        when(environment.getStringEnvVariable(any(String.class), any(String.class))).thenCallRealMethod();
+        DockerSeleniumStarterRemoteProxy.setEnv(environment);
 
         registry.add(spyProxy);
 
         Assert.assertEquals(amountOfChromeContainers, DockerSeleniumStarterRemoteProxy.getChromeContainersOnStartup());
         Assert.assertEquals(amountOfFirefoxContainers, DockerSeleniumStarterRemoteProxy.getFirefoxContainersOnStartup());
         Assert.assertEquals(amountOfMaxContainers, DockerSeleniumStarterRemoteProxy.getMaxDockerSeleniumContainers());
+        Assert.assertEquals(screenHeight, DockerSeleniumStarterRemoteProxy.getScreenHeight());
+        Assert.assertEquals(screenWidth, DockerSeleniumStarterRemoteProxy.getScreenWidth());
+        Assert.assertEquals(timeZone, DockerSeleniumStarterRemoteProxy.getTimeZone());
     }
 
     @Test
     public void amountOfCreatedContainersIsTheConfiguredOne() {
         // Mock the environment class that serves as proxy to retrieve env variables
-        Environment environment = mock(Environment.class);
+        Environment environment = mock(Environment.class, withSettings().useConstructor());
         int amountOfChromeContainers = 3;
         int amountOfFirefoxContainers = 4;
         when(environment.getEnvVariable(DockerSeleniumStarterRemoteProxy.ZALENIUM_CHROME_CONTAINERS))
                 .thenReturn(String.valueOf(amountOfChromeContainers));
         when(environment.getEnvVariable(DockerSeleniumStarterRemoteProxy.ZALENIUM_FIREFOX_CONTAINERS))
                 .thenReturn(String.valueOf(amountOfFirefoxContainers));
-
-        DockerSeleniumStarterRemoteProxy.setEnvironment(environment);
+        when(environment.getIntEnvVariable(any(String.class), any(Integer.class))).thenCallRealMethod();
+        DockerSeleniumStarterRemoteProxy.setEnv(environment);
 
         registry.add(spyProxy);
 
