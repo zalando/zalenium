@@ -25,9 +25,7 @@ import org.openqa.selenium.remote.DesiredCapabilities;
 
 import java.io.IOException;
 import java.net.ServerSocket;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -46,25 +44,33 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     private static final Logger LOGGER = Logger.getLogger(DockerSeleniumStarterRemoteProxy.class.getName());
 
     private static final String DOCKER_SELENIUM_IMAGE = "elgalu/selenium";
-    @VisibleForTesting
-    protected static final String DOCKER_SELENIUM_CAPABILITIES_URL = "https://raw.githubusercontent.com/elgalu/docker-selenium/latest/capabilities.json";
-
     private static List<DesiredCapabilities> dockerSeleniumCapabilities = new ArrayList<>();
 
     private static final int LOWER_PORT_BOUNDARY = 40000;
     private static final int UPPER_PORT_BOUNDARY = 50000;
-
-
     private List<Integer> allocatedPorts = new ArrayList<>();
 
     private static final DockerClient defaultDockerClient = new DefaultDockerClient("unix:///var/run/docker.sock");
     private static DockerClient dockerClient = defaultDockerClient;
 
     private static final Environment defaultEnvironment = new Environment();
-    private static Environment environment = defaultEnvironment;
+    private static Environment env = defaultEnvironment;
 
     private static final CommonProxyUtilities defaultCommonProxyUtilities = new CommonProxyUtilities();
     private static CommonProxyUtilities commonProxyUtilities = defaultCommonProxyUtilities;
+
+    private static final String LOGGING_PREFIX = "[DS] ";
+
+    private static int chromeContainersOnStartup;
+    private static int firefoxContainersOnStartup;
+    private static int maxDockerSeleniumContainers;
+    private static String timeZone;
+    private static int screenWidth;
+    private static int screenHeight;
+
+    @VisibleForTesting
+    protected static final String DOCKER_SELENIUM_CAPABILITIES_URL =
+            "https://raw.githubusercontent.com/elgalu/docker-selenium/latest/capabilities.json";
 
     @VisibleForTesting
     protected static final int DEFAULT_AMOUNT_CHROME_CONTAINERS = 0;
@@ -72,6 +78,12 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     protected static final int DEFAULT_AMOUNT_FIREFOX_CONTAINERS = 0;
     @VisibleForTesting
     protected static final int DEFAULT_AMOUNT_DOCKER_SELENIUM_CONTAINERS_RUNNING = 10;
+    @VisibleForTesting
+    protected static final String DEFAULT_TZ = "Europe/Berlin";
+    @VisibleForTesting
+    protected static final int DEFAULT_SCREEN_WIDTH = 1900;
+    @VisibleForTesting
+    protected static final int DEFAULT_SCREEN_HEIGHT = 1880;
 
     @VisibleForTesting
     protected static final String ZALENIUM_CHROME_CONTAINERS = "ZALENIUM_CHROME_CONTAINERS";
@@ -79,20 +91,12 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     protected static final String ZALENIUM_FIREFOX_CONTAINERS = "ZALENIUM_FIREFOX_CONTAINERS";
     @VisibleForTesting
     protected static final String ZALENIUM_MAX_DOCKER_SELENIUM_CONTAINERS = "ZALENIUM_MAX_DOCKER_SELENIUM_CONTAINERS";
-
-    private static final String LOGGING_PREFIX = "[DS] ";
-
-    /*
-        Amount of containers launched when the proxy is starting.
-     */
-    private static int chromeContainersOnStartup;
-    private static int firefoxContainersOnStartup;
-
-    /*
-            Max amount of docker Selenium containers running at the same time.
-         */
-    private static int maxDockerSeleniumContainers;
-
+    @VisibleForTesting
+    protected static final String ZALENIUM_TZ = "ZALENIUM_TZ";
+    @VisibleForTesting
+    protected static final String ZALENIUM_SCREEN_WIDTH = "ZALENIUM_SCREEN_WIDTH";
+    @VisibleForTesting
+    protected static final String ZALENIUM_SCREEN_HEIGHT = "ZALENIUM_SCREEN_HEIGHT";
 
     public DockerSeleniumStarterRemoteProxy(RegistrationRequest request, Registry registry) {
         super(updateDSCapabilities(request, DOCKER_SELENIUM_CAPABILITIES_URL), registry);
@@ -156,54 +160,28 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     }
 
     /*
-     * Reading configuration values from the environment variables, if a value was not provided it falls back to defaults.
+     * Reading configuration values from the env variables, if a value was not provided it falls back to defaults.
      */
     private static void readConfigurationFromEnvVariables() {
 
-        String envVarIsNotSetMessage = LOGGING_PREFIX + "Env. variable %s value is not set, falling back to default: %s.";
-        String envVarIsNotAValidIntMessage = LOGGING_PREFIX + "Env. variable %s is not a valid integer.";
+        int chromeContainers = env.getIntEnvVariable(ZALENIUM_CHROME_CONTAINERS, DEFAULT_AMOUNT_CHROME_CONTAINERS);
+        setChromeContainersOnStartup(chromeContainers);
 
-        if (environment.getEnvVariable(ZALENIUM_CHROME_CONTAINERS) != null) {
-            try {
-                int chromeContainers = Integer.parseInt(environment.getEnvVariable(ZALENIUM_CHROME_CONTAINERS));
-                setChromeContainersOnStartup(chromeContainers);
-            } catch (Exception e) {
-                LOGGER.log(Level.WARNING, String.format(envVarIsNotAValidIntMessage, ZALENIUM_CHROME_CONTAINERS), e);
-                setChromeContainersOnStartup(DEFAULT_AMOUNT_CHROME_CONTAINERS);
-            }
-        } else {
-            LOGGER.log(Level.FINE, String.format(envVarIsNotSetMessage, ZALENIUM_CHROME_CONTAINERS,
-                    DEFAULT_AMOUNT_CHROME_CONTAINERS));
-            setChromeContainersOnStartup(DEFAULT_AMOUNT_CHROME_CONTAINERS);
-        }
+        int firefoxContainers = env.getIntEnvVariable(ZALENIUM_FIREFOX_CONTAINERS, DEFAULT_AMOUNT_FIREFOX_CONTAINERS);
+        setFirefoxContainersOnStartup(firefoxContainers);
 
-        if (environment.getEnvVariable(ZALENIUM_FIREFOX_CONTAINERS) != null) {
-            try {
-                int firefoxContainers = Integer.parseInt(environment.getEnvVariable(ZALENIUM_FIREFOX_CONTAINERS));
-                setFirefoxContainersOnStartup(firefoxContainers);
-            } catch (Exception e) {
-                LOGGER.log(Level.WARNING, String.format(envVarIsNotAValidIntMessage, ZALENIUM_FIREFOX_CONTAINERS), e);
-                setFirefoxContainersOnStartup(DEFAULT_AMOUNT_FIREFOX_CONTAINERS);
-            }
-        } else {
-            LOGGER.log(Level.FINE, String.format(envVarIsNotSetMessage, ZALENIUM_FIREFOX_CONTAINERS,
-                    DEFAULT_AMOUNT_FIREFOX_CONTAINERS));
-            setFirefoxContainersOnStartup(DEFAULT_AMOUNT_FIREFOX_CONTAINERS);
-        }
+        int maxDSContainers = env.getIntEnvVariable(ZALENIUM_MAX_DOCKER_SELENIUM_CONTAINERS,
+                DEFAULT_AMOUNT_DOCKER_SELENIUM_CONTAINERS_RUNNING);
+        setMaxDockerSeleniumContainers(maxDSContainers);
 
-        if (environment.getEnvVariable(ZALENIUM_MAX_DOCKER_SELENIUM_CONTAINERS) != null) {
-            try {
-                int maxDSContainers = Integer.parseInt(environment.getEnvVariable(ZALENIUM_MAX_DOCKER_SELENIUM_CONTAINERS));
-                setMaxDockerSeleniumContainers(maxDSContainers);
-            } catch (Exception e) {
-                LOGGER.log(Level.WARNING, String.format(envVarIsNotAValidIntMessage, ZALENIUM_MAX_DOCKER_SELENIUM_CONTAINERS), e);
-                setMaxDockerSeleniumContainers(DEFAULT_AMOUNT_DOCKER_SELENIUM_CONTAINERS_RUNNING);
-            }
-        } else {
-            LOGGER.log(Level.FINE, String.format(envVarIsNotSetMessage, ZALENIUM_MAX_DOCKER_SELENIUM_CONTAINERS,
-                    DEFAULT_AMOUNT_DOCKER_SELENIUM_CONTAINERS_RUNNING));
-            setMaxDockerSeleniumContainers(DEFAULT_AMOUNT_DOCKER_SELENIUM_CONTAINERS_RUNNING);
-        }
+        int sWidth = env.getIntEnvVariable(ZALENIUM_SCREEN_WIDTH, DEFAULT_SCREEN_WIDTH);
+        setScreenWidth(sWidth);
+
+        int sHeight = env.getIntEnvVariable(ZALENIUM_SCREEN_HEIGHT, DEFAULT_SCREEN_HEIGHT);
+        setScreenHeight(sHeight);
+
+        String tz = env.getStringEnvVariable(ZALENIUM_TZ, DEFAULT_TZ);
+        setTimeZone(tz);
     }
 
     /*
@@ -261,6 +239,9 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
             envVariables.add("WAIT_TIMEOUT=20s");
             envVariables.add("PICK_ALL_RANDMON_PORTS=true");
             envVariables.add("VIDEO_STOP_SLEEP_SECS=4");
+            envVariables.add("SCREEN_WIDTH=" + getScreenWidth());
+            envVariables.add("SCREEN_HEIGHT=" + getScreenHeight());
+            envVariables.add("TZ=" + getTimeZone());
             envVariables.add("SELENIUM_NODE_REGISTER_CYCLE=0");
             envVariables.add("SELENIUM_NODE_PROXY_PARAMS=de.zalando.tip.zalenium.proxy.DockerSeleniumRemoteProxy");
             if (BrowserType.CHROME.equalsIgnoreCase(browser)) {
@@ -328,16 +309,6 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     }
 
     @VisibleForTesting
-    protected static void setEnvironment(final Environment env) {
-        environment = env;
-    }
-
-    @VisibleForTesting
-    protected static void restoreEnvironment() {
-        environment = defaultEnvironment;
-    }
-
-    @VisibleForTesting
     protected static void setCommonProxyUtilities(final CommonProxyUtilities utilities) {
         commonProxyUtilities = utilities;
     }
@@ -372,6 +343,44 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     public static void setMaxDockerSeleniumContainers(int maxDockerSeleniumContainers) {
         DockerSeleniumStarterRemoteProxy.maxDockerSeleniumContainers = maxDockerSeleniumContainers < 0 ?
                 DEFAULT_AMOUNT_DOCKER_SELENIUM_CONTAINERS_RUNNING : maxDockerSeleniumContainers;
+    }
+
+    public static String getTimeZone() {
+        return timeZone;
+    }
+
+    public static void setTimeZone(String timeZone) {
+        if (!Arrays.asList(TimeZone.getAvailableIDs()).contains(timeZone)) {
+            LOGGER.log(Level.WARNING, String.format("%s is not a real time zone.", timeZone));
+        }
+        DockerSeleniumStarterRemoteProxy.timeZone = Arrays.asList(TimeZone.getAvailableIDs()).contains(timeZone) ?
+                timeZone : DEFAULT_TZ;
+    }
+
+    public static int getScreenWidth() {
+        return screenWidth;
+    }
+
+    public static void setScreenWidth(int screenWidth) {
+        DockerSeleniumStarterRemoteProxy.screenWidth = screenWidth <= 0 ? DEFAULT_SCREEN_WIDTH : screenWidth;
+    }
+
+    public static int getScreenHeight() {
+        return screenHeight;
+    }
+
+    public static void setScreenHeight(int screenHeight) {
+        DockerSeleniumStarterRemoteProxy.screenHeight = screenHeight <= 0 ? DEFAULT_SCREEN_HEIGHT : screenHeight;
+    }
+
+    @VisibleForTesting
+    protected static void setEnv(final Environment env) {
+        DockerSeleniumStarterRemoteProxy.env = env;
+    }
+
+    @VisibleForTesting
+    protected static void restoreEnvironment() {
+        env = defaultEnvironment;
     }
 
     private static List<DesiredCapabilities> getDockerSeleniumCapabilitiesFromGitHub(String url) {
