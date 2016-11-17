@@ -60,7 +60,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     private static CommonProxyUtilities commonProxyUtilities = defaultCommonProxyUtilities;
 
     private static final String LOGGING_PREFIX = "[DS] ";
-    private static boolean setupCompleted;
+    private boolean setupCompleted;
 
     private static int chromeContainersOnStartup;
     private static int firefoxContainersOnStartup;
@@ -142,27 +142,26 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     public void beforeRegistration() {
         readConfigurationFromEnvVariables();
         setupCompleted = false;
-        new Thread() {
-            public void run() {
-                String message = String.format("%s Setting up %s Firefox nodes and %s Chrome nodes...", LOGGING_PREFIX,
-                        getFirefoxContainersOnStartup(), getChromeContainersOnStartup());
-                LOGGER.log(Level.INFO, message);
+        createStartupContainers();
+    }
 
+    private void createStartupContainers() {
+        Thread thread = new Thread() {
+            public void run() {
+                LOGGER.log(Level.INFO, String.format("%s Setting up %s Firefox nodes and %s Chrome nodes...",
+                        LOGGING_PREFIX, getFirefoxContainersOnStartup(), getChromeContainersOnStartup()));
                 int configuredContainers = getChromeContainersOnStartup() + getFirefoxContainersOnStartup();
                 int containersToCreate = configuredContainers > getMaxDockerSeleniumContainers() ?
                         getMaxDockerSeleniumContainers() : configuredContainers;
                 int createdContainers = 0;
-
                 while (createdContainers < containersToCreate &&
                         getNumberOfRunningContainers() <= getMaxDockerSeleniumContainers()) {
-
                     boolean wasContainerCreated;
                     if (createdContainers < getChromeContainersOnStartup()) {
                         wasContainerCreated = startDockerSeleniumContainer(BrowserType.CHROME);
                     } else {
                         wasContainerCreated = startDockerSeleniumContainer(BrowserType.FIREFOX);
                     }
-
                     if (wasContainerCreated) {
                         createdContainers++;
                     }
@@ -170,7 +169,8 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
                 LOGGER.log(Level.INFO, "Done setting up containers during startup.");
                 setupCompleted = true;
             }
-        }.start();
+        };
+        thread.start();
     }
 
     /*
