@@ -134,7 +134,7 @@ public class DockerSeleniumStarterRemoteProxyTest {
     public void noContainerIsStartedWhenBrowserCapabilityIsAbsent() {
         // Browser is absent
         Map<String, Object> nonSupportedCapability = new HashMap<>();
-        nonSupportedCapability.put(CapabilityType.PLATFORM, Platform.WINDOWS);
+        nonSupportedCapability.put(CapabilityType.PLATFORM, Platform.LINUX);
         TestSession testSession = spyProxy.getNewSession(nonSupportedCapability);
 
         Assert.assertNull(testSession);
