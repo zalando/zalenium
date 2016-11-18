@@ -21,7 +21,7 @@ You can use the Zalenium already, but it is still under development and open for
 ## Getting Started
 
 #### Prerequisites
-* Docker engine running, version >= 1.12.1 (probably works with earlier versions, not tested yet).
+* Docker engine running, version >= 1.11.1 (probably works with earlier versions, not tested yet).
 * Download the [docker-selenium](https://github.com/elgalu/docker-selenium) image. `docker pull elgalu/selenium`
 * JDK8+
 * *nix platform (tested only in OSX and Ubuntu, not tested on Windows yet).
@@ -42,7 +42,7 @@ Zalenium uses docker to scale on-demand, therefore we need to give it the `docke
   ```sh
     export SAUCE_USERNAME="<yourUser>"
     export SAUCE_ACCESS_KEY="<yourSecret>"
-    docker run --rm -ti --name zalenium -p 4444:4444 \
+    docker run --rm -ti --name zalenium -p 4444:4444 -p 5555:5555 \
       -e SAUCE_USERNAME -e SAUCE_ACCESS_KEY \
       -v /tmp/videos:/home/seluser/videos \
       -v /var/run/docker.sock:/var/run/docker.sock \
@@ -51,7 +51,7 @@ Zalenium uses docker to scale on-demand, therefore we need to give it the `docke
 
 * Start it without Sauce Labs enabled:
   ```sh
-    docker run --rm -ti --name zalenium -p 4444:4444 \
+    docker run --rm -ti --name zalenium -p 4444:4444 -p 5555:5555 \
       -v /var/run/docker.sock:/var/run/docker.sock \
       -v /tmp/videos:/home/seluser/videos \
       dosel/zalenium start --sauceLabsEnabled false
@@ -59,7 +59,7 @@ Zalenium uses docker to scale on-demand, therefore we need to give it the `docke
 
 * Start it with screen width and height, and time zone:
   ```sh
-    docker run --rm -ti --name zalenium -p 4444:4444 \
+    docker run --rm -ti --name zalenium -p 4444:4444 -p 5555:5555 \
       -v /var/run/docker.sock:/var/run/docker.sock \
       -v /tmp/videos:/home/seluser/videos \
       dosel/zalenium start --screenWidth 1440 --screenHeight 810 --timeZone "America/Montreal"
@@ -84,16 +84,26 @@ Zalenium uses docker to scale on-demand, therefore we need to give it the `docke
 * You can use the [integration tests](./src/test/java/de/zalando/tip/zalenium/it/ParallelIT.java) we have to try Zalenium.
 * To see the recorded videos, check the `/tmp/videos` folder (or the folder that you mapped when starting the container).
 
+### Docker version
+Zalenium is currently compatible with Docker `1.11` and `1.12` __default__, is recommended that you explicitly tell Zalenium which major version you are using via `-e DOCKER=1.11` due to API compatibility issues. In the future this will be automated on our side.
+
+```sh
+docker run --rm -ti --name zalenium -p 4444:4444 -p 5555:5555 \
+  -e DOCKER=1.11 \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  -v /tmp/videos:/home/seluser/videos \
+  dosel/zalenium start --sauceLabsEnabled false
+```
+
 ## Contributions
 Any feedback or contributions are welcome! Please check our [guidelines](CONTRIBUTING.md), they just follow the general GitHub issue/PR flow.
 
 #### TODOs
 We would love some help with:
 * Testing the tool in your day to day scenarios, to spot bugs or use cases we have not considered.
-* Adding more unit and integration tests.
 * Adding more cloud testing platforms.
 * Integrating it with CI tools.
-* Upgrading it to Selenium 3 Beta.
+* Upgrading it to Selenium 3.
 
 #### Testing
 

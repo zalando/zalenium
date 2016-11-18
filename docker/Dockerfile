@@ -92,6 +92,20 @@ RUN apt-get -qqy update \
   && apt-get -qyy autoremove \
   && rm -rf /var/lib/apt/lists/*
 
+#######################
+# Nginx reverse proxy #
+#######################
+# We need this to expose dynamic created ports
+#  until https://github.com/docker/for-mac/issues/171
+# Layer size: medium: 44.84 MB (with --no-install-recommends)
+# Layer size: medium: 50.51 MB
+RUN apt-get -qqy update \
+  && apt-get -qqy --no-install-recommends install \
+    nginx \
+  && apt-get -qyy autoremove \
+  && rm -rf /var/lib/apt/lists/* \
+  && nginx -v
+
 #==============================
 # Locale and encoding settings
 #==============================
@@ -156,34 +170,6 @@ RUN apt-get -qqy update \
   && apt-get -qyy autoremove \
   && rm -rf /var/lib/apt/lists/*
 
-#==================
-# Java8 - Oracle
-#==================
-# Regarding urandom see
-#  http://stackoverflow.com/q/26021181/511069
-#  https://github.com/SeleniumHQ/docker-selenium/issues/14#issuecomment-67414070
-# Layer size: huge: 618.6 MB (with --no-install-recommends)
-# Layer size: huge: 661.1 MB
-# RUN apt-get -qqy update \
-#   && apt-get -qqy --no-install-recommends install \
-#     software-properties-common \
-#   && echo debconf shared/accepted-oracle-license-v1-1 \
-#       select true | debconf-set-selections \
-#   && echo debconf shared/accepted-oracle-license-v1-1 \
-#       seen true | debconf-set-selections \
-#   && add-apt-repository ppa:webupd8team/java \
-#   && apt-get -qqy update \
-#   && apt-get -qqy install \
-#     oracle-java8-installer \
-#   && sed -i 's/securerandom.source=file:\/dev\/urandom/securerandom.source=file:\/dev\/.\/urandom/g' \
-#        /usr/lib/jvm/java-8-oracle/jre/lib/security/java.security \
-#   && sed -i 's/securerandom.source=file:\/dev\/random/securerandom.source=file:\/dev\/.\/urandom/g' \
-#        /usr/lib/jvm/java-8-oracle/jre/lib/security/java.security \
-#   && apt-get -qqy install \
-#     oracle-java8-set-default \
-#   && apt-get -qyy autoremove \
-#   && rm -rf /var/lib/apt/lists/*
-
 #==============================================
 # Java blocks until kernel have enough entropy
 # to generate the /dev/random seed
@@ -199,25 +185,43 @@ RUN apt-get -qqy update \
   && apt-get -qyy autoremove \
   && rm -rf /var/lib/apt/lists/*
 
-#===================
-# Get docker binary
-#===================
-# https://github.com/docker-library/docker/blob/master/1.12/Dockerfile#L1
-# Layer size: medium: 15.67 MB (by keeping only the docker binary)
-# Layer size: big...: 98.38 MB
-ENV DOCKER_BUCKET="get.docker.com" \
-    DOCKER_VERSION="1.12.3" \
-    DOCKER_SHA256="626601deb41d9706ac98da23f673af6c0d4631c4d194a677a9a1a07d7219fa0f" \
-    DOCKER_HOST="unix:///var/run/docker.sock"
+#=====================
+# Get docker binaries
+#=====================
+# Var `DOCKER` points to which binary to use at runtime
+ENV DOCKER_HOST="unix:///var/run/docker.sock" \
+    DOCKER_BUCKET="get.docker.com" \
+    DOCKER="1.12"
+
+#-----------------------
+# Docker 1.11.2 -- 35 MB
+#-----------------------
+# https://github.com/docker-library/docker/blob/master/1.11/Dockerfile
 RUN set -x \
+  && DOCKER_VERSION="1.11.2" \
+     DOCKER_SHA256="8c2e0c35e3cda11706f54b2d46c2521a6e9026a7b13c7d4b8ae1f3a706fc55e1" \
   && curl -fSL "https://${DOCKER_BUCKET}/builds/Linux/x86_64/docker-${DOCKER_VERSION}.tgz" \
           -o docker.tgz \
   && echo "${DOCKER_SHA256} *docker.tgz" | sha256sum -c - \
   && tar -xzvf docker.tgz \
-  && mv docker/docker /usr/local/bin/ \
-  && rm -rf docker/ \
-  && rm docker.tgz \
-  && docker --version
+  && mv docker/docker /usr/local/bin/docker-${DOCKER_VERSION} \
+  && rm -rf docker/ && rm docker.tgz \
+  && docker-${DOCKER_VERSION} --version | grep "${DOCKER_VERSION}"
+
+#-----------------------
+# Docker 1.12.3 -- 15 MB
+#-----------------------
+# https://github.com/docker-library/docker/blob/master/1.12/Dockerfile#L1
+RUN set -x \
+  && DOCKER_VERSION="1.12.3" \
+     DOCKER_SHA256="626601deb41d9706ac98da23f673af6c0d4631c4d194a677a9a1a07d7219fa0f" \
+  && curl -fSL "https://${DOCKER_BUCKET}/builds/Linux/x86_64/docker-${DOCKER_VERSION}.tgz" \
+          -o docker.tgz \
+  && echo "${DOCKER_SHA256} *docker.tgz" | sha256sum -c - \
+  && tar -xzvf docker.tgz \
+  && mv docker/docker /usr/local/bin/docker-${DOCKER_VERSION} \
+  && rm -rf docker/ && rm docker.tgz \
+  && docker-${DOCKER_VERSION} --version | grep "${DOCKER_VERSION}"
 
 #===================================================
 # Run the following commands as non-privileged user
@@ -236,19 +240,24 @@ RUN  export SELBASE="https://selenium-release.storage.googleapis.com" \
   && export SELPATH="${SEL_MAJOR_VER}/selenium-server-standalone-${SEL_VER}.jar" \
   && wget -nv ${SELBASE}/${SELPATH}
 
-#===========
+
+#================================
+# Sauce Labs capabilities backup
+#================================
 # Make a backup of Sauce Labs capabilities, in case the online fetch does not work
-#===========
+# TODO: Remove this backup and fetch the metadata from docker-selenium LABELs
+#       that needs to be done at run time, not in this Dockerfile
 RUN  export SAUCE_LABS_CAPABILITIES="https://saucelabs.com/rest/v1/info/platforms/webdriver" \
-  && wget -nv ${SAUCE_LABS_CAPABILITIES} -O saucelabs_capabilities.json
+  && wget -nv "${SAUCE_LABS_CAPABILITIES}" -O saucelabs_capabilities.json
 
 #==========
 # Zalenium
 #==========
 ENV ZAL_VER="${project.build.finalName}"
-ADD entry.sh /usr/bin/
-ADD zalenium.sh /home/seluser/
-ADD ${ZAL_VER}.jar /home/seluser/${ZAL_VER}.jar
+COPY entry.sh /usr/bin/
+COPY zalenium.sh /home/seluser/
+COPY nginx.conf /etc/nginx/
+COPY ${ZAL_VER}.jar /home/seluser/${ZAL_VER}.jar
 # https://github.com/zalando-incubator/zalenium/releases/download/v${ZAL_VER}/zalenium-release-v${ZAL_VER}.tar.gz
 
 #-----------------#

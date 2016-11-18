@@ -38,7 +38,7 @@ StartUp()
         VIDEOS_FOLDER=/tmp/videos
     fi
 
-    docker run -d -ti --name zalenium -p 4444:4444 \
+    docker run -d -ti --name zalenium -p 4444:4444 -p 5555:5555 \
           -e SAUCE_USERNAME -e SAUCE_ACCESS_KEY \
           -v ${VIDEOS_FOLDER}:/home/seluser/videos \
           -v /var/run/docker.sock:/var/run/docker.sock \
