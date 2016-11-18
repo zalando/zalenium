@@ -144,6 +144,8 @@
                                     <filtering>true</filtering>
                                     <includes>
                                         <include>Dockerfile</include>
+                                        <include>nginx.conf</include>
+                                        <include>.dockerignore</include>
                                     </includes>
                                 </resource>
                             </resources>

@@ -57,13 +57,18 @@ StartUp()
     if [ ! -f ${SELENIUM_ARTIFACT} ];
     then
         echo "Selenium JAR not present, exiting start script."
-        exit 1
+        exit 2
     fi
 
     if [ ! -f ${ZALENIUM_ARTIFACT} ];
     then
         echo "Zalenium JAR not present, exiting start script."
-        exit 1
+        exit 3
+    fi
+
+    if ! which nginx >/dev/null; then
+        echo "Nginx reverse proxy not installed, quitting."
+        exit 4
     fi
 
     if [ -z ${SAUCE_LABS_ENABLED} ]; then
@@ -76,12 +81,12 @@ StartUp()
 
         if [ "$SAUCE_USERNAME" = abc ]; then
             echo "SAUCE_USERNAME environment variable is not set, cannot start Sauce Labs node, exiting..."
-            exit 1
+            exit 5
         fi
 
         if [ "$SAUCE_ACCESS_KEY" = abc ]; then
             echo "SAUCE_ACCESS_KEY environment variable is not set, cannot start Sauce Labs node, exiting..."
-            exit 1
+            exit 6
         fi
     fi
 
@@ -92,6 +97,9 @@ StartUp()
     export ZALENIUM_TZ=${TZ}
     export ZALENIUM_SCREEN_WIDTH=${SCREEN_WIDTH}
     export ZALENIUM_SCREEN_HEIGHT=${SCREEN_HEIGHT}
+
+    echo "Starting Nginx reverse proxy..."
+    nginx
 
     echo "Starting Selenium Hub..."
 
@@ -119,9 +127,22 @@ StartUp()
     if [ "${IN_TRAVIS}" = "true" ]; then
         sleep 20
     else
+        # TODO: Replace sleep with active wait on the grid
+        #       and the # nodes required at start time (e.g. 2)
+        # https://github.com/SeleniumHQ/docker-selenium/issues/332#issuecomment-259423033
         sleep 2
     fi
     echo "DockerSeleniumStarter node started!"
+
+    if ! curl -sSL http://localhost:4444 | grep Grid >/dev/null; then
+        echo "Error: The Grid is not listening at port 4444"
+        exit 7
+    fi
+
+    if ! curl -sSL http://localhost:5555/proxy/4444/ | grep Grid >/dev/null; then
+        echo "Error: Nginx is not redirecting to the grid"
+        exit 8
+    fi
 
     if [ "$SAUCE_LABS_ENABLED" = true ]; then
         echo "Starting Sauce Labs node..."
@@ -220,7 +241,7 @@ case ${SCRIPT_ACTION} in
         if [ $((NUM_PARAMETERS % 2)) -ne 0 ]; then
             echo "Uneven amount of parameters entered, please check your input."
             usage
-            exit 1
+            exit 9
         fi
         while [ "$1" != "" ]; do
             PARAM=$(echo $1)
@@ -257,7 +278,7 @@ case ${SCRIPT_ACTION} in
                 *)
                     echo "ERROR: unknown parameter \"$PARAM\""
                     usage
-                    exit 1
+                    exit 10
                     ;;
             esac
             shift 2
