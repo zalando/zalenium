@@ -1,7 +1,6 @@
 #== Ubuntu xenial is 16.04, i.e. FROM ubuntu:16.04
 # Find latest images at https://hub.docker.com/r/library/ubuntu/
 # Layer size: big: 127.2 MB
-#  [tiny 0~4MB, small 5~9MB, medium 10~39MB, big 40~150MB, huge >150MB]
 FROM ubuntu:xenial-20161010
 ENV UBUNTU_FLAVOR="xenial" \
     UBUNTU_DATE="20161010"
@@ -72,7 +71,6 @@ RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys A2F683C52980AECF \
 #
 # Layer size: medium: 29.8 MB
 # Layer size: medium: 27.9 MB (with --no-install-recommends)
-#  [tiny 0~4MB, small 5~9MB, medium 10~39MB, big 40~150MB, huge >150MB]
 RUN apt-get -qqy update \
   && apt-get -qqy install \
     libltdl7 \
@@ -106,7 +104,6 @@ ENV LANGUAGE ${LANG_WHICH}_${LANG_WHERE}.${ENCODING}
 ENV LANG ${LANGUAGE}
 # Layer size: small: 8.956 MB
 # Layer size: small: 8.956 MB (with --no-install-recommends)
-#  [tiny 0~4MB, small 5~9MB, medium 10~39MB, big 40~150MB, huge >150MB]
 RUN locale-gen ${LANGUAGE} \
   && dpkg-reconfigure --frontend noninteractive locales \
   && apt-get -qqy update \
@@ -124,7 +121,6 @@ RUN locale-gen ${LANGUAGE} \
 ENV TZ "Europe/Berlin"
 # Apply TimeZone
 # Layer size: tiny: 1.339 MB
-#  [tiny 0~4MB, small 5~9MB, medium 10~39MB, big 40~150MB, huge >150MB]
 RUN echo "Setting time zone to '${TZ}'" \
   && echo ${TZ} > /etc/timezone \
   && dpkg-reconfigure --frontend noninteractive tzdata
@@ -133,7 +129,6 @@ RUN echo "Setting time zone to '${TZ}'" \
 # Add normal user with passwordless sudo
 #========================================
 # Layer size: tiny: 0.3 MB
-#  [tiny 0~4MB, small 5~9MB, medium 10~39MB, big 40~150MB, huge >150MB]
 RUN useradd seluser \
          --shell /bin/bash  \
          --create-home \
@@ -151,7 +146,6 @@ RUN useradd seluser \
 #  https://github.com/SeleniumHQ/docker-selenium/issues/14#issuecomment-67414070
 # Layer size: big: 132.2 MB
 # Layer size: big: 132.2 MB (with --no-install-recommends)
-#  [tiny 0~4MB, small 5~9MB, medium 10~39MB, big 40~150MB, huge >150MB]
 RUN apt-get -qqy update \
   && apt-get -qqy install \
     openjdk-8-jre-headless \
@@ -170,7 +164,6 @@ RUN apt-get -qqy update \
 #  https://github.com/SeleniumHQ/docker-selenium/issues/14#issuecomment-67414070
 # Layer size: huge: 618.6 MB (with --no-install-recommends)
 # Layer size: huge: 661.1 MB
-#  [tiny 0~4MB, small 5~9MB, medium 10~39MB, big 40~150MB, huge >150MB]
 # RUN apt-get -qqy update \
 #   && apt-get -qqy --no-install-recommends install \
 #     software-properties-common \
@@ -197,7 +190,6 @@ RUN apt-get -qqy update \
 #==============================================
 # See: SeleniumHQ/docker-selenium/issues/14
 # Layer size: tiny: 0.8 MB
-#  [tiny 0~4MB, small 5~9MB, medium 10~39MB, big 40~150MB, huge >150MB]
 RUN apt-get -qqy update \
   && apt-key update -qqy \
   && apt-get -qqy install \
@@ -213,7 +205,6 @@ RUN apt-get -qqy update \
 # https://github.com/docker-library/docker/blob/master/1.12/Dockerfile#L1
 # Layer size: medium: 15.67 MB (by keeping only the docker binary)
 # Layer size: big...: 98.38 MB
-#  [tiny 0~4MB, small 5~9MB, medium 10~39MB, big 40~150MB, huge >150MB]
 ENV DOCKER_BUCKET="get.docker.com" \
     DOCKER_VERSION="1.12.3" \
     DOCKER_SHA256="626601deb41d9706ac98da23f673af6c0d4631c4d194a677a9a1a07d7219fa0f" \
@@ -238,7 +229,6 @@ WORKDIR /home/seluser
 # Selenium
 #==========
 # Layer size: medium: 21.23 MB
-#  [tiny 0~4MB, small 5~9MB, medium 10~39MB, big 40~150MB, huge >150MB]
 ENV SEL_MAJOR_VER="${selenium-server.major-minor.version}" \
     SEL_PATCH_LEVEL_VER="${selenium-server.patch-level.version}"
 ENV SEL_VER="${SEL_MAJOR_VER}.${SEL_PATCH_LEVEL_VER}"
