@@ -24,6 +24,14 @@ EnsureCleanEnv()
     fi
 }
 
+EnsureDockerWorks()
+{
+    if ! docker images elgalu/selenium >/dev/null; then
+        echo "Docker seems to be not working properly, check the above error."
+        exit 1
+    fi
+}
+
 DockerTerminate()
 {
   echo "Trapped SIGTERM/SIGINT so shutting down Zalenium gracefully..."
@@ -37,6 +45,7 @@ trap DockerTerminate SIGTERM SIGINT SIGKILL
 
 StartUp()
 {
+    EnsureDockerWorks
     EnsureCleanEnv
 
     DOCKER_SELENIUM_IMAGE_COUNT=$(docker images | grep "elgalu/selenium" | wc -l)
@@ -110,7 +119,7 @@ StartUp()
     if [ "${IN_TRAVIS}" = "true" ]; then
         sleep 20
     else
-        sleep 10
+        sleep 2
     fi
     echo "DockerSeleniumStarter node started!"
 
