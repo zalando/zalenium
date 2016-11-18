@@ -22,7 +22,11 @@ import org.openqa.selenium.remote.CapabilityType;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
 
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.verify;
@@ -32,6 +36,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.withSettings;
+import static org.awaitility.Awaitility.await;
 
 
 public class DockerSeleniumStarterRemoteProxyTest {
@@ -123,6 +128,17 @@ public class DockerSeleniumStarterRemoteProxyTest {
 
         Assert.assertNull(testSession);
         verify(spyProxy, times(1)).startDockerSeleniumContainer(BrowserType.FIREFOX);
+    }
+
+    @Test
+    public void noContainerIsStartedWhenBrowserCapabilityIsAbsent() {
+        // Browser is absent
+        Map<String, Object> nonSupportedCapability = new HashMap<>();
+        nonSupportedCapability.put(CapabilityType.PLATFORM, Platform.LINUX);
+        TestSession testSession = spyProxy.getNewSession(nonSupportedCapability);
+
+        Assert.assertNull(testSession);
+        verify(spyProxy, never()).startDockerSeleniumContainer(anyString());
     }
 
     /*
@@ -286,6 +302,8 @@ public class DockerSeleniumStarterRemoteProxyTest {
 
         registry.add(spyProxy);
 
+        Callable<Boolean> callable = () -> spyProxy.isSetupCompleted();
+        await().atMost(1, SECONDS).pollInterval(100, MILLISECONDS).until(callable);
         verify(spyProxy, times(amountOfChromeContainers)).startDockerSeleniumContainer(BrowserType.CHROME);
         verify(spyProxy, times(amountOfFirefoxContainers)).startDockerSeleniumContainer(BrowserType.FIREFOX);
         Assert.assertEquals(amountOfChromeContainers, DockerSeleniumStarterRemoteProxy.getChromeContainersOnStartup());

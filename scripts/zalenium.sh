@@ -24,6 +24,14 @@ EnsureCleanEnv()
     fi
 }
 
+EnsureDockerWorks()
+{
+    if ! docker images elgalu/selenium >/dev/null; then
+        echo "Docker seems to be not working properly, check the above error."
+        exit 1
+    fi
+}
+
 DockerTerminate()
 {
   echo "Trapped SIGTERM/SIGINT so shutting down Zalenium gracefully..."
@@ -37,6 +45,7 @@ trap DockerTerminate SIGTERM SIGINT SIGKILL
 
 StartUp()
 {
+    EnsureDockerWorks
     EnsureCleanEnv
 
     DOCKER_SELENIUM_IMAGE_COUNT=$(docker images | grep "elgalu/selenium" | wc -l)
@@ -121,7 +130,7 @@ StartUp()
         # TODO: Replace sleep with active wait on the grid
         #       and the # nodes required at start time (e.g. 2)
         # https://github.com/SeleniumHQ/docker-selenium/issues/332#issuecomment-259423033
-        sleep 10
+        sleep 2
     fi
     echo "DockerSeleniumStarter node started!"
 

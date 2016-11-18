@@ -60,6 +60,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     private static CommonProxyUtilities commonProxyUtilities = defaultCommonProxyUtilities;
 
     private static final String LOGGING_PREFIX = "[DS] ";
+    private boolean setupCompleted;
 
     private static int chromeContainersOnStartup;
     private static int firefoxContainersOnStartup;
@@ -134,20 +135,14 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
 
     /*
         Starting a few containers (Firefox, Chrome), so they are ready when the tests come.
+        Executed in a thread so we don't wait for the containers to be created and the node
+        registration is not delayed.
     */
     @Override
     public void beforeRegistration() {
         readConfigurationFromEnvVariables();
-        if (getChromeContainersOnStartup() > 0 || getFirefoxContainersOnStartup() > 0) {
-            LOGGER.log(Level.INFO, LOGGING_PREFIX + "Setting up {0} Firefox nodes and {1} Chrome nodes ready to use.",
-                    new Object[]{getFirefoxContainersOnStartup(), getChromeContainersOnStartup()});
-            for (int i = 0; i < getChromeContainersOnStartup(); i++) {
-                startDockerSeleniumContainer(BrowserType.CHROME);
-            }
-            for (int i = 0; i < getFirefoxContainersOnStartup(); i++) {
-                startDockerSeleniumContainer(BrowserType.FIREFOX);
-            }
-        }
+        setupCompleted = false;
+        createStartupContainers();
     }
 
     /*
@@ -216,7 +211,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     }
 
     @VisibleForTesting
-    protected void startDockerSeleniumContainer(String browser) {
+    protected boolean startDockerSeleniumContainer(String browser) {
 
         if (validateAmountOfDockerSeleniumContainers()) {
 
@@ -273,10 +268,12 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
                 final ContainerCreation dockerSeleniumContainer = dockerClient.createContainer(containerConfig,
                         containerName);
                 dockerClient.startContainer(dockerSeleniumContainer.id());
+                return true;
             } catch (Exception e) {
                 LOGGER.log(Level.SEVERE, LOGGING_PREFIX + e.toString(), e);
             }
         }
+        return false;
     }
 
     private String getLatestDownloadedImage(String imageName) throws DockerException, InterruptedException {
@@ -369,6 +366,10 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
         DockerSeleniumStarterRemoteProxy.screenHeight = screenHeight <= 0 ? DEFAULT_SCREEN_HEIGHT : screenHeight;
     }
 
+    public boolean isSetupCompleted() {
+        return setupCompleted;
+    }
+
     @VisibleForTesting
     protected static void setEnv(final Environment env) {
         DockerSeleniumStarterRemoteProxy.env = env;
@@ -416,7 +417,32 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
         return dsCapabilities;
     }
 
-    private boolean validateAmountOfDockerSeleniumContainers() {
+    private void createStartupContainers() {
+        int configuredContainers = getChromeContainersOnStartup() + getFirefoxContainersOnStartup();
+        int containersToCreate = configuredContainers > getMaxDockerSeleniumContainers() ?
+                getMaxDockerSeleniumContainers() : configuredContainers;
+        new Thread() {
+            @Override
+            public void run() {
+                LOGGER.log(Level.INFO, String.format("%s Setting up %s nodes...", LOGGING_PREFIX, configuredContainers));
+                int createdContainers = 0;
+                while (createdContainers < containersToCreate &&
+                        getNumberOfRunningContainers() <= getMaxDockerSeleniumContainers()) {
+                    boolean wasContainerCreated;
+                    if (createdContainers < getChromeContainersOnStartup()) {
+                        wasContainerCreated = startDockerSeleniumContainer(BrowserType.CHROME);
+                    } else {
+                        wasContainerCreated = startDockerSeleniumContainer(BrowserType.FIREFOX);
+                    }
+                    createdContainers = wasContainerCreated ? createdContainers + 1 : createdContainers;
+                }
+                LOGGER.log(Level.INFO, String.format("%s containers were created.", createdContainers));
+                setupCompleted = true;
+            }
+        }.start();
+    }
+
+    private int getNumberOfRunningContainers() {
         try {
             List<Container> containerList = dockerClient.listContainers(DockerClient.ListContainersParam.allContainers());
             int numberOfDockerSeleniumContainers = 0;
@@ -426,6 +452,16 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
                     numberOfDockerSeleniumContainers++;
                 }
             }
+            return numberOfDockerSeleniumContainers;
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, LOGGING_PREFIX + e.toString(), e);
+        }
+        return 0;
+    }
+
+    private boolean validateAmountOfDockerSeleniumContainers() {
+        try {
+            int numberOfDockerSeleniumContainers = getNumberOfRunningContainers();
 
             /*
                 Validation to avoid the situation where 20 containers are running and only 4 proxies are registered.
@@ -441,10 +477,11 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
                 return false;
             }
 
-            LOGGER.log(Level.FINE, LOGGING_PREFIX + "{0} docker-selenium containers running", containerList.size());
+            LOGGER.log(Level.FINE, String.format("%s %s docker-selenium containers running", LOGGING_PREFIX,
+                    numberOfDockerSeleniumContainers));
             if (numberOfDockerSeleniumContainers >= getMaxDockerSeleniumContainers()) {
-                LOGGER.log(Level.FINE, LOGGING_PREFIX + "Max. number of docker-selenium containers has been reached, no more " +
-                        "will be created until the number decreases below {0}.", getMaxDockerSeleniumContainers());
+                LOGGER.log(Level.FINE, LOGGING_PREFIX + "Max. number of docker-selenium containers has been reached, " +
+                        "no more will be created until the number decreases below {0}.", getMaxDockerSeleniumContainers());
                 return false;
             }
             return true;
