@@ -130,6 +130,17 @@ public class DockerSeleniumStarterRemoteProxyTest {
         verify(spyProxy, times(1)).startDockerSeleniumContainer(BrowserType.FIREFOX);
     }
 
+    @Test
+    public void noContainerIsStartedWhenBrowserCapabilityIsAbsent() {
+        // Browser is absent
+        Map<String, Object> nonSupportedCapability = new HashMap<>();
+        nonSupportedCapability.put(CapabilityType.PLATFORM, Platform.WINDOWS);
+        TestSession testSession = spyProxy.getNewSession(nonSupportedCapability);
+
+        Assert.assertNull(testSession);
+        verify(spyProxy, never()).startDockerSeleniumContainer(anyString());
+    }
+
     /*
         The following tests check that if for any reason the capabilities from DockerSelenium cannot be
         fetched, it should fallback to the default ones.

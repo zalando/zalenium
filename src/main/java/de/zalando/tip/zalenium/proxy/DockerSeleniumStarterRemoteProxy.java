@@ -145,34 +145,6 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
         createStartupContainers();
     }
 
-    private void createStartupContainers() {
-        Thread thread = new Thread() {
-            public void run() {
-                LOGGER.log(Level.INFO, String.format("%s Setting up %s Firefox nodes and %s Chrome nodes...",
-                        LOGGING_PREFIX, getFirefoxContainersOnStartup(), getChromeContainersOnStartup()));
-                int configuredContainers = getChromeContainersOnStartup() + getFirefoxContainersOnStartup();
-                int containersToCreate = configuredContainers > getMaxDockerSeleniumContainers() ?
-                        getMaxDockerSeleniumContainers() : configuredContainers;
-                int createdContainers = 0;
-                while (createdContainers < containersToCreate &&
-                        getNumberOfRunningContainers() <= getMaxDockerSeleniumContainers()) {
-                    boolean wasContainerCreated;
-                    if (createdContainers < getChromeContainersOnStartup()) {
-                        wasContainerCreated = startDockerSeleniumContainer(BrowserType.CHROME);
-                    } else {
-                        wasContainerCreated = startDockerSeleniumContainer(BrowserType.FIREFOX);
-                    }
-                    if (wasContainerCreated) {
-                        createdContainers++;
-                    }
-                }
-                LOGGER.log(Level.INFO, "Done setting up containers during startup.");
-                setupCompleted = true;
-            }
-        };
-        thread.start();
-    }
-
     /*
         Making the node seem as heavily used, in order to get it listed after the 'docker-selenium' nodes.
         98% used.
@@ -443,6 +415,31 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
         desiredCapabilities.setCapability(RegistrationRequest.MAX_INSTANCES, 1);
         dsCapabilities.add(desiredCapabilities);
         return dsCapabilities;
+    }
+
+    private void createStartupContainers() {
+        int configuredContainers = getChromeContainersOnStartup() + getFirefoxContainersOnStartup();
+        int containersToCreate = configuredContainers > getMaxDockerSeleniumContainers() ?
+                getMaxDockerSeleniumContainers() : configuredContainers;
+        new Thread() {
+            @Override
+            public void run() {
+                LOGGER.log(Level.INFO, String.format("%s Setting up %s nodes...", LOGGING_PREFIX, configuredContainers));
+                int createdContainers = 0;
+                while (createdContainers < containersToCreate &&
+                        getNumberOfRunningContainers() <= getMaxDockerSeleniumContainers()) {
+                    boolean wasContainerCreated;
+                    if (createdContainers < getChromeContainersOnStartup()) {
+                        wasContainerCreated = startDockerSeleniumContainer(BrowserType.CHROME);
+                    } else {
+                        wasContainerCreated = startDockerSeleniumContainer(BrowserType.FIREFOX);
+                    }
+                    createdContainers = wasContainerCreated ? createdContainers + 1 : createdContainers;
+                }
+                LOGGER.log(Level.INFO, String.format("%s containers were created.", createdContainers));
+                setupCompleted = true;
+            }
+        }.start();
     }
 
     private int getNumberOfRunningContainers() {

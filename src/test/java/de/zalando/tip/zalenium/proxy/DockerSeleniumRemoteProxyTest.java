@@ -188,6 +188,9 @@ public class DockerSeleniumRemoteProxyTest {
                     DockerSeleniumStarterRemoteProxy.class.getCanonicalName());
             DockerSeleniumStarterRemoteProxy dsProxy = new DockerSeleniumStarterRemoteProxy(request, registry);
             DockerSeleniumStarterRemoteProxy.setMaxDockerSeleniumContainers(1);
+            DockerSeleniumStarterRemoteProxy.setScreenHeight(DockerSeleniumStarterRemoteProxy.DEFAULT_SCREEN_HEIGHT);
+            DockerSeleniumStarterRemoteProxy.setScreenWidth(DockerSeleniumStarterRemoteProxy.DEFAULT_SCREEN_WIDTH);
+            DockerSeleniumStarterRemoteProxy.setTimeZone(DockerSeleniumStarterRemoteProxy.DEFAULT_TZ);
             dsProxy.getNewSession(getCapabilitySupportedByDockerSelenium());
 
             // Creating a spy proxy to verify the invoked methods
@@ -243,6 +246,9 @@ public class DockerSeleniumRemoteProxyTest {
                     DockerSeleniumStarterRemoteProxy.class.getCanonicalName());
             DockerSeleniumStarterRemoteProxy dsProxy = new DockerSeleniumStarterRemoteProxy(request, registry);
             DockerSeleniumStarterRemoteProxy.setMaxDockerSeleniumContainers(1);
+            DockerSeleniumStarterRemoteProxy.setScreenHeight(DockerSeleniumStarterRemoteProxy.DEFAULT_SCREEN_HEIGHT);
+            DockerSeleniumStarterRemoteProxy.setScreenWidth(DockerSeleniumStarterRemoteProxy.DEFAULT_SCREEN_WIDTH);
+            DockerSeleniumStarterRemoteProxy.setTimeZone(DockerSeleniumStarterRemoteProxy.DEFAULT_TZ);
             dsProxy.getNewSession(getCapabilitySupportedByDockerSelenium());
 
             // Mocking the environment variable to return false for video recording enabled
