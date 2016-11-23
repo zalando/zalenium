@@ -223,6 +223,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
              */
 
             final int nodePort = findFreePortInRange(LOWER_PORT_BOUNDARY, UPPER_PORT_BOUNDARY);
+            final int vncPort = nodePort + 10000;
 
             List<String> envVariables = new ArrayList<>();
             envVariables.add("SELENIUM_HUB_HOST=" + hostIpAddress);
@@ -234,6 +235,8 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
             envVariables.add("WAIT_TIMEOUT=20s");
             envVariables.add("PICK_ALL_RANDMON_PORTS=true");
             envVariables.add("VIDEO_STOP_SLEEP_SECS=4");
+            envVariables.add("NOVNC=true");
+            envVariables.add("NOVNC_PORT=" + vncPort);
             envVariables.add("SCREEN_WIDTH=" + getScreenWidth());
             envVariables.add("SCREEN_HEIGHT=" + getScreenHeight());
             envVariables.add("TZ=" + getTimeZone());
@@ -447,8 +450,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
             List<Container> containerList = dockerClient.listContainers(DockerClient.ListContainersParam.allContainers());
             int numberOfDockerSeleniumContainers = 0;
             for (Container container : containerList) {
-                if (container.image().contains(DOCKER_SELENIUM_IMAGE) &&
-                        !"exited".equalsIgnoreCase(container.status())) {
+                if (container.image().contains(DOCKER_SELENIUM_IMAGE) && !"exited".equalsIgnoreCase(container.state())) {
                     numberOfDockerSeleniumContainers++;
                 }
             }
@@ -502,7 +504,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
                 try(ServerSocket serverSocket = new ServerSocket(portNumber)) {
                     freePort = serverSocket.getLocalPort();
                 } catch (IOException e) {
-                    LOGGER.log(Level.SEVERE, LOGGING_PREFIX + e.toString(), e);
+                    LOGGER.log(Level.FINE, LOGGING_PREFIX + e.toString(), e);
                 }
 
                 if (freePort != -1) {

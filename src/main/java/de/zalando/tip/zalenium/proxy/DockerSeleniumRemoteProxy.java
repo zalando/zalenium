@@ -299,7 +299,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                 try {
                     Thread.sleep(getSleepTimeBetweenChecks());
                 } catch (InterruptedException e) {
-                    LOGGER.log(Level.SEVERE, dockerSeleniumRemoteProxy.getNodeIpAndPort() + " Error while sleeping the " +
+                    LOGGER.log(Level.FINE, dockerSeleniumRemoteProxy.getNodeIpAndPort() + " Error while sleeping the " +
                             "thread, stopping thread execution.", e);
                     Thread.currentThread().interrupt();
                     return;

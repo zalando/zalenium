@@ -106,7 +106,8 @@ StartUp()
     mkdir -p logs
 
     java -cp ${SELENIUM_ARTIFACT}:${ZALENIUM_ARTIFACT} org.openqa.grid.selenium.GridLauncher \
-    -role hub -throwOnCapabilityNotPresent true > logs/stdout.zalenium.hub.log &
+    -role hub -servlets de.zalando.tip.zalenium.servlet.live \
+    -throwOnCapabilityNotPresent true > logs/stdout.zalenium.hub.log &
     echo $! > ${PID_PATH_SELENIUM}
 
     IN_TRAVIS="${CI:=false}"
