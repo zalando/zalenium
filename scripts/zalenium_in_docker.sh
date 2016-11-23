@@ -3,6 +3,27 @@
 SCRIPT_ACTION=$1
 ZALENIUM_DOCKER_IMAGE=$2
 
+# In OSX install gtimeout through `brew install coreutils`
+function mtimeout() {
+    if [ "$(uname -s)" = 'Darwin' ]; then
+        gtimeout "$@"
+    else
+        timeout "$@"
+    fi
+}
+
+# Actively waits for Zalenium to fully starts
+# you can copy paste this in your Jenkins scripts
+WaitZaleniumStarted()
+{
+    DONE_MSG="Zalenium is now ready!"
+    while ! docker logs zalenium | grep "${DONE_MSG}" >/dev/null; do
+        echo -n '.'
+        sleep 0.2
+    done
+}
+export -f WaitZaleniumStarted
+
 StartUp()
 {
     DOCKER_SELENIUM_IMAGE_COUNT=$(docker images | grep "elgalu/selenium" | wc -l)
@@ -22,12 +43,12 @@ StartUp()
 
     if [ "$SAUCE_USERNAME" = abc ]; then
         echo "SAUCE_USERNAME environment variable is not set, cannot start Sauce Labs node, exiting..."
-        exit 1
+        exit 2
     fi
 
     if [ "$SAUCE_ACCESS_KEY" = abc ]; then
         echo "SAUCE_ACCESS_KEY environment variable is not set, cannot start Sauce Labs node, exiting..."
-        exit 1
+        exit 3
     fi
 
     echo "Starting Zalenium in docker..."
@@ -44,7 +65,10 @@ StartUp()
           -v /var/run/docker.sock:/var/run/docker.sock \
           ${ZALENIUM_DOCKER_IMAGE} start
 
-    sleep 20
+    if ! mtimeout --foreground "2m" bash -c WaitZaleniumStarted; then
+        echo "Zalenium failed to start after 2 minutes, failing..."
+        exit 4
+    fi
 
     echo "Zalenium in docker started!"
 }
