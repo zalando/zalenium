@@ -21,9 +21,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 // We use this class name to be able to go to the resource like this: http://localhost:4444/grid/admin/live
 public class live extends RegistryBasedServlet {
+
+    private static final Logger LOGGER = Logger.getLogger(live.class.getName());
 
     public live(){
         this(null);
@@ -48,6 +52,14 @@ public class live extends RegistryBasedServlet {
     protected void process(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
 
+        int refresh = -1;
+
+        try {
+            refresh = Integer.parseInt(request.getParameter("refresh"));
+        } catch (NumberFormatException e) {
+            LOGGER.log(Level.FINE, e.toString(), e);
+        }
+
         response.setContentType("text/html");
         response.setCharacterEncoding("UTF-8");
         response.setStatus(200);
@@ -60,6 +72,10 @@ public class live extends RegistryBasedServlet {
         builder.append("<script src='/grid/resources/org/openqa/grid/images/console-beta.js'></script>");
         builder.append("<link href='/grid/resources/org/openqa/grid/images/console-beta.css' rel='stylesheet' type='text/css' />");
         builder.append("<link href='/grid/resources/org/openqa/grid/images/favicon.ico' rel='icon' type='image/x-icon' />");
+
+        if (refresh != -1) {
+            builder.append(String.format("<meta http-equiv='refresh' content='%d' />", refresh));
+        }
 
         builder.append("<title>Live Preview</title>");
 

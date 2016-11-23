@@ -48,8 +48,7 @@ public class LiveNodeHtmlRenderer implements HtmlRenderer {
         builder.append(tabBrowsers());
         builder.append(tabConfig());
 
-        builder.append("</div>");
-        builder.append("</div>");
+        builder.append("</div></div>");
 
         return builder.toString();
     }
@@ -124,9 +123,7 @@ public class LiveNodeHtmlRenderer implements HtmlRenderer {
 
         builder.append("<iframe src='").append(vncReadOnlyUrl).append("' class='vnc' ");
         builder.append("style='display: inline-flex; width: 100%; height: 300px; border:none; margin:0; padding:0;'>");
-        builder.append("Your browser does not support iframes. </iframe>");
-
-        builder.append("</div>");
+        builder.append("Your browser does not support iframes. </iframe></div>");
         return builder.toString();
     }
 
@@ -181,8 +178,7 @@ public class LiveNodeHtmlRenderer implements HtmlRenderer {
         nodeTabs = nodeTabs.concat("<ul>");
         nodeTabs = nodeTabs.concat("<li class='tab' type='browsers'><a title='test slots' href='#'>Browsers</a></li>");
         nodeTabs = nodeTabs.concat("<li class='tab' type='config'><a title='node configuration' href='#'>Configuration</a></li>");
-        nodeTabs = nodeTabs.concat("</ul>");
-        nodeTabs = nodeTabs.concat("</div>");
+        nodeTabs = nodeTabs.concat("</ul></div>");
         return nodeTabs;
     }
 
