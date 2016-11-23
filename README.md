@@ -85,7 +85,20 @@ Zalenium uses docker to scale on-demand, therefore we need to give it the `docke
 * To see the recorded videos, check the `/tmp/videos` folder (or the folder that you mapped when starting the container).
 
 ### Docker version
-Zalenium is currently compatible with Docker `1.11` and `1.12` __default__, is recommended that you explicitly tell Zalenium which major version you are using via `-e DOCKER=1.11` due to API compatibility issues. In the future this will be automated on our side.
+
+#### Linux
+For Linux systems you can simply share the docker binary via `-v $(which docker):/usr/bin/docker`
+
+```sh
+docker run --rm -ti --name zalenium -p 4444:4444 -p 5555:5555 \
+  -v $(which docker):/usr/bin/docker \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  -v /tmp/videos:/home/seluser/videos \
+  dosel/zalenium start --sauceLabsEnabled false
+```
+
+#### OSX
+Zalenium for OSX is currently compatible with Docker `1.11` and `1.12` __default__. In Mac is recommended that you explicitly tell Zalenium which major version you are using via `-e DOCKER=1.11` due to API compatibility issues. In the future this will be automated on our side as it is with Linux (read above)
 
 ```sh
 docker run --rm -ti --name zalenium -p 4444:4444 -p 5555:5555 \
