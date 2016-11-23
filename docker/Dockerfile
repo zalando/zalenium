@@ -204,7 +204,7 @@ RUN set -x \
           -o docker.tgz \
   && echo "${DOCKER_SHA256} *docker.tgz" | sha256sum -c - \
   && tar -xzvf docker.tgz \
-  && mv docker/docker /usr/local/bin/docker-${DOCKER_VERSION} \
+  && mv docker/docker /usr/bin/docker-${DOCKER_VERSION} \
   && rm -rf docker/ && rm docker.tgz \
   && docker-${DOCKER_VERSION} --version | grep "${DOCKER_VERSION}"
 
@@ -219,7 +219,7 @@ RUN set -x \
           -o docker.tgz \
   && echo "${DOCKER_SHA256} *docker.tgz" | sha256sum -c - \
   && tar -xzvf docker.tgz \
-  && mv docker/docker /usr/local/bin/docker-${DOCKER_VERSION} \
+  && mv docker/docker /usr/bin/docker-${DOCKER_VERSION} \
   && rm -rf docker/ && rm docker.tgz \
   && docker-${DOCKER_VERSION} --version | grep "${DOCKER_VERSION}"
 
