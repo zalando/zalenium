@@ -112,9 +112,7 @@ public class live extends RegistryBasedServlet {
         for (int i = leftColumnSize; i < nodes.size(); i++) {
             builder.append(nodes.get(i));
         }
-        builder.append("</div>");
-
-        builder.append("</div>");
+        builder.append("</div></div>");
         builder.append("</body>");
         builder.append("</html>");
 
@@ -131,8 +129,8 @@ public class live extends RegistryBasedServlet {
         header = header.concat("<h1><a href='/grid/live'>Zalenium Live Preview</a></h1>");
         header = header.concat("<h2>Zalenium Live Preview");
         header = header.concat("</h2>");
-        header = header.concat("<div><a id='helplink' target='_blank' href='https://github.com/zalando-incubator/zalenium'>Help</a></div>");
-        header = header.concat("</div>");
+        header = header.concat("<div><a id='helplink' target='_blank' ");
+        header = header.concat("href='https://github.com/zalando-incubator/zalenium'>Help</a></div></div>");
         return header;
     }
 
