@@ -13,14 +13,20 @@ import org.openqa.selenium.Platform;
 import org.openqa.selenium.remote.CapabilityType;
 
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class LiveNodeHtmlRenderer implements HtmlRenderer {
+
+    private static final Logger LOGGER = Logger.getLogger(LiveNodeHtmlRenderer.class.getName());
+
     private RemoteProxy proxy;
 
     public LiveNodeHtmlRenderer(RemoteProxy proxy) {
         this.proxy = proxy;
     }
 
+    @Override
     public String renderSummary() {
         StringBuilder builder = new StringBuilder();
         builder.append("<div class='proxy'>");
@@ -56,7 +62,8 @@ public class LiveNodeHtmlRenderer implements HtmlRenderer {
                     .get("version").getAsString();
             return " (version : "+version+ ")";
         }catch (Exception e) {
-            return " unknown version,"+e.getMessage();
+            LOGGER.log(Level.FINE, e.toString(), e);
+            return " unknown version, "+e.getMessage();
         }
     }
 
@@ -66,11 +73,11 @@ public class LiveNodeHtmlRenderer implements HtmlRenderer {
         builder.append("<div type='config' class='content_detail'>");
         Map<String, Object> config = proxy.getConfig();
 
-        for (String key : config.keySet()) {
+        for (Map.Entry<String, Object> entry : config.entrySet()) {
             builder.append("<p>");
-            builder.append(key);
+            builder.append(entry.getKey());
             builder.append(":");
-            builder.append(config.get(key));
+            builder.append(entry.getValue());
             builder.append("</p>");
         }
 
@@ -95,11 +102,11 @@ public class LiveNodeHtmlRenderer implements HtmlRenderer {
             }
         }
 
-        if (rcLines.getLinesType().size() != 0) {
+        if (rcLines.getLinesType().isEmpty()) {
             builder.append("<p class='protocol' >Remote Control (legacy)</p>");
             builder.append(getLines(rcLines));
         }
-        if (wdLines.getLinesType().size() != 0) {
+        if (wdLines.getLinesType().isEmpty()) {
             builder.append("<p class='protocol' >WebDriver</p>");
             builder.append(getLines(wdLines));
         }
@@ -187,7 +194,7 @@ public class LiveNodeHtmlRenderer implements HtmlRenderer {
      */
     public static String getPlatform(RemoteProxy proxy) {
         Platform res;
-        if (proxy.getTestSlots().size() == 0) {
+        if (proxy.getTestSlots().isEmpty()) {
             return "Unknown";
         } else {
             res = getPlatform(proxy.getTestSlots().get(0));
