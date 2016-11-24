@@ -80,8 +80,9 @@ Zalenium uses docker to scale on-demand, therefore we need to give it the `docke
 * Stop it: `docker stop zalenium`
 
 #### Using it
-* Just point your Selenium tests to http://localhost:4444/wd/hub and that's it!
+* Just point your Selenium tests to [http://localhost:4444/wd/hub](http://localhost:4444/wd/hub) and that's it!
 * You can use the [integration tests](./src/test/java/de/zalando/tip/zalenium/it/ParallelIT.java) we have to try Zalenium.
+* Check the live preview of your running tests [http://localhost:4444/grid/admin/live](http://localhost:4444/grid/admin/live)
 * To see the recorded videos, check the `/tmp/videos` folder (or the folder that you mapped when starting the container).
 
 ### Docker version
