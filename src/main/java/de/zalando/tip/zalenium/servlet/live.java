@@ -41,13 +41,23 @@ public class live extends RegistryBasedServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        process(request, response);
+        try {
+            process(request, response);
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, e.toString(), e);
+            throw e;
+        }
     }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        process(request, response);
+        try {
+            process(request, response);
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, e.toString(), e);
+            throw e;
+        }
     }
 
     protected void process(HttpServletRequest request, HttpServletResponse response)

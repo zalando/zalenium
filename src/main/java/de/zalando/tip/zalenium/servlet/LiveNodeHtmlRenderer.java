@@ -1,7 +1,6 @@
 package de.zalando.tip.zalenium.servlet;
 
 import com.google.gson.JsonObject;
-import org.openqa.grid.common.SeleniumProtocol;
 import org.openqa.grid.common.exception.GridException;
 import org.openqa.grid.internal.RemoteProxy;
 import org.openqa.grid.internal.TestSession;
@@ -90,22 +89,13 @@ public class LiveNodeHtmlRenderer implements HtmlRenderer {
         StringBuilder builder = new StringBuilder();
         builder.append("<div type='browsers' class='content_detail'>");
 
-        SlotsLines rcLines = new SlotsLines();
         SlotsLines wdLines = new SlotsLines();
 
         for (TestSlot slot : proxy.getTestSlots()) {
-            if (slot.getProtocol() == SeleniumProtocol.Selenium) {
-                rcLines.add(slot);
-            } else {
-                wdLines.add(slot);
-            }
+            wdLines.add(slot);
         }
 
-        if (rcLines.getLinesType().isEmpty()) {
-            builder.append("<p class='protocol' >Remote Control (legacy)</p>");
-            builder.append(getLines(rcLines));
-        }
-        if (wdLines.getLinesType().isEmpty()) {
+        if (!wdLines.getLinesType().isEmpty()) {
             builder.append("<p class='protocol' >WebDriver</p>");
             builder.append(getLines(wdLines));
         }

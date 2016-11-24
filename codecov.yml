@@ -11,6 +11,3 @@ coverage:
       default:
         target: auto
         target: 85%
-    ignore:
-      # Ignoring the servlets since it does not make sense for now to test them
-      - "src/main/java/de/zalando/tip/zalenium/servlet/*"
