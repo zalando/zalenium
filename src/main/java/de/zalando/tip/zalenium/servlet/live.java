@@ -29,6 +29,7 @@ public class live extends RegistryBasedServlet {
 
     private static final Logger LOGGER = Logger.getLogger(live.class.getName());
 
+    @SuppressWarnings("unused")
     public live(){
         this(null);
     }

@@ -47,7 +47,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     private static List<DesiredCapabilities> dockerSeleniumCapabilities = new ArrayList<>();
 
     private static final int LOWER_PORT_BOUNDARY = 40000;
-    private static final int UPPER_PORT_BOUNDARY = 50000;
+    private static final int UPPER_PORT_BOUNDARY = 49999;
     private List<Integer> allocatedPorts = new ArrayList<>();
 
     private static final DockerClient defaultDockerClient = new DefaultDockerClient("unix:///var/run/docker.sock");
@@ -232,9 +232,10 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
             envVariables.add("GRID=false");
             envVariables.add("RC_CHROME=false");
             envVariables.add("RC_FIREFOX=false");
-            envVariables.add("WAIT_TIMEOUT=20s");
+            envVariables.add("WAIT_TIMEOUT=120s");
             envVariables.add("PICK_ALL_RANDMON_PORTS=true");
-            envVariables.add("VIDEO_STOP_SLEEP_SECS=4");
+            envVariables.add("VIDEO_STOP_SLEEP_SECS=6");
+            envVariables.add("WAIT_TIME_OUT_VIDEO_STOP=20s");
             envVariables.add("NOVNC=true");
             envVariables.add("NOVNC_PORT=" + vncPort);
             envVariables.add("SCREEN_WIDTH=" + getScreenWidth());
@@ -429,8 +430,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
             public void run() {
                 LOGGER.log(Level.INFO, String.format("%s Setting up %s nodes...", LOGGING_PREFIX, configuredContainers));
                 int createdContainers = 0;
-                while (createdContainers < containersToCreate &&
-                        getNumberOfRunningContainers() <= getMaxDockerSeleniumContainers()) {
+                while (createdContainers < containersToCreate && getNumberOfRunningContainers() <= getMaxDockerSeleniumContainers()) {
                     boolean wasContainerCreated;
                     if (createdContainers < getChromeContainersOnStartup()) {
                         wasContainerCreated = startDockerSeleniumContainer(BrowserType.CHROME);
@@ -439,7 +439,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
                     }
                     createdContainers = wasContainerCreated ? createdContainers + 1 : createdContainers;
                 }
-                LOGGER.log(Level.INFO, String.format("%s containers were created.", createdContainers));
+                LOGGER.log(Level.INFO, String.format("%s containers were created, it will take a bit more until all get registered.", createdContainers));
                 setupCompleted = true;
             }
         }.start();
