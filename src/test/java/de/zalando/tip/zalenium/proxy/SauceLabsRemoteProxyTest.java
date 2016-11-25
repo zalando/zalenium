@@ -147,6 +147,7 @@ public class SauceLabsRemoteProxyTest {
         verify(request).setBody(expectedBody);
     }
 
+    @SuppressWarnings("ConstantConditions")
     @Test
     public void useSauceLabsFallbackCapabilitiesFileWhenTheOnesFromSauceLabsAreNotAvailable() {
         try {

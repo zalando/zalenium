@@ -1,6 +1,7 @@
 [![Build Status](https://travis-ci.org/zalando-incubator/zalenium.svg?branch=master)](https://travis-ci.org/zalando-incubator/zalenium)
 [![Quality Gate](https://sonarqube.com/api/badges/gate?key=de.zalando.tip:zalenium)](https://sonarqube.com/dashboard/index/de.zalando.tip:zalenium)
 [![codecov](https://codecov.io/gh/zalando-incubator/zalenium/branch/master/graph/badge.svg)](https://codecov.io/gh/zalando-incubator/zalenium)
+[![versioneye](https://www.versioneye.com/user/projects/581c5aa189f0a91d99ae3c8d/badge.svg?style=flat-square)](https://www.versioneye.com/user/projects/581c5aa189f0a91d99ae3c8d#dialog_dependency_badge)
 
 # What is Zalenium?
 A Selenium Grid extension to scale up and down your local grid dynamically with docker containers. It uses [docker-selenium](https://github.com/elgalu/docker-selenium) to run your tests in Firefox and Chrome locally, and when you need a different browser, your tests get redirected to [Sauce Labs](https://saucelabs.com/).
@@ -80,8 +81,9 @@ Zalenium uses docker to scale on-demand, therefore we need to give it the `docke
 * Stop it: `docker stop zalenium`
 
 #### Using it
-* Just point your Selenium tests to http://localhost:4444/wd/hub and that's it!
+* Just point your Selenium tests to [http://localhost:4444/wd/hub](http://localhost:4444/wd/hub) and that's it!
 * You can use the [integration tests](./src/test/java/de/zalando/tip/zalenium/it/ParallelIT.java) we have to try Zalenium.
+* Check the live preview of your running tests [http://localhost:4444/grid/admin/live](http://localhost:4444/grid/admin/live)
 * To see the recorded videos, check the `/tmp/videos` folder (or the folder that you mapped when starting the container).
 
 ### Docker version

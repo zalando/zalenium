@@ -406,7 +406,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     }
 
     @VisibleForTesting
-    protected static List<DesiredCapabilities> getDockerSeleniumFallbackCapabilities() {
+    public static List<DesiredCapabilities> getDockerSeleniumFallbackCapabilities() {
         List<DesiredCapabilities> dsCapabilities = new ArrayList<>();
         DesiredCapabilities desiredCapabilities = new DesiredCapabilities();
         desiredCapabilities.setBrowserName(BrowserType.FIREFOX);
