@@ -4,9 +4,12 @@ package de.zalando.tip.zalenium.servlet;
 import de.zalando.tip.zalenium.proxy.DockerSeleniumRemoteProxy;
 import de.zalando.tip.zalenium.proxy.DockerSeleniumStarterRemoteProxy;
 import de.zalando.tip.zalenium.util.TestUtils;
+import org.junit.Before;
 import org.junit.Test;
 import org.openqa.grid.common.RegistrationRequest;
 import org.openqa.grid.internal.Registry;
+import org.openqa.selenium.Platform;
+import org.openqa.selenium.remote.DesiredCapabilities;
 
 import javax.servlet.ServletException;
 import javax.servlet.ServletOutputStream;
@@ -15,6 +18,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
+import java.util.List;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -23,9 +27,13 @@ import static org.hamcrest.CoreMatchers.containsString;
 
 public class LiveNodeServletTest {
 
-    @Test
-    public void addedNodesAreRenderedInServlet() throws ServletException, IOException {
-        Registry registry = Registry.newInstance();
+    private Registry registry;
+    private HttpServletRequest request;
+    private HttpServletResponse response;
+
+    @Before
+    public void setUp() throws IOException {
+        registry = Registry.newInstance();
 
         // Creating the configuration and the registration request of the proxy (node)
         RegistrationRequest registrationRequest = TestUtils.getRegistrationRequestForTesting(40000,
@@ -36,14 +44,20 @@ public class LiveNodeServletTest {
         registrationRequest = TestUtils.getRegistrationRequestForTesting(40001,
                 DockerSeleniumRemoteProxy.class.getCanonicalName());
         registrationRequest.getCapabilities().clear();
-        registrationRequest.getCapabilities().addAll(DockerSeleniumStarterRemoteProxy.getDockerSeleniumFallbackCapabilities());
+        List<DesiredCapabilities> capabilities = DockerSeleniumStarterRemoteProxy.getDockerSeleniumFallbackCapabilities();
+        DesiredCapabilities desiredCapabilities = new DesiredCapabilities();
+        desiredCapabilities.setBrowserName("NEW_BROWSER");
+        desiredCapabilities.setPlatform(Platform.LINUX);
+        desiredCapabilities.setCapability(RegistrationRequest.MAX_INSTANCES, 1);
+        capabilities.add(desiredCapabilities);
+        registrationRequest.getCapabilities().addAll(capabilities);
         DockerSeleniumRemoteProxy proxyTwo = DockerSeleniumRemoteProxy.getNewInstance(registrationRequest, registry);
 
         registry.add(proxyOne);
         registry.add(proxyTwo);
 
-        HttpServletRequest request = mock(HttpServletRequest.class);
-        HttpServletResponse response = mock(HttpServletResponse.class);
+        request = mock(HttpServletRequest.class);
+        response = mock(HttpServletResponse.class);
 
         when(request.getParameter("refresh")).thenReturn("1");
         when(request.getServerName()).thenReturn("localhost");
@@ -70,6 +84,10 @@ public class LiveNodeServletTest {
                 return stringBuilder.toString();
             }
         });
+    }
+
+    @Test
+    public void addedNodesAreRenderedInServlet() throws ServletException, IOException {
 
         live liveServlet = new live(registry);
 
@@ -83,6 +101,19 @@ public class LiveNodeServletTest {
         assertThat(responseContent, containsString("http://localhost:5555/proxy/50000/?nginx=50000&view_only=false'"));
         assertThat(responseContent, containsString("http://localhost:5555/proxy/50001/?nginx=50001&view_only=true'"));
         assertThat(responseContent, containsString("http://localhost:5555/proxy/50001/?nginx=50001&view_only=false'"));
+    }
+
+    @Test
+    public void postAndGetReturnSameContent() throws ServletException, IOException {
+
+        live liveServlet = new live(registry);
+
+        liveServlet.doPost(request, response);
+        String postResponseContent = response.getOutputStream().toString();
+
+        liveServlet.doGet(request, response);
+        String getResponseContent = response.getOutputStream().toString();
+        assertThat(getResponseContent, containsString(postResponseContent));
     }
 
 }
