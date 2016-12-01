@@ -104,7 +104,7 @@ public class live extends RegistryBasedServlet {
         List<String> nodes = new ArrayList<>();
         for (RemoteProxy proxy : getRegistry().getAllProxies()) {
             if (proxy instanceof DockerSeleniumRemoteProxy) {
-                HtmlRenderer beta = new LiveNodeHtmlRenderer(proxy);
+                HtmlRenderer beta = new LiveNodeHtmlRenderer(proxy, request.getServerName());
                 nodes.add(beta.renderSummary());
             }
         }

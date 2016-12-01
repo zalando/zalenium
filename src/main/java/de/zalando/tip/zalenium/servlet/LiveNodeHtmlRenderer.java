@@ -20,9 +20,11 @@ public class LiveNodeHtmlRenderer implements HtmlRenderer {
     private static final Logger LOGGER = Logger.getLogger(LiveNodeHtmlRenderer.class.getName());
 
     private RemoteProxy proxy;
+    private String serverName;
 
-    public LiveNodeHtmlRenderer(RemoteProxy proxy) {
+    public LiveNodeHtmlRenderer(RemoteProxy proxy, String serverName) {
         this.proxy = proxy;
+        this.serverName = serverName == null ? "localhost" : serverName;
     }
 
     @Override
@@ -102,9 +104,9 @@ public class LiveNodeHtmlRenderer implements HtmlRenderer {
 
         // Adding live preview
         int vncPort = proxy.getRemoteHost().getPort() + 10000;
-        String vncViewBaseUrl = "http://localhost:5555/proxy/%s/?nginx=%s&view_only=%s";
-        String vncReadOnlyUrl = String.format(vncViewBaseUrl, vncPort, vncPort, "true");
-        String vncInteractUrl = String.format(vncViewBaseUrl, vncPort, vncPort, "false");
+        String vncViewBaseUrl = "http://%s:5555/proxy/%s/?nginx=%s&view_only=%s";
+        String vncReadOnlyUrl = String.format(vncViewBaseUrl, serverName, vncPort, vncPort, "true");
+        String vncInteractUrl = String.format(vncViewBaseUrl, serverName, vncPort, vncPort, "false");
 
         builder.append("<p class='vnc'>");
         builder.append("<a href='").append(vncReadOnlyUrl).append("' target='_blank'>Read-only VNC</a>||");
