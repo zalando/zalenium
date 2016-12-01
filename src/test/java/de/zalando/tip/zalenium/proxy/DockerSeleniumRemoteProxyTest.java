@@ -21,10 +21,13 @@ import org.junit.Test;
 import org.openqa.grid.common.RegistrationRequest;
 import org.openqa.grid.internal.Registry;
 import org.openqa.grid.internal.TestSession;
+import org.openqa.grid.web.servlet.handler.RequestType;
+import org.openqa.grid.web.servlet.handler.WebDriverRequest;
 import org.openqa.selenium.Platform;
 import org.openqa.selenium.remote.BrowserType;
 import org.openqa.selenium.remote.CapabilityType;
 
+import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.HashMap;
@@ -149,7 +152,13 @@ public class DockerSeleniumRemoteProxyTest {
         Assert.assertTrue(proxy.isBusy());
 
         // We release the session, the node should be free
+        WebDriverRequest request = mock(WebDriverRequest.class);
+        HttpServletResponse response = mock(HttpServletResponse.class);
+        when(request.getMethod()).thenReturn("DELETE");
+        when(request.getRequestType()).thenReturn(RequestType.STOP_SESSION);
+
         newSession.getSlot().doFinishRelease();
+        proxy.afterCommand(newSession, request, response);
 
         // After running one test, the node shouldn't be busy and also down
         Assert.assertFalse(proxy.isBusy());
@@ -216,7 +225,13 @@ public class DockerSeleniumRemoteProxyTest {
                     .processVideoAction(DockerSeleniumRemoteProxy.VideoRecordingAction.START_RECORDING, containerId);
 
             // We release the sessions, the node should be free
+            WebDriverRequest webDriverRequest = mock(WebDriverRequest.class);
+            HttpServletResponse response = mock(HttpServletResponse.class);
+            when(webDriverRequest.getMethod()).thenReturn("DELETE");
+            when(webDriverRequest.getRequestType()).thenReturn(RequestType.STOP_SESSION);
+
             newSession.getSlot().doFinishRelease();
+            spyProxy.afterCommand(newSession, webDriverRequest, response);
 
             Assert.assertFalse(spyProxy.isBusy());
             verify(spyProxy, timeout(40000))
@@ -281,7 +296,13 @@ public class DockerSeleniumRemoteProxyTest {
                     .processVideoAction(DockerSeleniumRemoteProxy.VideoRecordingAction.START_RECORDING, containerId);
 
             // We release the sessions, the node should be free
+            WebDriverRequest webDriverRequest = mock(WebDriverRequest.class);
+            HttpServletResponse response = mock(HttpServletResponse.class);
+            when(webDriverRequest.getMethod()).thenReturn("DELETE");
+            when(webDriverRequest.getRequestType()).thenReturn(RequestType.STOP_SESSION);
+
             newSession.getSlot().doFinishRelease();
+            spyProxy.afterCommand(newSession, webDriverRequest, response);
 
             Assert.assertFalse(spyProxy.isBusy());
             // Now we assert that videoRecording was invoked but processVideoAction not, neither copyVideos

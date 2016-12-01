@@ -21,7 +21,11 @@ import org.openqa.grid.common.exception.RemoteUnregisterException;
 import org.openqa.grid.internal.Registry;
 import org.openqa.grid.internal.TestSession;
 import org.openqa.grid.selenium.proxy.DefaultRemoteProxy;
+import org.openqa.grid.web.servlet.handler.RequestType;
+import org.openqa.grid.web.servlet.handler.WebDriverRequest;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -51,6 +55,8 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     private static boolean videoRecordingEnabled;
 
     private int amountOfExecutedTests;
+
+    private boolean stopSessionRequestReceived = false;
 
     private DockerSeleniumNodePoller dockerSeleniumNodePollerThread = null;
 
@@ -101,6 +107,20 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         }
         LOGGER.log(Level.FINE, "{0} No more sessions allowed", getNodeIpAndPort());
         return null;
+    }
+
+    @Override
+    public void afterCommand(TestSession session, HttpServletRequest request, HttpServletResponse response) {
+        if (request instanceof WebDriverRequest && "DELETE".equalsIgnoreCase(request.getMethod())) {
+            WebDriverRequest seleniumRequest = (WebDriverRequest) request;
+            if (RequestType.STOP_SESSION.equals(seleniumRequest.getRequestType())) {
+                this.setStopSessionRequestReceived(true);
+                String message = String.format("%s STOP_SESSION command received. Node should shutdown soon...",
+                        getNodeIpAndPort());
+                LOGGER.log(Level.INFO, message);
+            }
+        }
+        super.afterCommand(session, request, response);
     }
 
     @Override
@@ -259,6 +279,14 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         DockerSeleniumRemoteProxy.videoRecordingEnabled = videoRecordingEnabled;
     }
 
+    public boolean isStopSessionRequestReceived() {
+        return stopSessionRequestReceived;
+    }
+
+    public void setStopSessionRequestReceived(boolean stopSessionRequestReceived) {
+        this.stopSessionRequestReceived = stopSessionRequestReceived;
+    }
+
     /*
         Class to poll continuously the node status regarding the amount of tests executed. If MAX_UNIQUE_TEST_SESSIONS
         have been executed, then the node is removed from the grid (this should trigger the docker container to stop).
@@ -290,7 +318,8 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                     If the proxy is not busy and it can be released since the MAX_UNIQUE_TEST_SESSIONS have been executed,
                     then the node executes its teardown.
                 */
-                if (!dockerSeleniumRemoteProxy.isBusy() && dockerSeleniumRemoteProxy.isTestSessionLimitReached()) {
+                if (!dockerSeleniumRemoteProxy.isBusy() && dockerSeleniumRemoteProxy.isTestSessionLimitReached() &&
+                        dockerSeleniumRemoteProxy.isStopSessionRequestReceived()) {
                     dockerSeleniumRemoteProxy.videoRecording(VideoRecordingAction.STOP_RECORDING);
                     shutdownNode();
                     return;
