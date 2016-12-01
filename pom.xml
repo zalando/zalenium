@@ -52,7 +52,7 @@
         <selenium-server.patch-level.version>1</selenium-server.patch-level.version>
         <docker-client.version>6.1.0</docker-client.version>
         <junit.version>4.12</junit.version>
-        <mockito.version>2.2.15</mockito.version>
+        <mockito.version>2.2.21</mockito.version>
         <awaitility.version>2.0.0</awaitility.version>
         <testng.version>6.9.13.6</testng.version>
         <slf4j.version>1.7.21</slf4j.version>
