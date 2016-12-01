@@ -24,7 +24,7 @@ public class LiveNodeHtmlRenderer implements HtmlRenderer {
 
     public LiveNodeHtmlRenderer(RemoteProxy proxy, String serverName) {
         this.proxy = proxy;
-        this.serverName = serverName == null ? "localhost" : serverName;
+        this.serverName = serverName;
     }
 
     @Override
