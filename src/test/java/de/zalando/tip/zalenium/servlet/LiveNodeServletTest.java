@@ -46,6 +46,7 @@ public class LiveNodeServletTest {
         HttpServletResponse response = mock(HttpServletResponse.class);
 
         when(request.getParameter("refresh")).thenReturn("1");
+        when(request.getServerName()).thenReturn("localhost");
         when(response.getOutputStream()).thenReturn(new ServletOutputStream() {
             private StringBuilder stringBuilder = new StringBuilder();
 
