@@ -22,7 +22,7 @@ Zalenium's analytics records the following different events:
 - an `event` hit type with the `test_stop` event category, the proxy your test is using to run (docker-selenium or Sauce Labs) as action.
 - an `exception` hit type with the `exception` event category, exception description of the exception name and whether the exception was fatal e.g. `1`
 
-With the recorded information, it is not possible for us to match any particular real user with the anonymized user ID. For example, if you ever reinstall docker, a new ID would be generated and this would count as a completely new anonymized user.
+With the recorded information, it is not possible for us to match any particular real user with the anonymized user ID. For example, if you ever reinstall docker, a new ID is generated and this would count as a completely new anonymized user.
 
 As far as we can tell it would be impossible for Google to match the randomly generated analytics user ID to any other Google Analytics user ID. If Google turned evil the only thing they could do would be to lie about anonymising IP addresses and attempt to match users based on IP addresses.
 
@@ -30,7 +30,7 @@ As far as we can tell it would be impossible for Google to match the randomly ge
 Zalenium's analytics are sent throughout Zalenium's execution to Google Analytics over HTTPS.
 
 ## Who?
-Zalenium's analytics are accessible to Zalenium's current maintainers. Contact @diemol if you are a maintainer and need access.
+Zalenium's analytics are accessible to Zalenium's current maintainers. Contact [@diemol](https://github.com/diemol) if you are a maintainer and need access.
 
 ## How?
 The code is viewable in:
