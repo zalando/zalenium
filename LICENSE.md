@@ -50,3 +50,5 @@ We collect, process and use the following data:
   * ID
 
 ## End of License Information
+
+More information about anonymized data collection can be seen [here](Analytics.md)
