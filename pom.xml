@@ -50,7 +50,7 @@
     <properties>
         <selenium-server.major-minor.version>2.53</selenium-server.major-minor.version>
         <selenium-server.patch-level.version>1</selenium-server.patch-level.version>
-        <docker-client.version>6.1.0</docker-client.version>
+        <docker-client.version>6.1.1</docker-client.version>
         <junit.version>4.12</junit.version>
         <mockito.version>2.2.21</mockito.version>
         <awaitility.version>2.0.0</awaitility.version>
