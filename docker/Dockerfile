@@ -256,9 +256,10 @@ RUN  export SAUCE_LABS_CAPABILITIES="https://saucelabs.com/rest/v1/info/platform
 ENV ZAL_VER="${project.build.finalName}"
 COPY entry.sh /usr/bin/
 COPY zalenium.sh /home/seluser/
+COPY LICENSE.md /home/seluser/
+COPY Analytics.md /home/seluser/
 COPY nginx.conf /etc/nginx/
 COPY ${ZAL_VER}.jar /home/seluser/${ZAL_VER}.jar
-# https://github.com/zalando-incubator/zalenium/releases/download/v${ZAL_VER}/zalenium-release-v${ZAL_VER}.tar.gz
 
 #-----------------#
 # Fix perms again #

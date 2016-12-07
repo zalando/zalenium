@@ -149,6 +149,13 @@
                                         <include>.dockerignore</include>
                                     </includes>
                                 </resource>
+                                <resource>
+                                    <directory>.</directory>
+                                    <includes>
+                                        <include>LICENSE.md</include>
+                                        <include>Analytics.md</include>
+                                    </includes>
+                                </resource>
                             </resources>
                         </configuration>
                     </execution>
