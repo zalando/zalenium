@@ -13,6 +13,7 @@ import com.spotify.docker.client.messages.HostConfig;
 import com.spotify.docker.client.messages.Image;
 import de.zalando.tip.zalenium.util.CommonProxyUtilities;
 import de.zalando.tip.zalenium.util.Environment;
+import de.zalando.tip.zalenium.util.GoogleAnalyticsApi;
 import org.openqa.grid.common.RegistrationRequest;
 import org.openqa.grid.internal.Registry;
 import org.openqa.grid.internal.TestSession;
@@ -41,38 +42,9 @@ import java.util.logging.Logger;
 
 public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy implements RegistrationListener {
 
-    private static final Logger LOGGER = Logger.getLogger(DockerSeleniumStarterRemoteProxy.class.getName());
-
-    private static final String DOCKER_SELENIUM_IMAGE = "elgalu/selenium";
-    private static List<DesiredCapabilities> dockerSeleniumCapabilities = new ArrayList<>();
-
-    private static final int LOWER_PORT_BOUNDARY = 40000;
-    private static final int UPPER_PORT_BOUNDARY = 49999;
-    private List<Integer> allocatedPorts = new ArrayList<>();
-
-    private static final DockerClient defaultDockerClient = new DefaultDockerClient("unix:///var/run/docker.sock");
-    private static DockerClient dockerClient = defaultDockerClient;
-
-    private static final Environment defaultEnvironment = new Environment();
-    private static Environment env = defaultEnvironment;
-
-    private static final CommonProxyUtilities defaultCommonProxyUtilities = new CommonProxyUtilities();
-    private static CommonProxyUtilities commonProxyUtilities = defaultCommonProxyUtilities;
-
-    private static final String LOGGING_PREFIX = "[DS] ";
-    private boolean setupCompleted;
-
-    private static int chromeContainersOnStartup;
-    private static int firefoxContainersOnStartup;
-    private static int maxDockerSeleniumContainers;
-    private static String timeZone;
-    private static int screenWidth;
-    private static int screenHeight;
-
     @VisibleForTesting
     protected static final String DOCKER_SELENIUM_CAPABILITIES_URL =
             "https://raw.githubusercontent.com/elgalu/docker-selenium/latest/capabilities.json";
-
     @VisibleForTesting
     protected static final int DEFAULT_AMOUNT_CHROME_CONTAINERS = 0;
     @VisibleForTesting
@@ -85,7 +57,6 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     protected static final int DEFAULT_SCREEN_WIDTH = 1900;
     @VisibleForTesting
     protected static final int DEFAULT_SCREEN_HEIGHT = 1880;
-
     @VisibleForTesting
     protected static final String ZALENIUM_CHROME_CONTAINERS = "ZALENIUM_CHROME_CONTAINERS";
     @VisibleForTesting
@@ -98,60 +69,30 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     protected static final String ZALENIUM_SCREEN_WIDTH = "ZALENIUM_SCREEN_WIDTH";
     @VisibleForTesting
     protected static final String ZALENIUM_SCREEN_HEIGHT = "ZALENIUM_SCREEN_HEIGHT";
+    private static final Logger LOGGER = Logger.getLogger(DockerSeleniumStarterRemoteProxy.class.getName());
+    private static final String DOCKER_SELENIUM_IMAGE = "elgalu/selenium";
+    private static final int LOWER_PORT_BOUNDARY = 40000;
+    private static final int UPPER_PORT_BOUNDARY = 49999;
+    private static final DockerClient defaultDockerClient = new DefaultDockerClient("unix:///var/run/docker.sock");
+    private static final Environment defaultEnvironment = new Environment();
+    private static final CommonProxyUtilities defaultCommonProxyUtilities = new CommonProxyUtilities();
+    private static final String LOGGING_PREFIX = "[DS] ";
+    private static List<DesiredCapabilities> dockerSeleniumCapabilities = new ArrayList<>();
+    private static DockerClient dockerClient = defaultDockerClient;
+    private static Environment env = defaultEnvironment;
+    private static CommonProxyUtilities commonProxyUtilities = defaultCommonProxyUtilities;
+    private static GoogleAnalyticsApi ga = new GoogleAnalyticsApi();
+    private static int chromeContainersOnStartup;
+    private static int firefoxContainersOnStartup;
+    private static int maxDockerSeleniumContainers;
+    private static String timeZone;
+    private static int screenWidth;
+    private static int screenHeight;
+    private List<Integer> allocatedPorts = new ArrayList<>();
+    private boolean setupCompleted;
 
     public DockerSeleniumStarterRemoteProxy(RegistrationRequest request, Registry registry) {
         super(updateDSCapabilities(request, DOCKER_SELENIUM_CAPABILITIES_URL), registry);
-    }
-
-    /**
-     *  Receives a request to create a new session, but instead of accepting it, it will create a
-     *  docker-selenium container which will register to the hub, then reject the request and the hub
-     *  will assign the request to the new registered node.
-     */
-    @Override
-    public TestSession getNewSession(Map<String, Object> requestedCapability) {
-
-        if (!hasCapability(requestedCapability)) {
-            LOGGER.log(Level.FINE, LOGGING_PREFIX + "Capability not supported {0}", requestedCapability);
-            return null;
-        }
-
-        if (!requestedCapability.containsKey(CapabilityType.BROWSER_NAME)) {
-            LOGGER.log(Level.INFO, String.format("%s Capability %s does no contain %s key.", LOGGING_PREFIX,
-                    requestedCapability, CapabilityType.BROWSER_NAME));
-            return null;
-        }
-
-        LOGGER.log(Level.INFO, LOGGING_PREFIX + "Starting new node for {0}.", requestedCapability);
-
-        String browserName = requestedCapability.get(CapabilityType.BROWSER_NAME).toString();
-
-        /*
-            Here a docker-selenium container will be started and it will register to the hub
-         */
-        startDockerSeleniumContainer(browserName);
-        return null;
-    }
-
-    /*
-        Starting a few containers (Firefox, Chrome), so they are ready when the tests come.
-        Executed in a thread so we don't wait for the containers to be created and the node
-        registration is not delayed.
-    */
-    @Override
-    public void beforeRegistration() {
-        readConfigurationFromEnvVariables();
-        setupCompleted = false;
-        createStartupContainers();
-    }
-
-    /*
-        Making the node seem as heavily used, in order to get it listed after the 'docker-selenium' nodes.
-        98% used.
-     */
-    @Override
-    public float getResourceUsageInPercent() {
-        return 98;
     }
 
     /*
@@ -208,91 +149,6 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
         }
         LOGGER.log(Level.INFO, LOGGING_PREFIX + "Capabilities fetched from {0}", url);
         return dockerSeleniumCapabilities;
-    }
-
-    @VisibleForTesting
-    protected boolean startDockerSeleniumContainer(String browser) {
-
-        if (validateAmountOfDockerSeleniumContainers()) {
-
-            String hostIpAddress = "localhost";
-
-            /*
-                Building the docker command, depending if Chrome or Firefox is requested.
-                To launch only the requested node type.
-             */
-
-            final int nodePort = findFreePortInRange(LOWER_PORT_BOUNDARY, UPPER_PORT_BOUNDARY);
-            final int vncPort = nodePort + 10000;
-
-            List<String> envVariables = new ArrayList<>();
-            envVariables.add("SELENIUM_HUB_HOST=" + hostIpAddress);
-            envVariables.add("SELENIUM_HUB_PORT=4444");
-            envVariables.add("SELENIUM_NODE_HOST=" + hostIpAddress);
-            envVariables.add("GRID=false");
-            envVariables.add("RC_CHROME=false");
-            envVariables.add("RC_FIREFOX=false");
-            envVariables.add("WAIT_TIMEOUT=120s");
-            envVariables.add("PICK_ALL_RANDMON_PORTS=true");
-            envVariables.add("VIDEO_STOP_SLEEP_SECS=6");
-            envVariables.add("WAIT_TIME_OUT_VIDEO_STOP=20s");
-            envVariables.add("NOVNC=true");
-            envVariables.add("NOVNC_PORT=" + vncPort);
-            envVariables.add("SCREEN_WIDTH=" + getScreenWidth());
-            envVariables.add("SCREEN_HEIGHT=" + getScreenHeight());
-            envVariables.add("TZ=" + getTimeZone());
-            envVariables.add("SELENIUM_NODE_REGISTER_CYCLE=0");
-            envVariables.add("SELENIUM_NODE_PROXY_PARAMS=de.zalando.tip.zalenium.proxy.DockerSeleniumRemoteProxy");
-            if (BrowserType.CHROME.equalsIgnoreCase(browser)) {
-                envVariables.add("SELENIUM_NODE_CH_PORT=" + nodePort);
-                envVariables.add("CHROME=true");
-            } else {
-                envVariables.add("CHROME=false");
-            }
-            if (BrowserType.FIREFOX.equalsIgnoreCase(browser)) {
-                envVariables.add("SELENIUM_NODE_FF_PORT=" + nodePort);
-                envVariables.add("FIREFOX=true");
-            } else {
-                envVariables.add("FIREFOX=false");
-            }
-
-            HostConfig hostConfig = HostConfig.builder()
-                    .appendBinds("/dev/shm:/dev/shm")
-                    .networkMode("container:zalenium")
-                    .build();
-
-            try {
-                final ContainerConfig containerConfig = ContainerConfig.builder()
-                        .image(getLatestDownloadedImage(DOCKER_SELENIUM_IMAGE))
-                        .env(envVariables)
-                        .hostConfig(hostConfig)
-                        .build();
-
-                String containerName = String.format("%s_%s", "zalenium", nodePort);
-                final ContainerCreation dockerSeleniumContainer = dockerClient.createContainer(containerConfig,
-                        containerName);
-                dockerClient.startContainer(dockerSeleniumContainer.id());
-                return true;
-            } catch (Exception e) {
-                LOGGER.log(Level.SEVERE, LOGGING_PREFIX + e.toString(), e);
-            }
-        }
-        return false;
-    }
-
-    private String getLatestDownloadedImage(String imageName) throws DockerException, InterruptedException {
-        List<Image> images = dockerClient.listImages(DockerClient.ListImagesParam.byName(imageName));
-        if (images.isEmpty()) {
-            LOGGER.log(Level.SEVERE, "A downloaded docker-selenium image was not found!");
-            return DOCKER_SELENIUM_IMAGE;
-        }
-        for (int i = images.size() - 1; i >= 0; i--) {
-            if (images.get(i).repoTags() == null) {
-                images.remove(i);
-            }
-        }
-        images.sort((o1, o2) -> o2.created().compareTo(o1.created()));
-        return images.get(0).repoTags().get(0);
     }
 
     @VisibleForTesting
@@ -370,10 +226,6 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
         DockerSeleniumStarterRemoteProxy.screenHeight = screenHeight <= 0 ? DEFAULT_SCREEN_HEIGHT : screenHeight;
     }
 
-    public boolean isSetupCompleted() {
-        return setupCompleted;
-    }
-
     @VisibleForTesting
     protected static void setEnv(final Environment env) {
         DockerSeleniumStarterRemoteProxy.env = env;
@@ -401,6 +253,8 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
             }
         } catch (Exception e) {
             LOGGER.log(Level.WARNING, LOGGING_PREFIX + e.toString(), e);
+            ga.trackException(e);
+
         }
         return desiredCapabilitiesArrayList;
     }
@@ -419,6 +273,148 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
         desiredCapabilities.setCapability(RegistrationRequest.MAX_INSTANCES, 1);
         dsCapabilities.add(desiredCapabilities);
         return dsCapabilities;
+    }
+
+    /**
+     *  Receives a request to create a new session, but instead of accepting it, it will create a
+     *  docker-selenium container which will register to the hub, then reject the request and the hub
+     *  will assign the request to the new registered node.
+     */
+    @Override
+    public TestSession getNewSession(Map<String, Object> requestedCapability) {
+
+        if (!hasCapability(requestedCapability)) {
+            LOGGER.log(Level.FINE, LOGGING_PREFIX + "Capability not supported {0}", requestedCapability);
+            return null;
+        }
+
+        if (!requestedCapability.containsKey(CapabilityType.BROWSER_NAME)) {
+            LOGGER.log(Level.INFO, String.format("%s Capability %s does no contain %s key.", LOGGING_PREFIX,
+                    requestedCapability, CapabilityType.BROWSER_NAME));
+            return null;
+        }
+
+        LOGGER.log(Level.INFO, LOGGING_PREFIX + "Starting new node for {0}.", requestedCapability);
+
+        String browserName = requestedCapability.get(CapabilityType.BROWSER_NAME).toString();
+
+        /*
+            Here a docker-selenium container will be started and it will register to the hub
+         */
+        startDockerSeleniumContainer(browserName);
+        return null;
+    }
+
+    /*
+        Starting a few containers (Firefox, Chrome), so they are ready when the tests come.
+        Executed in a thread so we don't wait for the containers to be created and the node
+        registration is not delayed.
+    */
+    @Override
+    public void beforeRegistration() {
+        readConfigurationFromEnvVariables();
+        setupCompleted = false;
+        createStartupContainers();
+    }
+
+    /*
+        Making the node seem as heavily used, in order to get it listed after the 'docker-selenium' nodes.
+        98% used.
+     */
+    @Override
+    public float getResourceUsageInPercent() {
+        return 98;
+    }
+
+    @VisibleForTesting
+    protected boolean startDockerSeleniumContainer(String browser) {
+
+        if (validateAmountOfDockerSeleniumContainers()) {
+
+            String hostIpAddress = "localhost";
+
+            /*
+                Building the docker command, depending if Chrome or Firefox is requested.
+                To launch only the requested node type.
+             */
+
+            final int nodePort = findFreePortInRange(LOWER_PORT_BOUNDARY, UPPER_PORT_BOUNDARY);
+            final int vncPort = nodePort + 10000;
+
+            List<String> envVariables = new ArrayList<>();
+            envVariables.add("SELENIUM_HUB_HOST=" + hostIpAddress);
+            envVariables.add("SELENIUM_HUB_PORT=4444");
+            envVariables.add("SELENIUM_NODE_HOST=" + hostIpAddress);
+            envVariables.add("GRID=false");
+            envVariables.add("RC_CHROME=false");
+            envVariables.add("RC_FIREFOX=false");
+            envVariables.add("WAIT_TIMEOUT=120s");
+            envVariables.add("PICK_ALL_RANDMON_PORTS=true");
+            envVariables.add("VIDEO_STOP_SLEEP_SECS=6");
+            envVariables.add("WAIT_TIME_OUT_VIDEO_STOP=20s");
+            envVariables.add("NOVNC=true");
+            envVariables.add("NOVNC_PORT=" + vncPort);
+            envVariables.add("SCREEN_WIDTH=" + getScreenWidth());
+            envVariables.add("SCREEN_HEIGHT=" + getScreenHeight());
+            envVariables.add("TZ=" + getTimeZone());
+            envVariables.add("SELENIUM_NODE_REGISTER_CYCLE=0");
+            envVariables.add("SELENIUM_NODE_PROXY_PARAMS=de.zalando.tip.zalenium.proxy.DockerSeleniumRemoteProxy");
+            if (BrowserType.CHROME.equalsIgnoreCase(browser)) {
+                envVariables.add("SELENIUM_NODE_CH_PORT=" + nodePort);
+                envVariables.add("CHROME=true");
+            } else {
+                envVariables.add("CHROME=false");
+            }
+            if (BrowserType.FIREFOX.equalsIgnoreCase(browser)) {
+                envVariables.add("SELENIUM_NODE_FF_PORT=" + nodePort);
+                envVariables.add("FIREFOX=true");
+            } else {
+                envVariables.add("FIREFOX=false");
+            }
+
+            HostConfig hostConfig = HostConfig.builder()
+                    .appendBinds("/dev/shm:/dev/shm")
+                    .networkMode("container:zalenium")
+                    .autoRemove(true)
+                    .build();
+
+            try {
+                final ContainerConfig containerConfig = ContainerConfig.builder()
+                        .image(getLatestDownloadedImage(DOCKER_SELENIUM_IMAGE))
+                        .env(envVariables)
+                        .hostConfig(hostConfig)
+                        .build();
+
+                String containerName = String.format("%s_%s", "zalenium", nodePort);
+                final ContainerCreation dockerSeleniumContainer = dockerClient.createContainer(containerConfig,
+                        containerName);
+                dockerClient.startContainer(dockerSeleniumContainer.id());
+                return true;
+            } catch (Exception e) {
+                LOGGER.log(Level.SEVERE, LOGGING_PREFIX + e.toString(), e);
+                ga.trackException(e);
+            }
+        }
+        return false;
+    }
+
+    private String getLatestDownloadedImage(String imageName) throws DockerException, InterruptedException {
+        List<Image> images = dockerClient.listImages(DockerClient.ListImagesParam.byName(imageName));
+        if (images.isEmpty()) {
+            LOGGER.log(Level.SEVERE, "A downloaded docker-selenium image was not found!");
+            return DOCKER_SELENIUM_IMAGE;
+        }
+        for (int i = images.size() - 1; i >= 0; i--) {
+            if (images.get(i).repoTags() == null) {
+                images.remove(i);
+            }
+        }
+        images.sort((o1, o2) -> o2.created().compareTo(o1.created()));
+        return images.get(0).repoTags().get(0);
+    }
+
+    public boolean isSetupCompleted() {
+        return setupCompleted;
     }
 
     private void createStartupContainers() {
@@ -457,6 +453,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
             return numberOfDockerSeleniumContainers;
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, LOGGING_PREFIX + e.toString(), e);
+            ga.trackException(e);
         }
         return 0;
     }
@@ -489,6 +486,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
             return true;
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, LOGGING_PREFIX + e.toString(), e);
+            ga.trackException(e);
         }
         return false;
     }

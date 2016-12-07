@@ -5,6 +5,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import de.zalando.tip.zalenium.util.CommonProxyUtilities;
+import de.zalando.tip.zalenium.util.GoogleAnalyticsApi;
 import org.openqa.grid.common.RegistrationRequest;
 import org.openqa.grid.internal.Registry;
 import org.openqa.grid.internal.RemoteProxy;
@@ -43,6 +44,8 @@ public class SauceLabsRemoteProxy extends DefaultRemoteProxy {
     public static final String SAUCE_LABS_ACCESS_KEY = System.getenv("SAUCE_ACCESS_KEY");
     public static final String SAUCE_LABS_URL = "http://ondemand.saucelabs.com:80";
 
+    private static GoogleAnalyticsApi ga = new GoogleAnalyticsApi();
+
     public SauceLabsRemoteProxy(RegistrationRequest request, Registry registry) {
         super(updateSLCapabilities(request, SAUCE_LABS_CAPABILITIES_URL), registry);
     }
@@ -62,6 +65,7 @@ public class SauceLabsRemoteProxy extends DefaultRemoteProxy {
             return addCapabilitiesToRegistrationRequest(registrationRequest, slCapabilities);
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, e.toString(), e);
+            ga.trackException(e);
         }
         return registrationRequest;
     }
@@ -118,9 +122,21 @@ public class SauceLabsRemoteProxy extends DefaultRemoteProxy {
                 desiredCapabilities.addProperty("username", SAUCE_LABS_USER_NAME);
                 desiredCapabilities.addProperty("accessKey", SAUCE_LABS_ACCESS_KEY);
                 seleniumRequest.setBody(jsonObject.toString());
+                ga.startTestEvent(SauceLabsRemoteProxy.class.getName(), session.getRequestedCapabilities().toString());
             }
         }
         super.beforeCommand(session, request, response);
+    }
+
+    @Override
+    public void afterCommand(TestSession session, HttpServletRequest request, HttpServletResponse response) {
+        if (request instanceof WebDriverRequest && "DELETE".equalsIgnoreCase(request.getMethod())) {
+            WebDriverRequest seleniumRequest = (WebDriverRequest) request;
+            if (seleniumRequest.getRequestType().equals(RequestType.STOP_SESSION)) {
+                ga.stopTestEvent(SauceLabsRemoteProxy.class.getName());
+            }
+        }
+        super.afterCommand(session, request, response);
     }
 
     public boolean canDockerSeleniumProcessIt(Map<String, Object> requestedCapability) {
@@ -158,6 +174,7 @@ public class SauceLabsRemoteProxy extends DefaultRemoteProxy {
             return new URL(SAUCE_LABS_URL);
         } catch (MalformedURLException e) {
             LOGGER.log(Level.SEVERE, e.toString(), e);
+            ga.trackException(e);
         }
         return null;
     }
