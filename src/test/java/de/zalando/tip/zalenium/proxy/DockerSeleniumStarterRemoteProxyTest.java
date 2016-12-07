@@ -314,12 +314,18 @@ public class DockerSeleniumStarterRemoteProxyTest {
         DockerSeleniumStarterRemoteProxy.setChromeContainersOnStartup(-1);
         DockerSeleniumStarterRemoteProxy.setFirefoxContainersOnStartup(-1);
         DockerSeleniumStarterRemoteProxy.setMaxDockerSeleniumContainers(-1);
+        DockerSeleniumStarterRemoteProxy.setScreenHeight(-1);
+        DockerSeleniumStarterRemoteProxy.setScreenWidth(-1);
         Assert.assertEquals(DockerSeleniumStarterRemoteProxy.DEFAULT_AMOUNT_CHROME_CONTAINERS,
                 DockerSeleniumStarterRemoteProxy.getChromeContainersOnStartup());
         Assert.assertEquals(DockerSeleniumStarterRemoteProxy.DEFAULT_AMOUNT_FIREFOX_CONTAINERS,
                 DockerSeleniumStarterRemoteProxy.getFirefoxContainersOnStartup());
         Assert.assertEquals(DockerSeleniumStarterRemoteProxy.DEFAULT_AMOUNT_DOCKER_SELENIUM_CONTAINERS_RUNNING,
                 DockerSeleniumStarterRemoteProxy.getMaxDockerSeleniumContainers());
+        Assert.assertEquals(DockerSeleniumStarterRemoteProxy.DEFAULT_SCREEN_HEIGHT,
+                DockerSeleniumStarterRemoteProxy.getScreenHeight());
+        Assert.assertEquals(DockerSeleniumStarterRemoteProxy.DEFAULT_SCREEN_WIDTH,
+                DockerSeleniumStarterRemoteProxy.getScreenWidth());
     }
 
     @Test

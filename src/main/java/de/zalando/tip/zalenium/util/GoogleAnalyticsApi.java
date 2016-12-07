@@ -17,7 +17,7 @@ import java.util.logging.Logger;
  */
 public class GoogleAnalyticsApi {
 
-    private final Logger LOGGER = Logger.getLogger(GoogleAnalyticsApi.class.getName());
+    private final Logger logger = Logger.getLogger(GoogleAnalyticsApi.class.getName());
 
     private HttpClient httpClient;
 
@@ -66,15 +66,14 @@ public class GoogleAnalyticsApi {
     private void doPost(String payload) {
         new Thread(() -> {
             try {
-                boolean sendAnonymousUsageInfo = env.getBooleanEnvVariable("ZALENIUM_SEND_ANONYMOUS_USAGE_INFO", false);
-                if (!sendAnonymousUsageInfo) {
-                    LOGGER.log(Level.INFO, "Not recording any anonymous usage.");
+                if (!env.getBooleanEnvVariable("ZALENIUM_SEND_ANONYMOUS_USAGE_INFO", false)) {
+                    logger.log(Level.INFO, "Not recording any anonymous usage.");
                     return;
                 }
-                String gaApiVersion = env.getEnvVariable("ZALENIUM_GA_API_VERSION");
-                String gaTrackingId = env.getEnvVariable("ZALENIUM_GA_TRACKING_ID");
-                String gaEndpoint = env.getEnvVariable("ZALENIUM_GA_ENDPOINT");
-                String gaAnonymousClientId = env.getEnvVariable("ZALENIUM_GA_ANONYMOUS_CLIENT_ID");
+                String gaApiVersion = env.getStringEnvVariable("ZALENIUM_GA_API_VERSION", "");
+                String gaTrackingId = env.getStringEnvVariable("ZALENIUM_GA_TRACKING_ID", "");
+                String gaEndpoint = env.getStringEnvVariable("ZALENIUM_GA_ENDPOINT", "");
+                String gaAnonymousClientId = env.getStringEnvVariable("ZALENIUM_GA_ANONYMOUS_CLIENT_ID", "");
                 String finalPayload = payload.replace(GA_TRACKING_ID, gaTrackingId).replace(GA_API_VERSION, gaApiVersion)
                         .replace(GA_ANONYMOUS_CLIENT_ID, gaAnonymousClientId);
                 HttpPost httpPost = new HttpPost(gaEndpoint);
@@ -82,7 +81,7 @@ public class GoogleAnalyticsApi {
                 httpPost.setEntity(httpEntity);
                 httpClient.execute(httpPost);
             } catch (Exception e) {
-                LOGGER.log(Level.FINE, e.getMessage(), e);
+                logger.log(Level.FINE, e.getMessage(), e);
             }
         }).start();
     }

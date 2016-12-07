@@ -45,7 +45,6 @@ public class live extends RegistryBasedServlet {
             process(request, response);
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, e.toString(), e);
-            throw e;
         }
     }
 
@@ -56,7 +55,6 @@ public class live extends RegistryBasedServlet {
             process(request, response);
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, e.toString(), e);
-            throw e;
         }
     }
 
