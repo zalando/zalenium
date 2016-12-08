@@ -6,7 +6,6 @@ import de.zalando.tip.zalenium.util.Environment;
 import de.zalando.tip.zalenium.util.GoogleAnalyticsApi;
 import de.zalando.tip.zalenium.util.TestUtils;
 import org.apache.http.HttpResponse;
-import org.apache.http.StatusLine;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
 import org.junit.Assert;
