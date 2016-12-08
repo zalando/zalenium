@@ -34,8 +34,8 @@ Zalenium's analytics are accessible to Zalenium's current maintainers. Contact [
 
 ## How?
 The code is viewable in:
-* [Zalenium start](./scripts/zalenium.sh#L242)
-* [Zalenium stop](./scripts/zalenium.sh#L86)
+* [Zalenium start](./scripts/zalenium.sh#L267)
+* [Zalenium stop](./scripts/zalenium.sh#L98)
 * [Start, stop tests and exceptions](./src/main/java/de/zalando/tip/zalenium/util/GoogleAnalyticsApi.java)
 
 The code is implemented so it gets executed in a background process, without delaying normal execution. If it fails, it will do it immediately and silently.
