@@ -2,7 +2,13 @@ package de.zalando.tip.zalenium.proxy;
 
 import com.google.gson.JsonObject;
 import de.zalando.tip.zalenium.util.CommonProxyUtilities;
+import de.zalando.tip.zalenium.util.Environment;
+import de.zalando.tip.zalenium.util.GoogleAnalyticsApi;
 import de.zalando.tip.zalenium.util.TestUtils;
+import org.apache.http.HttpResponse;
+import org.apache.http.StatusLine;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpPost;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -27,10 +33,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.*;
 
 public class SauceLabsRemoteProxyTest {
 
@@ -175,5 +178,55 @@ public class SauceLabsRemoteProxyTest {
             SauceLabsRemoteProxy.restoreCommonProxyUtilities();
         }
     }
+
+    @Test
+    public void testEventIsInvoked() throws IOException {
+        try {
+            // Capability which should result in a created session
+            Map<String, Object> requestedCapability = new HashMap<>();
+            requestedCapability.put(CapabilityType.BROWSER_NAME, BrowserType.SAFARI);
+            requestedCapability.put(CapabilityType.PLATFORM, Platform.MAC);
+
+            // Getting a test session in the sauce labs node
+            TestSession testSession = sauceLabsProxy.getNewSession(requestedCapability);
+            Assert.assertNotNull(testSession);
+
+            // We release the sessions and invoke the afterCommand with a mocked object
+            Environment env = mock(Environment.class);
+            when(env.getBooleanEnvVariable("ZALENIUM_SEND_ANONYMOUS_USAGE_INFO", false))
+                    .thenReturn(true);
+            when(env.getStringEnvVariable("ZALENIUM_GA_API_VERSION", "")).thenReturn("1");
+            when(env.getStringEnvVariable("ZALENIUM_GA_TRACKING_ID", "")).thenReturn("UA-88441352");
+            when(env.getStringEnvVariable("ZALENIUM_GA_ENDPOINT", ""))
+                    .thenReturn("https://www.google-analytics.com/collect");
+            when(env.getStringEnvVariable("ZALENIUM_GA_ANONYMOUS_CLIENT_ID", ""))
+                    .thenReturn("RANDOM_STRING");
+
+            HttpClient client = mock(HttpClient.class);
+            HttpResponse httpResponse = mock(HttpResponse.class);
+            when(client.execute(any(HttpPost.class))).thenReturn(httpResponse);
+
+
+            GoogleAnalyticsApi ga = new GoogleAnalyticsApi();
+            GoogleAnalyticsApi gaSpy = spy(ga);
+            gaSpy.setEnv(env);
+            gaSpy.setHttpClient(client);
+            SauceLabsRemoteProxy.setGa(gaSpy);
+
+            WebDriverRequest webDriverRequest = mock(WebDriverRequest.class);
+            HttpServletResponse response = mock(HttpServletResponse.class);
+            when(webDriverRequest.getMethod()).thenReturn("DELETE");
+            when(webDriverRequest.getRequestType()).thenReturn(RequestType.STOP_SESSION);
+
+            testSession.getSlot().doFinishRelease();
+            sauceLabsProxy.afterCommand(testSession, webDriverRequest, response);
+
+            verify(gaSpy, times(1)).testEvent(anyString(), anyString(), anyLong());
+        } finally {
+            SauceLabsRemoteProxy.restoreGa();
+        }
+
+    }
+
 
 }

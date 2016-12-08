@@ -20,6 +20,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -44,7 +45,8 @@ public class SauceLabsRemoteProxy extends DefaultRemoteProxy {
     public static final String SAUCE_LABS_ACCESS_KEY = System.getenv("SAUCE_ACCESS_KEY");
     public static final String SAUCE_LABS_URL = "http://ondemand.saucelabs.com:80";
 
-    private static GoogleAnalyticsApi ga = new GoogleAnalyticsApi();
+    private static final GoogleAnalyticsApi defaultGA = new GoogleAnalyticsApi();
+    private static GoogleAnalyticsApi ga = defaultGA;
 
     public SauceLabsRemoteProxy(RegistrationRequest request, Registry registry) {
         super(updateSLCapabilities(request, SAUCE_LABS_CAPABILITIES_URL), registry);
@@ -74,7 +76,7 @@ public class SauceLabsRemoteProxy extends DefaultRemoteProxy {
         for (JsonElement cap : slCapabilities.getAsJsonArray()) {
             JsonObject capAsJsonObject = cap.getAsJsonObject();
             DesiredCapabilities desiredCapabilities = new DesiredCapabilities();
-            desiredCapabilities.setCapability(RegistrationRequest.MAX_INSTANCES, 1);
+            desiredCapabilities.setCapability(RegistrationRequest.MAX_INSTANCES, 10);
             desiredCapabilities.setBrowserName(capAsJsonObject.get("api_name").getAsString());
             desiredCapabilities.setPlatform(getPlatform(capAsJsonObject.get("os").getAsString()));
             desiredCapabilities.setVersion(capAsJsonObject.get("long_version").getAsString());
@@ -158,6 +160,16 @@ public class SauceLabsRemoteProxy extends DefaultRemoteProxy {
     @VisibleForTesting
     protected static void restoreCommonProxyUtilities() {
         commonProxyUtilities = defaultCommonProxyUtilities;
+    }
+
+    @VisibleForTesting
+    protected static void restoreGa() {
+        ga = defaultGA;
+    }
+
+    @VisibleForTesting
+    protected static void setGa(GoogleAnalyticsApi ga) {
+        SauceLabsRemoteProxy.ga = ga;
     }
 
     /*

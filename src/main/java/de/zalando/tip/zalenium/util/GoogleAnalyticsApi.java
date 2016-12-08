@@ -33,12 +33,12 @@ public class GoogleAnalyticsApi {
     }
 
     @VisibleForTesting
-    protected void setHttpClient(HttpClient httpClient) {
+    public void setHttpClient(HttpClient httpClient) {
         this.httpClient = httpClient;
     }
 
     @VisibleForTesting
-    protected void setEnv(final Environment env) {
+    public void setEnv(final Environment env) {
         this.env = env;
     }
 
