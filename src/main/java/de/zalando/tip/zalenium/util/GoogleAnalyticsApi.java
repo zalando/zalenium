@@ -42,12 +42,10 @@ public class GoogleAnalyticsApi {
         this.env = env;
     }
 
-    public void startTestEvent(String nodeHandler, String capabilities) {
-        trackEvent("test_start", nodeHandler, capabilities);
-    }
-
-    public void stopTestEvent(String nodeHandler) {
-        trackEvent("test_stop", nodeHandler, "");
+    public void testEvent(String nodeHandler, String capabilities, long seconds) {
+        String payload = String.format("v=%s&tid=%s&cid=%s&t=event&ec=%s&ea=%s&el=%s&ev=%s", GA_API_VERSION,
+                GA_TRACKING_ID, GA_ANONYMOUS_CLIENT_ID, "test", nodeHandler, capabilities, seconds);
+        doPost(payload);
     }
 
     public void trackException(Exception e) {
@@ -55,13 +53,6 @@ public class GoogleAnalyticsApi {
                 GA_ANONYMOUS_CLIENT_ID, e.getMessage(), "0");
         doPost(payload);
     }
-
-    private void trackEvent(String eventCategory, String eventAction, String eventLabel) {
-        String payload = String.format("v=%s&tid=%s&cid=%s&t=event&ec=%s&ea=%s&el=%s", GA_API_VERSION,
-                GA_TRACKING_ID, GA_ANONYMOUS_CLIENT_ID, eventCategory, eventAction, eventLabel);
-        doPost(payload);
-    }
-
 
     private void doPost(String payload) {
         new Thread(() -> {

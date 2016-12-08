@@ -34,9 +34,8 @@ We collect, process and use the following data:
 * Date and time of certain events
   * Zalenium started
   * Zalenium stopped
-  * Test started
+  * Test duration
   * Test capabilities
-  * Test stopped
   * Errors and stacktraces
 * Docker version
 * Docker info fields

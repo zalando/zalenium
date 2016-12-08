@@ -122,7 +122,6 @@ public class SauceLabsRemoteProxy extends DefaultRemoteProxy {
                 desiredCapabilities.addProperty("username", SAUCE_LABS_USER_NAME);
                 desiredCapabilities.addProperty("accessKey", SAUCE_LABS_ACCESS_KEY);
                 seleniumRequest.setBody(jsonObject.toString());
-                ga.startTestEvent(SauceLabsRemoteProxy.class.getName(), session.getRequestedCapabilities().toString());
             }
         }
         super.beforeCommand(session, request, response);
@@ -133,7 +132,9 @@ public class SauceLabsRemoteProxy extends DefaultRemoteProxy {
         if (request instanceof WebDriverRequest && "DELETE".equalsIgnoreCase(request.getMethod())) {
             WebDriverRequest seleniumRequest = (WebDriverRequest) request;
             if (seleniumRequest.getRequestType().equals(RequestType.STOP_SESSION)) {
-                ga.stopTestEvent(SauceLabsRemoteProxy.class.getName());
+                long executionTime = (System.currentTimeMillis() - session.getSlot().getLastSessionStart()) / 1000;
+                ga.testEvent(SauceLabsRemoteProxy.class.getName(), session.getRequestedCapabilities().toString(),
+                        executionTime);
             }
         }
         super.afterCommand(session, request, response);

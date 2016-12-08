@@ -106,7 +106,6 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         if (increaseCounter()) {
             TestSession newSession = super.getNewSession(requestedCapability);
             videoRecording(VideoRecordingAction.START_RECORDING);
-            ga.startTestEvent(DockerSeleniumRemoteProxy.class.getName(), requestedCapability.toString());
             return newSession;
         }
         LOGGER.log(Level.FINE, "{0} No more sessions allowed", getNodeIpAndPort());
@@ -122,7 +121,9 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                 String message = String.format("%s STOP_SESSION command received. Node should shutdown soon...",
                         getNodeIpAndPort());
                 LOGGER.log(Level.INFO, message);
-                ga.stopTestEvent(DockerSeleniumRemoteProxy.class.getName());
+                long executionTime = (System.currentTimeMillis() - session.getSlot().getLastSessionStart()) / 1000;
+                ga.testEvent(DockerSeleniumRemoteProxy.class.getName(), session.getRequestedCapabilities().toString(),
+                        executionTime);
             }
         }
         super.afterCommand(session, request, response);
