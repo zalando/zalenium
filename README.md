@@ -115,9 +115,7 @@ Any feedback or contributions are welcome! Please check our [guidelines](CONTRIB
 #### TODOs
 We would love some help with:
 * Testing the tool in your day to day scenarios, to spot bugs or use cases we have not considered.
-* Adding more cloud testing platforms.
 * Integrating it with CI tools.
-* Upgrading it to Selenium 3.
 
 #### Testing
 
@@ -154,6 +152,13 @@ Basically, the tool makes the grid expand or contract depending on the amount of
 * To make life easy for people who want to use it, we are now using as a version number the Selenium version being supported.
 * E.g. This release is `2.53.1a`, this means that this version is built with and supports Selenium 2.53.1.
 * The versioning will be similar to the one used in [docker-selenium](https://github.com/elgalu/docker-selenium)
+
+## Features coming in the next weeks
+* Integration with [BrowserStack](https://www.browserstack.com/), thanks to the open source account we are getting.
+
+![BrowserStack](./images/browserstack_logo.png)
+
+* Upgrading to Selenium 3 (Selenium 2.53.1 will still be supported of course).
 
 License
 ===================
