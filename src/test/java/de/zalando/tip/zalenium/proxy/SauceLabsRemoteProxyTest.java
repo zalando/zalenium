@@ -71,18 +71,6 @@ public class SauceLabsRemoteProxyTest {
     }
 
     @Test
-    public void unknownCapabilityDoesNotCreateSession() {
-        // Non existent capability that should not create a session
-        Map<String, Object> requestedCapability = new HashMap<>();
-        requestedCapability.put(CapabilityType.BROWSER_NAME, "RANDOM_NOT_EXISTENT_BROWSER");
-        requestedCapability.put(CapabilityType.PLATFORM, Platform.ANY);
-
-        TestSession testSession = sauceLabsProxy.getNewSession(requestedCapability);
-
-        Assert.assertNull(testSession);
-    }
-
-    @Test
     public void sessionIsCreatedWithCapabilitiesThatDockerSeleniumCannotProcess() {
         // Capability which should result in a created session
         Map<String, Object> requestedCapability = new HashMap<>();
