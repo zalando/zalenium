@@ -9,7 +9,6 @@ import de.zalando.tip.zalenium.util.GoogleAnalyticsApi;
 import de.zalando.tip.zalenium.util.SauceLabsCapabilityMatcher;
 import org.openqa.grid.common.RegistrationRequest;
 import org.openqa.grid.internal.Registry;
-import org.openqa.grid.internal.RemoteProxy;
 import org.openqa.grid.internal.TestSession;
 import org.openqa.grid.internal.utils.CapabilityMatcher;
 import org.openqa.grid.selenium.proxy.DefaultRemoteProxy;
@@ -22,7 +21,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -45,7 +43,7 @@ public class SauceLabsRemoteProxy extends DefaultRemoteProxy {
     private static final GoogleAnalyticsApi defaultGA = new GoogleAnalyticsApi();
     private static CommonProxyUtilities commonProxyUtilities = defaultCommonProxyUtilities;
     private static GoogleAnalyticsApi ga = defaultGA;
-    private static CapabilityMatcher capabilityHelper;
+    private CapabilityMatcher capabilityHelper;
 
     public SauceLabsRemoteProxy(RegistrationRequest request, Registry registry) {
         super(updateSLCapabilities(request, SAUCE_LABS_CAPABILITIES_URL), registry);
@@ -155,16 +153,6 @@ public class SauceLabsRemoteProxy extends DefaultRemoteProxy {
             }
         }
         super.afterCommand(session, request, response);
-    }
-
-    public boolean canDockerSeleniumProcessIt(Map<String, Object> requestedCapability) {
-        for (RemoteProxy remoteProxy : getRegistry().getAllProxies()) {
-            if ((remoteProxy instanceof DockerSeleniumStarterRemoteProxy) &&
-                    remoteProxy.hasCapability(requestedCapability)) {
-                return true;
-            }
-        }
-        return false;
     }
 
     /*
