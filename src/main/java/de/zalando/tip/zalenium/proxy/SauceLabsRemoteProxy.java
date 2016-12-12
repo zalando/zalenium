@@ -6,10 +6,12 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import de.zalando.tip.zalenium.util.CommonProxyUtilities;
 import de.zalando.tip.zalenium.util.GoogleAnalyticsApi;
+import de.zalando.tip.zalenium.util.SauceLabsCapabilityMatcher;
 import org.openqa.grid.common.RegistrationRequest;
 import org.openqa.grid.internal.Registry;
 import org.openqa.grid.internal.RemoteProxy;
 import org.openqa.grid.internal.TestSession;
+import org.openqa.grid.internal.utils.CapabilityMatcher;
 import org.openqa.grid.selenium.proxy.DefaultRemoteProxy;
 import org.openqa.grid.web.servlet.handler.RequestType;
 import org.openqa.grid.web.servlet.handler.WebDriverRequest;
@@ -20,6 +22,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -31,21 +34,18 @@ import java.util.logging.Logger;
 
 public class SauceLabsRemoteProxy extends DefaultRemoteProxy {
 
-    private static final Logger LOGGER = Logger.getLogger(SauceLabsRemoteProxy.class.getName());
-    private static final String SAUCE_LABS_DEFAULT_CAPABILITIES_BK_FILE = "saucelabs_capabilities.json";
-
-    @VisibleForTesting
-    protected static final String SAUCE_LABS_CAPABILITIES_URL = "http://saucelabs.com/rest/v1/info/platforms/webdriver";
-
-    private static final CommonProxyUtilities defaultCommonProxyUtilities = new CommonProxyUtilities();
-    private static CommonProxyUtilities commonProxyUtilities = defaultCommonProxyUtilities;
-
     public static final String SAUCE_LABS_USER_NAME = System.getenv("SAUCE_USERNAME");
     public static final String SAUCE_LABS_ACCESS_KEY = System.getenv("SAUCE_ACCESS_KEY");
     public static final String SAUCE_LABS_URL = "http://ondemand.saucelabs.com:80";
-
+    @VisibleForTesting
+    protected static final String SAUCE_LABS_CAPABILITIES_URL = "http://saucelabs.com/rest/v1/info/platforms/webdriver";
+    private static final Logger LOGGER = Logger.getLogger(SauceLabsRemoteProxy.class.getName());
+    private static final String SAUCE_LABS_DEFAULT_CAPABILITIES_BK_FILE = "saucelabs_capabilities.json";
+    private static final CommonProxyUtilities defaultCommonProxyUtilities = new CommonProxyUtilities();
     private static final GoogleAnalyticsApi defaultGA = new GoogleAnalyticsApi();
+    private static CommonProxyUtilities commonProxyUtilities = defaultCommonProxyUtilities;
     private static GoogleAnalyticsApi ga = defaultGA;
+    private static CapabilityMatcher capabilityHelper;
 
     public SauceLabsRemoteProxy(RegistrationRequest request, Registry registry) {
         super(updateSLCapabilities(request, SAUCE_LABS_CAPABILITIES_URL), registry);
@@ -75,10 +75,9 @@ public class SauceLabsRemoteProxy extends DefaultRemoteProxy {
         for (JsonElement cap : slCapabilities.getAsJsonArray()) {
             JsonObject capAsJsonObject = cap.getAsJsonObject();
             DesiredCapabilities desiredCapabilities = new DesiredCapabilities();
-            desiredCapabilities.setCapability(RegistrationRequest.MAX_INSTANCES, 10);
+            desiredCapabilities.setCapability(RegistrationRequest.MAX_INSTANCES, 1);
             desiredCapabilities.setBrowserName(capAsJsonObject.get("api_name").getAsString());
             desiredCapabilities.setPlatform(getPlatform(capAsJsonObject.get("os").getAsString()));
-            desiredCapabilities.setVersion(capAsJsonObject.get("long_version").getAsString());
             if (!registrationRequest.getCapabilities().contains(desiredCapabilities)) {
                 registrationRequest.addDesiredCapability(desiredCapabilities);
             }
@@ -93,23 +92,40 @@ public class SauceLabsRemoteProxy extends DefaultRemoteProxy {
         return Platform.extractFromSysProperty(os);
     }
 
+    @VisibleForTesting
+    protected static void setCommonProxyUtilities(final CommonProxyUtilities utilities) {
+        commonProxyUtilities = utilities;
+    }
+
+    @VisibleForTesting
+    protected static void restoreCommonProxyUtilities() {
+        commonProxyUtilities = defaultCommonProxyUtilities;
+    }
+
+    @VisibleForTesting
+    protected static void restoreGa() {
+        ga = defaultGA;
+    }
+
+    @VisibleForTesting
+    protected static void setGa(GoogleAnalyticsApi ga) {
+        SauceLabsRemoteProxy.ga = ga;
+    }
+
     @Override
     public TestSession getNewSession(Map<String, Object> requestedCapability) {
-
-        if (canDockerSeleniumProcessIt(requestedCapability)) {
-            LOGGER.log(Level.FINE, "[SL] Capability supported by docker-selenium, should not be processed by Sauce Labs: " +
-                    "{0}", requestedCapability);
-            return null;
-        }
-
-        if (!hasCapability(requestedCapability)) {
-            LOGGER.log(Level.FINE, "[SL] Capability not supported by Sauce Labs, rejecting it: {0}", requestedCapability);
-            return null;
-        }
 
         LOGGER.log(Level.INFO, "[SL] Test will be forwarded to Sauce Labs, {0}.", requestedCapability);
 
         return super.getNewSession(requestedCapability);
+    }
+
+    @Override
+    public CapabilityMatcher getCapabilityHelper() {
+        if (capabilityHelper == null) {
+            capabilityHelper = new SauceLabsCapabilityMatcher(this);
+        }
+        return capabilityHelper;
     }
 
     @Override
@@ -149,26 +165,6 @@ public class SauceLabsRemoteProxy extends DefaultRemoteProxy {
             }
         }
         return false;
-    }
-
-    @VisibleForTesting
-    protected static void setCommonProxyUtilities(final CommonProxyUtilities utilities) {
-        commonProxyUtilities = utilities;
-    }
-
-    @VisibleForTesting
-    protected static void restoreCommonProxyUtilities() {
-        commonProxyUtilities = defaultCommonProxyUtilities;
-    }
-
-    @VisibleForTesting
-    protected static void restoreGa() {
-        ga = defaultGA;
-    }
-
-    @VisibleForTesting
-    protected static void setGa(GoogleAnalyticsApi ga) {
-        SauceLabsRemoteProxy.ga = ga;
     }
 
     /*
