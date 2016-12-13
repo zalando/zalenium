@@ -84,6 +84,7 @@ Zalenium uses docker to scale on-demand, therefore we need to give it the `docke
 * You can use the [integration tests](./src/test/java/de/zalando/tip/zalenium/it/ParallelIT.java) we have to try Zalenium.
 * Check the live preview of your running tests [http://localhost:4444/grid/admin/live](http://localhost:4444/grid/admin/live)
 * To see the recorded videos, check the `/tmp/videos` folder (or the folder that you mapped when starting the container).
+  * It is possible to customise the video name by adding a `name` capability in your test. The file name will look like `testName_browser_nodePort_timeStamp.mkv` 
 
 ### Docker version
 
