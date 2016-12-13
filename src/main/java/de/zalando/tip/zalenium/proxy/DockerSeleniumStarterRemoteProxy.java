@@ -350,8 +350,12 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
             envVariables.add("RC_FIREFOX=false");
             envVariables.add("WAIT_TIMEOUT=120s");
             envVariables.add("PICK_ALL_RANDMON_PORTS=true");
+            envVariables.add("PICK_ALL_RANDOM_PORTS=true");
             envVariables.add("VIDEO_STOP_SLEEP_SECS=6");
             envVariables.add("WAIT_TIME_OUT_VIDEO_STOP=20s");
+            boolean sendAnonymousUsageInfo = env.getBooleanEnvVariable("ZALENIUM_SEND_ANONYMOUS_USAGE_INFO", false);
+            envVariables.add("SEND_ANONYMOUS_USAGE_INFO=" + sendAnonymousUsageInfo);
+            envVariables.add("BUILD_URL" + env.getStringEnvVariable("BUILD_URL", ""));
             envVariables.add("NOVNC=true");
             envVariables.add("NOVNC_PORT=" + vncPort);
             envVariables.add("SCREEN_WIDTH=" + getScreenWidth());

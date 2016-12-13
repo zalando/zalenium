@@ -71,13 +71,12 @@ public class SauceLabsRemoteProxyTest {
     }
 
     @Test
-    public void unknownCapabilityDoesNotCreateSession() {
+    public void missingBrowserCapabilityDoesNotCreateSession() {
         // Non existent capability that should not create a session
-        Map<String, Object> requestedCapability = new HashMap<>();
-        requestedCapability.put(CapabilityType.BROWSER_NAME, "RANDOM_NOT_EXISTENT_BROWSER");
-        requestedCapability.put(CapabilityType.PLATFORM, Platform.ANY);
+        Map<String, Object> nonSupportedCapability = new HashMap<>();
+        nonSupportedCapability.put(CapabilityType.PLATFORM, Platform.EL_CAPITAN);
 
-        TestSession testSession = sauceLabsProxy.getNewSession(requestedCapability);
+        TestSession testSession = sauceLabsProxy.getNewSession(nonSupportedCapability);
 
         Assert.assertNull(testSession);
     }
