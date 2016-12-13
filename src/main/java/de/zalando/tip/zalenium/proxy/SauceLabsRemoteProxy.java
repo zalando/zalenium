@@ -73,7 +73,7 @@ public class SauceLabsRemoteProxy extends DefaultRemoteProxy {
         for (JsonElement cap : slCapabilities.getAsJsonArray()) {
             JsonObject capAsJsonObject = cap.getAsJsonObject();
             DesiredCapabilities desiredCapabilities = new DesiredCapabilities();
-            desiredCapabilities.setCapability(RegistrationRequest.MAX_INSTANCES, 1);
+            desiredCapabilities.setCapability(RegistrationRequest.MAX_INSTANCES, 5);
             desiredCapabilities.setBrowserName(capAsJsonObject.get("api_name").getAsString());
             desiredCapabilities.setPlatform(getPlatform(capAsJsonObject.get("os").getAsString()));
             if (!registrationRequest.getCapabilities().contains(desiredCapabilities)) {

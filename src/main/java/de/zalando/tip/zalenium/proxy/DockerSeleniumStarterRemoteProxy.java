@@ -498,7 +498,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     /*
         Method adapted from https://gist.github.com/vorburger/3429822
      */
-    private int findFreePortInRange(int lowerBoundary, int upperBoundary) throws IllegalStateException {
+    private int findFreePortInRange(int lowerBoundary, int upperBoundary) {
         for (int portNumber = lowerBoundary; portNumber <= upperBoundary; portNumber++) {
             if (!allocatedPorts.contains(portNumber)) {
                 int freePort = -1;
@@ -515,7 +515,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
                 }
             }
         }
-        throw new IllegalStateException("Could not find a free TCP/IP port to use for docker-selenium");
+        return -1;
     }
 
 }
