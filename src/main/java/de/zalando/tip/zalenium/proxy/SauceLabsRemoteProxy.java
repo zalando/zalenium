@@ -175,4 +175,13 @@ public class SauceLabsRemoteProxy extends DefaultRemoteProxy {
         return null;
     }
 
+    @Override
+    public boolean equals(Object obj) {
+        if (!super.equals(obj)) {
+            return false;
+        }
+        SauceLabsRemoteProxy fObj = (SauceLabsRemoteProxy) obj;
+        return capabilityHelper.equals(fObj.getCapabilityHelper());
+    }
+
 }
