@@ -52,14 +52,15 @@
         <selenium-server.patch-level.version>1</selenium-server.patch-level.version>
         <docker-client.version>6.1.1</docker-client.version>
         <junit.version>4.12</junit.version>
-        <mockito.version>2.2.28</mockito.version>
+        <mockito.version>2.3.0</mockito.version>
         <awaitility.version>2.0.0</awaitility.version>
-        <testng.version>6.9.13.6</testng.version>
+        <testng.version>6.10</testng.version>
         <slf4j.version>1.7.21</slf4j.version>
         <surefire.version>2.19.1</surefire.version>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
         <maven.compiler.plugin>3.6.0</maven.compiler.plugin>
+        <maven-resources-plugin.version>3.0.2</maven-resources-plugin.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <threadCountProperty>1</threadCountProperty>
@@ -125,7 +126,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-resources-plugin</artifactId>
-                <version>3.0.1</version>
+                <version>${maven-resources-plugin.version}</version>
                 <executions>
                     <execution>
                         <id>start-stop-script</id>

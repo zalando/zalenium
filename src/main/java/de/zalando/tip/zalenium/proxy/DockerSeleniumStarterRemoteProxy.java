@@ -527,4 +527,9 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
         return setupCompleted == fObj.isSetupCompleted();
     }
 
+    @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
+
 }

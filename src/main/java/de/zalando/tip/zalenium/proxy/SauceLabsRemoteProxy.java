@@ -184,4 +184,8 @@ public class SauceLabsRemoteProxy extends DefaultRemoteProxy {
         return capabilityHelper.equals(fObj.getCapabilityHelper());
     }
 
+    @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
 }

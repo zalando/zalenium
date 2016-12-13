@@ -305,14 +305,14 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
             return false;
         }
         DockerSeleniumRemoteProxy fObj = (DockerSeleniumRemoteProxy) obj;
-        if (amountOfExecutedTests != fObj.getAmountOfExecutedTests()) {
-            return false;
-        } else if (!dockerSeleniumNodePollerThread.equals(fObj.getDockerSeleniumNodePollerThread())) {
-            return false;
-        } else if (stopSessionRequestReceived != fObj.isStopSessionRequestReceived()) {
-            return false;
-        }
-        return true;
+        return !((amountOfExecutedTests != fObj.getAmountOfExecutedTests()) ||
+                (!dockerSeleniumNodePollerThread.equals(fObj.getDockerSeleniumNodePollerThread())) ||
+                (stopSessionRequestReceived != fObj.isStopSessionRequestReceived()));
+    }
+
+    @Override
+    public int hashCode() {
+        return super.hashCode();
     }
 
     /*
