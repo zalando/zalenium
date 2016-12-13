@@ -518,18 +518,4 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
         return -1;
     }
 
-    @Override
-    public boolean equals(Object obj) {
-        if (!super.equals(obj)) {
-            return false;
-        }
-        DockerSeleniumStarterRemoteProxy fObj = (DockerSeleniumStarterRemoteProxy) obj;
-        return setupCompleted == fObj.isSetupCompleted();
-    }
-
-    @Override
-    public int hashCode() {
-        return super.hashCode();
-    }
-
 }

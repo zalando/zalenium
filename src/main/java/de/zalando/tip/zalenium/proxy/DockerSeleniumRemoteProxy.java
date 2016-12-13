@@ -299,22 +299,6 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         return dateFormat.format(new Date());
     }
 
-    @Override
-    public boolean equals(Object obj) {
-        if (!super.equals(obj)) {
-            return false;
-        }
-        DockerSeleniumRemoteProxy fObj = (DockerSeleniumRemoteProxy) obj;
-        return !((amountOfExecutedTests != fObj.getAmountOfExecutedTests()) ||
-                (!dockerSeleniumNodePollerThread.equals(fObj.getDockerSeleniumNodePollerThread())) ||
-                (stopSessionRequestReceived != fObj.isStopSessionRequestReceived()));
-    }
-
-    @Override
-    public int hashCode() {
-        return super.hashCode();
-    }
-
     /*
         Class to poll continuously the node status regarding the amount of tests executed. If MAX_UNIQUE_TEST_SESSIONS
         have been executed, then the node is removed from the grid (this should trigger the docker container to stop).
