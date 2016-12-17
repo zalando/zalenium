@@ -123,8 +123,14 @@ DockerTerminate()
             --data ds="docker"
         )
 
-        curl ${GA_ENDPOINT} "${args[@]}" \
-            --silent --output /dev/null &>/dev/null
+        if [[ "${project.build.finalName}.jar" == *"SNAPSHOT"* ]]; then
+            echo "Not sending info to GA since this is a SNAPSHOT version"
+        else
+            echo "Sending info to GA"
+            curl ${GA_ENDPOINT} "${args[@]}" \
+                --silent --output /dev/null &>/dev/null
+        fi
+
     fi
     wait
     exit 0
@@ -202,7 +208,9 @@ StartUp()
     export ZALENIUM_GA_TRACKING_ID=${GA_TRACKING_ID}
     export ZALENIUM_GA_ENDPOINT=${GA_ENDPOINT}
     export ZALENIUM_GA_ANONYMOUS_CLIENT_ID=${RANDOM_USER_GA_ID}
-    export ZALENIUM_SEND_ANONYMOUS_USAGE_INFO=${SEND_ANONYMOUS_USAGE_INFO}
+    if [[ "${project.build.finalName}.jar" != *"SNAPSHOT"* ]]; then
+        export ZALENIUM_SEND_ANONYMOUS_USAGE_INFO=${SEND_ANONYMOUS_USAGE_INFO}
+    fi
 
     echo "Starting Nginx reverse proxy..."
     nginx
@@ -306,8 +314,13 @@ StartUp()
             --data cm2="$TOTAL_MEMORY"
         )
 
-        curl ${GA_ENDPOINT} \
-            "${args[@]}" --silent --output /dev/null &>/dev/null & disown
+        if [[ "${project.build.finalName}.jar" == *"SNAPSHOT"* ]]; then
+            echo "Not sending info to GA since this is a SNAPSHOT version"
+        else
+            echo "Sending info to GA"
+            curl ${GA_ENDPOINT} \
+                "${args[@]}" --silent --output /dev/null &>/dev/null & disown
+        fi
 
     fi
 
