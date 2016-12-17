@@ -3,22 +3,16 @@ package de.zalando.tip.zalenium.proxy;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import de.zalando.tip.zalenium.util.CommonProxyUtilities;
 import de.zalando.tip.zalenium.util.GoogleAnalyticsApi;
-import de.zalando.tip.zalenium.util.SauceLabsCapabilityMatcher;
 import org.openqa.grid.common.RegistrationRequest;
 import org.openqa.grid.internal.Registry;
 import org.openqa.grid.internal.TestSession;
 import org.openqa.grid.internal.utils.CapabilityMatcher;
-import org.openqa.grid.selenium.proxy.DefaultRemoteProxy;
-import org.openqa.grid.web.servlet.handler.RequestType;
-import org.openqa.grid.web.servlet.handler.WebDriverRequest;
 import org.openqa.selenium.Platform;
 import org.openqa.selenium.remote.BrowserType;
 import org.openqa.selenium.remote.DesiredCapabilities;
 
-import javax.servlet.http.*;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.*;
@@ -28,7 +22,7 @@ import java.util.logging.Logger;
 /*
     This class should work in a similar way as its sibling, SauceLabsRemoteProxy
  */
-public class BrowserStackRemoteProxy extends DefaultRemoteProxy {
+public class BrowserStackRemoteProxy extends CloudTestingRemoteProxy {
 
     public static final String BROWSER_STACK_USER = System.getenv("BROWSER_STACK_USER");
     public static final String BROWSER_STACK_KEY = System.getenv("BROWSER_STACK_KEY");
@@ -57,7 +51,8 @@ public class BrowserStackRemoteProxy extends DefaultRemoteProxy {
             registrationRequest.getCapabilities().clear();
             if (slCapabilities != null) {
                 // TODO: Don't print the user and password (it is in the URL).
-                logger.log(Level.INFO, "[BS] Capabilities fetched from {0}", url.replace(BROWSER_STACK_KEY, ""));
+                logger.log(Level.INFO, "[BS] Capabilities fetched from {0}", url.replace(BROWSER_STACK_KEY, "")
+                    .replace(BROWSER_STACK_USER, ""));
             } else {
                 logger.log(Level.SEVERE, "[BS] Capabilities were NOT fetched from {0}, loading from backup file", url);
                 slCapabilities = commonProxyUtilities.readJSONFromFile(BROWSER_STACK_CAPABILITIES_BK_FILE);
@@ -137,56 +132,28 @@ public class BrowserStackRemoteProxy extends DefaultRemoteProxy {
     }
 
     @Override
-    public CapabilityMatcher getCapabilityHelper() {
-        if (capabilityHelper == null) {
-            // TODO: Validate if the same capability matcher can be used, if so, change the name
-            capabilityHelper = new SauceLabsCapabilityMatcher(this);
-        }
-        return capabilityHelper;
+    String getUserNameProperty() {
+        return "browserstack.user";
     }
 
     @Override
-    public void beforeCommand(TestSession session, HttpServletRequest request, HttpServletResponse response) {
-        if (request instanceof WebDriverRequest && "POST".equalsIgnoreCase(request.getMethod())) {
-            WebDriverRequest seleniumRequest = (WebDriverRequest) request;
-            if (seleniumRequest.getRequestType().equals(RequestType.START_SESSION)) {
-                String body = seleniumRequest.getBody();
-                JsonObject jsonObject = new JsonParser().parse(body).getAsJsonObject();
-                JsonObject desiredCapabilities = jsonObject.getAsJsonObject("desiredCapabilities");
-                desiredCapabilities.addProperty("browserstack.user", BROWSER_STACK_USER);
-                desiredCapabilities.addProperty("browserstack.key", BROWSER_STACK_KEY);
-                seleniumRequest.setBody(jsonObject.toString());
-            }
-        }
-        super.beforeCommand(session, request, response);
+    String getUserNameValue() {
+        return BROWSER_STACK_USER;
     }
 
     @Override
-    public void afterCommand(TestSession session, HttpServletRequest request, HttpServletResponse response) {
-        if (request instanceof WebDriverRequest && "DELETE".equalsIgnoreCase(request.getMethod())) {
-            WebDriverRequest seleniumRequest = (WebDriverRequest) request;
-            if (seleniumRequest.getRequestType().equals(RequestType.STOP_SESSION)) {
-                long executionTime = (System.currentTimeMillis() - session.getSlot().getLastSessionStart()) / 1000;
-                ga.testEvent(BrowserStackRemoteProxy.class.getName(), session.getRequestedCapabilities().toString(),
-                        executionTime);
-            }
-        }
-        super.afterCommand(session, request, response);
+    String getAccessKeyProperty() {
+        return "browserstack.key";
     }
 
-    /*
-        Making the node seem as heavily used, in order to get it listed after the 'docker-selenium' nodes.
-        99% used.
-    */
     @Override
-    public float getResourceUsageInPercent() {
-        return 99;
+    String getAccessKeyValue() {
+        return BROWSER_STACK_KEY;
     }
 
     @Override
     public URL getRemoteHost() {
         try {
-            // return new URL(String.format(BROWSER_STACK_URL, BROWSER_STACK_USER, BROWSER_STACK_KEY));
             return new URL(BROWSER_STACK_URL);
         } catch (MalformedURLException e) {
             logger.log(Level.SEVERE, e.toString(), e);

@@ -3,22 +3,16 @@ package de.zalando.tip.zalenium.proxy;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import de.zalando.tip.zalenium.util.CommonProxyUtilities;
 import de.zalando.tip.zalenium.util.GoogleAnalyticsApi;
-import de.zalando.tip.zalenium.util.SauceLabsCapabilityMatcher;
+import de.zalando.tip.zalenium.util.ZaleniumCapabilityMatcher;
 import org.openqa.grid.common.RegistrationRequest;
 import org.openqa.grid.internal.Registry;
 import org.openqa.grid.internal.TestSession;
 import org.openqa.grid.internal.utils.CapabilityMatcher;
-import org.openqa.grid.selenium.proxy.DefaultRemoteProxy;
-import org.openqa.grid.web.servlet.handler.RequestType;
-import org.openqa.grid.web.servlet.handler.WebDriverRequest;
 import org.openqa.selenium.Platform;
 import org.openqa.selenium.remote.DesiredCapabilities;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Map;
@@ -30,7 +24,7 @@ import java.util.logging.Logger;
     https://github.com/rossrowe/sauce-grid-plugin
  */
 
-public class SauceLabsRemoteProxy extends DefaultRemoteProxy {
+public class SauceLabsRemoteProxy extends CloudTestingRemoteProxy {
 
     public static final String SAUCE_LABS_USER_NAME = System.getenv("SAUCE_USERNAME");
     public static final String SAUCE_LABS_ACCESS_KEY = System.getenv("SAUCE_ACCESS_KEY");
@@ -43,7 +37,6 @@ public class SauceLabsRemoteProxy extends DefaultRemoteProxy {
     private static final GoogleAnalyticsApi defaultGA = new GoogleAnalyticsApi();
     private static CommonProxyUtilities commonProxyUtilities = defaultCommonProxyUtilities;
     private static GoogleAnalyticsApi ga = defaultGA;
-    private CapabilityMatcher capabilityHelper;
 
     public SauceLabsRemoteProxy(RegistrationRequest request, Registry registry) {
         super(updateSLCapabilities(request, SAUCE_LABS_CAPABILITIES_URL), registry);
@@ -119,49 +112,23 @@ public class SauceLabsRemoteProxy extends DefaultRemoteProxy {
     }
 
     @Override
-    public CapabilityMatcher getCapabilityHelper() {
-        if (capabilityHelper == null) {
-            capabilityHelper = new SauceLabsCapabilityMatcher(this);
-        }
-        return capabilityHelper;
+    String getUserNameProperty() {
+        return "username";
     }
 
     @Override
-    public void beforeCommand(TestSession session, HttpServletRequest request, HttpServletResponse response) {
-        if (request instanceof WebDriverRequest && "POST".equalsIgnoreCase(request.getMethod())) {
-            WebDriverRequest seleniumRequest = (WebDriverRequest) request;
-            if (seleniumRequest.getRequestType().equals(RequestType.START_SESSION)) {
-                String body = seleniumRequest.getBody();
-                JsonObject jsonObject = new JsonParser().parse(body).getAsJsonObject();
-                JsonObject desiredCapabilities = jsonObject.getAsJsonObject("desiredCapabilities");
-                desiredCapabilities.addProperty("username", SAUCE_LABS_USER_NAME);
-                desiredCapabilities.addProperty("accessKey", SAUCE_LABS_ACCESS_KEY);
-                seleniumRequest.setBody(jsonObject.toString());
-            }
-        }
-        super.beforeCommand(session, request, response);
+    String getUserNameValue() {
+        return SAUCE_LABS_USER_NAME;
     }
 
     @Override
-    public void afterCommand(TestSession session, HttpServletRequest request, HttpServletResponse response) {
-        if (request instanceof WebDriverRequest && "DELETE".equalsIgnoreCase(request.getMethod())) {
-            WebDriverRequest seleniumRequest = (WebDriverRequest) request;
-            if (seleniumRequest.getRequestType().equals(RequestType.STOP_SESSION)) {
-                long executionTime = (System.currentTimeMillis() - session.getSlot().getLastSessionStart()) / 1000;
-                ga.testEvent(SauceLabsRemoteProxy.class.getName(), session.getRequestedCapabilities().toString(),
-                        executionTime);
-            }
-        }
-        super.afterCommand(session, request, response);
+    String getAccessKeyProperty() {
+        return "accessKey";
     }
 
-    /*
-        Making the node seem as heavily used, in order to get it listed after the 'docker-selenium' nodes.
-        99% used.
-     */
     @Override
-    public float getResourceUsageInPercent() {
-        return 99;
+    String getAccessKeyValue() {
+        return SAUCE_LABS_ACCESS_KEY;
     }
 
     @Override

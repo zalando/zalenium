@@ -157,6 +157,12 @@
                                         <include>Analytics.md</include>
                                     </includes>
                                 </resource>
+                                <resource>
+                                    <directory>src/test/resources</directory>
+                                    <includes>
+                                        <include>browserstack_capabilities.json</include>
+                                    </includes>
+                                </resource>
                             </resources>
                         </configuration>
                     </execution>

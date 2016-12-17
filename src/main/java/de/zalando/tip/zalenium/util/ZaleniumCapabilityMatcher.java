@@ -15,13 +15,13 @@ import java.util.logging.Logger;
  * forwarded to Sauce Labs
  */
 
-public class SauceLabsCapabilityMatcher extends DefaultCapabilityMatcher {
+public class ZaleniumCapabilityMatcher extends DefaultCapabilityMatcher {
 
-    private static final Logger logger = Logger.getLogger(SauceLabsCapabilityMatcher.class.getName());
+    private static final Logger logger = Logger.getLogger(ZaleniumCapabilityMatcher.class.getName());
 
     private DefaultRemoteProxy proxy;
 
-    public SauceLabsCapabilityMatcher(DefaultRemoteProxy defaultRemoteProxy) {
+    public ZaleniumCapabilityMatcher(DefaultRemoteProxy defaultRemoteProxy) {
         super();
         proxy = defaultRemoteProxy;
     }
@@ -32,15 +32,16 @@ public class SauceLabsCapabilityMatcher extends DefaultCapabilityMatcher {
                 nodeCapability));
 
         if (!requestedCapability.containsKey(CapabilityType.BROWSER_NAME)) {
-            logger.log(Level.WARNING, String.format("[SL] Capability %s does no contain %s key.", requestedCapability, CapabilityType.BROWSER_NAME));
+            logger.log(Level.WARNING, String.format("Capability %s does no contain %s key.", requestedCapability,
+                    CapabilityType.BROWSER_NAME));
             return false;
         }
 
         for (RemoteProxy remoteProxy : proxy.getRegistry().getAllProxies()) {
             if ((remoteProxy instanceof DockerSeleniumStarterRemoteProxy) &&
                     remoteProxy.hasCapability(requestedCapability)) {
-                logger.log(Level.FINE, "[SL] Capability supported by docker-selenium, should not be processed by Sauce Labs: " +
-                        "{0}", requestedCapability);
+                logger.log(Level.FINE, "Capability supported by docker-selenium, should not be processed by " +
+                        "Sauce Labs nor BrowserStack: {0}", requestedCapability);
                 return false;
             }
         }
