@@ -58,7 +58,6 @@ public class GoogleAnalyticsApi {
         new Thread(() -> {
             try {
                 if (!env.getBooleanEnvVariable("ZALENIUM_SEND_ANONYMOUS_USAGE_INFO", false)) {
-                    logger.log(Level.INFO, "Not recording any anonymous usage.");
                     return;
                 }
                 String gaApiVersion = env.getStringEnvVariable("ZALENIUM_GA_API_VERSION", "");

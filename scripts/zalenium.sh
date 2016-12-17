@@ -6,6 +6,7 @@ MAX_DOCKER_SELENIUM_CONTAINERS=10
 SELENIUM_ARTIFACT="$(pwd)/selenium-server-standalone-${selenium-server.major-minor.version}.${selenium-server.patch-level.version}.jar"
 ZALENIUM_ARTIFACT="$(pwd)/${project.build.finalName}.jar"
 SAUCE_LABS_ENABLED=true
+BROWSER_STACK_ENABLED=true
 VIDEO_RECORDING_ENABLED=true
 SCREEN_WIDTH=1900
 SCREEN_HEIGHT=1880
@@ -19,6 +20,7 @@ GA_API_VERSION="1"
 PID_PATH_SELENIUM=/tmp/selenium-pid
 PID_PATH_DOCKER_SELENIUM_NODE=/tmp/docker-selenium-node-pid
 PID_PATH_SAUCE_LABS_NODE=/tmp/sauce-labs-node-pid
+PID_PATH_BROWSER_STACK_NODE=/tmp/browser-stack-node-pid
 
 WaitSeleniumHub()
 {
@@ -61,6 +63,24 @@ WaitSauceLabsProxy()
     done
 }
 export -f WaitSauceLabsProxy
+
+WaitBrowserStackProxy()
+{
+    # Wait for the sauce node success
+    while ! curl -sSL "http://localhost:30002/wd/hub/status" 2>&1 \
+            | jq -r '.state' 2>&1 | grep "success" >/dev/null; do
+        echo -n '.'
+        sleep 0.2
+    done
+
+    # Also wait for the sauce url though this is optional
+    DONE_MSG="hub-cloud.browserstack.com"
+    while ! docker logs zalenium | grep "${DONE_MSG}" >/dev/null; do
+        echo -n '.'
+        sleep 0.2
+    done
+}
+export -f WaitBrowserStackProxy
 
 EnsureCleanEnv()
 {
@@ -186,6 +206,25 @@ StartUp()
         fi
     fi
 
+    if [ -z ${BROWSER_STACK_ENABLED} ]; then
+        BROWSER_STACK_ENABLED=true
+    fi
+
+    if [ "$BROWSER_STACK_ENABLED" = true ]; then
+        BROWSER_STACK_USER="${BROWSER_STACK_USER:=abc}"
+        BROWSER_STACK_KEY="${BROWSER_STACK_KEY:=abc}"
+
+        if [ "$BROWSER_STACK_USER" = abc ]; then
+            echo "BROWSER_STACK_USER environment variable is not set, cannot start Browser Stack node, exiting..."
+            exit 5
+        fi
+
+        if [ "$BROWSER_STACK_KEY" = abc ]; then
+            echo "BROWSER_STACK_KEY environment variable is not set, cannot start Browser Stack node, exiting..."
+            exit 6
+        fi
+    fi
+
     export ZALENIUM_CHROME_CONTAINERS=${CHROME_CONTAINERS}
     export ZALENIUM_FIREFOX_CONTAINERS=${FIREFOX_CONTAINERS}
     export ZALENIUM_MAX_DOCKER_SELENIUM_CONTAINERS=${MAX_DOCKER_SELENIUM_CONTAINERS}
@@ -268,6 +307,22 @@ StartUp()
         echo "Sauce Labs node started!"
     else
         echo "Sauce Labs not enabled..."
+    fi
+
+    if [ "$BROWSER_STACK_ENABLED" = true ]; then
+        echo "Starting Browser Stack node..."
+        java -jar ${SELENIUM_ARTIFACT} -role node -hub http://localhost:4444/grid/register \
+         -proxy de.zalando.tip.zalenium.proxy.BrowserStackRemoteProxy \
+         -port 30002 > logs/stdout.zalenium.browserstack.node.log &
+        echo $! > ${PID_PATH_BROWSER_STACK_NODE}
+
+        if ! timeout --foreground "40s" bash -c WaitBrowserStackProxy; then
+            echo "BrowserStackRemoteProxy failed to start after 40 seconds, failing..."
+            exit 12
+        fi
+        echo "Browser Stack node started!"
+    else
+        echo "Browser Stack not enabled..."
     fi
 
     echo "Zalenium is now ready!"
@@ -368,6 +423,18 @@ ShutDown()
         fi
     fi
 
+    if [ -f ${PID_PATH_BROWSER_STACK_NODE} ];
+    then
+        echo "Stopping Browser Stack node..."
+        PID=$(cat ${PID_PATH_BROWSER_STACK_NODE});
+        kill ${PID};
+        if [ ${_returnedValue} -ne 0 ] ; then
+            echo "Failed to send kill signal to Browser Stack node!"
+        else
+            rm ${PID_PATH_BROWSER_STACK_NODE}
+        fi
+    fi
+
     EnsureCleanEnv
 }
 
@@ -382,6 +449,7 @@ function usage()
     echo -e "\t --firefoxContainers -> Number of Firefox containers created on startup. Default is 1 when parameter is absent."
     echo -e "\t --maxDockerSeleniumContainers -> Max number of docker-selenium containers running at the same time. Default is 10 when parameter is absent."
     echo -e "\t --sauceLabsEnabled -> Determines if the Sauce Labs node is started. Defaults to 'true' when parameter absent."
+    echo -e "\t --browserStackEnabled -> Determines if the Browser Stack node is started. Defaults to 'true' when parameter absent."
     echo -e "\t --videoRecordingEnabled -> Sets if video is recorded in every test. Defaults to 'true' when parameter absent."
     echo -e "\t --screenWidth -> Sets the screen width. Defaults to 1900"
     echo -e "\t --screenHeight -> Sets the screen height. Defaults to 1880"
@@ -441,6 +509,9 @@ case ${SCRIPT_ACTION} in
                     ;;
                 --sendAnonymousUsageInfo)
                     SEND_ANONYMOUS_USAGE_INFO=${VALUE}
+                    ;;
+                --browserStackEnabled)
+                    BROWSER_STACK_ENABLED=${VALUE}
                     ;;
                 *)
                     echo "ERROR: unknown parameter \"$PARAM\""
