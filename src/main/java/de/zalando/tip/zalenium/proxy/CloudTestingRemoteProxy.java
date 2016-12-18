@@ -26,7 +26,7 @@ import java.net.URL;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public abstract class CloudTestingRemoteProxy extends DefaultRemoteProxy {
+public class CloudTestingRemoteProxy extends DefaultRemoteProxy {
 
     private static final Logger logger = Logger.getLogger(CloudTestingRemoteProxy.class.getName());
     private static final GoogleAnalyticsApi defaultGA = new GoogleAnalyticsApi();
@@ -35,7 +35,8 @@ public abstract class CloudTestingRemoteProxy extends DefaultRemoteProxy {
     private static CommonProxyUtilities commonProxyUtilities = defaultCommonProxyUtilities;
     private CapabilityMatcher capabilityHelper;
 
-    CloudTestingRemoteProxy(RegistrationRequest request, Registry registry) {
+    @SuppressWarnings("WeakerAccess")
+    public CloudTestingRemoteProxy(RegistrationRequest request, Registry registry) {
         super(request, registry);
     }
 
