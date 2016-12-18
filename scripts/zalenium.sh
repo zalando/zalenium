@@ -344,8 +344,9 @@ StartUp()
         # Gathering the options used to start Zalenium, in order to learn about the used options
         ZALENIUM_START_COMMAND="zalenium.sh --chromeContainers $CHROME_CONTAINERS --firefoxContainers
             $FIREFOX_CONTAINERS --maxDockerSeleniumContainers $MAX_DOCKER_SELENIUM_CONTAINERS
-            --sauceLabsEnabled $SAUCE_LABS_ENABLED --videoRecordingEnabled $VIDEO_RECORDING_ENABLED
-            --screenWidth $SCREEN_WIDTH --screenHeight $SCREEN_HEIGHT --timeZone $TZ"
+            --sauceLabsEnabled $SAUCE_LABS_ENABLED --browserStackEnabled $BROWSER_STACK_ENABLED
+            --videoRecordingEnabled $VIDEO_RECORDING_ENABLED --screenWidth $SCREEN_WIDTH
+            --screenHeight $SCREEN_HEIGHT --timeZone $TZ"
 
         local args=(
             --max-time 10
@@ -495,6 +496,9 @@ case ${SCRIPT_ACTION} in
                 --sauceLabsEnabled)
                     SAUCE_LABS_ENABLED=${VALUE}
                     ;;
+                --browserStackEnabled)
+                    BROWSER_STACK_ENABLED=${VALUE}
+                    ;;
                 --videoRecordingEnabled)
                     VIDEO_RECORDING_ENABLED=${VALUE}
                     ;;
@@ -509,9 +513,6 @@ case ${SCRIPT_ACTION} in
                     ;;
                 --sendAnonymousUsageInfo)
                     SEND_ANONYMOUS_USAGE_INFO=${VALUE}
-                    ;;
-                --browserStackEnabled)
-                    BROWSER_STACK_ENABLED=${VALUE}
                     ;;
                 *)
                     echo "ERROR: unknown parameter \"$PARAM\""
