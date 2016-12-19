@@ -5,8 +5,8 @@ FIREFOX_CONTAINERS=1
 MAX_DOCKER_SELENIUM_CONTAINERS=10
 SELENIUM_ARTIFACT="$(pwd)/selenium-server-standalone-${selenium-server.major-minor.version}.${selenium-server.patch-level.version}.jar"
 ZALENIUM_ARTIFACT="$(pwd)/${project.build.finalName}.jar"
-SAUCE_LABS_ENABLED=true
-BROWSER_STACK_ENABLED=true
+SAUCE_LABS_ENABLED=false
+BROWSER_STACK_ENABLED=false
 VIDEO_RECORDING_ENABLED=true
 SCREEN_WIDTH=1900
 SCREEN_HEIGHT=1880
@@ -449,8 +449,8 @@ function usage()
     echo -e "\t --chromeContainers -> Number of Chrome containers created on startup. Default is 1 when parameter is absent."
     echo -e "\t --firefoxContainers -> Number of Firefox containers created on startup. Default is 1 when parameter is absent."
     echo -e "\t --maxDockerSeleniumContainers -> Max number of docker-selenium containers running at the same time. Default is 10 when parameter is absent."
-    echo -e "\t --sauceLabsEnabled -> Determines if the Sauce Labs node is started. Defaults to 'true' when parameter absent."
-    echo -e "\t --browserStackEnabled -> Determines if the Browser Stack node is started. Defaults to 'true' when parameter absent."
+    echo -e "\t --sauceLabsEnabled -> Determines if the Sauce Labs node is started. Defaults to 'false' when parameter absent."
+    echo -e "\t --browserStackEnabled -> Determines if the Browser Stack node is started. Defaults to 'false' when parameter absent."
     echo -e "\t --videoRecordingEnabled -> Sets if video is recorded in every test. Defaults to 'true' when parameter absent."
     echo -e "\t --screenWidth -> Sets the screen width. Defaults to 1900"
     echo -e "\t --screenHeight -> Sets the screen height. Defaults to 1880"
@@ -460,8 +460,10 @@ function usage()
     echo -e "\t stop"
     echo ""
     echo -e "\t Examples:"
-    echo -e "\t - Starting Zalenium with 2 Chrome containers and without Sauce Labs"
-    echo -e "\t start --chromeContainers 2 --sauceLabsEnabled false"
+    echo -e "\t - Starting Zalenium with 2 Chrome containers and with Sauce Labs"
+    echo -e "\t start --chromeContainers 2 --sauceLabsEnabled true"
+    echo -e "\t - Starting Zalenium with 2 Firefox containers and with BrowserStack"
+    echo -e "\t start --chromeContainers 2 --browserStackEnabled true"
     echo -e "\t - Starting Zalenium screen width 1440 and height 810, time zone \"America/Montreal\""
     echo -e "\t start --screenWidth 1440 --screenHeight 810 --timeZone \"America/Montreal\""
 }
