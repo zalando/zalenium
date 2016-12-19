@@ -155,7 +155,7 @@ Zalenium works conceptually in a simple way:
 4. If the request can be executed on [docker-selenium](https://github.com/elgalu/docker-selenium), a docker container is created on the run, and the test request is sent back to the hub while the new node registers.
 5. After the hub acknowledges the new node, it processes the test request with it.
 6. The test is executed, and then container is disposed.
-7. If the test cannot be executed in [docker-selenium](https://github.com/elgalu/docker-selenium), it is processed by [Sauce Labs](https://saucelabs.com/). It takes the HTTP request, adds the Sauce Labs user and api key to it, and forwards it to the cloud platform.
+7. If the test cannot be executed in [docker-selenium](https://github.com/elgalu/docker-selenium), it will processed by [Sauce Labs](https://saucelabs.com/) and/or [BrowserStack](https://www.browserstack.com/). It takes the HTTP request, adds the user and api key to it, and forwards it to the cloud platform.
 
 Basically, the tool makes the grid expand or contract depending on the amount of requests received.
 
@@ -163,6 +163,9 @@ Basically, the tool makes the grid expand or contract depending on the amount of
 * To make life easy for people who want to use it, we are now using as a version number the Selenium version being supported.
 * E.g. This release is `2.53.1a`, this means that this version is built with and supports Selenium 2.53.1.
 * The versioning will be similar to the one used in [docker-selenium](https://github.com/elgalu/docker-selenium)
+
+## Integrated Cloud Testing solutions so far
+
 
 ## Features coming in the next weeks
 * Integration with [BrowserStack](https://www.browserstack.com/), thanks to the open source account we are getting.
