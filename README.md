@@ -3,14 +3,14 @@
 [![codecov](https://codecov.io/gh/zalando/zalenium/branch/master/graph/badge.svg)](https://codecov.io/gh/zalando/zalenium)
 
 # What is Zalenium?
-A Selenium Grid extension to scale up and down your local grid dynamically with docker containers. It uses [docker-selenium](https://github.com/elgalu/docker-selenium) to run your tests in Firefox and Chrome locally, and when you need a different browser, your tests get redirected to [Sauce Labs](https://saucelabs.com/).
+A Selenium Grid extension to scale up and down your local grid dynamically with docker containers. It uses [docker-selenium](https://github.com/elgalu/docker-selenium) to run your tests in Firefox and Chrome locally, and when you need a different browser, your tests get redirected to [Sauce Labs](https://saucelabs.com/) and/or [BrowserStack](https://www.browserstack.com/).
 
 ### Why Zalenium?
 We know how complicated is to have a stable grid to run UI tests with Selenium, and moreover how hard is to maintain it over time. It is also very difficult to have a local grid with enough capabilities to cover all browsers and platforms.
 
 Therefore we are trying this approach where [docker-selenium](https://github.com/elgalu/docker-selenium) nodes are created, used and disposed on demand when possible. With this, you can run faster your UI tests with Firefox and Chrome since they are running on a local grid, on a node created from scratch and disposed after the test finishes.
 
-And whenever you need a capability that cannot be fulfilled by [docker-selenium](https://github.com/elgalu/docker-selenium), then the test gets redirected to [Sauce Labs](https://saucelabs.com/).
+And whenever you need a capability that cannot be fulfilled by [docker-selenium](https://github.com/elgalu/docker-selenium), then the test gets redirected to [Sauce Labs](https://saucelabs.com/) and/or [BrowserStack](https://www.browserstack.com/).
 
 This creates Zalenium's main goal: to allow anyone to have a disposable and flexible Selenium Grid infrastructure.
 
@@ -25,36 +25,45 @@ You can use the Zalenium already, but it is still under development and open for
 * Download the [docker-selenium](https://github.com/elgalu/docker-selenium) image. `docker pull elgalu/selenium`
 * JDK8+
 * *nix platform (tested only in OSX and Ubuntu, not tested on Windows yet).
-* If you want to use the [Sauce Labs](https://saucelabs.com/) feature, you need an account with them.
+* If you want to use the [Sauce Labs](https://saucelabs.com/) and/or the [BrowserStack](https://www.browserstack.com/) feature, you need an account with them.
 
 #### Setting it up
 * Make sure your docker daemon is running
 * `docker pull dosel/zalenium`
-* If you want to use [Sauce Labs](https://saucelabs.com/), export your user and API key as environment variables
+* If you want to use [Sauce Labs](https://saucelabs.com/) and/or [BrowserStack](https://www.browserstack.com/), export your user and API key as environment variables
 ```sh
+  # Sauce Labs
   export SAUCE_USERNAME=<your Sauce Labs username>
   export SAUCE_ACCESS_KEY=<your Sauce Labs access key>
+```
+```sh
+  # BrowserStack
+  export BROWSER_STACK_USER=<your BrowserStack username>
+  export BROWSER_STACK_KEY=<your BrowserStack access key>
 ```
 
 #### Running it
 Zalenium uses docker to scale on-demand, therefore we need to give it the `docker.sock` full access, this is known as "Docker alongside docker".
-* Start it with Sauce Labs enabled:
+* Start it with Sauce Labs and BrowserStack enabled:
   ```sh
-    export SAUCE_USERNAME="<yourUser>"
-    export SAUCE_ACCESS_KEY="<yourSecret>"
+    export SAUCE_USERNAME=<your Sauce Labs username>
+    export SAUCE_ACCESS_KEY=<your Sauce Labs access key>
+    export BROWSER_STACK_USER=<your BrowserStack username>
+    export BROWSER_STACK_KEY=<your BrowserStack access key>
     docker run --rm -ti --name zalenium -p 4444:4444 -p 5555:5555 \
       -e SAUCE_USERNAME -e SAUCE_ACCESS_KEY \
+      -e BROWSER_STACK_USER -e BROWSER_STACK_KEY \
       -v /tmp/videos:/home/seluser/videos \
       -v /var/run/docker.sock:/var/run/docker.sock \
-      dosel/zalenium start
+      dosel/zalenium start --browserStackEnabled true --sauceLabsEnabled true
   ```
 
-* Start it without Sauce Labs enabled:
+* Start it without Sauce Labs nor BrowserStack enabled:
   ```sh
     docker run --rm -ti --name zalenium -p 4444:4444 -p 5555:5555 \
       -v /var/run/docker.sock:/var/run/docker.sock \
       -v /tmp/videos:/home/seluser/videos \
-      dosel/zalenium start --sauceLabsEnabled false
+      dosel/zalenium start 
   ```
 
 * Start it with screen width and height, and time zone:
@@ -71,7 +80,8 @@ Zalenium uses docker to scale on-demand, therefore we need to give it the `docke
   * `--chromeContainers` -> Chrome nodes created on startup. Default is 1.
   * `--firefoxContainers` -> Firefox nodes created on startup. Default is 1.
   * `--maxDockerSeleniumContainers` -> Max number of docker-selenium containers running at the same time. Default is 10.
-  * `--sauceLabsEnabled` -> Start Sauce Labs node or not. Defaults to 'true'.
+  * `--sauceLabsEnabled` -> Start Sauce Labs node or not. Defaults to 'false'.
+  * `--browserStackEnabled` -> Start Sauce Labs node or not. Defaults to 'false'.
   * `--videoRecordingEnabled` -> Sets if video is recorded in every test. Defaults to 'true'.
   * `--screenWidth` -> Sets the screen width. Defaults to 1900.
   * `--screenHeight` -> Sets the screen height. Defaults to 1880.
@@ -96,7 +106,7 @@ docker run --rm -ti --name zalenium -p 4444:4444 -p 5555:5555 \
   -v $(which docker):/usr/bin/docker \
   -v /var/run/docker.sock:/var/run/docker.sock \
   -v /tmp/videos:/home/seluser/videos \
-  dosel/zalenium start --sauceLabsEnabled false
+  dosel/zalenium start 
 ```
 
 #### OSX
@@ -107,7 +117,7 @@ docker run --rm -ti --name zalenium -p 4444:4444 -p 5555:5555 \
   -e DOCKER=1.11 \
   -v /var/run/docker.sock:/var/run/docker.sock \
   -v /tmp/videos:/home/seluser/videos \
-  dosel/zalenium start --sauceLabsEnabled false
+  dosel/zalenium start 
 ```
 
 ## Contributions
