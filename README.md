@@ -150,7 +150,7 @@ If you want to verify your changes locally with the existing tests (please doubl
 Zalenium works conceptually in a simple way:
 
 1. A Selenium Hub is started, listening to port 4444.
-2. One custom node for [docker-selenium](https://github.com/elgalu/docker-selenium) and one for [Sauce Labs](https://saucelabs.com/) are started and get registered to the grid.
+2. One custom node for [docker-selenium](https://github.com/elgalu/docker-selenium), one for [Sauce Labs](https://saucelabs.com/) and one for [BrowserStack](https://www.browserstack.com/) are started and get registered to the grid.
 3. When a test request arrives to the hub, the requested capabilities are verified against each one of the nodes.
 4. If the request can be executed on [docker-selenium](https://github.com/elgalu/docker-selenium), a docker container is created on the run, and the test request is sent back to the hub while the new node registers.
 5. After the hub acknowledges the new node, it processes the test request with it.
@@ -164,14 +164,14 @@ Basically, the tool makes the grid expand or contract depending on the amount of
 * E.g. This release is `2.53.1a`, this means that this version is built with and supports Selenium 2.53.1.
 * The versioning will be similar to the one used in [docker-selenium](https://github.com/elgalu/docker-selenium)
 
-## Integrated Cloud Testing solutions so far
+## Integrated Cloud Testing solutions
+* Thanks to the open source accounts we got, we have integrated so far:
 
+![BrowserStack](./images/browserstack_logo.png)    ![Sauce Labs](./images/saucelabs_logo.png)
+
+If you want to integrate another cloud testing solution, we are happy to receive PRs or requests via issues, don't forget to check the [guidelines](CONTRIBUTING.md) for contributing.
 
 ## Features coming in the next weeks
-* Integration with [BrowserStack](https://www.browserstack.com/), thanks to the open source account we are getting.
-
-![BrowserStack](./images/browserstack_logo.png)
-
 * Upgrading to Selenium 3 (Selenium 2.53.1 will still be supported of course).
 
 License
