@@ -3,24 +3,12 @@ package de.zalando.tip.zalenium.proxy;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import de.zalando.tip.zalenium.util.CommonProxyUtilities;
-import de.zalando.tip.zalenium.util.GoogleAnalyticsApi;
-import de.zalando.tip.zalenium.util.SauceLabsCapabilityMatcher;
 import org.openqa.grid.common.RegistrationRequest;
 import org.openqa.grid.internal.Registry;
 import org.openqa.grid.internal.TestSession;
-import org.openqa.grid.internal.utils.CapabilityMatcher;
-import org.openqa.grid.selenium.proxy.DefaultRemoteProxy;
-import org.openqa.grid.web.servlet.handler.RequestType;
-import org.openqa.grid.web.servlet.handler.WebDriverRequest;
 import org.openqa.selenium.Platform;
 import org.openqa.selenium.remote.DesiredCapabilities;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -30,41 +18,36 @@ import java.util.logging.Logger;
     https://github.com/rossrowe/sauce-grid-plugin
  */
 
-public class SauceLabsRemoteProxy extends DefaultRemoteProxy {
+public class SauceLabsRemoteProxy extends CloudTestingRemoteProxy {
 
-    public static final String SAUCE_LABS_USER_NAME = System.getenv("SAUCE_USERNAME");
-    public static final String SAUCE_LABS_ACCESS_KEY = System.getenv("SAUCE_ACCESS_KEY");
-    public static final String SAUCE_LABS_URL = "http://ondemand.saucelabs.com:80";
     @VisibleForTesting
-    protected static final String SAUCE_LABS_CAPABILITIES_URL = "http://saucelabs.com/rest/v1/info/platforms/webdriver";
+    static final String SAUCE_LABS_CAPABILITIES_URL = "http://saucelabs.com/rest/v1/info/platforms/webdriver";
+    private static final String SAUCE_LABS_USER_NAME = System.getenv("SAUCE_USERNAME");
+    private static final String SAUCE_LABS_ACCESS_KEY = System.getenv("SAUCE_ACCESS_KEY");
+    private static final String SAUCE_LABS_URL = "http://ondemand.saucelabs.com:80";
     private static final Logger LOGGER = Logger.getLogger(SauceLabsRemoteProxy.class.getName());
     private static final String SAUCE_LABS_DEFAULT_CAPABILITIES_BK_FILE = "saucelabs_capabilities.json";
-    private static final CommonProxyUtilities defaultCommonProxyUtilities = new CommonProxyUtilities();
-    private static final GoogleAnalyticsApi defaultGA = new GoogleAnalyticsApi();
-    private static CommonProxyUtilities commonProxyUtilities = defaultCommonProxyUtilities;
-    private static GoogleAnalyticsApi ga = defaultGA;
-    private CapabilityMatcher capabilityHelper;
 
     public SauceLabsRemoteProxy(RegistrationRequest request, Registry registry) {
         super(updateSLCapabilities(request, SAUCE_LABS_CAPABILITIES_URL), registry);
     }
 
     @VisibleForTesting
-    protected static RegistrationRequest updateSLCapabilities(RegistrationRequest registrationRequest, String url) {
-        JsonElement slCapabilities = commonProxyUtilities.readJSONFromUrl(url);
+    static RegistrationRequest updateSLCapabilities(RegistrationRequest registrationRequest, String url) {
+        JsonElement slCapabilities = getCommonProxyUtilities().readJSONFromUrl(url);
 
         try {
             registrationRequest.getCapabilities().clear();
-            if (slCapabilities != null) {
-                LOGGER.log(Level.INFO, "[SL] Capabilities fetched from {0}", url);
-            } else {
-                LOGGER.log(Level.SEVERE, "[SL] Capabilities were NOT fetched from {0}, loading from backup file", url);
-                slCapabilities = commonProxyUtilities.readJSONFromFile(SAUCE_LABS_DEFAULT_CAPABILITIES_BK_FILE);
+            String logMessage = String.format("[SL] Capabilities fetched from %s", url);
+            if (slCapabilities == null) {
+                logMessage = String.format("[SL] Capabilities were NOT fetched from %s, loading from backup file", url);
+                slCapabilities = getCommonProxyUtilities().readJSONFromFile(SAUCE_LABS_DEFAULT_CAPABILITIES_BK_FILE);
             }
+            LOGGER.log(Level.INFO, logMessage);
             return addCapabilitiesToRegistrationRequest(registrationRequest, slCapabilities);
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, e.toString(), e);
-            ga.trackException(e);
+            getGa().trackException(e);
         }
         return registrationRequest;
     }
@@ -90,89 +73,35 @@ public class SauceLabsRemoteProxy extends DefaultRemoteProxy {
         return Platform.extractFromSysProperty(os);
     }
 
-    @VisibleForTesting
-    protected static void setCommonProxyUtilities(final CommonProxyUtilities utilities) {
-        commonProxyUtilities = utilities;
-    }
-
-    @VisibleForTesting
-    protected static void restoreCommonProxyUtilities() {
-        commonProxyUtilities = defaultCommonProxyUtilities;
-    }
-
-    @VisibleForTesting
-    protected static void restoreGa() {
-        ga = defaultGA;
-    }
-
-    @VisibleForTesting
-    protected static void setGa(GoogleAnalyticsApi ga) {
-        SauceLabsRemoteProxy.ga = ga;
-    }
-
     @Override
     public TestSession getNewSession(Map<String, Object> requestedCapability) {
-
         LOGGER.log(Level.INFO, "[SL] Test will be forwarded to Sauce Labs, {0}.", requestedCapability);
-
         return super.getNewSession(requestedCapability);
     }
 
     @Override
-    public CapabilityMatcher getCapabilityHelper() {
-        if (capabilityHelper == null) {
-            capabilityHelper = new SauceLabsCapabilityMatcher(this);
-        }
-        return capabilityHelper;
+    String getUserNameProperty() {
+        return "username";
     }
 
     @Override
-    public void beforeCommand(TestSession session, HttpServletRequest request, HttpServletResponse response) {
-        if (request instanceof WebDriverRequest && "POST".equalsIgnoreCase(request.getMethod())) {
-            WebDriverRequest seleniumRequest = (WebDriverRequest) request;
-            if (seleniumRequest.getRequestType().equals(RequestType.START_SESSION)) {
-                String body = seleniumRequest.getBody();
-                JsonObject jsonObject = new JsonParser().parse(body).getAsJsonObject();
-                JsonObject desiredCapabilities = jsonObject.getAsJsonObject("desiredCapabilities");
-                desiredCapabilities.addProperty("username", SAUCE_LABS_USER_NAME);
-                desiredCapabilities.addProperty("accessKey", SAUCE_LABS_ACCESS_KEY);
-                seleniumRequest.setBody(jsonObject.toString());
-            }
-        }
-        super.beforeCommand(session, request, response);
+    String getUserNameValue() {
+        return SAUCE_LABS_USER_NAME;
     }
 
     @Override
-    public void afterCommand(TestSession session, HttpServletRequest request, HttpServletResponse response) {
-        if (request instanceof WebDriverRequest && "DELETE".equalsIgnoreCase(request.getMethod())) {
-            WebDriverRequest seleniumRequest = (WebDriverRequest) request;
-            if (seleniumRequest.getRequestType().equals(RequestType.STOP_SESSION)) {
-                long executionTime = (System.currentTimeMillis() - session.getSlot().getLastSessionStart()) / 1000;
-                ga.testEvent(SauceLabsRemoteProxy.class.getName(), session.getRequestedCapabilities().toString(),
-                        executionTime);
-            }
-        }
-        super.afterCommand(session, request, response);
-    }
-
-    /*
-        Making the node seem as heavily used, in order to get it listed after the 'docker-selenium' nodes.
-        99% used.
-     */
-    @Override
-    public float getResourceUsageInPercent() {
-        return 99;
+    String getAccessKeyProperty() {
+        return "accessKey";
     }
 
     @Override
-    public URL getRemoteHost() {
-        try {
-            return new URL(SAUCE_LABS_URL);
-        } catch (MalformedURLException e) {
-            LOGGER.log(Level.SEVERE, e.toString(), e);
-            ga.trackException(e);
-        }
-        return null;
+    String getAccessKeyValue() {
+        return SAUCE_LABS_ACCESS_KEY;
+    }
+
+    @Override
+    String getCloudTestingServiceUrl() {
+        return SAUCE_LABS_URL;
     }
 
 }

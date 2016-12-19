@@ -343,7 +343,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
 
             List<String> envVariables = new ArrayList<>();
             envVariables.add("SELENIUM_HUB_HOST=" + hostIpAddress);
-            envVariables.add("SELENIUM_HUB_PORT=4444");
+            envVariables.add("SELENIUM_HUB_PORT=4445");
             envVariables.add("SELENIUM_NODE_HOST=" + hostIpAddress);
             envVariables.add("GRID=false");
             envVariables.add("RC_CHROME=false");
@@ -355,7 +355,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
             envVariables.add("WAIT_TIME_OUT_VIDEO_STOP=20s");
             boolean sendAnonymousUsageInfo = env.getBooleanEnvVariable("ZALENIUM_SEND_ANONYMOUS_USAGE_INFO", false);
             envVariables.add("SEND_ANONYMOUS_USAGE_INFO=" + sendAnonymousUsageInfo);
-            envVariables.add("BUILD_URL" + env.getStringEnvVariable("BUILD_URL", ""));
+            envVariables.add("BUILD_URL=" + env.getStringEnvVariable("BUILD_URL", ""));
             envVariables.add("NOVNC=true");
             envVariables.add("NOVNC_PORT=" + vncPort);
             envVariables.add("SCREEN_WIDTH=" + getScreenWidth());

@@ -51,6 +51,19 @@ StartUp()
         exit 3
     fi
 
+    BROWSER_STACK_USER="${BROWSER_STACK_USER:=abc}"
+    BROWSER_STACK_KEY="${BROWSER_STACK_KEY:=abc}"
+
+    if [ "$BROWSER_STACK_USER" = abc ]; then
+        echo "BROWSER_STACK_USER environment variable is not set, cannot start Browser Stack node, exiting..."
+        exit 4
+    fi
+
+    if [ "$BROWSER_STACK_KEY" = abc ]; then
+        echo "BROWSER_STACK_KEY environment variable is not set, cannot start Browser Stack node, exiting..."
+        exit 5
+    fi
+
     echo "Starting Zalenium in docker..."
 
     IN_TRAVIS="${CI:=false}"
@@ -61,13 +74,14 @@ StartUp()
 
     docker run -d -ti --name zalenium -p 4444:4444 -p 5555:5555 \
           -e SAUCE_USERNAME -e SAUCE_ACCESS_KEY \
+          -e BROWSER_STACK_USER -e BROWSER_STACK_KEY \
           -v ${VIDEOS_FOLDER}:/home/seluser/videos \
           -v /var/run/docker.sock:/var/run/docker.sock \
-          ${ZALENIUM_DOCKER_IMAGE} start
+          ${ZALENIUM_DOCKER_IMAGE} start --browserStackEnabled true --sauceLabsEnabled true
 
     if ! mtimeout --foreground "2m" bash -c WaitZaleniumStarted; then
         echo "Zalenium failed to start after 2 minutes, failing..."
-        exit 4
+        exit 6
     fi
 
     echo "Zalenium in docker started!"

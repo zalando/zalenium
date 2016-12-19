@@ -2,10 +2,12 @@ package de.zalando.tip.zalenium.util;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
+import org.apache.commons.codec.binary.Base64;
 
 import java.io.*;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.net.URLConnection;
 import java.nio.charset.Charset;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -17,16 +19,25 @@ public class CommonProxyUtilities {
     /*
         Reading a JSON with DockerSelenium capabilities from a given URL
         http://stackoverflow.com/questions/4308554/simplest-way-to-read-json-from-a-url-in-java
+        http://stackoverflow.com/questions/496651/connecting-to-remote-url-which-requires-authentication-using-java
      */
-    public JsonElement readJSONFromUrl(String url) {
+    public JsonElement readJSONFromUrl(String jsonUrl) {
         try {
-            InputStream is = new URL(url).openStream();
+            URL url = new URL(jsonUrl);
+            URLConnection urlConnection = url.openConnection();
+
+            if (url.getUserInfo() != null) {
+                String basicAuth = "Basic " + new String(new Base64().encode(url.getUserInfo().getBytes()));
+                urlConnection.setRequestProperty("Authorization", basicAuth);
+            }
+
+            InputStream is = urlConnection.getInputStream();
             BufferedReader rd = new BufferedReader(new InputStreamReader(is, Charset.forName("UTF-8")));
             String jsonText = readAll(rd);
             is.close();
             return new JsonParser().parse(jsonText);
         } catch (Exception e) {
-            LOG.log(Level.FINE, e.toString(), e);
+            LOG.log(Level.SEVERE, e.toString(), e);
         }
         return null;
     }
