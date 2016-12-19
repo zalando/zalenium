@@ -173,6 +173,7 @@ If you want to integrate another cloud testing solution, we are happy to receive
 
 ## Features coming in the next weeks
 * Upgrading to Selenium 3 (Selenium 2.53.1 will still be supported of course).
+* Adding Sauce Connect and BrowserStack local to enable local testing.
 
 License
 ===================
