@@ -19,13 +19,12 @@ import java.util.logging.Logger;
  */
 public class BrowserStackRemoteProxy extends CloudTestingRemoteProxy {
 
-    private static final String BROWSER_STACK_USER = System.getenv("BROWSER_STACK_USER");
-    private static final String BROWSER_STACK_KEY = System.getenv("BROWSER_STACK_KEY");
     private static final String BROWSER_STACK_URL = "http://hub-cloud.browserstack.com:80";
-    @VisibleForTesting
     private static final String BROWSER_STACK_CAPABILITIES_URL = "https://%s:%s@www.browserstack.com/automate/browsers.json";
     private static final Logger logger = Logger.getLogger(BrowserStackRemoteProxy.class.getName());
     private static final String BROWSER_STACK_CAPABILITIES_BK_FILE = "browserstack_capabilities.json";
+    private static final String BROWSER_STACK_USER = getEnv().getStringEnvVariable("BROWSER_STACK_USER", "");
+    private static final String BROWSER_STACK_KEY = getEnv().getStringEnvVariable("BROWSER_STACK_KEY", "");
 
     public BrowserStackRemoteProxy(RegistrationRequest request, Registry registry) {
         super(updateBSCapabilities(request, String.format(BROWSER_STACK_CAPABILITIES_URL, BROWSER_STACK_USER,
@@ -34,18 +33,23 @@ public class BrowserStackRemoteProxy extends CloudTestingRemoteProxy {
 
     @VisibleForTesting
     private static RegistrationRequest updateBSCapabilities(RegistrationRequest registrationRequest, String url) {
-        JsonElement slCapabilities = getCommonProxyUtilities().readJSONFromUrl(url);
-
+        JsonElement bsCapabilities = getCommonProxyUtilities().readJSONFromUrl(url);
         try {
             registrationRequest.getCapabilities().clear();
-            if (slCapabilities != null) {
-                String userPasswordSuppress = String.format("%s:%s@", BROWSER_STACK_USER, BROWSER_STACK_KEY);
-                logger.log(Level.INFO, "[BS] Capabilities fetched from {0}", url.replace(userPasswordSuppress, ""));
-            } else {
-                logger.log(Level.SEVERE, "[BS] Capabilities were NOT fetched from {0}, loading from backup file", url);
-                slCapabilities = getCommonProxyUtilities().readJSONFromFile(BROWSER_STACK_CAPABILITIES_BK_FILE);
+            String userPasswordSuppress = String.format("%s:%s@", BROWSER_STACK_USER, BROWSER_STACK_KEY);
+            String logMessage = String.format("[BS] Capabilities fetched from %s", url.replace(userPasswordSuppress, ""));
+            if (bsCapabilities == null) {
+                logMessage = String.format("[BS] Capabilities were NOT fetched from %s, loading from backup file",
+                        url.replace(userPasswordSuppress, ""));
+                bsCapabilities = getCommonProxyUtilities().readJSONFromFile(BROWSER_STACK_CAPABILITIES_BK_FILE);
+                if (bsCapabilities == null) {
+                    logger.info("Capabilities from file are null!");
+                } else {
+                    logger.info("Capabilities from file are NOT null!");
+                }
             }
-            return addCapabilitiesToRegistrationRequest(registrationRequest, slCapabilities);
+            logger.log(Level.INFO, logMessage);
+            return addCapabilitiesToRegistrationRequest(registrationRequest, bsCapabilities);
         } catch (Exception e) {
             logger.log(Level.SEVERE, e.toString(), e);
             getGa().trackException(e);

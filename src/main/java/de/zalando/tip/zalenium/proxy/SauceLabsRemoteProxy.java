@@ -38,12 +38,12 @@ public class SauceLabsRemoteProxy extends CloudTestingRemoteProxy {
 
         try {
             registrationRequest.getCapabilities().clear();
-            if (slCapabilities != null) {
-                LOGGER.log(Level.INFO, "[SL] Capabilities fetched from {0}", url);
-            } else {
-                LOGGER.log(Level.SEVERE, "[SL] Capabilities were NOT fetched from {0}, loading from backup file", url);
+            String logMessage = String.format("[SL] Capabilities fetched from %s", url);
+            if (slCapabilities == null) {
+                logMessage = String.format("[SL] Capabilities were NOT fetched from %s, loading from backup file", url);
                 slCapabilities = getCommonProxyUtilities().readJSONFromFile(SAUCE_LABS_DEFAULT_CAPABILITIES_BK_FILE);
             }
+            LOGGER.log(Level.INFO, logMessage);
             return addCapabilitiesToRegistrationRequest(registrationRequest, slCapabilities);
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, e.toString(), e);

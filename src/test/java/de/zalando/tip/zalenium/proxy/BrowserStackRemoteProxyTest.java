@@ -10,8 +10,9 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
 import org.hamcrest.CoreMatchers;
+import org.junit.After;
 import org.junit.Assert;
-import org.junit.BeforeClass;
+import org.junit.Before;
 import org.junit.Test;
 import org.openqa.grid.common.RegistrationRequest;
 import org.openqa.grid.internal.Registry;
@@ -34,12 +35,12 @@ import static org.mockito.Mockito.*;
 
 public class BrowserStackRemoteProxyTest {
 
-    private static BrowserStackRemoteProxy browserStackProxy;
-    private static Registry registry;
+    private BrowserStackRemoteProxy browserStackProxy;
+    private Registry registry;
 
     @SuppressWarnings("ConstantConditions")
-    @BeforeClass
-    public static void setUp() {
+    @Before
+    public void setUp() {
         registry = Registry.newInstance();
         // Creating the configuration and the registration request of the proxy (node)
         RegistrationRequest request = TestUtils.getRegistrationRequestForTesting(30002,
@@ -61,6 +62,13 @@ public class BrowserStackRemoteProxyTest {
         // We add both nodes to the registry
         registry.add(browserStackProxy);
         registry.add(dsStarterProxy);
+    }
+
+    @After
+    public void tearDown() {
+        BrowserStackRemoteProxy.restoreCommonProxyUtilities();
+        BrowserStackRemoteProxy.restoreGa();
+        BrowserStackRemoteProxy.restoreEnvironment();
     }
 
     @Test
@@ -119,14 +127,13 @@ public class BrowserStackRemoteProxyTest {
 
         testSession.forward(request, response, true);
 
+        Environment env = new Environment();
+
         // The body should now have the BrowserStack variables
-        String expectedBody = System.getenv("BROWSER_STACK_USER") == null ?
-                String.format("{\"desiredCapabilities\":{\"browserName\":\"internet explorer\",\"platform\":" +
-                                "\"WIN8\",\"browserstack.user\":%s,\"browserstack.key\":%s}}", System.getenv("BROWSER_STACK_USER"),
-                        System.getenv("BROWSER_STACK_KEY")) :
-                String.format("{\"desiredCapabilities\":{\"browserName\":\"internet explorer\",\"platform\":" +
-                                "\"WIN8\",\"browserstack.user\":\"%s\",\"browserstack.key\":\"%s\"}}", System.getenv("BROWSER_STACK_USER"),
-                        System.getenv("BROWSER_STACK_KEY"));
+        String expectedBody = String.format("{\"desiredCapabilities\":{\"browserName\":\"internet explorer\",\"platform\":" +
+                                "\"WIN8\",\"browserstack.user\":\"%s\",\"browserstack.key\":\"%s\"}}",
+                        env.getStringEnvVariable("BROWSER_STACK_USER", ""),
+                        env.getStringEnvVariable("BROWSER_STACK_KEY", ""));
         verify(request).setBody(expectedBody);
     }
 
@@ -176,42 +183,6 @@ public class BrowserStackRemoteProxyTest {
         Assert.assertThat(request.getBody(), CoreMatchers.containsString(jsonObject.toString()));
         Assert.assertThat(request.getBody(), CoreMatchers.not(CoreMatchers.containsString("browserstack.user")));
         Assert.assertThat(request.getBody(), CoreMatchers.not(CoreMatchers.containsString("browserstack.key")));
-    }
-
-    @Test
-    public void gaGetsInvokedWhenExceptionsAreCaught() throws IOException {
-        // Mocking environment and Google Analytics class.
-        Environment env = mock(Environment.class);
-        when(env.getBooleanEnvVariable("ZALENIUM_SEND_ANONYMOUS_USAGE_INFO", false))
-                .thenReturn(true);
-        when(env.getStringEnvVariable("ZALENIUM_GA_API_VERSION", "")).thenReturn("1");
-        when(env.getStringEnvVariable("ZALENIUM_GA_TRACKING_ID", "")).thenReturn("UA-88441352");
-        when(env.getStringEnvVariable("ZALENIUM_GA_ENDPOINT", ""))
-                .thenReturn("https://www.google-analytics.com/collect");
-        when(env.getStringEnvVariable("ZALENIUM_GA_ANONYMOUS_CLIENT_ID", ""))
-                .thenReturn("RANDOM_STRING");
-
-        HttpClient client = mock(HttpClient.class);
-        HttpResponse httpResponse = mock(HttpResponse.class);
-        when(client.execute(any(HttpPost.class))).thenReturn(httpResponse);
-
-        GoogleAnalyticsApi ga = new GoogleAnalyticsApi();
-        GoogleAnalyticsApi gaSpy = spy(ga);
-        gaSpy.setEnv(env);
-        gaSpy.setHttpClient(client);
-        BrowserStackRemoteProxy.setGa(gaSpy);
-
-        CommonProxyUtilities commonProxyUtilities = mock(CommonProxyUtilities.class);
-        when(commonProxyUtilities.readJSONFromUrl(anyString())).thenCallRealMethod();
-        when(commonProxyUtilities.readJSONFromFile(anyString())).thenReturn(null);
-        BrowserStackRemoteProxy.setCommonProxyUtilities(commonProxyUtilities);
-
-
-        RegistrationRequest request = TestUtils.getRegistrationRequestForTesting(30002,
-                BrowserStackRemoteProxy.class.getCanonicalName());
-        browserStackProxy = BrowserStackRemoteProxy.getNewInstance(request, registry);
-        
-        verify(gaSpy, times(1)).trackException(any(Exception.class));
     }
 
 }

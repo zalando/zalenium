@@ -9,6 +9,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import de.zalando.tip.zalenium.util.CommonProxyUtilities;
+import de.zalando.tip.zalenium.util.Environment;
 import de.zalando.tip.zalenium.util.GoogleAnalyticsApi;
 import de.zalando.tip.zalenium.util.ZaleniumCapabilityMatcher;
 import org.openqa.grid.common.RegistrationRequest;
@@ -31,8 +32,10 @@ public class CloudTestingRemoteProxy extends DefaultRemoteProxy {
     private static final Logger logger = Logger.getLogger(CloudTestingRemoteProxy.class.getName());
     private static final GoogleAnalyticsApi defaultGA = new GoogleAnalyticsApi();
     private static final CommonProxyUtilities defaultCommonProxyUtilities = new CommonProxyUtilities();
+    private static final Environment defaultEnvironment = new Environment();
     private static GoogleAnalyticsApi ga = defaultGA;
     private static CommonProxyUtilities commonProxyUtilities = defaultCommonProxyUtilities;
+    private static Environment env = defaultEnvironment;
     private CapabilityMatcher capabilityHelper;
 
     @SuppressWarnings("WeakerAccess")
@@ -58,6 +61,10 @@ public class CloudTestingRemoteProxy extends DefaultRemoteProxy {
         return commonProxyUtilities;
     }
 
+    public static Environment getEnv() {
+        return env;
+    }
+
     @VisibleForTesting
     static void setCommonProxyUtilities(final CommonProxyUtilities utilities) {
         commonProxyUtilities = utilities;
@@ -66,6 +73,16 @@ public class CloudTestingRemoteProxy extends DefaultRemoteProxy {
     @VisibleForTesting
     static void restoreCommonProxyUtilities() {
         commonProxyUtilities = defaultCommonProxyUtilities;
+    }
+
+    @VisibleForTesting
+    public static void setEnv(final Environment env) {
+        CloudTestingRemoteProxy.env = env;
+    }
+
+    @VisibleForTesting
+    public static void restoreEnvironment() {
+        env = defaultEnvironment;
     }
 
     @Override
