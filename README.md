@@ -44,6 +44,9 @@ You can use the Zalenium already, but it is still under development and open for
 
 #### Running it
 Zalenium uses docker to scale on-demand, therefore we need to give it the `docker.sock` full access, this is known as "Docker alongside docker".
+
+NB. The container must be called `zalenium`. This is required because a docker network with this name will be created to allow all containers to locate each other without too much hassle.
+
 * Start it with Sauce Labs and BrowserStack enabled:
   ```sh
     export SAUCE_USERNAME=<your Sauce Labs username>
