@@ -10,10 +10,6 @@ import com.spotify.docker.client.messages.ContainerCreation;
 import com.spotify.docker.client.messages.ExecCreation;
 import de.zalando.tip.zalenium.util.Environment;
 import de.zalando.tip.zalenium.util.TestUtils;
-import org.apache.http.HttpResponse;
-import org.apache.http.StatusLine;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpPost;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -42,14 +38,7 @@ import static org.awaitility.Awaitility.await;
 import static org.awaitility.Awaitility.to;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.timeout;
-import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.withSettings;
+import static org.mockito.Mockito.*;
 
 public class DockerSeleniumRemoteProxyTest {
 
@@ -77,6 +66,7 @@ public class DockerSeleniumRemoteProxyTest {
         when(dockerClient.execCreate(anyString(), any(String[].class), any(DockerClient.ExecCreateParam.class),
                 any(DockerClient.ExecCreateParam.class))).thenReturn(execCreation);
         when(dockerClient.execStart(anyString())).thenReturn(logStream);
+        doNothing().when(dockerClient).stopContainer(anyString(), anyInt());
 
         DockerSeleniumRemoteProxy.setDockerClient(dockerClient);
     }
@@ -140,9 +130,6 @@ public class DockerSeleniumRemoteProxyTest {
 
         // Start poller thread
         proxy.startPolling();
-
-        // Mock the poller HttpClient to avoid exceptions due to failed connections
-        proxy.getDockerSeleniumNodePollerThread().setClient(getMockedClient());
 
         // Get a test session
         TestSession newSession = proxy.getNewSession(requestedCapability);
@@ -212,9 +199,6 @@ public class DockerSeleniumRemoteProxyTest {
             // Start poller thread
             spyProxy.startPolling();
 
-            // Mock the poller HttpClient to avoid exceptions due to failed connections
-            spyProxy.getDockerSeleniumNodePollerThread().setClient(getMockedClient());
-
             // Get a test session
             TestSession newSession = spyProxy.getNewSession(getCapabilitySupportedByDockerSelenium());
             Assert.assertNotNull(newSession);
@@ -283,15 +267,13 @@ public class DockerSeleniumRemoteProxyTest {
             // Start poller thread
             spyProxy.startPolling();
 
-            // Mock the poller HttpClient to avoid exceptions due to failed connections
-            spyProxy.getDockerSeleniumNodePollerThread().setClient(getMockedClient());
-
             // Get a test session
             TestSession newSession = spyProxy.getNewSession(getCapabilitySupportedByDockerSelenium());
             Assert.assertNotNull(newSession);
 
             // Assert no video recording was started, videoRecording is invoked but processVideoAction should not
-            verify(spyProxy, times(1)).videoRecording(DockerSeleniumRemoteProxy.VideoRecordingAction.START_RECORDING);
+            verify(spyProxy, times(1))
+                    .videoRecording(DockerSeleniumRemoteProxy.VideoRecordingAction.START_RECORDING);
             verify(spyProxy, never())
                     .processVideoAction(DockerSeleniumRemoteProxy.VideoRecordingAction.START_RECORDING, containerId);
 
@@ -380,16 +362,4 @@ public class DockerSeleniumRemoteProxyTest {
         requestedCapability.put(CapabilityType.PLATFORM, Platform.LINUX);
         return requestedCapability;
     }
-
-    private HttpClient getMockedClient() throws IOException {
-        HttpClient client = mock(HttpClient.class);
-        HttpResponse httpResponse = mock(HttpResponse.class);
-        StatusLine statusLine = mock(StatusLine.class);
-        when(statusLine.getStatusCode()).thenReturn(200);
-        when(httpResponse.getStatusLine()).thenReturn(statusLine);
-        when(client.execute(any(HttpPost.class))).thenReturn(httpResponse);
-        return client;
-    }
-
-
 }

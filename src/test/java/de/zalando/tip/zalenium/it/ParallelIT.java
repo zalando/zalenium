@@ -24,7 +24,7 @@ public class ParallelIT  {
     private static final Logger LOGGER = LoggerFactory.getLogger(ParallelIT.class);
 
     // Zalenium setup variables
-    public static final String DOCKER_SELENIUM_URL = "http://localhost:4444/wd/hub";
+    private static final String DOCKER_SELENIUM_URL = "http://localhost:4444/wd/hub";
 
     // We need a thread safe environment to handle the webDriver variable in each thread separately
     private ThreadLocal<WebDriver> webDriver = new ThreadLocal<>();
@@ -70,7 +70,7 @@ public class ParallelIT  {
     }
 
     // Returns the webDriver for the current thread
-    public WebDriver getWebDriver() {
+    private WebDriver getWebDriver() {
         return webDriver.get();
     }
 
