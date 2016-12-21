@@ -240,6 +240,36 @@ RUN  export SELBASE="https://selenium-release.storage.googleapis.com" \
   && export SELPATH="${SEL_MAJOR_VER}/selenium-server-standalone-${SEL_VER}.jar" \
   && wget -nv ${SELBASE}/${SELPATH}
 
+# ------------------------#
+# Sauce Connect Tunneling #
+# ------------------------#
+# https://docs.saucelabs.com/reference/sauce-connect/
+# Layer size: medium: 12.42 MB
+ENV SAUCE_CONN_VER="sc-4.4.2-linux" \
+    SAUCE_CONN_DOWN_URL="https://saucelabs.com/downloads"
+RUN cd /tmp \
+  && wget -nv "${SAUCE_CONN_DOWN_URL}/${SAUCE_CONN_VER}.tar.gz" \
+  && tar -zxf "${SAUCE_CONN_VER}.tar.gz" \
+  && rm -rf /usr/local/${SAUCE_CONN_VER} \
+  && mv ${SAUCE_CONN_VER} /usr/local \
+  && rm "${SAUCE_CONN_VER}.tar.gz" \
+  && ln -sf /usr/local/${SAUCE_CONN_VER}/bin/sc /usr/local/bin/sc \
+  && which sc
+
+# -----------------------#
+# BrowserStack Tunneling #
+# -----------------------#
+# https://www.browserstack.com/local-testing
+# Layer size: medium: 16.02 MB
+ENV BSTACK_TUNNEL_URL="https://www.browserstack.com/browserstack-local" \
+    BSTACK_TUNNEL_ZIP="BrowserStackLocal-linux-x64.zip"
+RUN cd /tmp \
+  && wget -nv "${BSTACK_TUNNEL_URL}/${BSTACK_TUNNEL_ZIP}" \
+  && unzip "${BSTACK_TUNNEL_ZIP}" \
+  && chmod 755 BrowserStackLocal \
+  && rm "${BSTACK_TUNNEL_ZIP}" \
+  && mv BrowserStackLocal /usr/local/bin \
+  && which BrowserStackLocal
 
 #================================
 # Sauce Labs capabilities backup
