@@ -139,7 +139,7 @@ public class live extends RegistryBasedServlet {
         header = header.concat("<h2>Zalenium Live Preview");
         header = header.concat("</h2>");
         header = header.concat("<div><a id='helplink' target='_blank' ");
-        header = header.concat("href='https://github.com/zalando-incubator/zalenium'>Help</a></div></div>");
+        header = header.concat("href='https://github.com/zalando/zalenium'>Help</a></div></div>");
         return header;
     }
 

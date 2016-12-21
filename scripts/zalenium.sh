@@ -107,7 +107,7 @@ data will be collected, processed and used by Zalando SE for the purpose of impr
 infrastructure tools. Anonymisation with respect of the IP address means that only the first two octets
 of the IP address are collected.
 
-See the complete license at https://github.com/zalando-incubator/zalenium/blob/master/LICENSE.md"
+See the complete license at https://github.com/zalando/zalenium/blob/master/LICENSE.md"
     echo "*************************************** Data Processing Agreement ***************************************"
 }
 
@@ -146,7 +146,6 @@ DockerTerminate()
         if [[ "${project.build.finalName}.jar" == *"SNAPSHOT"* ]]; then
             echo "Not sending info to GA since this is a SNAPSHOT version"
         else
-            echo "Sending info to GA"
             curl ${GA_ENDPOINT} "${args[@]}" \
                 --silent --output /dev/null &>/dev/null
         fi
@@ -373,7 +372,6 @@ StartUp()
         if [[ "${project.build.finalName}.jar" == *"SNAPSHOT"* ]]; then
             echo "Not sending info to GA since this is a SNAPSHOT version"
         else
-            echo "Sending info to GA"
             curl ${GA_ENDPOINT} \
                 "${args[@]}" --silent --output /dev/null &>/dev/null & disown
         fi
