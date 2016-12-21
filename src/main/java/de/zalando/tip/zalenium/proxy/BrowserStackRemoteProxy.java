@@ -42,11 +42,6 @@ public class BrowserStackRemoteProxy extends CloudTestingRemoteProxy {
                 logMessage = String.format("[BS] Capabilities were NOT fetched from %s, loading from backup file",
                         url.replace(userPasswordSuppress, ""));
                 bsCapabilities = getCommonProxyUtilities().readJSONFromFile(BROWSER_STACK_CAPABILITIES_BK_FILE);
-                if (bsCapabilities == null) {
-                    logger.info("Capabilities from file are null!");
-                } else {
-                    logger.info("Capabilities from file are NOT null!");
-                }
             }
             logger.log(Level.INFO, logMessage);
             return addCapabilitiesToRegistrationRequest(registrationRequest, bsCapabilities);

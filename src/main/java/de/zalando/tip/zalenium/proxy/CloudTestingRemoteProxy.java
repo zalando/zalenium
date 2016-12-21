@@ -61,18 +61,13 @@ public class CloudTestingRemoteProxy extends DefaultRemoteProxy {
         return commonProxyUtilities;
     }
 
-    public static Environment getEnv() {
-        return env;
-    }
-
     @VisibleForTesting
     static void setCommonProxyUtilities(final CommonProxyUtilities utilities) {
         commonProxyUtilities = utilities;
     }
 
-    @VisibleForTesting
-    static void restoreCommonProxyUtilities() {
-        commonProxyUtilities = defaultCommonProxyUtilities;
+    public static Environment getEnv() {
+        return env;
     }
 
     @VisibleForTesting
@@ -81,7 +76,12 @@ public class CloudTestingRemoteProxy extends DefaultRemoteProxy {
     }
 
     @VisibleForTesting
-    public static void restoreEnvironment() {
+    static void restoreCommonProxyUtilities() {
+        commonProxyUtilities = defaultCommonProxyUtilities;
+    }
+
+    @VisibleForTesting
+    static void restoreEnvironment() {
         env = defaultEnvironment;
     }
 
