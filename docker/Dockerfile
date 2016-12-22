@@ -291,7 +291,14 @@ COPY browserstack_capabilities.json /home/seluser/
 ENV ZAL_VER="${project.build.finalName}" \
     BROWSER_STACK_TUNNEL_OPTS="-skipCheck -v -forcelocal" \
     BROWSER_STACK_TUNNEL_ID="zalenium" \
-    BROWSER_STACK_TUNNEL="false"
+    BROWSER_STACK_TUNNEL="false" \
+    BROWSER_STACK_WAIT_TIMEOUT="2m" \
+    SAUCE_TUNNEL_MAX_RETRY_ATTEMPTS="1" \
+    SAUCE_TUNNEL_READY_FILE="/tmp/sauce-connect-ready" \
+    SAUCE_TUNNEL_ID="zalenium" \
+    SAUCE_TUNNEL_DOCTOR_TEST="false" \
+    SAUCE_WAIT_TIMEOUT="2m" \
+    SAUCE_TUNNEL="false"
 
 COPY entry.sh /usr/bin/
 COPY zalenium.sh /home/seluser/
