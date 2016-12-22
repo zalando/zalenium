@@ -40,6 +40,16 @@ public class ParallelIT  {
         };
     }
 
+    // Data provider which returns the browsers that will be used to run the tests when the tunnel is on
+    @DataProvider(name = "browsersAndPlatformsWithTunnel")
+    public static Object[][] browsersAndPlatformsWithTunnelProvider() {
+        return new Object[][] {
+                new Object[]{BrowserType.CHROME, Platform.MAC},
+                new Object[]{BrowserType.FIREFOX, Platform.WIN8},
+                new Object[]{BrowserType.IE, Platform.WIN8}
+        };
+    }
+
     @BeforeMethod
     public void startWebDriverAndGetBaseUrl(Method method, Object[] testArgs) throws MalformedURLException {
         String browserType = testArgs[0].toString();
@@ -50,6 +60,9 @@ public class ParallelIT  {
         desiredCapabilities.setCapability(CapabilityType.BROWSER_NAME, browserType);
         desiredCapabilities.setCapability(CapabilityType.PLATFORM, platform);
         desiredCapabilities.setCapability("name", method.getName());
+        desiredCapabilities.setCapability("browserstack.local", "true");
+        desiredCapabilities.setCapability("browserstack.localIdentifier", "zalenium");
+        desiredCapabilities.setCapability("tunnelIdentifier", "zalenium");
 
         try {
             webDriver.set(new RemoteWebDriver(new URL(DOCKER_SELENIUM_URL), desiredCapabilities));
@@ -74,6 +87,17 @@ public class ParallelIT  {
         return webDriver.get();
     }
 
+    @Test(dataProvider = "browsersAndPlatformsWithTunnel")
+    public void loadSeleniumGridAndCheckTitle(String browserType, Platform platform) {
+
+        // Go to the homepage
+        getWebDriver().get("http://localhost:4444/grid/console");
+
+
+        // Assert that the title is the expected one
+        Assert.assertEquals(getWebDriver().getTitle(), "Grid Console");
+    }
+
     @Test(dataProvider = "browsersAndPlatforms")
     public void loadZalandoPageAndCheckTitle(String browserType, Platform platform) {
 
@@ -94,6 +118,5 @@ public class ParallelIT  {
         // Assert that the title is the expected one
         Assert.assertEquals(getWebDriver().getTitle(), "Google", "Page title is not the expected one");
     }
-
 
 }
