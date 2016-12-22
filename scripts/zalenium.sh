@@ -12,6 +12,7 @@ SCREEN_WIDTH=1900
 SCREEN_HEIGHT=1880
 TZ="Europe/Berlin"
 SEND_ANONYMOUS_USAGE_INFO=true
+START_TUNNEL=false
 
 GA_TRACKING_ID="UA-88441352-3"
 GA_ENDPOINT=https://www.google-analytics.com/collect
@@ -320,6 +321,11 @@ StartUp()
             exit 12
         fi
         echo "Browser Stack node started!"
+        if [ "$START_TUNNEL" = true ]; then
+            export BROWSER_STACK_LOG_FILE="logs/browserstack-stdout.log"
+            echo "Starting BrowserStackLocal..."
+            start-browserstack.sh &
+        fi
     else
         echo "Browser Stack not enabled..."
     fi
@@ -513,6 +519,9 @@ case ${SCRIPT_ACTION} in
                     ;;
                 --sendAnonymousUsageInfo)
                     SEND_ANONYMOUS_USAGE_INFO=${VALUE}
+                    ;;
+                --startTunnel)
+                    START_TUNNEL=${VALUE}
                     ;;
                 *)
                     echo "ERROR: unknown parameter \"$PARAM\""

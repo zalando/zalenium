@@ -288,18 +288,30 @@ COPY browserstack_capabilities.json /home/seluser/
 #==========
 # Zalenium
 #==========
-ENV ZAL_VER="${project.build.finalName}"
+ENV ZAL_VER="${project.build.finalName}" \
+    BROWSER_STACK_TUNNEL_OPTS="-skipCheck -v -forcelocal" \
+    BROWSER_STACK_TUNNEL_ID="zalenium" \
+    BROWSER_STACK_TUNNEL="false"
+
 COPY entry.sh /usr/bin/
 COPY zalenium.sh /home/seluser/
 COPY LICENSE.md /home/seluser/
 COPY Analytics.md /home/seluser/
 COPY nginx.conf /etc/nginx/
+COPY start-browserstack.sh /home/seluser/
+COPY wait-browserstack.sh /home/seluser/
+COPY start-saucelabs.sh /home/seluser/
+COPY wait-saucelabs.sh /home/seluser/
 COPY ${ZAL_VER}.jar /home/seluser/${ZAL_VER}.jar
 
 #-----------------#
 # Fix perms again #
 #-----------------#
 RUN sudo chmod +x /home/seluser/zalenium.sh \
+  && sudo chmod +x /home/seluser/start-browserstack.sh \
+  && sudo chmod +x /home/seluser/wait-browserstack.sh \
+  && sudo chmod +x /home/seluser/start-saucelabs.sh \
+  && sudo chmod +x /home/seluser/wait-saucelabs.sh \
   && sudo chmod +x /usr/bin/entry.sh
 
 # IMPORTANT: Using the string form `CMD "entry.sh"` without
