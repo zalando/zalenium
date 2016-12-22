@@ -305,6 +305,12 @@ StartUp()
             exit 12
         fi
         echo "Sauce Labs node started!"
+        if [ "$START_TUNNEL" = true ]; then
+            export SAUCE_LOG_FILE="$(pwd)/logs/saucelabs-stdout.log"
+            export SAUCE_TUNNEL="true"
+            echo "Starting Sauce Connect..."
+            ./start-saucelabs.sh &
+        fi
     else
         echo "Sauce Labs not enabled..."
     fi
@@ -322,9 +328,10 @@ StartUp()
         fi
         echo "Browser Stack node started!"
         if [ "$START_TUNNEL" = true ]; then
-            export BROWSER_STACK_LOG_FILE="logs/browserstack-stdout.log"
+            export BROWSER_STACK_LOG_FILE="$(pwd)/logs/browserstack-stdout.log"
+            export BROWSER_STACK_TUNNEL="true"
             echo "Starting BrowserStackLocal..."
-            start-browserstack.sh &
+            ./start-browserstack.sh &
         fi
     else
         echo "Browser Stack not enabled..."
