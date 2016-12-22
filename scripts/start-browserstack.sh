@@ -26,7 +26,7 @@ die () {
 BrowserStackLocal \
   ${BROWSER_STACK_KEY} \
   ${BROWSER_STACK_TUNNEL_OPTS} \
-  -localIdentifier ${BROWSER_STACK_TUNNEL_ID} &
+  -localIdentifier ${BROWSER_STACK_TUNNEL_ID} > ${BROWSER_STACK_LOG_FILE} &
 BROWSER_STACK_TUNNEL_PID=$!
 
 function shutdown {
@@ -38,7 +38,7 @@ function shutdown {
 }
 
 # Now wait for the tunnel to be ready
-timeout --foreground ${BROWSER_STACK_WAIT_TIMEOUT} wait-browserstack.sh
+timeout --foreground ${BROWSER_STACK_WAIT_TIMEOUT} ./wait-browserstack.sh
 
 # Run function shutdown() when this process receives a killing signal
 trap shutdown SIGTERM SIGINT SIGKILL
