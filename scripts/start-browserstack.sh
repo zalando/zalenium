@@ -37,9 +37,6 @@ function shutdown {
   exit 0
 }
 
-# Now wait for the tunnel to be ready
-timeout --foreground ${BROWSER_STACK_WAIT_TIMEOUT} ./wait-browserstack.sh
-
 # Run function shutdown() when this process receives a killing signal
 trap shutdown SIGTERM SIGINT SIGKILL
 

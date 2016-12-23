@@ -310,6 +310,8 @@ StartUp()
             export SAUCE_TUNNEL="true"
             echo "Starting Sauce Connect..."
             ./start-saucelabs.sh &
+            # Now wait for the tunnel to be ready
+            timeout --foreground ${SAUCE_WAIT_TIMEOUT} ./wait-saucelabs.sh
         fi
     else
         echo "Sauce Labs not enabled..."
@@ -332,6 +334,8 @@ StartUp()
             export BROWSER_STACK_TUNNEL="true"
             echo "Starting BrowserStackLocal..."
             ./start-browserstack.sh &
+            # Now wait for the tunnel to be ready
+            timeout --foreground ${BROWSER_STACK_WAIT_TIMEOUT} ./wait-browserstack.sh
         fi
     else
         echo "Browser Stack not enabled..."

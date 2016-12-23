@@ -90,7 +90,8 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     private List<Integer> allocatedPorts = new ArrayList<>();
     private boolean setupCompleted;
 
-    DockerSeleniumStarterRemoteProxy(RegistrationRequest request, Registry registry) {
+    @SuppressWarnings("WeakerAccess")
+    public DockerSeleniumStarterRemoteProxy(RegistrationRequest request, Registry registry) {
         super(updateDSCapabilities(request, DOCKER_SELENIUM_CAPABILITIES_URL), registry);
     }
 
