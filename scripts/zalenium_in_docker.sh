@@ -77,7 +77,7 @@ StartUp()
           -e BROWSER_STACK_USER -e BROWSER_STACK_KEY \
           -v ${VIDEOS_FOLDER}:/home/seluser/videos \
           -v /var/run/docker.sock:/var/run/docker.sock \
-          ${ZALENIUM_DOCKER_IMAGE} start --browserStackEnabled true --sauceLabsEnabled true
+          ${ZALENIUM_DOCKER_IMAGE} start --browserStackEnabled true --sauceLabsEnabled true --startTunnel true
 
     if ! mtimeout --foreground "2m" bash -c WaitZaleniumStarted; then
         echo "Zalenium failed to start after 2 minutes, failing..."
