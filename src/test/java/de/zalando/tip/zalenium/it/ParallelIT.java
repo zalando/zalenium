@@ -2,13 +2,13 @@ package de.zalando.tip.zalenium.it;
 
 import org.openqa.selenium.Platform;
 import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.net.NetworkUtils;
 import org.openqa.selenium.remote.BrowserType;
 import org.openqa.selenium.remote.CapabilityType;
 import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.remote.RemoteWebDriver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.DataProvider;
@@ -17,6 +17,11 @@ import org.testng.annotations.Test;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
+
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.CoreMatchers.containsString;
+
 
 @SuppressWarnings("UnusedParameters")
 public class ParallelIT  {
@@ -47,6 +52,15 @@ public class ParallelIT  {
                 new Object[]{BrowserType.CHROME, Platform.MAC},
                 new Object[]{BrowserType.FIREFOX, Platform.WIN8},
                 new Object[]{BrowserType.IE, Platform.WIN8}
+        };
+    }
+
+    // Data provider which returns the browsers that will be used to run the tests
+    @DataProvider(name = "browsersAndPlatformsForLivePreview")
+    public static Object[][] browsersAndPlatformsForLivePreviewProvider() {
+        return new Object[][] {
+                new Object[]{BrowserType.CHROME, Platform.LINUX},
+                new Object[]{BrowserType.FIREFOX, Platform.ANY},
         };
     }
 
@@ -87,15 +101,46 @@ public class ParallelIT  {
         return webDriver.get();
     }
 
+    @Test(dataProvider = "browsersAndPlatformsForLivePreview")
+    public void checkIframeLinksForLivePreviewWithLocalhost(String browserType, Platform platform) {
+
+        // Go to the homepage
+        getWebDriver().get("http://localhost:4444/grid/admin/live");
+
+        // Get the page source to get the iFrame links
+        String pageSource = getWebDriver().getPageSource();
+        LOGGER.info(pageSource);
+
+        // Assert that the href for the iFrame has the serverName from the request
+        assertThat(pageSource, containsString("http://localhost:5555/proxy/"));
+    }
+
+    @Test(dataProvider = "browsersAndPlatformsForLivePreview")
+    public void checkIframeLinksForLivePreviewWithMachineIp(String browserType, Platform platform) {
+
+        NetworkUtils networkUtils = new NetworkUtils();
+        String hostIpAddress = networkUtils.getIp4NonLoopbackAddressOfThisMachine().getHostAddress();
+
+        // Go to the homepage
+        getWebDriver().get(String.format("http://%s:4444/grid/admin/live", hostIpAddress));
+
+        // Get the page source to get the iFrame links
+        String pageSource = getWebDriver().getPageSource();
+        LOGGER.info(pageSource);
+
+        // Assert that the href for the iFrame has the serverName from the request
+        assertThat(pageSource, containsString(String.format("http://%s:5555/proxy/", hostIpAddress)));
+    }
+
+
     @Test(dataProvider = "browsersAndPlatformsWithTunnel")
     public void loadSeleniumGridAndCheckTitle(String browserType, Platform platform) {
 
         // Go to the homepage
         getWebDriver().get("http://localhost:4444/grid/console");
 
-
         // Assert that the title is the expected one
-        Assert.assertEquals(getWebDriver().getTitle(), "Grid Console");
+        assertThat(getWebDriver().getTitle(), equalTo("Grid Console"));
     }
 
     @Test(dataProvider = "browsersAndPlatforms")
@@ -105,8 +150,7 @@ public class ParallelIT  {
         getWebDriver().get("http://www.zalando.de");
 
         // Assert that the title is the expected one
-        Assert.assertEquals(getWebDriver().getTitle(), "Schuhe & Mode online kaufen | ZALANDO Online Shop",
-                "Page title is not the expected one");
+        assertThat(getWebDriver().getTitle(), equalTo("Schuhe & Mode online kaufen | ZALANDO Online Shop"));
     }
 
     @Test(dataProvider = "browsersAndPlatforms")
@@ -116,7 +160,7 @@ public class ParallelIT  {
         getWebDriver().get("http://www.google.com");
 
         // Assert that the title is the expected one
-        Assert.assertEquals(getWebDriver().getTitle(), "Google", "Page title is not the expected one");
+        assertThat(getWebDriver().getTitle(), equalTo("Google"));
     }
 
 }
