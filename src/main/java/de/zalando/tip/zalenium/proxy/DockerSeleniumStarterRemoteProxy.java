@@ -20,6 +20,7 @@ import org.openqa.grid.internal.TestSession;
 import org.openqa.grid.internal.listeners.RegistrationListener;
 import org.openqa.grid.selenium.proxy.DefaultRemoteProxy;
 import org.openqa.selenium.Platform;
+import org.openqa.selenium.net.NetworkUtils;
 import org.openqa.selenium.remote.BrowserType;
 import org.openqa.selenium.remote.CapabilityType;
 import org.openqa.selenium.remote.DesiredCapabilities;
@@ -331,7 +332,8 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
 
         if (validateAmountOfDockerSeleniumContainers()) {
 
-            String hostIpAddress = "localhost";
+            NetworkUtils networkUtils = new NetworkUtils();
+            String hostIpAddress = networkUtils.getIp4NonLoopbackAddressOfThisMachine().getHostAddress();
 
             /*
                 Building the docker command, depending if Chrome or Firefox is requested.

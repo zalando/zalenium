@@ -23,11 +23,13 @@ PID_PATH_DOCKER_SELENIUM_NODE=/tmp/docker-selenium-node-pid
 PID_PATH_SAUCE_LABS_NODE=/tmp/sauce-labs-node-pid
 PID_PATH_BROWSER_STACK_NODE=/tmp/browser-stack-node-pid
 
+export ZALENIUM_CONTAINER_HOST_IP=$(hostname --all-ip-addresses)
+
 WaitSeleniumHub()
 {
     # Other option is to wait for certain text at
     #  logs/stdout.zalenium.hub.log
-    while ! curl -sSL "http://localhost:4444/wd/hub/status" 2>&1 \
+    while ! curl -sSL "http://$ZALENIUM_CONTAINER_HOST_IP:4444/wd/hub/status" 2>&1 \
             | jq -r '.status' 2>&1 | grep "13" >/dev/null; do
         echo -n '.'
         sleep 0.2
@@ -39,7 +41,7 @@ WaitStarterProxy()
 {
     # Other option is to wait for certain text at
     #  logs/stdout.zalenium.docker.node.log
-    while ! curl -sSL "http://localhost:30000/wd/hub/status" 2>&1 \
+    while ! curl -sSL "http://$ZALENIUM_CONTAINER_HOST_IP:30000/wd/hub/status" 2>&1 \
             | jq -r '.state' 2>&1 | grep "success" >/dev/null; do
         echo -n '.'
         sleep 0.2
@@ -50,7 +52,7 @@ export -f WaitStarterProxy
 WaitSauceLabsProxy()
 {
     # Wait for the sauce node success
-    while ! curl -sSL "http://localhost:30001/wd/hub/status" 2>&1 \
+    while ! curl -sSL "http://$ZALENIUM_CONTAINER_HOST_IP:30001/wd/hub/status" 2>&1 \
             | jq -r '.state' 2>&1 | grep "success" >/dev/null; do
         echo -n '.'
         sleep 0.2
@@ -68,7 +70,7 @@ export -f WaitSauceLabsProxy
 WaitBrowserStackProxy()
 {
     # Wait for the sauce node success
-    while ! curl -sSL "http://localhost:30002/wd/hub/status" 2>&1 \
+    while ! curl -sSL "http://$ZALENIUM_CONTAINER_HOST_IP:30002/wd/hub/status" 2>&1 \
             | jq -r '.state' 2>&1 | grep "success" >/dev/null; do
         echo -n '.'
         sleep 0.2
@@ -265,14 +267,14 @@ StartUp()
 
     if ! timeout --foreground "1m" bash -c WaitSeleniumHub; then
         echo "GridLauncher failed to start after 1 minute, failing..."
-        curl "http://localhost:4444/wd/hub/status"
+        curl "http://$ZALENIUM_CONTAINER_HOST_IP:4444/wd/hub/status"
         exit 11
     fi
     echo "Selenium Hub started!"
 
     echo "Starting DockerSeleniumStarter node..."
 
-    java -jar ${SELENIUM_ARTIFACT} -role node -hub http://localhost:4444/grid/register \
+    java -jar ${SELENIUM_ARTIFACT} -role node -hub http://${ZALENIUM_CONTAINER_HOST_IP}:4444/grid/register \
      -proxy de.zalando.tip.zalenium.proxy.DockerSeleniumStarterRemoteProxy \
      -port 30000 > logs/stdout.zalenium.docker.node.log &
     echo $! > ${PID_PATH_DOCKER_SELENIUM_NODE}
@@ -283,19 +285,19 @@ StartUp()
     fi
     echo "DockerSeleniumStarter node started!"
 
-    if ! curl -sSL "http://localhost:4444" | grep Grid >/dev/null; then
+    if ! curl -sSL "http://$ZALENIUM_CONTAINER_HOST_IP:4444" | grep Grid >/dev/null; then
         echo "Error: The Grid is not listening at port 4444"
         exit 7
     fi
 
-    if ! curl -sSL "http://localhost:5555/proxy/4444/" | grep Grid >/dev/null; then
+    if ! curl -sSL "http://$ZALENIUM_CONTAINER_HOST_IP:5555/proxy/4444/" | grep Grid >/dev/null; then
         echo "Error: Nginx is not redirecting to the grid"
         exit 8
     fi
 
     if [ "$SAUCE_LABS_ENABLED" = true ]; then
         echo "Starting Sauce Labs node..."
-        java -jar ${SELENIUM_ARTIFACT} -role node -hub http://localhost:4444/grid/register \
+        java -jar ${SELENIUM_ARTIFACT} -role node -hub http://${ZALENIUM_CONTAINER_HOST_IP}:4444/grid/register \
          -proxy de.zalando.tip.zalenium.proxy.SauceLabsRemoteProxy \
          -port 30001 > logs/stdout.zalenium.sauce.node.log &
         echo $! > ${PID_PATH_SAUCE_LABS_NODE}
@@ -319,7 +321,7 @@ StartUp()
 
     if [ "$BROWSER_STACK_ENABLED" = true ]; then
         echo "Starting Browser Stack node..."
-        java -jar ${SELENIUM_ARTIFACT} -role node -hub http://localhost:4444/grid/register \
+        java -jar ${SELENIUM_ARTIFACT} -role node -hub http://${ZALENIUM_CONTAINER_HOST_IP}:4444/grid/register \
          -proxy de.zalando.tip.zalenium.proxy.BrowserStackRemoteProxy \
          -port 30002 > logs/stdout.zalenium.browserstack.node.log &
         echo $! > ${PID_PATH_BROWSER_STACK_NODE}
