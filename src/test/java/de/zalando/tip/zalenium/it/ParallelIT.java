@@ -49,9 +49,8 @@ public class ParallelIT  {
     @DataProvider(name = "browsersAndPlatformsWithTunnel")
     public static Object[][] browsersAndPlatformsWithTunnelProvider() {
         return new Object[][] {
-                new Object[]{BrowserType.CHROME, Platform.MAC},
-                new Object[]{BrowserType.FIREFOX, Platform.WIN8},
-                new Object[]{BrowserType.IE, Platform.WIN8}
+                new Object[]{BrowserType.CHROME, Platform.MAC, true},
+                new Object[]{BrowserType.FIREFOX, Platform.WINDOWS, true}
         };
     }
 
@@ -68,15 +67,21 @@ public class ParallelIT  {
     public void startWebDriverAndGetBaseUrl(Method method, Object[] testArgs) throws MalformedURLException {
         String browserType = testArgs[0].toString();
         Platform platform = (Platform) testArgs[1];
+        boolean localTesting = false;
+        if (testArgs.length > 2) {
+            localTesting = testArgs[2] != null && (boolean) testArgs[2];
+        }
         LOGGER.info("STARTING {} on {} - {}", method.getName(), browserType, platform.name());
 
         DesiredCapabilities desiredCapabilities = new DesiredCapabilities();
         desiredCapabilities.setCapability(CapabilityType.BROWSER_NAME, browserType);
         desiredCapabilities.setCapability(CapabilityType.PLATFORM, platform);
         desiredCapabilities.setCapability("name", method.getName());
-        desiredCapabilities.setCapability("browserstack.local", "true");
-        desiredCapabilities.setCapability("browserstack.localIdentifier", "zalenium");
-        desiredCapabilities.setCapability("tunnelIdentifier", "zalenium");
+        if (localTesting) {
+            desiredCapabilities.setCapability("browserstack.local", "true");
+            desiredCapabilities.setCapability("browserstack.localIdentifier", "zalenium");
+            desiredCapabilities.setCapability("tunnelIdentifier", "zalenium");
+        }
 
         try {
             webDriver.set(new RemoteWebDriver(new URL(DOCKER_SELENIUM_URL), desiredCapabilities));
@@ -109,7 +114,6 @@ public class ParallelIT  {
 
         // Get the page source to get the iFrame links
         String pageSource = getWebDriver().getPageSource();
-        LOGGER.info(pageSource);
 
         // Assert that the href for the iFrame has the serverName from the request
         assertThat(pageSource, containsString("http://localhost:5555/proxy/"));
@@ -126,7 +130,6 @@ public class ParallelIT  {
 
         // Get the page source to get the iFrame links
         String pageSource = getWebDriver().getPageSource();
-        LOGGER.info(pageSource);
 
         // Assert that the href for the iFrame has the serverName from the request
         assertThat(pageSource, containsString(String.format("http://%s:5555/proxy/", hostIpAddress)));
@@ -134,7 +137,7 @@ public class ParallelIT  {
 
 
     @Test(dataProvider = "browsersAndPlatformsWithTunnel")
-    public void loadSeleniumGridAndCheckTitle(String browserType, Platform platform) {
+    public void loadSeleniumGridAndCheckTitle(String browserType, Platform platform, boolean local) {
 
         // Go to the homepage
         getWebDriver().get("http://localhost:4444/grid/console");
