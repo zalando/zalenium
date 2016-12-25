@@ -466,6 +466,7 @@ function usage()
     echo -e "\t --maxDockerSeleniumContainers -> Max number of docker-selenium containers running at the same time. Default is 10 when parameter is absent."
     echo -e "\t --sauceLabsEnabled -> Determines if the Sauce Labs node is started. Defaults to 'false' when parameter absent."
     echo -e "\t --browserStackEnabled -> Determines if the Browser Stack node is started. Defaults to 'false' when parameter absent."
+    echo -e "\t --startTunnel -> When using Sauce Labs and/or BrowserStack, starts Sauce Connect and/or BrowserStackLocal respectively. Defaults to 'false'."
     echo -e "\t --videoRecordingEnabled -> Sets if video is recorded in every test. Defaults to 'true' when parameter absent."
     echo -e "\t --screenWidth -> Sets the screen width. Defaults to 1900"
     echo -e "\t --screenHeight -> Sets the screen height. Defaults to 1880"

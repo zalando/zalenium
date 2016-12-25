@@ -85,6 +85,7 @@ NB. The container must be called `zalenium`. This is required because a docker n
   * `--maxDockerSeleniumContainers` -> Max number of docker-selenium containers running at the same time. Default is 10.
   * `--sauceLabsEnabled` -> Start Sauce Labs node or not. Defaults to 'false'.
   * `--browserStackEnabled` -> Start Sauce Labs node or not. Defaults to 'false'.
+  * `--startTunnel` -> When using Sauce Labs and/or BrowserStack, starts Sauce Connect and/or BrowserStackLocal. Defaults to 'false'.
   * `--videoRecordingEnabled` -> Sets if video is recorded in every test. Defaults to 'true'.
   * `--screenWidth` -> Sets the screen width. Defaults to 1900.
   * `--screenHeight` -> Sets the screen height. Defaults to 1880.
