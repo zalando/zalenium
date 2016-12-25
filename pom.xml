@@ -25,9 +25,9 @@
     </licenses>
 
     <scm>
-        <url>https://github.com/zalando-incubator/zalenium</url>
-        <connection>scm:git:https://github.com/zalando-incubator/zalenium</connection>
-        <developerConnection>scm:git:git@github.com:zalando-incubator/zalenium.git</developerConnection>
+        <url>https://github.com/zalando/zalenium</url>
+        <connection>scm:git:https://github.com/zalando/zalenium</connection>
+        <developerConnection>scm:git:git@github.com:zalando/zalenium.git</developerConnection>
     </scm>
 
     <developers>

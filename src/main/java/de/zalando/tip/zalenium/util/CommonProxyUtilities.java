@@ -37,7 +37,7 @@ public class CommonProxyUtilities {
             is.close();
             return new JsonParser().parse(jsonText);
         } catch (Exception e) {
-            LOG.log(Level.SEVERE, e.toString(), e);
+            LOG.log(Level.FINE, e.toString(), e);
         }
         return null;
     }

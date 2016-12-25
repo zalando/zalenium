@@ -12,6 +12,7 @@ SCREEN_WIDTH=1900
 SCREEN_HEIGHT=1880
 TZ="Europe/Berlin"
 SEND_ANONYMOUS_USAGE_INFO=true
+START_TUNNEL=false
 
 GA_TRACKING_ID="UA-88441352-3"
 GA_ENDPOINT=https://www.google-analytics.com/collect
@@ -107,7 +108,7 @@ data will be collected, processed and used by Zalando SE for the purpose of impr
 infrastructure tools. Anonymisation with respect of the IP address means that only the first two octets
 of the IP address are collected.
 
-See the complete license at https://github.com/zalando-incubator/zalenium/blob/master/LICENSE.md"
+See the complete license at https://github.com/zalando/zalenium/blob/master/LICENSE.md"
     echo "*************************************** Data Processing Agreement ***************************************"
 }
 
@@ -146,7 +147,6 @@ DockerTerminate()
         if [[ "${project.build.finalName}.jar" == *"SNAPSHOT"* ]]; then
             echo "Not sending info to GA since this is a SNAPSHOT version"
         else
-            echo "Sending info to GA"
             curl ${GA_ENDPOINT} "${args[@]}" \
                 --silent --output /dev/null &>/dev/null
         fi
@@ -305,6 +305,14 @@ StartUp()
             exit 12
         fi
         echo "Sauce Labs node started!"
+        if [ "$START_TUNNEL" = true ]; then
+            export SAUCE_LOG_FILE="$(pwd)/logs/saucelabs-stdout.log"
+            export SAUCE_TUNNEL="true"
+            echo "Starting Sauce Connect..."
+            ./start-saucelabs.sh &
+            # Now wait for the tunnel to be ready
+            timeout --foreground ${SAUCE_WAIT_TIMEOUT} ./wait-saucelabs.sh
+        fi
     else
         echo "Sauce Labs not enabled..."
     fi
@@ -321,6 +329,14 @@ StartUp()
             exit 12
         fi
         echo "Browser Stack node started!"
+        if [ "$START_TUNNEL" = true ]; then
+            export BROWSER_STACK_LOG_FILE="$(pwd)/logs/browserstack-stdout.log"
+            export BROWSER_STACK_TUNNEL="true"
+            echo "Starting BrowserStackLocal..."
+            ./start-browserstack.sh &
+            # Now wait for the tunnel to be ready
+            timeout --foreground ${BROWSER_STACK_WAIT_TIMEOUT} ./wait-browserstack.sh
+        fi
     else
         echo "Browser Stack not enabled..."
     fi
@@ -373,7 +389,6 @@ StartUp()
         if [[ "${project.build.finalName}.jar" == *"SNAPSHOT"* ]]; then
             echo "Not sending info to GA since this is a SNAPSHOT version"
         else
-            echo "Sending info to GA"
             curl ${GA_ENDPOINT} \
                 "${args[@]}" --silent --output /dev/null &>/dev/null & disown
         fi
@@ -451,6 +466,7 @@ function usage()
     echo -e "\t --maxDockerSeleniumContainers -> Max number of docker-selenium containers running at the same time. Default is 10 when parameter is absent."
     echo -e "\t --sauceLabsEnabled -> Determines if the Sauce Labs node is started. Defaults to 'false' when parameter absent."
     echo -e "\t --browserStackEnabled -> Determines if the Browser Stack node is started. Defaults to 'false' when parameter absent."
+    echo -e "\t --startTunnel -> When using Sauce Labs and/or BrowserStack, starts Sauce Connect and/or BrowserStackLocal respectively. Defaults to 'false'."
     echo -e "\t --videoRecordingEnabled -> Sets if video is recorded in every test. Defaults to 'true' when parameter absent."
     echo -e "\t --screenWidth -> Sets the screen width. Defaults to 1900"
     echo -e "\t --screenHeight -> Sets the screen height. Defaults to 1880"
@@ -515,6 +531,9 @@ case ${SCRIPT_ACTION} in
                     ;;
                 --sendAnonymousUsageInfo)
                     SEND_ANONYMOUS_USAGE_INFO=${VALUE}
+                    ;;
+                --startTunnel)
+                    START_TUNNEL=${VALUE}
                     ;;
                 *)
                     echo "ERROR: unknown parameter \"$PARAM\""
