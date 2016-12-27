@@ -258,9 +258,8 @@ StartUp()
 
     mkdir -p logs
 
-    java -cp ${SELENIUM_ARTIFACT}:${ZALENIUM_ARTIFACT} org.openqa.grid.selenium.GridLauncher \
-    -role hub -port 4445 -servlets de.zalando.tip.zalenium.servlet.live \
-    -throwOnCapabilityNotPresent true > logs/stdout.zalenium.hub.log &
+    java -cp ${SELENIUM_ARTIFACT}:${ZALENIUM_ARTIFACT} org.openqa.grid.selenium.GridLauncherV3 \
+    -role hub -port 4445 -servlets de.zalando.tip.zalenium.servlet.live > logs/stdout.zalenium.hub.log &
     echo $! > ${PID_PATH_SELENIUM}
 
     if ! timeout --foreground "1m" bash -c WaitSeleniumHub; then
