@@ -11,7 +11,6 @@ import org.openqa.grid.web.servlet.beta.SlotsLines;
 import org.openqa.selenium.Platform;
 import org.openqa.selenium.remote.CapabilityType;
 
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -22,6 +21,7 @@ public class LiveNodeHtmlRenderer implements HtmlRenderer {
     private RemoteProxy proxy;
     private String serverName;
 
+    @SuppressWarnings("WeakerAccess")
     public LiveNodeHtmlRenderer(RemoteProxy proxy, String serverName) {
         this.proxy = proxy;
         this.serverName = serverName;
@@ -68,19 +68,11 @@ public class LiveNodeHtmlRenderer implements HtmlRenderer {
     }
 
     // content of the config tab.
+    @SuppressWarnings("StringBufferReplaceableByString")
     private String tabConfig() {
         StringBuilder builder = new StringBuilder();
         builder.append("<div type='config' class='content_detail'>");
-        Map<String, Object> config = proxy.getConfig();
-
-        for (Map.Entry<String, Object> entry : config.entrySet()) {
-            builder.append("<p>");
-            builder.append(entry.getKey());
-            builder.append(":");
-            builder.append(entry.getValue());
-            builder.append("</p>");
-        }
-
+        builder.append(proxy.getConfig().toString("<p>%1$s: %2$s</p>"));
         builder.append("</div>");
         return builder.toString();
     }

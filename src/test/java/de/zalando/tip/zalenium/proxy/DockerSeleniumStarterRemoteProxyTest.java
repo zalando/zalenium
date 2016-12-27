@@ -153,10 +153,10 @@ public class DockerSeleniumStarterRemoteProxyTest {
         RegistrationRequest registrationRequest = new RegistrationRequest();
         String url = "this_is_not_a_url";
         registrationRequest = DockerSeleniumStarterRemoteProxy.updateDSCapabilities(registrationRequest, url);
-        Assert.assertEquals("Should return 2 capabilities", registrationRequest.getCapabilities().size(), 2);
-        Assert.assertThat(registrationRequest.getCapabilities().toString(), CoreMatchers.containsString(BrowserType.FIREFOX));
-        Assert.assertThat(registrationRequest.getCapabilities().toString(), CoreMatchers.containsString(BrowserType.CHROME));
-        Assert.assertThat(registrationRequest.getCapabilities().toString(), CoreMatchers.containsString(Platform.LINUX.name()));
+        Assert.assertEquals("Should return 2 capabilities", registrationRequest.getConfiguration().capabilities.size(), 2);
+        Assert.assertThat(registrationRequest.getConfiguration().capabilities.toString(), CoreMatchers.containsString(BrowserType.FIREFOX));
+        Assert.assertThat(registrationRequest.getConfiguration().capabilities.toString(), CoreMatchers.containsString(BrowserType.CHROME));
+        Assert.assertThat(registrationRequest.getConfiguration().capabilities.toString(), CoreMatchers.containsString(Platform.LINUX.name()));
     }
 
     @Test
@@ -167,10 +167,10 @@ public class DockerSeleniumStarterRemoteProxyTest {
         RegistrationRequest registrationRequest = new RegistrationRequest();
         String url = "https://www.google.com";
         registrationRequest = DockerSeleniumStarterRemoteProxy.updateDSCapabilities(registrationRequest, url);
-        Assert.assertEquals("Should return 2 capabilities", registrationRequest.getCapabilities().size(), 2);
-        Assert.assertThat(registrationRequest.getCapabilities().toString(), CoreMatchers.containsString(BrowserType.FIREFOX));
-        Assert.assertThat(registrationRequest.getCapabilities().toString(), CoreMatchers.containsString(BrowserType.CHROME));
-        Assert.assertThat(registrationRequest.getCapabilities().toString(), CoreMatchers.containsString(Platform.LINUX.name()));
+        Assert.assertEquals("Should return 2 capabilities", registrationRequest.getConfiguration().capabilities.size(), 2);
+        Assert.assertThat(registrationRequest.getConfiguration().capabilities.toString(), CoreMatchers.containsString(BrowserType.FIREFOX));
+        Assert.assertThat(registrationRequest.getConfiguration().capabilities.toString(), CoreMatchers.containsString(BrowserType.CHROME));
+        Assert.assertThat(registrationRequest.getConfiguration().capabilities.toString(), CoreMatchers.containsString(Platform.LINUX.name()));
     }
 
     @Test
@@ -181,10 +181,10 @@ public class DockerSeleniumStarterRemoteProxyTest {
         RegistrationRequest registrationRequest = new RegistrationRequest();
         String url = "http://ip.jsontest.com/";
         registrationRequest = DockerSeleniumStarterRemoteProxy.updateDSCapabilities(registrationRequest, url);
-        Assert.assertEquals("Should return 2 capabilities", registrationRequest.getCapabilities().size(), 2);
-        Assert.assertThat(registrationRequest.getCapabilities().toString(), CoreMatchers.containsString(BrowserType.FIREFOX));
-        Assert.assertThat(registrationRequest.getCapabilities().toString(), CoreMatchers.containsString(BrowserType.CHROME));
-        Assert.assertThat(registrationRequest.getCapabilities().toString(), CoreMatchers.containsString(Platform.LINUX.name()));
+        Assert.assertEquals("Should return 2 capabilities", registrationRequest.getConfiguration().capabilities.size(), 2);
+        Assert.assertThat(registrationRequest.getConfiguration().capabilities.toString(), CoreMatchers.containsString(BrowserType.FIREFOX));
+        Assert.assertThat(registrationRequest.getConfiguration().capabilities.toString(), CoreMatchers.containsString(BrowserType.CHROME));
+        Assert.assertThat(registrationRequest.getConfiguration().capabilities.toString(), CoreMatchers.containsString(Platform.LINUX.name()));
     }
 
     /*
@@ -342,19 +342,16 @@ public class DockerSeleniumStarterRemoteProxyTest {
         RegistrationRequest request = TestUtils.getRegistrationRequestForTesting(30000,
                 DockerSeleniumStarterRemoteProxy.class.getCanonicalName());
 
-        // Assuring the capabilities are empty
-        Assert.assertTrue(request.getCapabilities().isEmpty());
-
         request = DockerSeleniumStarterRemoteProxy.updateDSCapabilities(request,
                 DockerSeleniumStarterRemoteProxy.DOCKER_SELENIUM_CAPABILITIES_URL);
 
         // Now the capabilities should be filled even if the url was not fetched
-        Assert.assertFalse(request.getCapabilities().isEmpty());
+        Assert.assertFalse(request.getConfiguration().capabilities.isEmpty());
 
-        Assert.assertEquals("Should return 2 capabilities", request.getCapabilities().size(), 2);
-        Assert.assertThat(request.getCapabilities().toString(), CoreMatchers.containsString(BrowserType.FIREFOX));
-        Assert.assertThat(request.getCapabilities().toString(), CoreMatchers.containsString(BrowserType.CHROME));
-        Assert.assertThat(request.getCapabilities().toString(), CoreMatchers.containsString(Platform.LINUX.name()));
+        Assert.assertEquals("Should return 2 capabilities", request.getConfiguration().capabilities.size(), 2);
+        Assert.assertThat(request.getConfiguration().capabilities.toString(), CoreMatchers.containsString(BrowserType.FIREFOX));
+        Assert.assertThat(request.getConfiguration().capabilities.toString(), CoreMatchers.containsString(BrowserType.CHROME));
+        Assert.assertThat(request.getConfiguration().capabilities.toString(), CoreMatchers.containsString(Platform.LINUX.name()));
     }
 
 }

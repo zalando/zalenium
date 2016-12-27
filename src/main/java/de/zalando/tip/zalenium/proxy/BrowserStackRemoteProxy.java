@@ -35,7 +35,7 @@ public class BrowserStackRemoteProxy extends CloudTestingRemoteProxy {
     private static RegistrationRequest updateBSCapabilities(RegistrationRequest registrationRequest, String url) {
         JsonElement bsCapabilities = getCommonProxyUtilities().readJSONFromUrl(url);
         try {
-            registrationRequest.getCapabilities().clear();
+            registrationRequest.getConfiguration().capabilities.clear();
             String userPasswordSuppress = String.format("%s:%s@", BROWSER_STACK_USER, BROWSER_STACK_KEY);
             String logMessage = String.format("[BS] Capabilities fetched from %s", url.replace(userPasswordSuppress, ""));
             if (bsCapabilities == null) {
@@ -62,8 +62,8 @@ public class BrowserStackRemoteProxy extends CloudTestingRemoteProxy {
             String os = capAsJsonObject.get("os").getAsString();
             String osVersion = capAsJsonObject.get("os_version").getAsString();
             desiredCapabilities.setPlatform(getPlatform(os, osVersion));
-            if (!registrationRequest.getCapabilities().contains(desiredCapabilities)) {
-                registrationRequest.addDesiredCapability(desiredCapabilities);
+            if (!registrationRequest.getConfiguration().capabilities.contains(desiredCapabilities)) {
+                registrationRequest.getConfiguration().capabilities.add(desiredCapabilities);
             }
         }
         return registrationRequest;

@@ -126,8 +126,8 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
      */
     @VisibleForTesting
     static RegistrationRequest updateDSCapabilities(RegistrationRequest registrationRequest, String url) {
-        registrationRequest.getCapabilities().clear();
-        registrationRequest.getCapabilities().addAll(getCapabilities(url));
+        registrationRequest.getConfiguration().capabilities.clear();
+        registrationRequest.getConfiguration().capabilities.addAll(getCapabilities(url));
         return registrationRequest;
     }
 
