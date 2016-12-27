@@ -14,9 +14,13 @@ if [ "$TRAVIS_PULL_REQUEST" = "false" ] && [ -n "${TRAVIS_TAG}" ] && [ "${TRAVIS
     echo "Logged in to docker with user '${DOCKER_USERNAME}'"
     echo "docker tag and docker push using TRAVIS_TAG=${TRAVIS_TAG}"
     docker tag zalenium:${TRAVIS_TAG} dosel/zalenium:${TRAVIS_TAG}
-    docker tag zalenium:${TRAVIS_TAG} dosel/zalenium:latest
     docker push dosel/zalenium:${TRAVIS_TAG} | tee docker_push.log
-    docker push dosel/zalenium:latest
+    if [[ "${TRAVIS_TAG}" == "3."* ]]; then
+        echo "Not marking image with Selenium 3 as latest for now..."
+    else
+        docker tag zalenium:${TRAVIS_TAG} dosel/zalenium:latest
+        docker push dosel/zalenium:latest
+    fi
 else
 	echo "Image not being pushed, either this is a PR, no tag is set, or the branch is not master."
 fi
