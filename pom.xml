@@ -49,7 +49,7 @@
 
     <properties>
         <selenium-server.major-minor.version>3.0</selenium-server.major-minor.version>
-        <selenium-server.patch-level.version>0</selenium-server.patch-level.version>
+        <selenium-server.patch-level.version>1</selenium-server.patch-level.version>
         <docker-client.version>6.1.1</docker-client.version>
         <junit.version>4.12</junit.version>
         <mockito.version>2.3.0</mockito.version>
