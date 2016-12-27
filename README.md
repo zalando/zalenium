@@ -163,10 +163,14 @@ Zalenium works conceptually in a simple way:
 
 Basically, the tool makes the grid expand or contract depending on the amount of requests received.
 
-## About the project versioning
+## Selenium 2 and Selenium 3 - About the project versioning
 * To make life easy for people who want to use it, we are now using as a version number the Selenium version being supported.
-* E.g. This release is `2.53.1a`, this means that this version is built with and supports Selenium 2.53.1.
+* The major-minor version combined with the patch level will indicate the Selenium version being supported. E.g.
+  * When a release is `2.53.1a`, it supports Selenium 2.53.1.
+  * When a release is `3.0.0a`, it supports Selenium 3.0.0.
+  
 * The versioning will be similar to the one used in [docker-selenium](https://github.com/elgalu/docker-selenium)
+* Until Selenium 3 gets more widely used than Selenium 2, `latest` will refer to the most recent docker image supporting Selenium 2. 
 
 ## Integrated Cloud Testing solutions
 * Thanks to the open source accounts we got, we have integrated so far:
@@ -174,9 +178,6 @@ Basically, the tool makes the grid expand or contract depending on the amount of
 ![BrowserStack](./images/browserstack_logo.png)    ![Sauce Labs](./images/saucelabs_logo.png)
 
 If you want to integrate another cloud testing solution, we are happy to receive PRs or requests via issues, don't forget to check the [guidelines](CONTRIBUTING.md) for contributing.
-
-## Features coming in the next weeks
-* Upgrading to Selenium 3 (Selenium 2.53.1 will still be supported of course).
 
 License
 ===================
