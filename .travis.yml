@@ -11,10 +11,8 @@ before_install:
   - docker pull elgalu/selenium
 
 script:
-  # Run SonarQube analysis
   - ./run_sonar_qube_analysis.sh
-  # Run integration tests
-  - travis_retry mvn clean verify -Pintegration-test -DthreadCountProperty=2 -Dskip.surefire.tests=true
+  - travis_retry ./run_integration_tests.sh
   # Run unit tests for coverage
   - mvn clean package -Pcoverage-report
 
