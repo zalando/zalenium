@@ -73,18 +73,11 @@ public class TestingBotRemoteProxy extends CloudTestingRemoteProxy {
         return browserName;
     }
 
-    private static Platform getPlatform(String os, String osVersion) {
-        if ("ios".equalsIgnoreCase(os)) {
-            return Platform.MAC;
+    private static Platform getPlatform(String os) {
+        if ("windows 2012".equalsIgnoreCase(os)) {
+            return Platform.WIN8;
         }
-        if ("windows".equalsIgnoreCase(os)) {
-            if ("xp".equalsIgnoreCase(osVersion)) {
-                return Platform.extractFromSysProperty(os);
-            } else {
-                return Platform.extractFromSysProperty(os + " " + osVersion);
-            }
-        }
-        return Platform.extractFromSysProperty(osVersion);
+        return Platform.extractFromSysProperty(os);
     }
 
     @Override
