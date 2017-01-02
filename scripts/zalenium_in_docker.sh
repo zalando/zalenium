@@ -64,6 +64,19 @@ StartUp()
         exit 5
     fi
 
+    TESTINGBOT_USER="${TESTINGBOT_USER:=abc}"
+    TESTINGBOT_KEY="${TESTINGBOT_KEY:=abc}"
+
+    if [ "$TESTINGBOT_USER" = abc ]; then
+        echo "TESTINGBOT_USER environment variable is not set, cannot start TestingBot node, exiting..."
+        exit 4
+    fi
+
+    if [ "$TESTINGBOT_KEY" = abc ]; then
+        echo "TESTINGBOT_KEY environment variable is not set, cannot start TestingBot node, exiting..."
+        exit 5
+    fi
+
     echo "Starting Zalenium in docker..."
 
     IN_TRAVIS="${CI:=false}"
@@ -75,9 +88,10 @@ StartUp()
     docker run -d -ti --name zalenium -p 4444:4444 -p 5555:5555 \
           -e SAUCE_USERNAME -e SAUCE_ACCESS_KEY \
           -e BROWSER_STACK_USER -e BROWSER_STACK_KEY \
+          -e TESTINGBOT_USER -e TESTINGBOT_KEY \
           -v ${VIDEOS_FOLDER}:/home/seluser/videos \
           -v /var/run/docker.sock:/var/run/docker.sock \
-          ${ZALENIUM_DOCKER_IMAGE} start --browserStackEnabled true --sauceLabsEnabled true --startTunnel true
+          ${ZALENIUM_DOCKER_IMAGE} start --browserStackEnabled true --sauceLabsEnabled true --testingbotEnabled true --startTunnel true
 
     if ! mtimeout --foreground "2m" bash -c WaitZaleniumStarted; then
         echo "Zalenium failed to start after 2 minutes, failing..."

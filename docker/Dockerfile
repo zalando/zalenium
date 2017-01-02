@@ -242,7 +242,7 @@ RUN cd /tmp \
 # -----------------------#
 # BrowserStack Tunneling #
 # -----------------------#
-# https://www.browserstack.com/local-testing
+# https://testingbot.com/support/other/tunnel
 # Layer size: medium: 16.02 MB
 ENV BSTACK_TUNNEL_URL="https://www.browserstack.com/browserstack-local" \
     BSTACK_TUNNEL_ZIP="BrowserStackLocal-linux-x64.zip"
@@ -253,6 +253,17 @@ RUN cd /tmp \
   && rm "${BSTACK_TUNNEL_ZIP}" \
   && mv BrowserStackLocal /usr/local/bin \
   && which BrowserStackLocal
+
+# -----------------------#
+# TestingBot Tunneling #
+# -----------------------#
+# https://www.browserstack.com/local-testing
+# Layer size: medium: 16.02 MB
+ENV TB_TUNNEL_URL="https://testingbot.com/tunnel/testingbot-tunnel.jar"
+RUN cd /tmp \
+  && wget -nv "${TB_TUNNEL_URL}" \
+  && mv testingbot-tunnel.jar /usr/local/bin \
+  && which testingbot-tunnel.jar
 
 #===================================================
 # Run the following commands as non-privileged user
@@ -285,6 +296,11 @@ RUN  export SAUCE_LABS_CAPABILITIES="https://saucelabs.com/rest/v1/info/platform
 #================================
 COPY browserstack_capabilities.json /home/seluser/
 
+#================================
+# TestingBot capabilities backup
+#================================
+COPY testingbot_capabilities.json /home/seluser/
+
 #==========
 # Zalenium
 #==========
@@ -298,7 +314,10 @@ ENV ZAL_VER="${project.build.finalName}" \
     SAUCE_TUNNEL_ID="zalenium" \
     SAUCE_TUNNEL_DOCTOR_TEST="false" \
     SAUCE_WAIT_TIMEOUT="2m" \
-    SAUCE_TUNNEL="false"
+    SAUCE_TUNNEL="false" \
+    TESTINGBOT_TUNNEL_OPTS="-skipCheck -v -forcelocal" \
+    TESTINGBOT_TUNNEL="false" \
+    TESTINGBOT_WAIT_TIMEOUT="2m"
 
 COPY entry.sh /usr/bin/
 COPY zalenium.sh /home/seluser/
@@ -309,6 +328,8 @@ COPY start-browserstack.sh /home/seluser/
 COPY wait-browserstack.sh /home/seluser/
 COPY start-saucelabs.sh /home/seluser/
 COPY wait-saucelabs.sh /home/seluser/
+COPY start-testingbot.sh /home/seluser/
+COPY wait-testingbot.sh /home/seluser/
 COPY ${ZAL_VER}.jar /home/seluser/${ZAL_VER}.jar
 
 #-----------------#
@@ -319,6 +340,8 @@ RUN sudo chmod +x /home/seluser/zalenium.sh \
   && sudo chmod +x /home/seluser/wait-browserstack.sh \
   && sudo chmod +x /home/seluser/start-saucelabs.sh \
   && sudo chmod +x /home/seluser/wait-saucelabs.sh \
+  && sudo chmod +x /home/seluser/start-testingbot.sh \
+  && sudo chmod +x /home/seluser/wait-testingbot.sh \
   && sudo chmod +x /usr/bin/entry.sh
 
 # IMPORTANT: Using the string form `CMD "entry.sh"` without

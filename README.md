@@ -3,14 +3,14 @@
 [![codecov](https://codecov.io/gh/zalando/zalenium/branch/master/graph/badge.svg)](https://codecov.io/gh/zalando/zalenium)
 
 # What is Zalenium?
-A Selenium Grid extension to scale up and down your local grid dynamically with docker containers. It uses [docker-selenium](https://github.com/elgalu/docker-selenium) to run your tests in Firefox and Chrome locally, and when you need a different browser, your tests get redirected to [Sauce Labs](https://saucelabs.com/) and/or [BrowserStack](https://www.browserstack.com/).
+A Selenium Grid extension to scale up and down your local grid dynamically with docker containers. It uses [docker-selenium](https://github.com/elgalu/docker-selenium) to run your tests in Firefox and Chrome locally, and when you need a different browser, your tests get redirected to [Sauce Labs](https://saucelabs.com/) and/or [BrowserStack](https://www.browserstack.com/) and/or [TestingBot](https://testingbot.com/).
 
 ### Why Zalenium?
 We know how complicated is to have a stable grid to run UI tests with Selenium, and moreover how hard is to maintain it over time. It is also very difficult to have a local grid with enough capabilities to cover all browsers and platforms.
 
 Therefore we are trying this approach where [docker-selenium](https://github.com/elgalu/docker-selenium) nodes are created, used and disposed on demand when possible. With this, you can run faster your UI tests with Firefox and Chrome since they are running on a local grid, on a node created from scratch and disposed after the test finishes.
 
-And whenever you need a capability that cannot be fulfilled by [docker-selenium](https://github.com/elgalu/docker-selenium), then the test gets redirected to [Sauce Labs](https://saucelabs.com/) and/or [BrowserStack](https://www.browserstack.com/).
+And whenever you need a capability that cannot be fulfilled by [docker-selenium](https://github.com/elgalu/docker-selenium), then the test gets redirected to [Sauce Labs](https://saucelabs.com/) and/or [BrowserStack](https://www.browserstack.com/) and/or [TestingBot](https://testingbot.com/).
 
 This creates Zalenium's main goal: to allow anyone to have a disposable and flexible Selenium Grid infrastructure.
 
@@ -25,12 +25,12 @@ You can use the Zalenium already, but it is still under development and open for
 * Download the [docker-selenium](https://github.com/elgalu/docker-selenium) image. `docker pull elgalu/selenium`
 * JDK8+
 * *nix platform (tested only in OSX and Ubuntu, not tested on Windows yet).
-* If you want to use the [Sauce Labs](https://saucelabs.com/) and/or the [BrowserStack](https://www.browserstack.com/) feature, you need an account with them.
+* If you want to use the [Sauce Labs](https://saucelabs.com/) and/or the [BrowserStack](https://www.browserstack.com/) and/or the [TestingBot](https://testingbot.com/) feature, you need an account with them.
 
 #### Setting it up
 * Make sure your docker daemon is running
 * `docker pull dosel/zalenium`
-* If you want to use [Sauce Labs](https://saucelabs.com/) and/or [BrowserStack](https://www.browserstack.com/), export your user and API key as environment variables
+* If you want to use [Sauce Labs](https://saucelabs.com/) and/or [BrowserStack](https://www.browserstack.com/) and/or [TestingBot](https://testingbot.com/), export your user and API key as environment variables
 ```sh
   # Sauce Labs
   export SAUCE_USERNAME=<your Sauce Labs username>
@@ -40,6 +40,11 @@ You can use the Zalenium already, but it is still under development and open for
   # BrowserStack
   export BROWSER_STACK_USER=<your BrowserStack username>
   export BROWSER_STACK_KEY=<your BrowserStack access key>
+```
+```sh
+  # TestingBot
+  export TESTINGBOT_USER=<your TestingBot username>
+  export TESTINGBOT_KEY=<your TestingBot access key>
 ```
 
 #### Running it
@@ -53,15 +58,18 @@ NB. The container must be called `zalenium`. This is required because a docker n
     export SAUCE_ACCESS_KEY=<your Sauce Labs access key>
     export BROWSER_STACK_USER=<your BrowserStack username>
     export BROWSER_STACK_KEY=<your BrowserStack access key>
+    export TESTINGBOT_USER=<your TestingBot username>
+    export TESTINGBOT_KEY=<your TestingBot access key>
     docker run --rm -ti --name zalenium -p 4444:4444 -p 5555:5555 \
       -e SAUCE_USERNAME -e SAUCE_ACCESS_KEY \
       -e BROWSER_STACK_USER -e BROWSER_STACK_KEY \
+      -e TESTINGBOT_USER -e TESTINGBOT_KEY \
       -v /tmp/videos:/home/seluser/videos \
       -v /var/run/docker.sock:/var/run/docker.sock \
       dosel/zalenium start --browserStackEnabled true --sauceLabsEnabled true
   ```
 
-* Start it without Sauce Labs nor BrowserStack enabled:
+* Start it without Sauce Labs, BrowserStack nor TestingBot enabled:
   ```sh
     docker run --rm -ti --name zalenium -p 4444:4444 -p 5555:5555 \
       -v /var/run/docker.sock:/var/run/docker.sock \
@@ -84,8 +92,9 @@ NB. The container must be called `zalenium`. This is required because a docker n
   * `--firefoxContainers` -> Firefox nodes created on startup. Default is 1.
   * `--maxDockerSeleniumContainers` -> Max number of docker-selenium containers running at the same time. Default is 10.
   * `--sauceLabsEnabled` -> Start Sauce Labs node or not. Defaults to 'false'.
-  * `--browserStackEnabled` -> Start Sauce Labs node or not. Defaults to 'false'.
-  * `--startTunnel` -> When using Sauce Labs and/or BrowserStack, starts Sauce Connect and/or BrowserStackLocal. Defaults to 'false'.
+  * `--browserStackEnabled` -> Start BrowserStack node or not. Defaults to 'false'.
+  * `--testingbotEnabled` -> Start TestingBot node or not. Defaults to 'false'.
+  * `--startTunnel` -> When using Sauce Labs and/or BrowserStack and/or TestingBot, starts Sauce Connect and/or BrowserStackLocal and/or TestingBot Tunnel. Defaults to 'false'.
   * `--videoRecordingEnabled` -> Sets if video is recorded in every test. Defaults to 'true'.
   * `--screenWidth` -> Sets the screen width. Defaults to 1900.
   * `--screenHeight` -> Sets the screen height. Defaults to 1880.
@@ -159,7 +168,7 @@ Zalenium works conceptually in a simple way:
 4. If the request can be executed on [docker-selenium](https://github.com/elgalu/docker-selenium), a docker container is created on the run, and the test request is sent back to the hub while the new node registers.
 5. After the hub acknowledges the new node, it processes the test request with it.
 6. The test is executed, and then container is disposed.
-7. If the test cannot be executed in [docker-selenium](https://github.com/elgalu/docker-selenium), it will processed by [Sauce Labs](https://saucelabs.com/) and/or [BrowserStack](https://www.browserstack.com/). It takes the HTTP request, adds the user and api key to it, and forwards it to the cloud platform.
+7. If the test cannot be executed in [docker-selenium](https://github.com/elgalu/docker-selenium), it will processed by [Sauce Labs](https://saucelabs.com/) and/or [BrowserStack](https://www.browserstack.com/) and/or [TestingBot](https://testingbot.com/). It takes the HTTP request, adds the user and api key to it, and forwards it to the cloud platform.
 
 Basically, the tool makes the grid expand or contract depending on the amount of requests received.
 
@@ -175,7 +184,7 @@ Basically, the tool makes the grid expand or contract depending on the amount of
 ## Integrated Cloud Testing solutions
 * Thanks to the open source accounts we got, we have integrated so far:
 
-![BrowserStack](./images/browserstack_logo.png)    ![Sauce Labs](./images/saucelabs_logo.png)
+![BrowserStack](./images/browserstack_logo.png)    ![Sauce Labs](./images/saucelabs_logo.png)     ![TestingBot](./images/testingbot_logo.png)
 
 If you want to integrate another cloud testing solution, we are happy to receive PRs or requests via issues, don't forget to check the [guidelines](CONTRIBUTING.md) for contributing.
 
