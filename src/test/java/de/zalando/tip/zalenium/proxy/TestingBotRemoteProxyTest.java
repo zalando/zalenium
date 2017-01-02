@@ -91,4 +91,97 @@ public class TestingBotRemoteProxyTest {
 
         Assert.assertNotNull(testSession);
     }
+
+    @Test
+    public void credentialsAreAddedInSessionCreation() throws IOException {
+        // Capability which should result in a created session
+        Map<String, Object> requestedCapability = new HashMap<>();
+        requestedCapability.put(CapabilityType.BROWSER_NAME, BrowserType.IE);
+        requestedCapability.put(CapabilityType.PLATFORM, Platform.WIN8);
+
+        // Getting a test session in the sauce labs node
+        TestSession testSession = testingBotProxy.getNewSession(requestedCapability);
+        Assert.assertNotNull(testSession);
+
+        // We need to mock all the needed objects to forward the session and see how in the beforeMethod
+        // the SauceLabs user and api key get added to the body request.
+        WebDriverRequest request = mock(WebDriverRequest.class);
+        when(request.getRequestURI()).thenReturn("session");
+        when(request.getServletPath()).thenReturn("session");
+        when(request.getContextPath()).thenReturn("");
+        when(request.getMethod()).thenReturn("POST");
+        when(request.getRequestType()).thenReturn(RequestType.START_SESSION);
+        JsonObject jsonObject = new JsonObject();
+        JsonObject desiredCapabilities = new JsonObject();
+        desiredCapabilities.addProperty(CapabilityType.BROWSER_NAME, BrowserType.IE);
+        desiredCapabilities.addProperty(CapabilityType.PLATFORM, Platform.WIN8.name());
+        jsonObject.add("desiredCapabilities", desiredCapabilities);
+        when(request.getBody()).thenReturn(jsonObject.toString());
+
+        Enumeration<String> strings = Collections.emptyEnumeration();
+        when(request.getHeaderNames()).thenReturn(strings);
+
+        HttpServletResponse response = mock(HttpServletResponse.class);
+        ServletOutputStream stream = mock(ServletOutputStream.class);
+        when(response.getOutputStream()).thenReturn(stream);
+
+        testSession.forward(request, response, true);
+
+        Environment env = new Environment();
+
+        // The body should now have the TestingBot variables
+        String expectedBody = String.format("{\"desiredCapabilities\":{\"browserName\":\"internet explorer\",\"platform\":" +
+                                "\"WIN8\",\"key\":\"%s\",\"secret\":\"%s\"}}",
+                        env.getStringEnvVariable("TESTINGBOT_USER", ""),
+                        env.getStringEnvVariable("TESTINGBOT_KEY", ""));
+        verify(request).setBody(expectedBody);
+    }
+
+    @Test
+    public void requestIsNotModifiedInOtherRequestTypes() throws IOException {
+        // Capability which should result in a created session
+        Map<String, Object> requestedCapability = new HashMap<>();
+        requestedCapability.put(CapabilityType.BROWSER_NAME, BrowserType.IE);
+        requestedCapability.put(CapabilityType.PLATFORM, Platform.WIN8);
+
+        // Getting a test session in the sauce labs node
+        TestSession testSession = testingBotProxy.getNewSession(requestedCapability);
+        Assert.assertNotNull(testSession);
+
+        // We need to mock all the needed objects to forward the session and see how in the beforeMethod
+        // the SauceLabs user and api key get added to the body request.
+        WebDriverRequest request = mock(WebDriverRequest.class);
+        when(request.getRequestURI()).thenReturn("session");
+        when(request.getServletPath()).thenReturn("session");
+        when(request.getContextPath()).thenReturn("");
+        when(request.getMethod()).thenReturn("POST");
+        when(request.getRequestType()).thenReturn(RequestType.REGULAR);
+        JsonObject jsonObject = new JsonObject();
+        JsonObject desiredCapabilities = new JsonObject();
+        desiredCapabilities.addProperty(CapabilityType.BROWSER_NAME, BrowserType.IE);
+        desiredCapabilities.addProperty(CapabilityType.PLATFORM, Platform.WIN8.name());
+        jsonObject.add("desiredCapabilities", desiredCapabilities);
+        when(request.getBody()).thenReturn(jsonObject.toString());
+
+        Enumeration<String> strings = Collections.emptyEnumeration();
+        when(request.getHeaderNames()).thenReturn(strings);
+
+        HttpServletResponse response = mock(HttpServletResponse.class);
+        ServletOutputStream stream = mock(ServletOutputStream.class);
+        when(response.getOutputStream()).thenReturn(stream);
+
+        testSession.forward(request, response, true);
+
+        // The body should not be affected and not contain the TestingBot variables
+        Assert.assertThat(request.getBody(), CoreMatchers.containsString(jsonObject.toString()));
+        Assert.assertThat(request.getBody(), CoreMatchers.not(CoreMatchers.containsString("key")));
+        Assert.assertThat(request.getBody(), CoreMatchers.not(CoreMatchers.containsString("secret")));
+
+        when(request.getMethod()).thenReturn("GET");
+
+        testSession.forward(request, response, true);
+        Assert.assertThat(request.getBody(), CoreMatchers.containsString(jsonObject.toString()));
+        Assert.assertThat(request.getBody(), CoreMatchers.not(CoreMatchers.containsString("key")));
+        Assert.assertThat(request.getBody(), CoreMatchers.not(CoreMatchers.containsString("secret")));
+    }
 }

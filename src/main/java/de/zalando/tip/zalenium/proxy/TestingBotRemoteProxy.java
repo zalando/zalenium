@@ -33,18 +33,18 @@ public class TestingBotRemoteProxy extends CloudTestingRemoteProxy {
 
     @VisibleForTesting
     private static RegistrationRequest updateTBCapabilities(RegistrationRequest registrationRequest, String url) {
-        JsonElement bsCapabilities = getCommonProxyUtilities().readJSONFromUrl(url);
+        JsonElement tbCapabilities = getCommonProxyUtilities().readJSONFromUrl(url);
         try {
             registrationRequest.getCapabilities().clear();
             String userPasswordSuppress = String.format("%s:%s@", TESTINGBOT_USER, TESTINGBOT_KEY);
             String logMessage = String.format("[TB] Capabilities fetched from %s", url.replace(userPasswordSuppress, ""));
-            if (bsCapabilities == null) {
+            if (tbCapabilities == null) {
                 logMessage = String.format("[TB] Capabilities were NOT fetched from %s, loading from backup file",
                         url.replace(userPasswordSuppress, ""));
-                bsCapabilities = getCommonProxyUtilities().readJSONFromFile(TESTINGBOT_CAPABILITIES_BK_FILE);
+                tbCapabilities = getCommonProxyUtilities().readJSONFromFile(TESTINGBOT_CAPABILITIES_BK_FILE);
             }
             logger.log(Level.INFO, logMessage);
-            return addCapabilitiesToRegistrationRequest(registrationRequest, bsCapabilities);
+            return addCapabilitiesToRegistrationRequest(registrationRequest, tbCapabilities);
         } catch (Exception e) {
             logger.log(Level.SEVERE, e.toString(), e);
             getGa().trackException(e);
@@ -52,8 +52,8 @@ public class TestingBotRemoteProxy extends CloudTestingRemoteProxy {
         return registrationRequest;
     }
 
-    private static RegistrationRequest addCapabilitiesToRegistrationRequest(RegistrationRequest registrationRequest, JsonElement slCapabilities) {
-        for (JsonElement cap : slCapabilities.getAsJsonArray()) {
+    private static RegistrationRequest addCapabilitiesToRegistrationRequest(RegistrationRequest registrationRequest, JsonElement tbCapabilities) {
+        for (JsonElement cap : tbCapabilities.getAsJsonArray()) {
             JsonObject capAsJsonObject = cap.getAsJsonObject();
             DesiredCapabilities desiredCapabilities = new DesiredCapabilities();
             desiredCapabilities.setCapability(RegistrationRequest.MAX_INSTANCES, 5);
