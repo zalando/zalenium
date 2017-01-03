@@ -23,12 +23,12 @@ public class TestingBotRemoteProxy extends CloudTestingRemoteProxy {
     private static final String TESTINGBOT_CAPABILITIES_URL = "https://%s:%s@api.testingbot.com/v1/browsers";
     private static final Logger logger = Logger.getLogger(TestingBotRemoteProxy.class.getName());
     private static final String TESTINGBOT_CAPABILITIES_BK_FILE = "testingbot_capabilities.json";
-    private static final String TESTINGBOT_USER = getEnv().getStringEnvVariable("TESTINGBOT_USER", "");
     private static final String TESTINGBOT_KEY = getEnv().getStringEnvVariable("TESTINGBOT_KEY", "");
+    private static final String TESTINGBOT_SECRET = getEnv().getStringEnvVariable("TESTINGBOT_SECRET", "");
 
     public TestingBotRemoteProxy(RegistrationRequest request, Registry registry) {
-        super(updateTBCapabilities(request, String.format(TESTINGBOT_CAPABILITIES_URL, TESTINGBOT_USER,
-                TESTINGBOT_KEY)), registry);
+        super(updateTBCapabilities(request, String.format(TESTINGBOT_CAPABILITIES_URL, TESTINGBOT_KEY,
+                TESTINGBOT_SECRET)), registry);
     }
 
     @VisibleForTesting
@@ -36,7 +36,7 @@ public class TestingBotRemoteProxy extends CloudTestingRemoteProxy {
         JsonElement tbCapabilities = getCommonProxyUtilities().readJSONFromUrl(url);
         try {
             registrationRequest.getCapabilities().clear();
-            String userPasswordSuppress = String.format("%s:%s@", TESTINGBOT_USER, TESTINGBOT_KEY);
+            String userPasswordSuppress = String.format("%s:%s@", TESTINGBOT_KEY, TESTINGBOT_SECRET);
             String logMessage = String.format("[TB] Capabilities fetched from %s", url.replace(userPasswordSuppress, ""));
             if (tbCapabilities == null) {
                 logMessage = String.format("[TB] Capabilities were NOT fetched from %s, loading from backup file",
@@ -93,7 +93,7 @@ public class TestingBotRemoteProxy extends CloudTestingRemoteProxy {
 
     @Override
     String getUserNameValue() {
-        return TESTINGBOT_USER;
+        return TESTINGBOT_KEY;
     }
 
     @Override
@@ -103,7 +103,7 @@ public class TestingBotRemoteProxy extends CloudTestingRemoteProxy {
 
     @Override
     String getAccessKeyValue() {
-        return TESTINGBOT_KEY;
+        return TESTINGBOT_SECRET;
     }
 
     @Override

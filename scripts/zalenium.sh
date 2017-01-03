@@ -246,16 +246,16 @@ StartUp()
     fi
 
     if [ "$TESTINGBOT_ENABLED" = true ]; then
-        TESTINGBOT_USER="${TESTINGBOT_USER:=abc}"
         TESTINGBOT_KEY="${TESTINGBOT_KEY:=abc}"
-
-        if [ "$TESTINGBOT_USER" = abc ]; then
-            echo "TESTINGBOT_USER environment variable is not set, cannot start TestingBot node, exiting..."
-            exit 4
-        fi
+        TESTINGBOT_SECRET="${TESTINGBOT_SECRET:=abc}"
 
         if [ "$TESTINGBOT_KEY" = abc ]; then
             echo "TESTINGBOT_KEY environment variable is not set, cannot start TestingBot node, exiting..."
+            exit 4
+        fi
+
+        if [ "$TESTINGBOT_SECRET" = abc ]; then
+            echo "TESTINGBOT_SECRET environment variable is not set, cannot start TestingBot node, exiting..."
             exit 5
         fi
     fi
@@ -420,7 +420,7 @@ StartUp()
         ZALENIUM_START_COMMAND="zalenium.sh --chromeContainers $CHROME_CONTAINERS --firefoxContainers
             $FIREFOX_CONTAINERS --maxDockerSeleniumContainers $MAX_DOCKER_SELENIUM_CONTAINERS
             --sauceLabsEnabled $SAUCE_LABS_ENABLED --browserStackEnabled $BROWSER_STACK_ENABLED
-            --testingbotEnabled $TESTINGBOT_ENABLED --videoRecordingEnabled $VIDEO_RECORDING_ENABLED
+            --testingBotEnabled $TESTINGBOT_ENABLED --videoRecordingEnabled $VIDEO_RECORDING_ENABLED
             --screenWidth $SCREEN_WIDTH --screenHeight $SCREEN_HEIGHT --timeZone $TZ"
 
         local args=(
@@ -537,7 +537,7 @@ function usage()
     echo -e "\t --maxDockerSeleniumContainers -> Max number of docker-selenium containers running at the same time. Default is 10 when parameter is absent."
     echo -e "\t --sauceLabsEnabled -> Determines if the Sauce Labs node is started. Defaults to 'false' when parameter absent."
     echo -e "\t --browserStackEnabled -> Determines if the Browser Stack node is started. Defaults to 'false' when parameter absent."
-    echo -e "\t --testingbotEnabled -> Determines if the TestingBot node is started. Defaults to 'false' when parameter absent."
+    echo -e "\t --testingBotEnabled -> Determines if the TestingBot node is started. Defaults to 'false' when parameter absent."
     echo -e "\t --startTunnel -> When using a cloud testing platfor is enabled, starts the tunnel to allow local testing. Defaults to 'false'."
     echo -e "\t --videoRecordingEnabled -> Sets if video is recorded in every test. Defaults to 'true' when parameter absent."
     echo -e "\t --screenWidth -> Sets the screen width. Defaults to 1900"
@@ -553,7 +553,7 @@ function usage()
     echo -e "\t - Starting Zalenium with 2 Firefox containers and with BrowserStack"
     echo -e "\t start --chromeContainers 2 --browserStackEnabled true"
     echo -e "\t - Starting Zalenium with 2 Firefox containers and with TestingBot"
-    echo -e "\t start --chromeContainers 2 --testingbotEnabled true"
+    echo -e "\t start --chromeContainers 2 --testingBotEnabled true"
     echo -e "\t - Starting Zalenium screen width 1440 and height 810, time zone \"America/Montreal\""
     echo -e "\t start --screenWidth 1440 --screenHeight 810 --timeZone \"America/Montreal\""
 }
@@ -591,7 +591,7 @@ case ${SCRIPT_ACTION} in
                 --browserStackEnabled)
                     BROWSER_STACK_ENABLED=${VALUE}
                     ;;
-                --testingbotEnabled)
+                --testingBotEnabled)
                     TESTINGBOT_ENABLED=${VALUE}
                     ;;
                 --videoRecordingEnabled)

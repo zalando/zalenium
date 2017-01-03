@@ -43,8 +43,8 @@ You can use the Zalenium already, but it is still under development and open for
 ```
 ```sh
   # TestingBot
-  export TESTINGBOT_USER=<your TestingBot username>
   export TESTINGBOT_KEY=<your TestingBot access key>
+  export TESTINGBOT_SECRET=<your TestingBot secret>
 ```
 
 #### Running it
@@ -87,7 +87,7 @@ NB. The container must be called `zalenium`. This is required because a docker n
     export TESTINGBOT_USER=<your TestingBot username>
     export TESTINGBOT_KEY=<your TestingBot access key>
     docker run --rm -ti --name zalenium -p 4444:4444 -p 5555:5555 \
-      -e TESTINGBOT_USER -e TESTINGBOT_KEY \
+      -e TESTINGBOT_KEY -e TESTINGBOT_SECRET \
       -v /tmp/videos:/home/seluser/videos \
       -v /var/run/docker.sock:/var/run/docker.sock \
       dosel/zalenium start --testingBotEnabled true
