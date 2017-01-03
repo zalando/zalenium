@@ -245,6 +245,21 @@ StartUp()
         fi
     fi
 
+    if [ "$TESTINGBOT_ENABLED" = true ]; then
+        TESTINGBOT_USER="${TESTINGBOT_USER:=abc}"
+        TESTINGBOT_KEY="${TESTINGBOT_KEY:=abc}"
+
+        if [ "$TESTINGBOT_USER" = abc ]; then
+            echo "TESTINGBOT_USER environment variable is not set, cannot start TestingBot node, exiting..."
+            exit 4
+        fi
+
+        if [ "$TESTINGBOT_KEY" = abc ]; then
+            echo "TESTINGBOT_KEY environment variable is not set, cannot start TestingBot node, exiting..."
+            exit 5
+        fi
+    fi
+
     export ZALENIUM_CHROME_CONTAINERS=${CHROME_CONTAINERS}
     export ZALENIUM_FIREFOX_CONTAINERS=${FIREFOX_CONTAINERS}
     export ZALENIUM_MAX_DOCKER_SELENIUM_CONTAINERS=${MAX_DOCKER_SELENIUM_CONTAINERS}

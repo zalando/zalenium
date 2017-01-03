@@ -69,12 +69,12 @@ StartUp()
 
     if [ "$TESTINGBOT_USER" = abc ]; then
         echo "TESTINGBOT_USER environment variable is not set, cannot start TestingBot node, exiting..."
-        exit 4
+        exit 6
     fi
 
     if [ "$TESTINGBOT_KEY" = abc ]; then
         echo "TESTINGBOT_KEY environment variable is not set, cannot start TestingBot node, exiting..."
-        exit 5
+        exit 7
     fi
 
     echo "Starting Zalenium in docker..."
@@ -95,7 +95,7 @@ StartUp()
 
     if ! mtimeout --foreground "2m" bash -c WaitZaleniumStarted; then
         echo "Zalenium failed to start after 2 minutes, failing..."
-        exit 6
+        exit 8
     fi
 
     echo "Zalenium in docker started!"
