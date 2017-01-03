@@ -52,29 +52,45 @@ Zalenium uses docker to scale on-demand, therefore we need to give it the `docke
 
 NB. The container must be called `zalenium`. This is required because a docker network with this name will be created to allow all containers to locate each other without too much hassle.
 
-* Start it with Sauce Labs and BrowserStack enabled:
-  ```sh
-    export SAUCE_USERNAME=<your Sauce Labs username>
-    export SAUCE_ACCESS_KEY=<your Sauce Labs access key>
-    export BROWSER_STACK_USER=<your BrowserStack username>
-    export BROWSER_STACK_KEY=<your BrowserStack access key>
-    export TESTINGBOT_USER=<your TestingBot username>
-    export TESTINGBOT_KEY=<your TestingBot access key>
-    docker run --rm -ti --name zalenium -p 4444:4444 -p 5555:5555 \
-      -e SAUCE_USERNAME -e SAUCE_ACCESS_KEY \
-      -e BROWSER_STACK_USER -e BROWSER_STACK_KEY \
-      -e TESTINGBOT_USER -e TESTINGBOT_KEY \
-      -v /tmp/videos:/home/seluser/videos \
-      -v /var/run/docker.sock:/var/run/docker.sock \
-      dosel/zalenium start --browserStackEnabled true --sauceLabsEnabled true
-  ```
-
-* Start it without Sauce Labs, BrowserStack nor TestingBot enabled:
+* Start it without any of the integrated cloud testing platforms enabled:
   ```sh
     docker run --rm -ti --name zalenium -p 4444:4444 -p 5555:5555 \
       -v /var/run/docker.sock:/var/run/docker.sock \
       -v /tmp/videos:/home/seluser/videos \
       dosel/zalenium start 
+  ```
+
+* Start it with Sauce Labs enabled:
+  ```sh
+    export SAUCE_USERNAME=<your Sauce Labs username>
+    export SAUCE_ACCESS_KEY=<your Sauce Labs access key>
+    docker run --rm -ti --name zalenium -p 4444:4444 -p 5555:5555 \
+      -e SAUCE_USERNAME -e SAUCE_ACCESS_KEY \
+      -v /tmp/videos:/home/seluser/videos \
+      -v /var/run/docker.sock:/var/run/docker.sock \
+      dosel/zalenium start --sauceLabsEnabled true
+  ```
+
+* Start it with BrowserStack enabled:
+  ```sh
+    export BROWSER_STACK_USER=<your BrowserStack username>
+    export BROWSER_STACK_KEY=<your BrowserStack access key>
+    docker run --rm -ti --name zalenium -p 4444:4444 -p 5555:5555 \
+      -e BROWSER_STACK_USER -e BROWSER_STACK_KEY \
+      -v /tmp/videos:/home/seluser/videos \
+      -v /var/run/docker.sock:/var/run/docker.sock \
+      dosel/zalenium start --browserStackEnabled true
+  ```
+
+* Start it with TestingBot enabled:
+  ```sh
+    export TESTINGBOT_USER=<your TestingBot username>
+    export TESTINGBOT_KEY=<your TestingBot access key>
+    docker run --rm -ti --name zalenium -p 4444:4444 -p 5555:5555 \
+      -e TESTINGBOT_USER -e TESTINGBOT_KEY \
+      -v /tmp/videos:/home/seluser/videos \
+      -v /var/run/docker.sock:/var/run/docker.sock \
+      dosel/zalenium start --testingBotEnabled true
   ```
 
 * Start it with screen width and height, and time zone:
@@ -163,12 +179,12 @@ If you want to verify your changes locally with the existing tests (please doubl
 Zalenium works conceptually in a simple way:
 
 1. A Selenium Hub is started, listening to port 4444.
-2. One custom node for [docker-selenium](https://github.com/elgalu/docker-selenium), one for [Sauce Labs](https://saucelabs.com/) and one for [BrowserStack](https://www.browserstack.com/) are started and get registered to the grid.
+2. One custom node for [docker-selenium](https://github.com/elgalu/docker-selenium), and when enabled, one for [Sauce Labs](https://saucelabs.com/) and/or one for [BrowserStack](https://www.browserstack.com/) and/or one for [TestingBot](https://testingbot.com) are started and get registered to the grid.
 3. When a test request arrives to the hub, the requested capabilities are verified against each one of the nodes.
 4. If the request can be executed on [docker-selenium](https://github.com/elgalu/docker-selenium), a docker container is created on the run, and the test request is sent back to the hub while the new node registers.
 5. After the hub acknowledges the new node, it processes the test request with it.
 6. The test is executed, and then container is disposed.
-7. If the test cannot be executed in [docker-selenium](https://github.com/elgalu/docker-selenium), it will processed by [Sauce Labs](https://saucelabs.com/) and/or [BrowserStack](https://www.browserstack.com/) and/or [TestingBot](https://testingbot.com/). It takes the HTTP request, adds the user and api key to it, and forwards it to the cloud platform.
+7. If the test cannot be executed in [docker-selenium](https://github.com/elgalu/docker-selenium), it will processed by one of the enabled cloud testing platforms. It takes the HTTP request, adds the user and api key to it, and forwards it to the cloud platform.
 
 Basically, the tool makes the grid expand or contract depending on the amount of requests received.
 
