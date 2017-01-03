@@ -242,7 +242,7 @@ RUN cd /tmp \
 # -----------------------#
 # BrowserStack Tunneling #
 # -----------------------#
-# https://testingbot.com/support/other/tunnel
+# https://www.browserstack.com/local-testing
 # Layer size: medium: 16.02 MB
 ENV BSTACK_TUNNEL_URL="https://www.browserstack.com/browserstack-local" \
     BSTACK_TUNNEL_ZIP="BrowserStackLocal-linux-x64.zip"
@@ -257,8 +257,7 @@ RUN cd /tmp \
 # -----------------------#
 # TestingBot Tunneling #
 # -----------------------#
-# https://www.browserstack.com/local-testing
-# Layer size: medium: 16.02 MB
+# https://testingbot.com/support/other/tunnel
 ENV TB_TUNNEL_URL="https://testingbot.com/tunnel/testingbot-tunnel.jar"
 RUN cd /tmp \
   && wget -nv "${TB_TUNNEL_URL}" \
