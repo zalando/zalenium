@@ -88,7 +88,7 @@ export -f WaitBrowserStackProxy
 WaitTestingBotProxy()
 {
     # Wait for the testingbot node success
-    while ! curl -sSL "http://localhost:30002/wd/hub/status" 2>&1 \
+    while ! curl -sSL "http://localhost:30003/wd/hub/status" 2>&1 \
             | jq -r '.state' 2>&1 | grep "success" >/dev/null; do
         echo -n '.'
         sleep 0.2
@@ -365,7 +365,7 @@ StartUp()
         echo "Starting TestingBot node..."
         java -jar ${SELENIUM_ARTIFACT} -role node -hub http://localhost:4444/grid/register \
          -proxy de.zalando.tip.zalenium.proxy.TestingBotRemoteProxy \
-         -port 30002 > logs/stdout.zalenium.testingbot.node.log &
+         -port 30003 > logs/stdout.zalenium.testingbot.node.log &
         echo $! > ${PID_PATH_TESTINGBOT_NODE}
 
         if ! timeout --foreground "40s" bash -c WaitTestingBotProxy; then
@@ -405,9 +405,8 @@ StartUp()
         ZALENIUM_START_COMMAND="zalenium.sh --chromeContainers $CHROME_CONTAINERS --firefoxContainers
             $FIREFOX_CONTAINERS --maxDockerSeleniumContainers $MAX_DOCKER_SELENIUM_CONTAINERS
             --sauceLabsEnabled $SAUCE_LABS_ENABLED --browserStackEnabled $BROWSER_STACK_ENABLED
-            --testingbotEnabled $TESTINGBOT_ENABLED
-            --videoRecordingEnabled $VIDEO_RECORDING_ENABLED --screenWidth $SCREEN_WIDTH
-            --screenHeight $SCREEN_HEIGHT --timeZone $TZ"
+            --testingbotEnabled $TESTINGBOT_ENABLED --videoRecordingEnabled $VIDEO_RECORDING_ENABLED
+            --screenWidth $SCREEN_WIDTH --screenHeight $SCREEN_HEIGHT --timeZone $TZ"
 
         local args=(
             --max-time 10
@@ -524,7 +523,7 @@ function usage()
     echo -e "\t --sauceLabsEnabled -> Determines if the Sauce Labs node is started. Defaults to 'false' when parameter absent."
     echo -e "\t --browserStackEnabled -> Determines if the Browser Stack node is started. Defaults to 'false' when parameter absent."
     echo -e "\t --testingbotEnabled -> Determines if the TestingBot node is started. Defaults to 'false' when parameter absent."
-    echo -e "\t --startTunnel -> When using Sauce Labs and/or BrowserStack and/or TestingBot, starts Sauce Connect and/or BrowserStackLocal and/or TestingBot Tunnel respectively. Defaults to 'false'."
+    echo -e "\t --startTunnel -> When using a cloud testing platfor is enabled, starts the tunnel to allow local testing. Defaults to 'false'."
     echo -e "\t --videoRecordingEnabled -> Sets if video is recorded in every test. Defaults to 'true' when parameter absent."
     echo -e "\t --screenWidth -> Sets the screen width. Defaults to 1900"
     echo -e "\t --screenHeight -> Sets the screen height. Defaults to 1880"
