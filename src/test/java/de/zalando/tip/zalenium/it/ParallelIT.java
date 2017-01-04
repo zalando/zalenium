@@ -78,6 +78,7 @@ public class ParallelIT  {
         desiredCapabilities.setCapability(CapabilityType.PLATFORM, platform);
         desiredCapabilities.setCapability("name", method.getName());
         if (localTesting) {
+            desiredCapabilities.setCapability("tunnel", "true");
             desiredCapabilities.setCapability("browserstack.local", "true");
             desiredCapabilities.setCapability("browserstack.localIdentifier", "zalenium");
             desiredCapabilities.setCapability("tunnelIdentifier", "zalenium");
