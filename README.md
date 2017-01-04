@@ -141,6 +141,7 @@ Basically, the tool makes the grid expand or contract depending on the amount of
 * The major-minor version combined with the patch level will indicate the Selenium version being supported. E.g.
   * When a release is `2.53.1a`, it supports Selenium 2.53.1.
   * When a release is `3.0.0a`, it supports Selenium 3.0.0.
+  * The badges above show the latest image versions for Selenium 2 and 3.
   
 * The versioning will be similar to the one used in [docker-selenium](https://github.com/elgalu/docker-selenium)
 * Until Selenium 3 gets more widely used than Selenium 2, `latest` will refer to the most recent docker image supporting Selenium 2. 

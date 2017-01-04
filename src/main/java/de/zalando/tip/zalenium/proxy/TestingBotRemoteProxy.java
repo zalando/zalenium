@@ -7,7 +7,6 @@ import org.openqa.grid.common.RegistrationRequest;
 import org.openqa.grid.internal.Registry;
 import org.openqa.grid.internal.TestSession;
 import org.openqa.selenium.Platform;
-import org.openqa.selenium.remote.BrowserType;
 import org.openqa.selenium.remote.DesiredCapabilities;
 
 import java.util.*;
@@ -64,13 +63,6 @@ public class TestingBotRemoteProxy extends CloudTestingRemoteProxy {
             }
         }
         return registrationRequest;
-    }
-
-    private static String getBrowser(String browserName) {
-        if ("ie".equalsIgnoreCase(browserName)) {
-            return BrowserType.IE;
-        }
-        return browserName;
     }
 
     private static Platform getPlatform(String os) {

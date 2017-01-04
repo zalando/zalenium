@@ -132,8 +132,8 @@ public class TestingBotRemoteProxyTest {
         // The body should now have the TestingBot variables
         String expectedBody = String.format("{\"desiredCapabilities\":{\"browserName\":\"internet explorer\",\"platform\":" +
                                 "\"WIN8\",\"key\":\"%s\",\"secret\":\"%s\"}}",
-                        env.getStringEnvVariable("TESTINGBOT_USER", ""),
-                        env.getStringEnvVariable("TESTINGBOT_KEY", ""));
+                        env.getStringEnvVariable("TESTINGBOT_KEY", ""),
+                        env.getStringEnvVariable("TESTINGBOT_SECRET", ""));
         verify(request).setBody(expectedBody);
     }
 
