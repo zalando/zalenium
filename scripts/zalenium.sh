@@ -7,6 +7,7 @@ SELENIUM_ARTIFACT="$(pwd)/selenium-server-standalone-${selenium-server.major-min
 ZALENIUM_ARTIFACT="$(pwd)/${project.build.finalName}.jar"
 SAUCE_LABS_ENABLED=false
 BROWSER_STACK_ENABLED=false
+TESTINGBOT_ENABLED=false
 VIDEO_RECORDING_ENABLED=true
 SCREEN_WIDTH=1900
 SCREEN_HEIGHT=1880
@@ -21,7 +22,11 @@ GA_API_VERSION="1"
 PID_PATH_SELENIUM=/tmp/selenium-pid
 PID_PATH_DOCKER_SELENIUM_NODE=/tmp/docker-selenium-node-pid
 PID_PATH_SAUCE_LABS_NODE=/tmp/sauce-labs-node-pid
+PID_PATH_TESTINGBOT_NODE=/tmp/testingbot-node-pid
 PID_PATH_BROWSER_STACK_NODE=/tmp/browser-stack-node-pid
+PID_PATH_SAUCE_LABS_TUNNEL=/tmp/sauce-labs-tunnel-pid
+PID_PATH_TESTINGBOT_TUNNEL=/tmp/testingbot-tunnel-pid
+PID_PATH_BROWSER_STACK_TUNNEL=/tmp/browser-stack-tunnel-pid
 
 WaitSeleniumHub()
 {
@@ -82,6 +87,24 @@ WaitBrowserStackProxy()
     done
 }
 export -f WaitBrowserStackProxy
+
+WaitTestingBotProxy()
+{
+    # Wait for the testingbot node success
+    while ! curl -sSL "http://localhost:30003/wd/hub/status" 2>&1 \
+            | jq -r '.state' 2>&1 | grep "success" >/dev/null; do
+        echo -n '.'
+        sleep 0.2
+    done
+
+    # Also wait for the testingbot url though this is optional
+    DONE_MSG="hub.testingbot.com"
+    while ! docker logs zalenium | grep "${DONE_MSG}" >/dev/null; do
+        echo -n '.'
+        sleep 0.2
+    done
+}
+export -f WaitTestingBotProxy
 
 EnsureCleanEnv()
 {
@@ -225,6 +248,21 @@ StartUp()
         fi
     fi
 
+    if [ "$TESTINGBOT_ENABLED" = true ]; then
+        TESTINGBOT_KEY="${TESTINGBOT_KEY:=abc}"
+        TESTINGBOT_SECRET="${TESTINGBOT_SECRET:=abc}"
+
+        if [ "$TESTINGBOT_KEY" = abc ]; then
+            echo "TESTINGBOT_KEY environment variable is not set, cannot start TestingBot node, exiting..."
+            exit 4
+        fi
+
+        if [ "$TESTINGBOT_SECRET" = abc ]; then
+            echo "TESTINGBOT_SECRET environment variable is not set, cannot start TestingBot node, exiting..."
+            exit 5
+        fi
+    fi
+
     export ZALENIUM_CHROME_CONTAINERS=${CHROME_CONTAINERS}
     export ZALENIUM_FIREFOX_CONTAINERS=${FIREFOX_CONTAINERS}
     export ZALENIUM_MAX_DOCKER_SELENIUM_CONTAINERS=${MAX_DOCKER_SELENIUM_CONTAINERS}
@@ -310,6 +348,7 @@ StartUp()
             export SAUCE_TUNNEL="true"
             echo "Starting Sauce Connect..."
             ./start-saucelabs.sh &
+            echo $! > ${PID_PATH_SAUCE_LABS_TUNNEL}
             # Now wait for the tunnel to be ready
             timeout --foreground ${SAUCE_WAIT_TIMEOUT} ./wait-saucelabs.sh
         fi
@@ -334,11 +373,37 @@ StartUp()
             export BROWSER_STACK_TUNNEL="true"
             echo "Starting BrowserStackLocal..."
             ./start-browserstack.sh &
+            echo $! > ${PID_PATH_BROWSER_STACK_TUNNEL}
             # Now wait for the tunnel to be ready
             timeout --foreground ${BROWSER_STACK_WAIT_TIMEOUT} ./wait-browserstack.sh
         fi
     else
         echo "Browser Stack not enabled..."
+    fi
+
+    if [ "$TESTINGBOT_ENABLED" = true ]; then
+        echo "Starting TestingBot node..."
+        java -jar ${SELENIUM_ARTIFACT} -role node -hub http://localhost:4444/grid/register \
+         -proxy de.zalando.tip.zalenium.proxy.TestingBotRemoteProxy \
+         -port 30003 > logs/stdout.zalenium.testingbot.node.log &
+        echo $! > ${PID_PATH_TESTINGBOT_NODE}
+
+        if ! timeout --foreground "40s" bash -c WaitTestingBotProxy; then
+            echo "TestingBotRemoteProxy failed to start after 40 seconds, failing..."
+            exit 12
+        fi
+        echo "TestingBot node started!"
+        if [ "$START_TUNNEL" = true ]; then
+            export TESTINGBOT_LOG_FILE="$(pwd)/logs/testingbot-stdout.log"
+            export TESTINGBOT_TUNNEL="true"
+            echo "Starting TestingBot Tunnel..."
+            ./start-testingbot.sh &
+            echo $! > ${PID_PATH_TESTINGBOT_TUNNEL}
+            # Now wait for the tunnel to be ready
+            timeout --foreground ${TESTINGBOT_WAIT_TIMEOUT} ./wait-testingbot.sh
+        fi
+    else
+        echo "TestingBot not enabled..."
     fi
 
     echo "Zalenium is now ready!"
@@ -361,8 +426,8 @@ StartUp()
         ZALENIUM_START_COMMAND="zalenium.sh --chromeContainers $CHROME_CONTAINERS --firefoxContainers
             $FIREFOX_CONTAINERS --maxDockerSeleniumContainers $MAX_DOCKER_SELENIUM_CONTAINERS
             --sauceLabsEnabled $SAUCE_LABS_ENABLED --browserStackEnabled $BROWSER_STACK_ENABLED
-            --videoRecordingEnabled $VIDEO_RECORDING_ENABLED --screenWidth $SCREEN_WIDTH
-            --screenHeight $SCREEN_HEIGHT --timeZone $TZ"
+            --testingBotEnabled $TESTINGBOT_ENABLED --videoRecordingEnabled $VIDEO_RECORDING_ENABLED
+            --screenWidth $SCREEN_WIDTH --screenHeight $SCREEN_HEIGHT --timeZone $TZ"
 
         local args=(
             --max-time 10
@@ -451,6 +516,57 @@ ShutDown()
         fi
     fi
 
+    if [ -f ${PID_PATH_TESTINGBOT_NODE} ];
+    then
+        echo "Stopping TestingBot node..."
+        PID=$(cat ${PID_PATH_TESTINGBOT_NODE});
+        kill ${PID};
+        if [ ${_returnedValue} -ne 0 ] ; then
+            echo "Failed to send kill signal to TestingBot node!"
+        else
+            rm ${PID_PATH_TESTINGBOT_NODE}
+        fi
+    fi
+
+    if [ -f ${PID_PATH_SAUCE_LABS_TUNNEL} ];
+    then
+        echo "Stopping Sauce Connect..."
+        PID=$(cat ${PID_PATH_SAUCE_LABS_TUNNEL});
+        kill -SIGTERM ${PID};
+        wait ${PID};
+        if [ ${_returnedValue} -ne 0 ] ; then
+            echo "Failed to send kill signal to Sauce Connect!"
+        else
+            rm ${PID_PATH_SAUCE_LABS_TUNNEL}
+        fi
+    fi
+
+    if [ -f ${PID_PATH_BROWSER_STACK_TUNNEL} ];
+    then
+        echo "Stopping BrowserStackLocal..."
+        PID=$(cat ${PID_PATH_BROWSER_STACK_TUNNEL});
+        kill -SIGTERM ${PID};
+        wait ${PID};
+        if [ ${_returnedValue} -ne 0 ] ; then
+            echo "Failed to send kill signal to BrowserStackLocal!"
+        else
+            rm ${PID_PATH_BROWSER_STACK_TUNNEL}
+        fi
+    fi
+
+    if [ -f ${PID_PATH_TESTINGBOT_TUNNEL} ];
+    then
+        echo "Stopping TestingBot tunnel..."
+        PID=$(cat ${PID_PATH_TESTINGBOT_TUNNEL});
+        kill -SIGTERM ${PID};
+        wait ${PID};
+        if [ ${_returnedValue} -ne 0 ] ; then
+            echo "Failed to send kill signal to the TestingBot tunnel!"
+        else
+            rm ${PID_PATH_TESTINGBOT_TUNNEL}
+        fi
+    fi
+
     EnsureCleanEnv
 }
 
@@ -466,7 +582,8 @@ function usage()
     echo -e "\t --maxDockerSeleniumContainers -> Max number of docker-selenium containers running at the same time. Default is 10 when parameter is absent."
     echo -e "\t --sauceLabsEnabled -> Determines if the Sauce Labs node is started. Defaults to 'false' when parameter absent."
     echo -e "\t --browserStackEnabled -> Determines if the Browser Stack node is started. Defaults to 'false' when parameter absent."
-    echo -e "\t --startTunnel -> When using Sauce Labs and/or BrowserStack, starts Sauce Connect and/or BrowserStackLocal respectively. Defaults to 'false'."
+    echo -e "\t --testingBotEnabled -> Determines if the TestingBot node is started. Defaults to 'false' when parameter absent."
+    echo -e "\t --startTunnel -> When using a cloud testing platform is enabled, starts the tunnel to allow local testing. Defaults to 'false'."
     echo -e "\t --videoRecordingEnabled -> Sets if video is recorded in every test. Defaults to 'true' when parameter absent."
     echo -e "\t --screenWidth -> Sets the screen width. Defaults to 1900"
     echo -e "\t --screenHeight -> Sets the screen height. Defaults to 1880"
@@ -480,6 +597,8 @@ function usage()
     echo -e "\t start --chromeContainers 2 --sauceLabsEnabled true"
     echo -e "\t - Starting Zalenium with 2 Firefox containers and with BrowserStack"
     echo -e "\t start --chromeContainers 2 --browserStackEnabled true"
+    echo -e "\t - Starting Zalenium with 2 Firefox containers and with TestingBot"
+    echo -e "\t start --chromeContainers 2 --testingBotEnabled true"
     echo -e "\t - Starting Zalenium screen width 1440 and height 810, time zone \"America/Montreal\""
     echo -e "\t start --screenWidth 1440 --screenHeight 810 --timeZone \"America/Montreal\""
 }
@@ -516,6 +635,9 @@ case ${SCRIPT_ACTION} in
                     ;;
                 --browserStackEnabled)
                     BROWSER_STACK_ENABLED=${VALUE}
+                    ;;
+                --testingBotEnabled)
+                    TESTINGBOT_ENABLED=${VALUE}
                     ;;
                 --videoRecordingEnabled)
                     VIDEO_RECORDING_ENABLED=${VALUE}

@@ -71,6 +71,7 @@
         <skipTests>false</skipTests>
         <skip.surefire.tests>${skipTests}</skip.surefire.tests>
         <skip.failsafe.setup>false</skip.failsafe.setup>
+        <integrationToTest>sauceLabs</integrationToTest>
     </properties>
 
     <dependencies>
@@ -161,6 +162,7 @@
                                     <directory>src/test/resources</directory>
                                     <includes>
                                         <include>browserstack_capabilities.json</include>
+                                        <include>testingbot_capabilities.json</include>
                                     </includes>
                                 </resource>
                             </resources>
@@ -357,6 +359,7 @@
                                     <arguments>
                                         <argument>start</argument>
                                         <argument>${project.artifactId}:${project.version}</argument>
+                                        <argument>${integrationToTest}</argument>
                                     </arguments>
                                 </configuration>
                             </execution>
