@@ -23,15 +23,15 @@ die () {
 # timeout --foreground ${WAIT_TIMEOUT} wait-xvfb.sh
 
 # Start tunnel
-java -jar testingbot-tunnel.jar \
+java -jar /usr/local/bin/testingbot-tunnel.jar \
   ${TESTINGBOT_KEY} \
   ${TESTINGBOT_SECRET} \
-  ${TESTINGBOT_TUNNEL_OPTS} > ${TESTINGBOT_LOG_FILE} &
+  --se-port 4447 ${TESTINGBOT_TUNNEL_OPTS} > ${TESTINGBOT_LOG_FILE} 2>&1 &
 TESTINGBOT_TUNNEL_PID=$!
 
 function shutdown {
   echo "Trapped SIGTERM/SIGINT so shutting down TestingBot gracefully..."
-  kill -SIGINT ${TESTINGBOT_TUNNEL_PID}
+  kill -SIGTERM ${TESTINGBOT_TUNNEL_PID}
   wait ${TESTINGBOT_TUNNEL_PID}
   echo "TestingBot tunnel shutdown complete."
   exit 0

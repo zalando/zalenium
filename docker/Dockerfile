@@ -314,7 +314,7 @@ ENV ZAL_VER="${project.build.finalName}" \
     SAUCE_TUNNEL_DOCTOR_TEST="false" \
     SAUCE_WAIT_TIMEOUT="2m" \
     SAUCE_TUNNEL="false" \
-    TESTINGBOT_TUNNEL_OPTS="-skipCheck -v -forcelocal" \
+    TESTINGBOT_TUNNEL_OPTS="--se-port 4447" \
     TESTINGBOT_TUNNEL="false" \
     TESTINGBOT_WAIT_TIMEOUT="2m"
 

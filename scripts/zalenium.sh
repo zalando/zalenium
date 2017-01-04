@@ -24,6 +24,9 @@ PID_PATH_DOCKER_SELENIUM_NODE=/tmp/docker-selenium-node-pid
 PID_PATH_SAUCE_LABS_NODE=/tmp/sauce-labs-node-pid
 PID_PATH_TESTINGBOT_NODE=/tmp/testingbot-node-pid
 PID_PATH_BROWSER_STACK_NODE=/tmp/browser-stack-node-pid
+PID_PATH_SAUCE_LABS_TUNNEL=/tmp/sauce-labs-tunnel-pid
+PID_PATH_TESTINGBOT_TUNNEL=/tmp/testingbot-tunnel-pid
+PID_PATH_BROWSER_STACK_TUNNEL=/tmp/browser-stack-tunnel-pid
 
 WaitSeleniumHub()
 {
@@ -345,6 +348,7 @@ StartUp()
             export SAUCE_TUNNEL="true"
             echo "Starting Sauce Connect..."
             ./start-saucelabs.sh &
+            echo $! > ${PID_PATH_SAUCE_LABS_TUNNEL}
             # Now wait for the tunnel to be ready
             timeout --foreground ${SAUCE_WAIT_TIMEOUT} ./wait-saucelabs.sh
         fi
@@ -369,6 +373,7 @@ StartUp()
             export BROWSER_STACK_TUNNEL="true"
             echo "Starting BrowserStackLocal..."
             ./start-browserstack.sh &
+            echo $! > ${PID_PATH_BROWSER_STACK_TUNNEL}
             # Now wait for the tunnel to be ready
             timeout --foreground ${BROWSER_STACK_WAIT_TIMEOUT} ./wait-browserstack.sh
         fi
@@ -393,11 +398,12 @@ StartUp()
             export TESTINGBOT_TUNNEL="true"
             echo "Starting TestingBot Tunnel..."
             ./start-testingbot.sh &
+            echo $! > ${PID_PATH_TESTINGBOT_TUNNEL}
             # Now wait for the tunnel to be ready
             timeout --foreground ${TESTINGBOT_WAIT_TIMEOUT} ./wait-testingbot.sh
         fi
     else
-        echo "Browser Stack not enabled..."
+        echo "TestingBot not enabled..."
     fi
 
     echo "Zalenium is now ready!"
@@ -519,6 +525,45 @@ ShutDown()
             echo "Failed to send kill signal to TestingBot node!"
         else
             rm ${PID_PATH_TESTINGBOT_NODE}
+        fi
+    fi
+
+    if [ -f ${PID_PATH_SAUCE_LABS_TUNNEL} ];
+    then
+        echo "Stopping Sauce Connect..."
+        PID=$(cat ${PID_PATH_SAUCE_LABS_TUNNEL});
+        kill -SIGTERM ${PID};
+        wait ${PID};
+        if [ ${_returnedValue} -ne 0 ] ; then
+            echo "Failed to send kill signal to Sauce Connect!"
+        else
+            rm ${PID_PATH_SAUCE_LABS_TUNNEL}
+        fi
+    fi
+
+    if [ -f ${PID_PATH_BROWSER_STACK_TUNNEL} ];
+    then
+        echo "Stopping BrowserStackLocal..."
+        PID=$(cat ${PID_PATH_BROWSER_STACK_TUNNEL});
+        kill -SIGTERM ${PID};
+        wait ${PID};
+        if [ ${_returnedValue} -ne 0 ] ; then
+            echo "Failed to send kill signal to BrowserStackLocal!"
+        else
+            rm ${PID_PATH_BROWSER_STACK_TUNNEL}
+        fi
+    fi
+
+    if [ -f ${PID_PATH_TESTINGBOT_TUNNEL} ];
+    then
+        echo "Stopping TestingBot tunnel..."
+        PID=$(cat ${PID_PATH_TESTINGBOT_TUNNEL});
+        kill -SIGTERM ${PID};
+        wait ${PID};
+        if [ ${_returnedValue} -ne 0 ] ; then
+            echo "Failed to send kill signal to the TestingBot tunnel!"
+        else
+            rm ${PID_PATH_TESTINGBOT_TUNNEL}
         fi
     fi
 

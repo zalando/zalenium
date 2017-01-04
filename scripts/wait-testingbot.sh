@@ -13,7 +13,7 @@ die () {
   exit $errnum
 }
 
-export DONE_MSG="You can now access your local server(s) in our remote browser"
+export DONE_MSG="You may start your tests"
 
 if [ "${TESTINGBOT_TUNNEL}" = "true" ]; then
   echo "Waiting for TestingBot tunnel to start..."
