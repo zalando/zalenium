@@ -75,4 +75,4 @@ Basic usage, without any of the integrated cloud testing platforms.
 
 ## Starting Zalenium with Docker Compose
 
-You can see an example [here](./docs/docker-compose.yaml)
+You can see an example [here](./docker-compose.yaml)

@@ -1,6 +1,8 @@
 [![Build Status](https://travis-ci.org/zalando/zalenium.svg?branch=master)](https://travis-ci.org/zalando/zalenium)
 [![Quality Gate](https://sonarqube.com/api/badges/gate?key=de.zalando.tip:zalenium)](https://sonarqube.com/dashboard/index/de.zalando.tip:zalenium)
 [![codecov](https://codecov.io/gh/zalando/zalenium/branch/master/graph/badge.svg)](https://codecov.io/gh/zalando/zalenium)
+[![](https://images.microbadger.com/badges/version/dosel/zalenium.svg)](https://microbadger.com/images/dosel/zalenium)
+[![](https://images.microbadger.com/badges/version/dosel/zalenium:3.0.1a.svg)](https://microbadger.com/images/dosel/zalenium:3.0.1a)
 
 # What is Zalenium?
 A Selenium Grid extension to scale up and down your local grid dynamically with docker containers. It uses [docker-selenium](https://github.com/elgalu/docker-selenium) to run your tests in Firefox and Chrome locally, and when you need a different browser, your tests get redirected to [Sauce Labs](https://saucelabs.com/) and/or [BrowserStack](https://www.browserstack.com/) and/or [TestingBot](https://testingbot.com/).
@@ -30,29 +32,14 @@ You can use the Zalenium already, but it is still under development and open for
 #### Setting it up
 * Make sure your docker daemon is running
 * `docker pull dosel/zalenium`
-* If you want to use [Sauce Labs](https://saucelabs.com/) and/or [BrowserStack](https://www.browserstack.com/) and/or [TestingBot](https://testingbot.com/), export your user and API key as environment variables
-```sh
-  # Sauce Labs
-  export SAUCE_USERNAME=<your Sauce Labs username>
-  export SAUCE_ACCESS_KEY=<your Sauce Labs access key>
-```
-```sh
-  # BrowserStack
-  export BROWSER_STACK_USER=<your BrowserStack username>
-  export BROWSER_STACK_KEY=<your BrowserStack access key>
-```
-```sh
-  # TestingBot
-  export TESTINGBOT_KEY=<your TestingBot access key>
-  export TESTINGBOT_SECRET=<your TestingBot secret>
-```
 
 #### Running it
 Zalenium uses docker to scale on-demand, therefore we need to give it the `docker.sock` full access, this is known as "Docker alongside docker".
 
 NB. The container must be called `zalenium`. This is required because a docker network with this name will be created to allow all containers to locate each other without too much hassle.
 
-* Start it without any of the integrated cloud testing platforms enabled:
+* Basic usage, without any of the integrated cloud testing platforms enabled:
+
   ```sh
     docker run --rm -ti --name zalenium -p 4444:4444 -p 5555:5555 \
       -v /var/run/docker.sock:/var/run/docker.sock \
@@ -60,48 +47,9 @@ NB. The container must be called `zalenium`. This is required because a docker n
       dosel/zalenium start 
   ```
 
-* Start it with Sauce Labs enabled:
-  ```sh
-    export SAUCE_USERNAME=<your Sauce Labs username>
-    export SAUCE_ACCESS_KEY=<your Sauce Labs access key>
-    docker run --rm -ti --name zalenium -p 4444:4444 -p 5555:5555 \
-      -e SAUCE_USERNAME -e SAUCE_ACCESS_KEY \
-      -v /tmp/videos:/home/seluser/videos \
-      -v /var/run/docker.sock:/var/run/docker.sock \
-      dosel/zalenium start --sauceLabsEnabled true
-  ```
+* More usage examples can be seen [here](./docs/usage_examples.md)
 
-* Start it with BrowserStack enabled:
-  ```sh
-    export BROWSER_STACK_USER=<your BrowserStack username>
-    export BROWSER_STACK_KEY=<your BrowserStack access key>
-    docker run --rm -ti --name zalenium -p 4444:4444 -p 5555:5555 \
-      -e BROWSER_STACK_USER -e BROWSER_STACK_KEY \
-      -v /tmp/videos:/home/seluser/videos \
-      -v /var/run/docker.sock:/var/run/docker.sock \
-      dosel/zalenium start --browserStackEnabled true
-  ```
-
-* Start it with TestingBot enabled:
-  ```sh
-    export TESTINGBOT_USER=<your TestingBot username>
-    export TESTINGBOT_KEY=<your TestingBot access key>
-    docker run --rm -ti --name zalenium -p 4444:4444 -p 5555:5555 \
-      -e TESTINGBOT_KEY -e TESTINGBOT_SECRET \
-      -v /tmp/videos:/home/seluser/videos \
-      -v /var/run/docker.sock:/var/run/docker.sock \
-      dosel/zalenium start --testingBotEnabled true
-  ```
-
-* Start it with screen width and height, and time zone:
-  ```sh
-    docker run --rm -ti --name zalenium -p 4444:4444 -p 5555:5555 \
-      -v /var/run/docker.sock:/var/run/docker.sock \
-      -v /tmp/videos:/home/seluser/videos \
-      dosel/zalenium start --screenWidth 1440 --screenHeight 810 --timeZone "America/Montreal"
-  ```
-
-* After the output, you should see the DockerSeleniumStarter node and the SauceLabs node in the [grid](http://localhost:4444/grid/console)
+* After the output, you should see the DockerSeleniumStarter node in the [grid](http://localhost:4444/grid/console)
 
 * The startup can receive different parameters:
   * `--chromeContainers` -> Chrome nodes created on startup. Default is 1.
@@ -110,7 +58,7 @@ NB. The container must be called `zalenium`. This is required because a docker n
   * `--sauceLabsEnabled` -> Start Sauce Labs node or not. Defaults to 'false'.
   * `--browserStackEnabled` -> Start BrowserStack node or not. Defaults to 'false'.
   * `--testingbotEnabled` -> Start TestingBot node or not. Defaults to 'false'.
-  * `--startTunnel` -> When using Sauce Labs and/or BrowserStack and/or TestingBot, starts Sauce Connect and/or BrowserStackLocal and/or TestingBot Tunnel. Defaults to 'false'.
+  * `--startTunnel` -> When using a cloud testing platform is enabled, starts the tunnel to allow local testing. Defaults to 'false'.
   * `--videoRecordingEnabled` -> Sets if video is recorded in every test. Defaults to 'true'.
   * `--screenWidth` -> Sets the screen width. Defaults to 1900.
   * `--screenHeight` -> Sets the screen height. Defaults to 1880.
