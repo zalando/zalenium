@@ -2,6 +2,7 @@
 
 SCRIPT_ACTION=$1
 ZALENIUM_DOCKER_IMAGE=$2
+INTEGRATION_TO_TEST=$3
 
 # In OSX install gtimeout through `brew install coreutils`
 function mtimeout() {
@@ -38,50 +39,81 @@ StartUp()
         docker rm -f $(docker ps -a -f name=zalenium -q)
     fi
 
-    SAUCE_USERNAME="${SAUCE_USERNAME:=abc}"
-    SAUCE_ACCESS_KEY="${SAUCE_ACCESS_KEY:=abc}"
-
-    if [ "$SAUCE_USERNAME" = abc ]; then
-        echo "SAUCE_USERNAME environment variable is not set, cannot start Sauce Labs node, exiting..."
-        exit 2
-    fi
-
-    if [ "$SAUCE_ACCESS_KEY" = abc ]; then
-        echo "SAUCE_ACCESS_KEY environment variable is not set, cannot start Sauce Labs node, exiting..."
-        exit 3
-    fi
-
-    BROWSER_STACK_USER="${BROWSER_STACK_USER:=abc}"
-    BROWSER_STACK_KEY="${BROWSER_STACK_KEY:=abc}"
-
-    if [ "$BROWSER_STACK_USER" = abc ]; then
-        echo "BROWSER_STACK_USER environment variable is not set, cannot start Browser Stack node, exiting..."
-        exit 4
-    fi
-
-    if [ "$BROWSER_STACK_KEY" = abc ]; then
-        echo "BROWSER_STACK_KEY environment variable is not set, cannot start Browser Stack node, exiting..."
-        exit 5
-    fi
-
-    echo "Starting Zalenium in docker..."
-
     IN_TRAVIS="${CI:=false}"
     VIDEOS_FOLDER=${project.build.directory}/videos
     if [ "${IN_TRAVIS}" = "true" ]; then
         VIDEOS_FOLDER=/tmp/videos
     fi
 
-    docker run -d -ti --name zalenium -p 4444:4444 -p 5555:5555 \
-          -e SAUCE_USERNAME -e SAUCE_ACCESS_KEY \
-          -e BROWSER_STACK_USER -e BROWSER_STACK_KEY \
-          -v ${VIDEOS_FOLDER}:/home/seluser/videos \
-          -v /var/run/docker.sock:/var/run/docker.sock \
-          ${ZALENIUM_DOCKER_IMAGE} start --browserStackEnabled true --sauceLabsEnabled true --startTunnel true
+    if [ "$INTEGRATION_TO_TEST" = sauceLabs ]; then
+        echo "Starting Zalenium in docker with Sauce Labs..."
+        SAUCE_USERNAME="${SAUCE_USERNAME:=abc}"
+        SAUCE_ACCESS_KEY="${SAUCE_ACCESS_KEY:=abc}"
+
+        if [ "$SAUCE_USERNAME" = abc ]; then
+            echo "SAUCE_USERNAME environment variable is not set, cannot start Sauce Labs node, exiting..."
+            exit 2
+        fi
+
+        if [ "$SAUCE_ACCESS_KEY" = abc ]; then
+            echo "SAUCE_ACCESS_KEY environment variable is not set, cannot start Sauce Labs node, exiting..."
+            exit 3
+        fi
+
+        docker run -d -ti --name zalenium -p 4444:4444 -p 5555:5555 \
+              -e SAUCE_USERNAME -e SAUCE_ACCESS_KEY \
+              -v ${VIDEOS_FOLDER}:/home/seluser/videos \
+              -v /var/run/docker.sock:/var/run/docker.sock \
+              ${ZALENIUM_DOCKER_IMAGE} start --sauceLabsEnabled true --startTunnel true
+    fi
+
+    if [ "$INTEGRATION_TO_TEST" = browserStack ]; then
+        echo "Starting Zalenium in docker with BrowserStack..."
+        BROWSER_STACK_USER="${BROWSER_STACK_USER:=abc}"
+        BROWSER_STACK_KEY="${BROWSER_STACK_KEY:=abc}"
+
+        if [ "$BROWSER_STACK_USER" = abc ]; then
+            echo "BROWSER_STACK_USER environment variable is not set, cannot start Browser Stack node, exiting..."
+            exit 4
+        fi
+
+        if [ "$BROWSER_STACK_KEY" = abc ]; then
+            echo "BROWSER_STACK_KEY environment variable is not set, cannot start Browser Stack node, exiting..."
+            exit 5
+        fi
+
+        docker run -d -ti --name zalenium -p 4444:4444 -p 5555:5555 \
+              -e BROWSER_STACK_USER -e BROWSER_STACK_KEY \
+              -v ${VIDEOS_FOLDER}:/home/seluser/videos \
+              -v /var/run/docker.sock:/var/run/docker.sock \
+              ${ZALENIUM_DOCKER_IMAGE} start --browserStackEnabled true --startTunnel true
+    fi
+
+    if [ "$INTEGRATION_TO_TEST" = testingBot ]; then
+        echo "Starting Zalenium in docker with TestingBot..."
+        TESTINGBOT_KEY="${TESTINGBOT_KEY:=abc}"
+        TESTINGBOT_SECRET="${TESTINGBOT_SECRET:=abc}"
+
+        if [ "$TESTINGBOT_KEY" = abc ]; then
+            echo "TESTINGBOT_KEY environment variable is not set, cannot start TestingBot node, exiting..."
+            exit 6
+        fi
+
+        if [ "$TESTINGBOT_SECRET" = abc ]; then
+            echo "TESTINGBOT_SECRET environment variable is not set, cannot start TestingBot node, exiting..."
+            exit 7
+        fi
+
+        docker run -d -ti --name zalenium -p 4444:4444 -p 5555:5555 \
+              -e TESTINGBOT_KEY -e TESTINGBOT_SECRET \
+              -v ${VIDEOS_FOLDER}:/home/seluser/videos \
+              -v /var/run/docker.sock:/var/run/docker.sock \
+              ${ZALENIUM_DOCKER_IMAGE} start --testingBotEnabled true --startTunnel true
+    fi
 
     if ! mtimeout --foreground "2m" bash -c WaitZaleniumStarted; then
         echo "Zalenium failed to start after 2 minutes, failing..."
-        exit 6
+        exit 8
     fi
 
     echo "Zalenium in docker started!"
