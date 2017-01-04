@@ -583,7 +583,7 @@ function usage()
     echo -e "\t --sauceLabsEnabled -> Determines if the Sauce Labs node is started. Defaults to 'false' when parameter absent."
     echo -e "\t --browserStackEnabled -> Determines if the Browser Stack node is started. Defaults to 'false' when parameter absent."
     echo -e "\t --testingBotEnabled -> Determines if the TestingBot node is started. Defaults to 'false' when parameter absent."
-    echo -e "\t --startTunnel -> When using a cloud testing platfor is enabled, starts the tunnel to allow local testing. Defaults to 'false'."
+    echo -e "\t --startTunnel -> When using a cloud testing platform is enabled, starts the tunnel to allow local testing. Defaults to 'false'."
     echo -e "\t --videoRecordingEnabled -> Sets if video is recorded in every test. Defaults to 'true' when parameter absent."
     echo -e "\t --screenWidth -> Sets the screen width. Defaults to 1900"
     echo -e "\t --screenHeight -> Sets the screen height. Defaults to 1880"
