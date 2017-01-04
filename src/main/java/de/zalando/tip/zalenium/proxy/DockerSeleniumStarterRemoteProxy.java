@@ -377,7 +377,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
             }
 
             HostConfig hostConfig = HostConfig.builder()
-                    .appendBinds("/dev/shm:/dev/shm")
+                    .shmSize(1073741824L) // 1GB
                     .networkMode("container:zalenium")
                     .autoRemove(true)
                     .build();
