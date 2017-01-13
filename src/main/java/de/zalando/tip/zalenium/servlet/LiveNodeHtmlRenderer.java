@@ -95,6 +95,14 @@ public class LiveNodeHtmlRenderer implements HtmlRenderer {
 
         for (TestSlot slot : proxy.getTestSlots()) {
             wdLines.add(slot);
+            // Display test name when it exists in the capabilities
+            TestSession session = slot.getSession();
+            if (session != null) {
+                String testName = session.getRequestedCapabilities().get("name").toString();
+                if (testName != null) {
+                    builder.append("<p>Test name: ").append(testName).append("</p>");
+                }
+            }
         }
 
         if (!wdLines.getLinesType().isEmpty()) {
