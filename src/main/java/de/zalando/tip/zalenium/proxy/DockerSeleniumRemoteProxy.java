@@ -57,6 +57,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     private static CommonProxyUtilities commonProxyUtilities = new CommonProxyUtilities();
     private int amountOfExecutedTests;
     private String testName;
+    private String testGroup;
     private boolean stopSessionRequestReceived = false;
     private DockerSeleniumNodePoller dockerSeleniumNodePollerThread = null;
     private GoogleAnalyticsApi ga = new GoogleAnalyticsApi();
@@ -116,6 +117,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         if (increaseCounter()) {
             TestSession newSession = super.getNewSession(requestedCapability);
             testName = requestedCapability.getOrDefault("name", "").toString();
+            testGroup = requestedCapability.getOrDefault("group", "").toString();
             videoRecording(VideoRecordingAction.START_RECORDING);
             return newSession;
         }
@@ -204,6 +206,10 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
 
     public String getTestName() {
         return testName == null ? "" : testName;
+    }
+
+    public String getTestGroup() {
+        return testGroup == null ? "" : testGroup;
     }
 
     String getContainerId() throws DockerException, InterruptedException {

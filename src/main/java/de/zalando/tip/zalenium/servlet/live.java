@@ -63,10 +63,12 @@ public class live extends RegistryBasedServlet {
             throws IOException {
 
         int refresh = -1;
+        String testGroup = "";
 
         try {
             refresh = Integer.parseInt(request.getParameter("refresh"));
-        } catch (NumberFormatException e) {
+            testGroup = request.getParameter("group") == null ? "" : request.getParameter("group");
+        } catch (Exception e) {
             LOGGER.log(Level.FINE, e.toString(), e);
         }
 
@@ -105,7 +107,10 @@ public class live extends RegistryBasedServlet {
             if (proxy instanceof DockerSeleniumRemoteProxy) {
                 DockerSeleniumRemoteProxy dockerSeleniumRemoteProxy = (DockerSeleniumRemoteProxy) proxy;
                 HtmlRenderer renderer = new LiveNodeHtmlRenderer(dockerSeleniumRemoteProxy, request.getServerName());
-                nodes.add(renderer.renderSummary());
+                // Render the nodes that are part of an specified test group
+                if (testGroup.isEmpty() || testGroup.equalsIgnoreCase(dockerSeleniumRemoteProxy.getTestGroup())) {
+                    nodes.add(renderer.renderSummary());
+                }
             }
         }
 

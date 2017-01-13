@@ -144,6 +144,9 @@ public class LiveNodeHtmlRenderer implements HtmlRenderer {
             if (!proxy.getTestName().isEmpty()) {
                 builder.append("<p>Test name: ").append(proxy.getTestName()).append("</p>");
             }
+            if (!proxy.getTestGroup().isEmpty()) {
+                builder.append("<p>Test group: ").append(proxy.getTestGroup()).append("</p>");
+            }
         }
 
         if (!wdLines.getLinesType().isEmpty()) {
