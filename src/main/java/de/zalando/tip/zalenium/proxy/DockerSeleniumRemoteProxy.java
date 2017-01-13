@@ -202,6 +202,10 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         }
     }
 
+    public String getTestName() {
+        return testName == null ? "" : testName;
+    }
+
     String getContainerId() throws DockerException, InterruptedException {
         List<Container> containerList = dockerClient.listContainers(DockerClient.ListContainersParam.allContainers());
         for (Container container : containerList) {
@@ -247,7 +251,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                 String fileExtension = entry.getName().substring(entry.getName().lastIndexOf('.'));
                 String fileName = String.format("%s_%s", entry.getName(), getCurrentDateAndTimeFormatted());
                 fileName = fileName.replace(fileExtension, "").concat(fileExtension);
-                fileName = testName.isEmpty() ? fileName : fileName.replace("vid_", testName + "_");
+                fileName = getTestName().isEmpty() ? fileName : fileName.replace("vid_", getTestName() + "_");
                 File curFile = new File(localPath, fileName);
                 File parent = curFile.getParentFile();
                 if (!parent.exists()) {
@@ -269,6 +273,11 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         return stopSessionRequestReceived;
     }
 
+    private String getCurrentDateAndTimeFormatted() {
+        DateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
+        return dateFormat.format(new Date());
+    }
+
     public enum VideoRecordingAction {
         START_RECORDING("start-video"), STOP_RECORDING("stop-video");
 
@@ -281,11 +290,6 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         public String getRecordingAction() {
             return recordingAction;
         }
-    }
-
-    private String getCurrentDateAndTimeFormatted() {
-        DateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
-        return dateFormat.format(new Date());
     }
 
     /*

@@ -58,6 +58,7 @@ public class live extends RegistryBasedServlet {
         }
     }
 
+    @SuppressWarnings("WeakerAccess")
     protected void process(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
 
@@ -102,7 +103,8 @@ public class live extends RegistryBasedServlet {
         List<String> nodes = new ArrayList<>();
         for (RemoteProxy proxy : getRegistry().getAllProxies()) {
             if (proxy instanceof DockerSeleniumRemoteProxy) {
-                HtmlRenderer renderer = new LiveNodeHtmlRenderer(proxy, request.getServerName());
+                DockerSeleniumRemoteProxy dockerSeleniumRemoteProxy = (DockerSeleniumRemoteProxy) proxy;
+                HtmlRenderer renderer = new LiveNodeHtmlRenderer(dockerSeleniumRemoteProxy, request.getServerName());
                 nodes.add(renderer.renderSummary());
             }
         }

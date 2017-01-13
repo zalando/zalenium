@@ -1,8 +1,8 @@
 package de.zalando.tip.zalenium.servlet;
 
 import com.google.gson.JsonObject;
+import de.zalando.tip.zalenium.proxy.DockerSeleniumRemoteProxy;
 import org.openqa.grid.common.exception.GridException;
-import org.openqa.grid.internal.RemoteProxy;
 import org.openqa.grid.internal.TestSession;
 import org.openqa.grid.internal.TestSlot;
 import org.openqa.grid.internal.utils.HtmlRenderer;
@@ -19,12 +19,58 @@ public class LiveNodeHtmlRenderer implements HtmlRenderer {
 
     private static final Logger LOGGER = Logger.getLogger(LiveNodeHtmlRenderer.class.getName());
 
-    private RemoteProxy proxy;
+    private DockerSeleniumRemoteProxy proxy;
     private String serverName;
 
-    public LiveNodeHtmlRenderer(RemoteProxy proxy, String serverName) {
+    @SuppressWarnings("WeakerAccess")
+    public LiveNodeHtmlRenderer(DockerSeleniumRemoteProxy proxy, String serverName) {
         this.proxy = proxy;
         this.serverName = serverName;
+    }
+
+    /**
+     * return the platform for the proxy. It should be the same for all slots of the proxy, so checking that.
+     *
+     * @param proxy remote proxy
+     * @return Either the platform name, "Unknown", "mixed OS", or "not specified".
+     */
+    @SuppressWarnings("WeakerAccess")
+    public static String getPlatform(DockerSeleniumRemoteProxy proxy) {
+        Platform res;
+        if (proxy.getTestSlots().isEmpty()) {
+            return "Unknown";
+        } else {
+            res = getPlatform(proxy.getTestSlots().get(0));
+        }
+
+        for (TestSlot slot : proxy.getTestSlots()) {
+            Platform tmp = getPlatform(slot);
+            if (tmp != res) {
+                return "mixed OS";
+            } else {
+                res = tmp;
+            }
+        }
+        if (res == null) {
+            return "not specified";
+        } else {
+            return res.toString();
+        }
+    }
+
+    private static Platform getPlatform(TestSlot slot) {
+        Object o = slot.getCapabilities().get(CapabilityType.PLATFORM);
+        if (o == null) {
+            return Platform.ANY;
+        } else {
+            if (o instanceof String) {
+                return Platform.valueOf((String) o);
+            } else if (o instanceof Platform) {
+                return (Platform) o;
+            } else {
+                throw new GridException("Cannot cast " + o + " to org.openqa.selenium.Platform");
+            }
+        }
     }
 
     @Override
@@ -60,10 +106,10 @@ public class LiveNodeHtmlRenderer implements HtmlRenderer {
             String version = object.get("value").getAsJsonObject()
                     .get("build").getAsJsonObject()
                     .get("version").getAsString();
-            return " (version : "+version+ ")";
-        }catch (Exception e) {
+            return " (version : " + version + ")";
+        } catch (Exception e) {
             LOGGER.log(Level.FINE, e.toString(), e);
-            return " unknown version, "+e.getMessage();
+            return " unknown version, " + e.getMessage();
         }
     }
 
@@ -85,7 +131,6 @@ public class LiveNodeHtmlRenderer implements HtmlRenderer {
         return builder.toString();
     }
 
-
     // content of the browsers tab
     private String tabBrowsers() {
         StringBuilder builder = new StringBuilder();
@@ -96,12 +141,8 @@ public class LiveNodeHtmlRenderer implements HtmlRenderer {
         for (TestSlot slot : proxy.getTestSlots()) {
             wdLines.add(slot);
             // Display test name when it exists in the capabilities
-            TestSession session = slot.getSession();
-            if (session != null) {
-                String testName = session.getRequestedCapabilities().get("name").toString();
-                if (testName != null) {
-                    builder.append("<p>Test name: ").append(testName).append("</p>");
-                }
+            if (!proxy.getTestName().isEmpty()) {
+                builder.append("<p>Test name: ").append(proxy.getTestName()).append("</p>");
             }
         }
 
@@ -180,50 +221,6 @@ public class LiveNodeHtmlRenderer implements HtmlRenderer {
         nodeTabs = nodeTabs.concat("<li class='tab' type='config'><a title='node configuration' href='#'>Configuration</a></li>");
         nodeTabs = nodeTabs.concat("</ul></div>");
         return nodeTabs;
-    }
-
-
-    /**
-     * return the platform for the proxy. It should be the same for all slots of the proxy, so checking that.
-     * @param proxy remote proxy
-     * @return Either the platform name, "Unknown", "mixed OS", or "not specified".
-     */
-    public static String getPlatform(RemoteProxy proxy) {
-        Platform res;
-        if (proxy.getTestSlots().isEmpty()) {
-            return "Unknown";
-        } else {
-            res = getPlatform(proxy.getTestSlots().get(0));
-        }
-
-        for (TestSlot slot : proxy.getTestSlots()) {
-            Platform tmp = getPlatform(slot);
-            if (tmp != res) {
-                return "mixed OS";
-            } else {
-                res = tmp;
-            }
-        }
-        if (res == null) {
-            return "not specified";
-        } else {
-            return res.toString();
-        }
-    }
-
-    private static Platform getPlatform(TestSlot slot) {
-        Object o = slot.getCapabilities().get(CapabilityType.PLATFORM);
-        if (o == null) {
-            return Platform.ANY;
-        } else {
-            if (o instanceof String) {
-                return Platform.valueOf((String) o);
-            } else if (o instanceof Platform) {
-                return (Platform) o;
-            } else {
-                throw new GridException("Cannot cast " + o + " to org.openqa.selenium.Platform");
-            }
-        }
     }
 
 }
