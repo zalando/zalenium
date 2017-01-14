@@ -1,9 +1,9 @@
 #== Ubuntu xenial is 16.04, i.e. FROM ubuntu:16.04
 # Find latest images at https://hub.docker.com/r/library/ubuntu/
 # Layer size: big: 127.2 MB
-FROM ubuntu:xenial-20161010
+FROM ubuntu:xenial-20161213
 ENV UBUNTU_FLAVOR="xenial" \
-    UBUNTU_DATE="20161010"
+    UBUNTU_DATE="20161213"
 
 #== Ubuntu flavors - common
 RUN  echo "deb http://archive.ubuntu.com/ubuntu ${UBUNTU_FLAVOR} main universe\n" > /etc/apt/sources.list \
@@ -11,6 +11,8 @@ RUN  echo "deb http://archive.ubuntu.com/ubuntu ${UBUNTU_FLAVOR} main universe\n
   && echo "deb http://archive.ubuntu.com/ubuntu ${UBUNTU_FLAVOR}-security main universe\n" >> /etc/apt/sources.list
 
 MAINTAINER Team TIP <diemol+team-tip@gmail.com>
+# https://github.com/docker/docker/pull/25466#discussion-diff-74622923R677
+LABEL maintainer "Team TIP <diemol+team-tip@gmail.com>"
 
 # No interactive frontend during docker build
 ENV DEBIAN_FRONTEND=noninteractive \
@@ -209,13 +211,30 @@ RUN set -x \
   && docker-${DOCKER_VERSION} --version | grep "${DOCKER_VERSION}"
 
 #-----------------------
-# Docker 1.12.3 -- 15 MB
+# Docker 1.12.5 -- 15 MB
 #-----------------------
 # https://github.com/docker-library/docker/blob/master/1.12/Dockerfile#L1
 RUN set -x \
-  && DOCKER_VERSION="1.12.3" \
-     DOCKER_SHA256="626601deb41d9706ac98da23f673af6c0d4631c4d194a677a9a1a07d7219fa0f" \
+  && DOCKER_VERSION="1.12.5" \
+     DOCKER_SHA256="0058867ac46a1eba283e2441b1bb5455df846144f9d9ba079e97655399d4a2c6" \
   && curl -fSL "https://${DOCKER_BUCKET}/builds/Linux/x86_64/docker-${DOCKER_VERSION}.tgz" \
+          -o docker.tgz \
+  && echo "${DOCKER_SHA256} *docker.tgz" | sha256sum -c - \
+  && tar -xzvf docker.tgz \
+  && mv docker/docker /usr/bin/docker-${DOCKER_VERSION} \
+  && rm -rf docker/ && rm docker.tgz \
+  && docker-${DOCKER_VERSION} --version | grep "${DOCKER_VERSION}"
+
+#-----------------
+# Docker 1.13.0 --
+#-----------------
+# https://github.com/docker-library/docker/blob/master/1.13-rc/Dockerfile#L1
+RUN set -x \
+  && DOCKER_VERSION="1.13.0" \
+  && DOCKER_VER_RC="-rc7" \
+     DOCKER_SHA256="beff8e0c5a235c0b9f374e4975401c793ceeca19332ffec965edb557ef7bfbc1" \
+     DOCKER_BUCKET="test.docker.com" \
+  && curl -fSL "https://${DOCKER_BUCKET}/builds/Linux/x86_64/docker-${DOCKER_VERSION}${DOCKER_VER_RC}.tgz" \
           -o docker.tgz \
   && echo "${DOCKER_SHA256} *docker.tgz" | sha256sum -c - \
   && tar -xzvf docker.tgz \

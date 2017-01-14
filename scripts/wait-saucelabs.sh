@@ -22,6 +22,7 @@ if [ "${SAUCE_TUNNEL}" = "true" ]; then
   [ -z "${SAUCE_LOG_FILE}" ] && die "Required env var SAUCE_LOG_FILE"
   while ! grep "${DONE_MSG}" ${SAUCE_LOG_FILE} >/dev/null; do
     if grep "${GOODBYE_MSG}" ${SAUCE_LOG_FILE} >/dev/null; then
+      cat /home/seluser/logs/saucelabs-* 2>&1
       die "Found GOODBYE_MSG '${GOODBYE_MSG}' in output so quitting."
     fi
     echo -n '.'
