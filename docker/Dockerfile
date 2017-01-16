@@ -211,7 +211,7 @@ RUN set -x \
   && docker-${DOCKER_VERSION} --version | grep "${DOCKER_VERSION}"
 
 #-----------------------
-# Docker 1.12.5 -- 15 MB
+# Docker 1.12.6 -- 15 MB
 #-----------------------
 # https://github.com/docker-library/docker/blob/master/1.12/Dockerfile#L1
 RUN set -x \
