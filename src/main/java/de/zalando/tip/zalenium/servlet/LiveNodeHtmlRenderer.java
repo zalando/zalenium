@@ -29,28 +29,15 @@ public class LiveNodeHtmlRenderer implements HtmlRenderer {
     }
 
     /**
-     * return the platform for the proxy. It should be the same for all slots of the proxy, so checking that.
+     * Platform for docker-selenium will be always Linux.
      *
      * @param proxy remote proxy
      * @return Either the platform name, "Unknown", "mixed OS", or "not specified".
      */
     @SuppressWarnings("WeakerAccess")
     public static String getPlatform(DockerSeleniumRemoteProxy proxy) {
-        Platform res;
-        if (proxy.getTestSlots().isEmpty()) {
-            return "Unknown";
-        } else {
-            res = getPlatform(proxy.getTestSlots().get(0));
-        }
 
-        for (TestSlot slot : proxy.getTestSlots()) {
-            Platform tmp = getPlatform(slot);
-            if (tmp != res) {
-                return "mixed OS";
-            } else {
-                res = tmp;
-            }
-        }
+        Platform res = getPlatform(proxy.getTestSlots().get(0));
         if (res == null) {
             return "not specified";
         } else {
@@ -60,16 +47,12 @@ public class LiveNodeHtmlRenderer implements HtmlRenderer {
 
     private static Platform getPlatform(TestSlot slot) {
         Object o = slot.getCapabilities().get(CapabilityType.PLATFORM);
-        if (o == null) {
-            return Platform.ANY;
+        if (o instanceof String) {
+            return Platform.valueOf((String) o);
+        } else if (o instanceof Platform) {
+            return (Platform) o;
         } else {
-            if (o instanceof String) {
-                return Platform.valueOf((String) o);
-            } else if (o instanceof Platform) {
-                return (Platform) o;
-            } else {
-                throw new GridException("Cannot cast " + o + " to org.openqa.selenium.Platform");
-            }
+            return Platform.ANY;
         }
     }
 
