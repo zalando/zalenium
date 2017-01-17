@@ -57,6 +57,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     private static CommonProxyUtilities commonProxyUtilities = new CommonProxyUtilities();
     private int amountOfExecutedTests;
     private String testName;
+    private String testGroup;
     private boolean stopSessionRequestReceived = false;
     private DockerSeleniumNodePoller dockerSeleniumNodePollerThread = null;
     private GoogleAnalyticsApi ga = new GoogleAnalyticsApi();
@@ -116,6 +117,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         if (increaseCounter()) {
             TestSession newSession = super.getNewSession(requestedCapability);
             testName = requestedCapability.getOrDefault("name", "").toString();
+            testGroup = requestedCapability.getOrDefault("group", "").toString();
             videoRecording(VideoRecordingAction.START_RECORDING);
             return newSession;
         }
@@ -202,6 +204,14 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         }
     }
 
+    public String getTestName() {
+        return testName == null ? "" : testName;
+    }
+
+    public String getTestGroup() {
+        return testGroup == null ? "" : testGroup;
+    }
+
     String getContainerId() throws DockerException, InterruptedException {
         List<Container> containerList = dockerClient.listContainers(DockerClient.ListContainersParam.allContainers());
         for (Container container : containerList) {
@@ -220,9 +230,9 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         final ExecCreation execCreation = dockerClient.execCreate(containerId, command,
                 DockerClient.ExecCreateParam.attachStdout(), DockerClient.ExecCreateParam.attachStderr());
         final LogStream output = dockerClient.execStart(execCreation.id());
-        LOGGER.log(Level.INFO, String.format("%s %s", getNodeIpAndPort(), action.getRecordingAction()));
+        LOGGER.log(Level.INFO, () -> String.format("%s %s", getNodeIpAndPort(), action.getRecordingAction()));
         try {
-            LOGGER.log(Level.INFO, String.format("%s %s", getNodeIpAndPort(), output.readFully()));
+            LOGGER.log(Level.INFO, () -> String.format("%s %s", getNodeIpAndPort(), output.readFully()));
         } catch (RuntimeException e) {
             LOGGER.log(Level.FINE, getNodeIpAndPort() + " " + e.toString(), e);
             ga.trackException(e);
@@ -247,7 +257,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                 String fileExtension = entry.getName().substring(entry.getName().lastIndexOf('.'));
                 String fileName = String.format("%s_%s", entry.getName(), getCurrentDateAndTimeFormatted());
                 fileName = fileName.replace(fileExtension, "").concat(fileExtension);
-                fileName = testName.isEmpty() ? fileName : fileName.replace("vid_", testName + "_");
+                fileName = getTestName().isEmpty() ? fileName : fileName.replace("vid_", getTestName() + "_");
                 File curFile = new File(localPath, fileName);
                 File parent = curFile.getParentFile();
                 if (!parent.exists()) {
@@ -269,6 +279,11 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         return stopSessionRequestReceived;
     }
 
+    private String getCurrentDateAndTimeFormatted() {
+        DateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
+        return dateFormat.format(new Date());
+    }
+
     public enum VideoRecordingAction {
         START_RECORDING("start-video"), STOP_RECORDING("stop-video");
 
@@ -281,11 +296,6 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         public String getRecordingAction() {
             return recordingAction;
         }
-    }
-
-    private String getCurrentDateAndTimeFormatted() {
-        DateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
-        return dateFormat.format(new Date());
     }
 
     /*

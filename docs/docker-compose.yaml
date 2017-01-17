@@ -39,7 +39,7 @@ services:
       - TESTINGBOT_KEY
       - TESTINGBOT_SECRET
       # For OSX remember to include the docker version
-      # allowed values are: 1.11 or 1.12
+      # allowed values are: 1.11 or 1.12 or 1.13
       # - DOCKER=1.11
 
   # Feel free to add your services but remember

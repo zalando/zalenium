@@ -7,6 +7,10 @@
   * [with TestingBot enabled](#with-testingbot-enabled)
   * [with screen width and height, and time zone](#with-screen-width-and-height-and-time-zone)
 * [Starting Zalenium with Docker Compose](#starting-zalenium-with-docker-compose)
+* [Live preview](#live-preview)
+  * [Displaying the live preview](#displaying-the-live-preview)
+  * [Showing the test name on the live preview](#showing-the-test-name-on-the-live-preview)
+  * [Filtering tests by group name](#filtering-tests-by-group-name)
 
 
 ## Initial setup
@@ -76,3 +80,38 @@ Basic usage, without any of the integrated cloud testing platforms.
 ## Starting Zalenium with Docker Compose
 
 You can see an example [here](./docker-compose.yaml)
+
+## Live preview
+
+### Displaying the live preview
+* Just go to [http://localhost:4444/grid/admin/live](http://localhost:4444/grid/admin/live)
+  * You can also replace `localhost` for the IP/machine name where Zalenium is running.
+* Auto-refresh, add `?refresh=numberOfSeconds` to refresh the view automatically. E.g. 
+[http://localhost:4444/grid/admin/live?refresh=20](http://localhost:4444/grid/admin/live?refresh=20) will refresh the 
+page every 20 seconds.
+
+### Showing the test name on the live preview
+Add a `name` capability with the test name to display it in the live preview. This helps to identify where your test 
+is running. Example code in Java for the capability:
+
+  ```java
+    DesiredCapabilities desiredCapabilities = new DesiredCapabilities();
+    desiredCapabilities.setCapability(CapabilityType.BROWSER_NAME, BrowserType.FIREFOX);
+    desiredCapabilities.setCapability(CapabilityType.PLATFORM, Platform.LINUX);
+    desiredCapabilities.setCapability("name", "myTestName");
+  ```
+
+### Filtering tests by group name
+When more than one develper/tester is using the same instance of Zalenium, add a `group` capability to your tests. This 
+will let you filter the running tests in the live preview by passing `?group=myTestGroup` at the end of the url. E.g.
+ 
+* Added capability
+
+  ```java
+    DesiredCapabilities desiredCapabilities = new DesiredCapabilities();
+    desiredCapabilities.setCapability(CapabilityType.BROWSER_NAME, BrowserType.FIREFOX);
+    desiredCapabilities.setCapability(CapabilityType.PLATFORM, Platform.LINUX);
+    desiredCapabilities.setCapability("group", "myTestGroup");
+  ```
+
+* Filter in live preview: [http://localhost:4444/grid/admin/live?group=myTestGroup](http://localhost:4444/grid/admin/live?group=myTestGroup)

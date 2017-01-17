@@ -118,6 +118,9 @@ public class ParallelIT  {
 
         // Assert that the href for the iFrame has the serverName from the request
         assertThat(pageSource, containsString("http://localhost:5555/proxy/"));
+
+        // Reusing test to check that the test name is displayed in the live preview
+        assertThat(pageSource, containsString("checkIframeLinksForLivePreviewWithLocalhost"));
     }
 
     @Test(dataProvider = "browsersAndPlatformsForLivePreview")
