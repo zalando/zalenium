@@ -230,9 +230,9 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         final ExecCreation execCreation = dockerClient.execCreate(containerId, command,
                 DockerClient.ExecCreateParam.attachStdout(), DockerClient.ExecCreateParam.attachStderr());
         final LogStream output = dockerClient.execStart(execCreation.id());
-        LOGGER.log(Level.INFO, String.format("%s %s", getNodeIpAndPort(), action.getRecordingAction()));
+        LOGGER.log(Level.INFO, () -> String.format("%s %s", getNodeIpAndPort(), action.getRecordingAction()));
         try {
-            LOGGER.log(Level.INFO, String.format("%s %s", getNodeIpAndPort(), output.readFully()));
+            LOGGER.log(Level.INFO, () -> String.format("%s %s", getNodeIpAndPort(), output.readFully()));
         } catch (RuntimeException e) {
             LOGGER.log(Level.FINE, getNodeIpAndPort() + " " + e.toString(), e);
             ga.trackException(e);
