@@ -2,7 +2,6 @@ package de.zalando.tip.zalenium.servlet;
 
 import com.google.gson.JsonObject;
 import de.zalando.tip.zalenium.proxy.DockerSeleniumRemoteProxy;
-import org.openqa.grid.common.exception.GridException;
 import org.openqa.grid.internal.TestSession;
 import org.openqa.grid.internal.TestSlot;
 import org.openqa.grid.internal.utils.HtmlRenderer;
