@@ -58,14 +58,17 @@ public class live extends RegistryBasedServlet {
         }
     }
 
+    @SuppressWarnings("WeakerAccess")
     protected void process(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
 
         int refresh = -1;
+        String testGroup = "";
 
         try {
             refresh = Integer.parseInt(request.getParameter("refresh"));
-        } catch (NumberFormatException e) {
+            testGroup = request.getParameter("group") == null ? "" : request.getParameter("group");
+        } catch (Exception e) {
             LOGGER.log(Level.FINE, e.toString(), e);
         }
 
@@ -102,8 +105,12 @@ public class live extends RegistryBasedServlet {
         List<String> nodes = new ArrayList<>();
         for (RemoteProxy proxy : getRegistry().getAllProxies()) {
             if (proxy instanceof DockerSeleniumRemoteProxy) {
-                HtmlRenderer beta = new LiveNodeHtmlRenderer(proxy, request.getServerName());
-                nodes.add(beta.renderSummary());
+                DockerSeleniumRemoteProxy dockerSeleniumRemoteProxy = (DockerSeleniumRemoteProxy) proxy;
+                HtmlRenderer renderer = new LiveNodeHtmlRenderer(dockerSeleniumRemoteProxy, request.getServerName());
+                // Render the nodes that are part of an specified test group
+                if (testGroup.isEmpty() || testGroup.equalsIgnoreCase(dockerSeleniumRemoteProxy.getTestGroup())) {
+                    nodes.add(renderer.renderSummary());
+                }
             }
         }
 
