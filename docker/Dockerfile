@@ -225,22 +225,21 @@ RUN set -x \
   && rm -rf docker/ && rm docker.tgz \
   && docker-${DOCKER_VERSION} --version | grep "${DOCKER_VERSION}"
 
-#-----------------
-# Docker 1.13.0 --
-#-----------------
-# https://github.com/docker-library/docker/blob/master/1.13-rc/Dockerfile#L1
+#-----------------------
+# Docker 1.13.0 -- 15 MB
+#-----------------------
+# https://github.com/docker-library/docker/blob/master/1.13/Dockerfile#L1
+# Starting with 1.13, newer CLIs can talk to older daemons
 RUN set -x \
   && DOCKER_VERSION="1.13.0" \
-  && DOCKER_VER_RC="-rc7" \
-     DOCKER_SHA256="beff8e0c5a235c0b9f374e4975401c793ceeca19332ffec965edb557ef7bfbc1" \
-     DOCKER_BUCKET="test.docker.com" \
-  && curl -fSL "https://${DOCKER_BUCKET}/builds/Linux/x86_64/docker-${DOCKER_VERSION}${DOCKER_VER_RC}.tgz" \
+     DOCKER_SHA256="fc194bb95640b1396283e5b23b5ff9d1b69a5e418b5b3d774f303a7642162ad6" \
+  && curl -fSL "https://${DOCKER_BUCKET}/builds/Linux/x86_64/docker-${DOCKER_VERSION}.tgz" \
           -o docker.tgz \
   && echo "${DOCKER_SHA256} *docker.tgz" | sha256sum -c - \
   && tar -xzvf docker.tgz \
-  && mv docker/docker /usr/bin/docker-${DOCKER_VERSION} \
+  && mv docker/docker /usr/bin/docker \
   && rm -rf docker/ && rm docker.tgz \
-  && docker-${DOCKER_VERSION} --version | grep "${DOCKER_VERSION}"
+  && docker --version | grep "${DOCKER_VERSION}"
 
 # ------------------------#
 # Sauce Connect Tunneling #
