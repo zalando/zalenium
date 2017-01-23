@@ -61,6 +61,7 @@
         <maven.compiler.target>1.8</maven.compiler.target>
         <maven.compiler.plugin>3.6.0</maven.compiler.plugin>
         <maven-resources-plugin.version>3.0.2</maven-resources-plugin.version>
+        <jacoco-maven-plugin.version>0.7.8</jacoco-maven-plugin.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <threadCountProperty>1</threadCountProperty>
@@ -260,7 +261,7 @@
                     <plugin>
                         <groupId>org.jacoco</groupId>
                         <artifactId>jacoco-maven-plugin</artifactId>
-                        <version>0.7.7.201606060606</version>
+                        <version>${jacoco-maven-plugin.version}</version>
                         <configuration>
                             <destFile>${basedir}/target/coverage-reports/coverage-unit.exec</destFile>
                             <dataFile>${basedir}/target/coverage-reports/coverage-unit.exec</dataFile>

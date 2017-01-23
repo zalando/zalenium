@@ -4,10 +4,7 @@ import com.spotify.docker.client.DefaultDockerClient;
 import com.spotify.docker.client.DockerClient;
 import com.spotify.docker.client.LogStream;
 import com.spotify.docker.client.exceptions.DockerException;
-import com.spotify.docker.client.messages.Container;
-import com.spotify.docker.client.messages.ContainerConfig;
-import com.spotify.docker.client.messages.ContainerCreation;
-import com.spotify.docker.client.messages.ExecCreation;
+import com.spotify.docker.client.messages.*;
 import de.zalando.tip.zalenium.util.Environment;
 import de.zalando.tip.zalenium.util.TestUtils;
 import org.junit.After;
@@ -26,6 +23,7 @@ import org.openqa.selenium.remote.CapabilityType;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -299,16 +297,14 @@ public class DockerSeleniumRemoteProxyTest {
     }
 
     private void cleanUpAfterVideoRecordingTests(DockerClient dockerClient, String containerId,
-                                                 String zaleniumContainerId) throws DockerException, InterruptedException {
+                                     String zaleniumContainerId) throws DockerException, InterruptedException {
         String busyboxLatestImage = "busybox:latest";
         DockerSeleniumStarterRemoteProxy.setMaxDockerSeleniumContainers(0);
         if (containerId != null) {
             dockerClient.stopContainer(containerId, 5);
-            dockerClient.removeContainer(containerId);
         }
         if (zaleniumContainerId != null) {
             dockerClient.stopContainer(zaleniumContainerId, 5);
-            dockerClient.removeContainer(zaleniumContainerId);
         }
         dockerClient.removeImage(busyboxLatestImage);
     }
@@ -333,10 +329,14 @@ public class DockerSeleniumRemoteProxyTest {
     private String createZaleniumContainer(DockerClient dockerClient) throws DockerException, InterruptedException {
         String busyboxLatestImage = "busybox:latest";
         dockerClient.pull(busyboxLatestImage);
+        final HostConfig hostConfig = HostConfig.builder()
+                .autoRemove(true)
+                .build();
         final ContainerConfig containerConfig = ContainerConfig.builder()
                 .image(busyboxLatestImage)
                 // make sure the container's busy doing something upon startup
                 .cmd("sh", "-c", "while :; do sleep 1; done")
+                .hostConfig(hostConfig)
                 .build();
         final ContainerCreation containerCreation = dockerClient.createContainer(containerConfig, "zalenium");
         String zaleniumContainerId = containerCreation.id();
