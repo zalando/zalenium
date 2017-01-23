@@ -306,7 +306,7 @@ public class DockerSeleniumRemoteProxyTest {
         if (zaleniumContainerId != null) {
             dockerClient.stopContainer(zaleniumContainerId, 5);
         }
-        dockerClient.removeImage(busyboxLatestImage);
+        dockerClient.removeImage(busyboxLatestImage, true, true);
     }
 
     private String waitForContainerToBeReady(DockerClient dockerClient, DockerSeleniumRemoteProxy spyProxy)
