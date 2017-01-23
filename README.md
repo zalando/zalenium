@@ -87,7 +87,7 @@ docker run --rm -ti --name zalenium -p 4444:4444 -p 5555:5555 \
 ```
 
 #### OSX
-Zalenium for OSX is currently compatible with Docker `1.11` and `1.12` __default__. In Mac is recommended that you explicitly tell Zalenium which major version you are using via `-e DOCKER=1.11` due to API compatibility issues. In the future this will be automated on our side as it is with Linux (read above)
+Zalenium for OSX is currently compatible with Docker `1.11`, `1.12` __default__ and `1.13`. In Mac is recommended that you explicitly tell Zalenium which major version you are using via `-e DOCKER=1.11` due to API compatibility issues. In the future this will be automated on our side as it is with Linux (read above)
 
 ```sh
 docker run --rm -ti --name zalenium -p 4444:4444 -p 5555:5555 \

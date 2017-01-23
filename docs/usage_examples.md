@@ -59,8 +59,8 @@ Basic usage, without any of the integrated cloud testing platforms.
 ### with TestingBot enabled
 
   ```sh
-    export TESTINGBOT_USER=<your TestingBot username>
     export TESTINGBOT_KEY=<your TestingBot access key>
+    export TESTINGBOT_SECRET=<your TestingBot secret>
     docker run --rm -ti --name zalenium -p 4444:4444 -p 5555:5555 \
       -e TESTINGBOT_KEY -e TESTINGBOT_SECRET \
       -v /tmp/videos:/home/seluser/videos \
