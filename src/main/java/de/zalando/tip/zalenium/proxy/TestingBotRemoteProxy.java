@@ -57,19 +57,12 @@ public class TestingBotRemoteProxy extends CloudTestingRemoteProxy {
             DesiredCapabilities desiredCapabilities = new DesiredCapabilities();
             desiredCapabilities.setCapability(RegistrationRequest.MAX_INSTANCES, 5);
             desiredCapabilities.setBrowserName(capAsJsonObject.get("name").getAsString());
-            desiredCapabilities.setPlatform(getPlatform(capAsJsonObject.get("platform").getAsString()));
+            desiredCapabilities.setPlatform(Platform.extractFromSysProperty(capAsJsonObject.get("platform").getAsString()));
             if (!registrationRequest.getCapabilities().contains(desiredCapabilities)) {
                 registrationRequest.addDesiredCapability(desiredCapabilities);
             }
         }
         return registrationRequest;
-    }
-
-    private static Platform getPlatform(String os) {
-        if ("windows 2012".equalsIgnoreCase(os)) {
-            return Platform.WIN8;
-        }
-        return Platform.extractFromSysProperty(os);
     }
 
     @Override
