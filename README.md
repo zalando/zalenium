@@ -36,8 +36,6 @@ You can use the Zalenium already, but it is still under development and open for
 #### Running it
 Zalenium uses docker to scale on-demand, therefore we need to give it the `docker.sock` full access, this is known as "Docker alongside docker".
 
-NB. The container must be called `zalenium`. This is required because a docker network with this name will be created to allow all containers to locate each other without too much hassle.
-
 * Basic usage, without any of the integrated cloud testing platforms enabled:
 
   ```sh
@@ -71,7 +69,10 @@ NB. The container must be called `zalenium`. This is required because a docker n
 * You can use the [integration tests](./src/test/java/de/zalando/tip/zalenium/it/ParallelIT.java) we have to try Zalenium.
 * Check the live preview of your running tests [http://localhost:4444/grid/admin/live](http://localhost:4444/grid/admin/live)
 * To see the recorded videos, check the `/tmp/videos` folder (or the folder that you mapped when starting the container).
-  * It is possible to customise the video name by adding a `name` capability in your test. The file name will look like `testName_browser_nodePort_timeStamp.mkv` 
+  * It is possible to customise the video name by adding a `name` capability in your test. The file name will look 
+  like `containerName_testName_browser_nodePort_timeStamp.mkv`. The `containerName` part is useful when more than one 
+  instance of Zalenium is running.
+
 
 ### Docker version
 
