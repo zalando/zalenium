@@ -4,13 +4,7 @@ import de.zalando.tip.zalenium.util.TestUtils;
 import org.junit.Test;
 import org.openqa.grid.common.RegistrationRequest;
 import org.openqa.grid.internal.Registry;
-import org.openqa.grid.internal.TestSession;
-import org.openqa.grid.internal.utils.CapabilityMatcher;
 import org.testng.Assert;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.net.URL;
 
 public class CloudTestingRemoteProxyTest {
 
