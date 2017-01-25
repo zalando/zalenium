@@ -204,7 +204,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
 
     static void setTimeZone(String timeZone) {
         if (!Arrays.asList(TimeZone.getAvailableIDs()).contains(timeZone)) {
-            LOGGER.log(Level.WARNING, String.format("%s is not a real time zone.", timeZone));
+            LOGGER.log(Level.WARNING, () -> String.format("%s is not a real time zone.", timeZone));
         }
         DockerSeleniumStarterRemoteProxy.timeZone = Arrays.asList(TimeZone.getAvailableIDs()).contains(timeZone) ?
                 timeZone : DEFAULT_TZ;
@@ -289,7 +289,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
         }
 
         if (!requestedCapability.containsKey(CapabilityType.BROWSER_NAME)) {
-            LOGGER.log(Level.INFO, String.format("%s Capability %s does no contain %s key.", LOGGING_PREFIX,
+            LOGGER.log(Level.INFO, () -> String.format("%s Capability %s does no contain %s key.", LOGGING_PREFIX,
                     requestedCapability, CapabilityType.BROWSER_NAME));
             return null;
         }
@@ -477,7 +477,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
                 return false;
             }
 
-            LOGGER.log(Level.FINE, String.format("%s %s docker-selenium containers running", LOGGING_PREFIX,
+            LOGGER.log(Level.FINE, () -> String.format("%s %s docker-selenium containers running", LOGGING_PREFIX,
                     numberOfDockerSeleniumContainers));
             if (numberOfDockerSeleniumContainers >= getMaxDockerSeleniumContainers()) {
                 LOGGER.log(Level.FINE, LOGGING_PREFIX + "Max. number of docker-selenium containers has been reached, " +
