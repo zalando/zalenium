@@ -26,7 +26,7 @@ public class Environment {
                 return defaultValue;
             }
         } else {
-            logger.log(Level.FINE, String.format(ENV_VAR_IS_NOT_SET, envVariableName, defaultValue));
+            logger.log(Level.FINE, () -> String.format(ENV_VAR_IS_NOT_SET, envVariableName, defaultValue));
             return defaultValue;
         }
     }
@@ -40,7 +40,7 @@ public class Environment {
                 return defaultValue;
             }
         } else {
-            logger.log(Level.FINE, String.format(ENV_VAR_IS_NOT_SET, envVariableName, defaultValue));
+            logger.log(Level.FINE, () -> String.format(ENV_VAR_IS_NOT_SET, envVariableName, defaultValue));
             return defaultValue;
         }
     }
@@ -55,7 +55,7 @@ public class Environment {
                 return defaultValue;
             }
         } else {
-            logger.log(Level.FINE, String.format(ENV_VAR_IS_NOT_SET, envVariableName, defaultValue));
+            logger.log(Level.FINE, () -> String.format(ENV_VAR_IS_NOT_SET, envVariableName, defaultValue));
             return defaultValue;
         }
     }
