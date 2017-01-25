@@ -54,6 +54,8 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     @VisibleForTesting
     static final int DEFAULT_SCREEN_HEIGHT = 1880;
     @VisibleForTesting
+    static final String DEFAULT_ZALENIUM_CONTAINER_NAME = "zalenium";
+    @VisibleForTesting
     static final String ZALENIUM_CHROME_CONTAINERS = "ZALENIUM_CHROME_CONTAINERS";
     @VisibleForTesting
     static final String ZALENIUM_FIREFOX_CONTAINERS = "ZALENIUM_FIREFOX_CONTAINERS";
@@ -65,6 +67,8 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     static final String ZALENIUM_SCREEN_WIDTH = "ZALENIUM_SCREEN_WIDTH";
     @VisibleForTesting
     static final String ZALENIUM_SCREEN_HEIGHT = "ZALENIUM_SCREEN_HEIGHT";
+    @VisibleForTesting
+    static final String ZALENIUM_CONTAINER_NAME = "ZALENIUM_CONTAINER_NAME";
     @VisibleForTesting
     static final String DOCKER_SELENIUM_CAPABILITIES_URL =
             "https://raw.githubusercontent.com/elgalu/docker-selenium/latest/capabilities.json";
@@ -87,6 +91,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     private static String timeZone;
     private static int screenWidth;
     private static int screenHeight;
+    private static String containerName;
     private List<Integer> allocatedPorts = new ArrayList<>();
     private boolean setupCompleted;
 
@@ -118,6 +123,9 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
 
         String tz = env.getStringEnvVariable(ZALENIUM_TZ, DEFAULT_TZ);
         setTimeZone(tz);
+
+        String containerN = env.getStringEnvVariable(ZALENIUM_CONTAINER_NAME, DEFAULT_ZALENIUM_CONTAINER_NAME);
+        setContainerName(containerN);
     }
 
     /*
@@ -178,6 +186,14 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     static void setFirefoxContainersOnStartup(int firefoxContainersOnStartup) {
         DockerSeleniumStarterRemoteProxy.firefoxContainersOnStartup = firefoxContainersOnStartup < 0 ?
                 DEFAULT_AMOUNT_FIREFOX_CONTAINERS : firefoxContainersOnStartup;
+    }
+
+    static String getContainerName() {
+        return containerName == null ? DEFAULT_ZALENIUM_CONTAINER_NAME : containerName;
+    }
+
+    static void setContainerName(String containerName) {
+        DockerSeleniumStarterRemoteProxy.containerName = containerName;
     }
 
     static int getChromeContainersOnStartup() {
@@ -376,9 +392,10 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
                 envVariables.add("FIREFOX=false");
             }
 
+            String networkMode = String.format("container:%s", getContainerName());
             HostConfig hostConfig = HostConfig.builder()
                     .shmSize(1073741824L) // 1GB
-                    .networkMode("container:zalenium")
+                    .networkMode(networkMode)
                     .autoRemove(true)
                     .build();
 
@@ -389,7 +406,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
                         .hostConfig(hostConfig)
                         .build();
 
-                String containerName = String.format("%s_%s", "zalenium", nodePort);
+                String containerName = String.format("%s_%s", getContainerName(), nodePort);
                 final ContainerCreation dockerSeleniumContainer = dockerClient.createContainer(containerConfig,
                         containerName);
                 dockerClient.startContainer(dockerSeleniumContainer.id());

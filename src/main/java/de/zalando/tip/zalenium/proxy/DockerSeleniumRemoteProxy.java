@@ -215,7 +215,8 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     String getContainerId() throws DockerException, InterruptedException {
         List<Container> containerList = dockerClient.listContainers(DockerClient.ListContainersParam.allContainers());
         for (Container container : containerList) {
-            String containerName = "/zalenium_" + getRemoteHost().getPort();
+            String containerName = String.format("/%s_%s", DockerSeleniumStarterRemoteProxy.getContainerName(),
+                    getRemoteHost().getPort());
             if (containerName.equalsIgnoreCase(container.names().get(0))) {
                 return container.id();
             }
@@ -258,6 +259,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                 String fileName = String.format("%s_%s", entry.getName(), getCurrentDateAndTimeFormatted());
                 fileName = fileName.replace(fileExtension, "").concat(fileExtension);
                 fileName = getTestName().isEmpty() ? fileName : fileName.replace("vid_", getTestName() + "_");
+                fileName = DockerSeleniumStarterRemoteProxy.getContainerName() + "_" + fileName;
                 File curFile = new File(localPath, fileName);
                 File parent = curFile.getParentFile();
                 if (!parent.exists()) {
