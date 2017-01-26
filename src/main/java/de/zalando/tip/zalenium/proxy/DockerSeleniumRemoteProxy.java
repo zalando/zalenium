@@ -217,7 +217,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         return testGroup == null ? "" : testGroup;
     }
 
-    String getContainerId() throws DockerException, InterruptedException {
+    protected String getContainerId() throws DockerException, InterruptedException {
         List<Container> containerList = dockerClient.listContainers(DockerClient.ListContainersParam.allContainers());
         for (Container container : containerList) {
             String containerName = String.format("/%s_%s", DockerSeleniumStarterRemoteProxy.getContainerName(),
@@ -318,7 +318,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
             this.dockerSeleniumRemoteProxy = dockerSeleniumRemoteProxy;
         }
 
-        long getSleepTimeBetweenChecks() {
+        protected long getSleepTimeBetweenChecks() {
             return sleepTimeBetweenChecks;
         }
 
