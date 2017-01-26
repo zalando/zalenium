@@ -146,7 +146,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
             firefoxVersion = imageInfo.config().labels().get("selenium2_firefox_version");
         } catch (DockerException | InterruptedException e) {
             LOGGER.log(Level.FINE, LOGGING_PREFIX + "Could not grab browser version information from the " +
-                    "docker-selenium image");
+                    "docker-selenium image", e);
         }
 
         dockerSeleniumCapabilities.clear();
@@ -384,9 +384,9 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
                         .hostConfig(hostConfig)
                         .build();
 
-                String containerName = String.format("%s_%s", getContainerName(), nodePort);
+                String dockerSeleniumContainerName = String.format("%s_%s", getContainerName(), nodePort);
                 final ContainerCreation dockerSeleniumContainer = dockerClient.createContainer(containerConfig,
-                        containerName);
+                        dockerSeleniumContainerName);
                 dockerClient.startContainer(dockerSeleniumContainer.id());
                 return true;
             } catch (Exception e) {

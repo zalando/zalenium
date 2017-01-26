@@ -283,10 +283,6 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         return dockerSeleniumNodePollerThread;
     }
 
-    private boolean isStopSessionRequestReceived() {
-        return stopSessionRequestReceived;
-    }
-
     private String getCurrentDateAndTimeFormatted() {
         DateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
         return dateFormat.format(new Date());
@@ -331,7 +327,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                     then the node executes its teardown.
                 */
                 if (!dockerSeleniumRemoteProxy.isBusy() && dockerSeleniumRemoteProxy.isTestSessionLimitReached() &&
-                        dockerSeleniumRemoteProxy.isStopSessionRequestReceived()) {
+                        dockerSeleniumRemoteProxy.stopSessionRequestReceived) {
                     dockerSeleniumRemoteProxy.videoRecording(VideoRecordingAction.STOP_RECORDING);
                     shutdownNode();
                     return;
