@@ -39,6 +39,7 @@ import java.util.logging.Logger;
  * the process will flow as normal.
  */
 
+@SuppressWarnings("WeakerAccess")
 public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy implements RegistrationListener {
 
     @VisibleForTesting
@@ -179,16 +180,18 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
         commonProxyUtilities = defaultCommonProxyUtilities;
     }
 
-    static int getFirefoxContainersOnStartup() {
+    @VisibleForTesting
+    protected static int getFirefoxContainersOnStartup() {
         return firefoxContainersOnStartup;
     }
 
-    static void setFirefoxContainersOnStartup(int firefoxContainersOnStartup) {
+    @VisibleForTesting
+    protected static void setFirefoxContainersOnStartup(int firefoxContainersOnStartup) {
         DockerSeleniumStarterRemoteProxy.firefoxContainersOnStartup = firefoxContainersOnStartup < 0 ?
                 DEFAULT_AMOUNT_FIREFOX_CONTAINERS : firefoxContainersOnStartup;
     }
 
-    static String getContainerName() {
+    public static String getContainerName() {
         return containerName == null ? DEFAULT_ZALENIUM_CONTAINER_NAME : containerName;
     }
 
@@ -196,29 +199,35 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
         DockerSeleniumStarterRemoteProxy.containerName = containerName;
     }
 
-    static int getChromeContainersOnStartup() {
+    @VisibleForTesting
+    protected static int getChromeContainersOnStartup() {
         return chromeContainersOnStartup;
     }
 
-    static void setChromeContainersOnStartup(int chromeContainersOnStartup) {
+    @VisibleForTesting
+    protected static void setChromeContainersOnStartup(int chromeContainersOnStartup) {
         DockerSeleniumStarterRemoteProxy.chromeContainersOnStartup = chromeContainersOnStartup < 0 ?
                 DEFAULT_AMOUNT_CHROME_CONTAINERS : chromeContainersOnStartup;
     }
 
-    static int getMaxDockerSeleniumContainers() {
+    @VisibleForTesting
+    protected static int getMaxDockerSeleniumContainers() {
         return maxDockerSeleniumContainers;
     }
 
-    static void setMaxDockerSeleniumContainers(int maxDockerSeleniumContainers) {
+    @VisibleForTesting
+    protected static void setMaxDockerSeleniumContainers(int maxDockerSeleniumContainers) {
         DockerSeleniumStarterRemoteProxy.maxDockerSeleniumContainers = maxDockerSeleniumContainers < 0 ?
                 DEFAULT_AMOUNT_DOCKER_SELENIUM_CONTAINERS_RUNNING : maxDockerSeleniumContainers;
     }
 
-    static String getTimeZone() {
+    @VisibleForTesting
+    protected static String getTimeZone() {
         return timeZone;
     }
 
-    static void setTimeZone(String timeZone) {
+    @VisibleForTesting
+    protected static void setTimeZone(String timeZone) {
         if (!Arrays.asList(TimeZone.getAvailableIDs()).contains(timeZone)) {
             LOGGER.log(Level.WARNING, () -> String.format("%s is not a real time zone.", timeZone));
         }
@@ -226,19 +235,23 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
                 timeZone : DEFAULT_TZ;
     }
 
-    static int getScreenWidth() {
+    @VisibleForTesting
+    protected static int getScreenWidth() {
         return screenWidth;
     }
 
-    static void setScreenWidth(int screenWidth) {
+    @VisibleForTesting
+    protected static void setScreenWidth(int screenWidth) {
         DockerSeleniumStarterRemoteProxy.screenWidth = screenWidth <= 0 ? DEFAULT_SCREEN_WIDTH : screenWidth;
     }
 
-    static int getScreenHeight() {
+    @VisibleForTesting
+    protected static int getScreenHeight() {
         return screenHeight;
     }
 
-    static void setScreenHeight(int screenHeight) {
+    @VisibleForTesting
+    protected static void setScreenHeight(int screenHeight) {
         DockerSeleniumStarterRemoteProxy.screenHeight = screenHeight <= 0 ? DEFAULT_SCREEN_HEIGHT : screenHeight;
     }
 
@@ -435,7 +448,8 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
         return images.get(0).repoTags().get(0);
     }
 
-    boolean isSetupCompleted() {
+    @VisibleForTesting
+    protected boolean isSetupCompleted() {
         return setupCompleted;
     }
 

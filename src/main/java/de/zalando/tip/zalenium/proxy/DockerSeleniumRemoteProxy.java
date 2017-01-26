@@ -278,7 +278,8 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         LOGGER.log(Level.INFO, "{0} Video files copies to: {1}", new Object[]{getNodeIpAndPort(), localPath});
     }
 
-    DockerSeleniumNodePoller getDockerSeleniumNodePollerThread() {
+    @VisibleForTesting
+    protected DockerSeleniumNodePoller getDockerSeleniumNodePollerThread() {
         return dockerSeleniumNodePollerThread;
     }
 
