@@ -54,7 +54,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     @VisibleForTesting
     static final int DEFAULT_SCREEN_HEIGHT = 1880;
     @VisibleForTesting
-    static final String DEFAULT_ZALENIUM_CONTAINER_NAME = "zalenium";
+    private static final String DEFAULT_ZALENIUM_CONTAINER_NAME = "zalenium";
     @VisibleForTesting
     static final String ZALENIUM_CHROME_CONTAINERS = "ZALENIUM_CHROME_CONTAINERS";
     @VisibleForTesting
@@ -68,7 +68,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     @VisibleForTesting
     static final String ZALENIUM_SCREEN_HEIGHT = "ZALENIUM_SCREEN_HEIGHT";
     @VisibleForTesting
-    static final String ZALENIUM_CONTAINER_NAME = "ZALENIUM_CONTAINER_NAME";
+    private static final String ZALENIUM_CONTAINER_NAME = "ZALENIUM_CONTAINER_NAME";
     @VisibleForTesting
     static final String DOCKER_SELENIUM_CAPABILITIES_URL =
             "https://raw.githubusercontent.com/elgalu/docker-selenium/latest/capabilities.json";
@@ -192,7 +192,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
         return containerName == null ? DEFAULT_ZALENIUM_CONTAINER_NAME : containerName;
     }
 
-    static void setContainerName(String containerName) {
+    private static void setContainerName(String containerName) {
         DockerSeleniumStarterRemoteProxy.containerName = containerName;
     }
 
@@ -419,6 +419,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
         return false;
     }
 
+    @SuppressWarnings("ConstantConditions")
     private String getLatestDownloadedImage(String imageName) throws DockerException, InterruptedException {
         List<Image> images = dockerClient.listImages(DockerClient.ListImagesParam.byName(imageName));
         if (images.isEmpty()) {

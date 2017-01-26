@@ -114,23 +114,23 @@ public class CloudTestingRemoteProxy extends DefaultRemoteProxy {
         super.afterCommand(session, request, response);
     }
 
-    String getUserNameProperty() {
+    public String getUserNameProperty() {
         return null;
     }
 
-    String getUserNameValue() {
+    public String getUserNameValue() {
         return null;
     }
 
-    String getAccessKeyProperty() {
+    public String getAccessKeyProperty() {
         return null;
     }
 
-    String getAccessKeyValue() {
+    public String getAccessKeyValue() {
         return null;
     }
 
-    String getCloudTestingServiceUrl() {
+    public String getCloudTestingServiceUrl() {
         return null;
     }
 

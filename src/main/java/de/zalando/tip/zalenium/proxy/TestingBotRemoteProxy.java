@@ -72,27 +72,27 @@ public class TestingBotRemoteProxy extends CloudTestingRemoteProxy {
     }
 
     @Override
-    String getUserNameProperty() {
+    public String getUserNameProperty() {
         return "key";
     }
 
     @Override
-    String getUserNameValue() {
+    public String getUserNameValue() {
         return TESTINGBOT_KEY;
     }
 
     @Override
-    String getAccessKeyProperty() {
+    public String getAccessKeyProperty() {
         return "secret";
     }
 
     @Override
-    String getAccessKeyValue() {
+    public String getAccessKeyValue() {
         return TESTINGBOT_SECRET;
     }
 
     @Override
-    String getCloudTestingServiceUrl() {
+    public String getCloudTestingServiceUrl() {
         return TESTINGBOT_URL;
     }
 
