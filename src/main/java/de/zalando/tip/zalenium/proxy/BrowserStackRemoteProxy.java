@@ -97,27 +97,27 @@ public class BrowserStackRemoteProxy extends CloudTestingRemoteProxy {
     }
 
     @Override
-    String getUserNameProperty() {
+    public String getUserNameProperty() {
         return "browserstack.user";
     }
 
     @Override
-    String getUserNameValue() {
+    public String getUserNameValue() {
         return BROWSER_STACK_USER;
     }
 
     @Override
-    String getAccessKeyProperty() {
+    public String getAccessKeyProperty() {
         return "browserstack.key";
     }
 
     @Override
-    String getAccessKeyValue() {
+    public String getAccessKeyValue() {
         return BROWSER_STACK_KEY;
     }
 
     @Override
-    String getCloudTestingServiceUrl() {
+    public String getCloudTestingServiceUrl() {
         return BROWSER_STACK_URL;
     }
 

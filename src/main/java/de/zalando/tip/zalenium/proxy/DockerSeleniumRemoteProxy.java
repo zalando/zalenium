@@ -40,6 +40,7 @@ import java.util.logging.Logger;
 /*
     The implementation of this class was inspired on https://gist.github.com/krmahadevan/4649607
  */
+@SuppressWarnings("WeakerAccess")
 public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
 
     @VisibleForTesting
@@ -95,7 +96,8 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         env = defaultEnvironment;
     }
 
-    static boolean isVideoRecordingEnabled() {
+    @VisibleForTesting
+    protected static boolean isVideoRecordingEnabled() {
         return videoRecordingEnabled;
     }
 
@@ -161,7 +163,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         stopPolling();
     }
 
-    String getNodeIpAndPort() {
+    private String getNodeIpAndPort() {
         return getRemoteHost().getHost() + ":" + getRemoteHost().getPort();
     }
 
@@ -180,15 +182,18 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     /*
         Method to decide if the node can be removed based on the amount of executed tests.
      */
-    synchronized boolean isTestSessionLimitReached() {
+    @VisibleForTesting
+    protected synchronized boolean isTestSessionLimitReached() {
         return getAmountOfExecutedTests() >= MAX_UNIQUE_TEST_SESSIONS;
     }
 
-    int getAmountOfExecutedTests() {
+    @VisibleForTesting
+    protected int getAmountOfExecutedTests() {
         return amountOfExecutedTests;
     }
 
-    void videoRecording(final VideoRecordingAction action) {
+    @VisibleForTesting
+    protected void videoRecording(final VideoRecordingAction action) {
         if (isVideoRecordingEnabled()) {
             try {
                 String containerId = getContainerId();
@@ -212,10 +217,11 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         return testGroup == null ? "" : testGroup;
     }
 
-    String getContainerId() throws DockerException, InterruptedException {
+    protected String getContainerId() throws DockerException, InterruptedException {
         List<Container> containerList = dockerClient.listContainers(DockerClient.ListContainersParam.allContainers());
         for (Container container : containerList) {
-            String containerName = "/zalenium_" + getRemoteHost().getPort();
+            String containerName = String.format("/%s_%s", DockerSeleniumStarterRemoteProxy.getContainerName(),
+                    getRemoteHost().getPort());
             if (containerName.equalsIgnoreCase(container.names().get(0))) {
                 return container.id();
             }
@@ -258,6 +264,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                 String fileName = String.format("%s_%s", entry.getName(), getCurrentDateAndTimeFormatted());
                 fileName = fileName.replace(fileExtension, "").concat(fileExtension);
                 fileName = getTestName().isEmpty() ? fileName : fileName.replace("vid_", getTestName() + "_");
+                fileName = DockerSeleniumStarterRemoteProxy.getContainerName() + "_" + fileName;
                 File curFile = new File(localPath, fileName);
                 File parent = curFile.getParentFile();
                 if (!parent.exists()) {
@@ -271,12 +278,9 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         LOGGER.log(Level.INFO, "{0} Video files copies to: {1}", new Object[]{getNodeIpAndPort(), localPath});
     }
 
-    DockerSeleniumNodePoller getDockerSeleniumNodePollerThread() {
+    @VisibleForTesting
+    protected DockerSeleniumNodePoller getDockerSeleniumNodePollerThread() {
         return dockerSeleniumNodePollerThread;
-    }
-
-    boolean isStopSessionRequestReceived() {
-        return stopSessionRequestReceived;
     }
 
     private String getCurrentDateAndTimeFormatted() {
@@ -311,7 +315,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
             this.dockerSeleniumRemoteProxy = dockerSeleniumRemoteProxy;
         }
 
-        long getSleepTimeBetweenChecks() {
+        protected long getSleepTimeBetweenChecks() {
             return sleepTimeBetweenChecks;
         }
 
@@ -323,7 +327,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                     then the node executes its teardown.
                 */
                 if (!dockerSeleniumRemoteProxy.isBusy() && dockerSeleniumRemoteProxy.isTestSessionLimitReached() &&
-                        dockerSeleniumRemoteProxy.isStopSessionRequestReceived()) {
+                        dockerSeleniumRemoteProxy.stopSessionRequestReceived) {
                     dockerSeleniumRemoteProxy.videoRecording(VideoRecordingAction.STOP_RECORDING);
                     shutdownNode();
                     return;

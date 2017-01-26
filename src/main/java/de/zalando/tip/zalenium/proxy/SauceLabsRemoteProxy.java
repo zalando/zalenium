@@ -80,27 +80,27 @@ public class SauceLabsRemoteProxy extends CloudTestingRemoteProxy {
     }
 
     @Override
-    String getUserNameProperty() {
+    public String getUserNameProperty() {
         return "username";
     }
 
     @Override
-    String getUserNameValue() {
+    public String getUserNameValue() {
         return SAUCE_LABS_USER_NAME;
     }
 
     @Override
-    String getAccessKeyProperty() {
+    public String getAccessKeyProperty() {
         return "accessKey";
     }
 
     @Override
-    String getAccessKeyValue() {
+    public String getAccessKeyValue() {
         return SAUCE_LABS_ACCESS_KEY;
     }
 
     @Override
-    String getCloudTestingServiceUrl() {
+    public String getCloudTestingServiceUrl() {
         return SAUCE_LABS_URL;
     }
 

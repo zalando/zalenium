@@ -1,17 +1,10 @@
 package de.zalando.tip.zalenium.proxy;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import com.spotify.docker.client.DefaultDockerClient;
 import com.spotify.docker.client.DockerClient;
 import com.spotify.docker.client.exceptions.DockerException;
-import com.spotify.docker.client.messages.Container;
-import com.spotify.docker.client.messages.ContainerConfig;
-import com.spotify.docker.client.messages.ContainerCreation;
-import com.spotify.docker.client.messages.HostConfig;
-import com.spotify.docker.client.messages.Image;
-import de.zalando.tip.zalenium.util.CommonProxyUtilities;
+import com.spotify.docker.client.messages.*;
 import de.zalando.tip.zalenium.util.Environment;
 import de.zalando.tip.zalenium.util.GoogleAnalyticsApi;
 import org.openqa.grid.common.RegistrationRequest;
@@ -39,6 +32,7 @@ import java.util.logging.Logger;
  * the process will flow as normal.
  */
 
+@SuppressWarnings("WeakerAccess")
 public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy implements RegistrationListener {
 
     @VisibleForTesting
@@ -66,20 +60,19 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     @VisibleForTesting
     static final String ZALENIUM_SCREEN_HEIGHT = "ZALENIUM_SCREEN_HEIGHT";
     @VisibleForTesting
-    static final String DOCKER_SELENIUM_CAPABILITIES_URL =
-            "https://raw.githubusercontent.com/elgalu/docker-selenium/latest/capabilities.json";
+    private static final String DEFAULT_ZALENIUM_CONTAINER_NAME = "zalenium";
+    @VisibleForTesting
+    private static final String ZALENIUM_CONTAINER_NAME = "ZALENIUM_CONTAINER_NAME";
     private static final Logger LOGGER = Logger.getLogger(DockerSeleniumStarterRemoteProxy.class.getName());
     private static final String DOCKER_SELENIUM_IMAGE = "elgalu/selenium";
     private static final int LOWER_PORT_BOUNDARY = 40000;
     private static final int UPPER_PORT_BOUNDARY = 49999;
     private static final DockerClient defaultDockerClient = new DefaultDockerClient("unix:///var/run/docker.sock");
     private static final Environment defaultEnvironment = new Environment();
-    private static final CommonProxyUtilities defaultCommonProxyUtilities = new CommonProxyUtilities();
     private static final String LOGGING_PREFIX = "[DS] ";
     private static List<DesiredCapabilities> dockerSeleniumCapabilities = new ArrayList<>();
     private static DockerClient dockerClient = defaultDockerClient;
     private static Environment env = defaultEnvironment;
-    private static CommonProxyUtilities commonProxyUtilities = defaultCommonProxyUtilities;
     private static GoogleAnalyticsApi ga = new GoogleAnalyticsApi();
     private static int chromeContainersOnStartup;
     private static int firefoxContainersOnStartup;
@@ -87,12 +80,13 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     private static String timeZone;
     private static int screenWidth;
     private static int screenHeight;
+    private static String containerName;
     private List<Integer> allocatedPorts = new ArrayList<>();
     private boolean setupCompleted;
 
     @SuppressWarnings("WeakerAccess")
     public DockerSeleniumStarterRemoteProxy(RegistrationRequest request, Registry registry) {
-        super(updateDSCapabilities(request, DOCKER_SELENIUM_CAPABILITIES_URL), registry);
+        super(updateDSCapabilities(request), registry);
     }
 
     /*
@@ -118,6 +112,9 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
 
         String tz = env.getStringEnvVariable(ZALENIUM_TZ, DEFAULT_TZ);
         setTimeZone(tz);
+
+        String containerN = env.getStringEnvVariable(ZALENIUM_CONTAINER_NAME, DEFAULT_ZALENIUM_CONTAINER_NAME);
+        setContainerName(containerN);
     }
 
     /*
@@ -125,29 +122,55 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
      *  If it is not possible to retrieve them, then we default to Chrome and Firefox in Linux.
      */
     @VisibleForTesting
-    static RegistrationRequest updateDSCapabilities(RegistrationRequest registrationRequest, String url) {
+    protected static RegistrationRequest updateDSCapabilities(RegistrationRequest registrationRequest) {
         registrationRequest.getCapabilities().clear();
-        registrationRequest.getCapabilities().addAll(getCapabilities(url));
+        registrationRequest.getCapabilities().addAll(getCapabilities());
         return registrationRequest;
     }
 
+    @SuppressWarnings("ConstantConditions")
     @VisibleForTesting
-    static void clearCapabilities() {
-        dockerSeleniumCapabilities.clear();
-    }
-
-    private static List<DesiredCapabilities> getCapabilities(String url) {
+    public static List<DesiredCapabilities> getCapabilities() {
         if (!dockerSeleniumCapabilities.isEmpty()) {
             return dockerSeleniumCapabilities;
         }
 
-        dockerSeleniumCapabilities = getDockerSeleniumCapabilitiesFromGitHub(url);
-        if (dockerSeleniumCapabilities.isEmpty()) {
-            dockerSeleniumCapabilities = getDockerSeleniumFallbackCapabilities();
-            LOGGER.log(Level.WARNING, LOGGING_PREFIX + "Could not fetch capabilities from {0}, falling back to defaults.", url);
-            return dockerSeleniumCapabilities;
+        String chromeVersion = "";
+        String firefoxVersion = "";
+
+        // Getting versions from the current docker-selenium image
+        try {
+            String latestDownloadedImage = getLatestDownloadedImage(DOCKER_SELENIUM_IMAGE);
+            ImageInfo imageInfo = dockerClient.inspectImage(latestDownloadedImage);
+            chromeVersion = imageInfo.config().labels().get("selenium2_chrome_version");
+            firefoxVersion = imageInfo.config().labels().get("selenium2_firefox_version");
+        } catch (DockerException | InterruptedException e) {
+            LOGGER.log(Level.FINE, LOGGING_PREFIX + "Could not grab browser version information from the " +
+                    "docker-selenium image", e);
         }
-        LOGGER.log(Level.INFO, LOGGING_PREFIX + "Capabilities fetched from {0}", url);
+
+        dockerSeleniumCapabilities.clear();
+
+        List<DesiredCapabilities> dsCapabilities = new ArrayList<>();
+        DesiredCapabilities firefoxCapabilities = new DesiredCapabilities();
+        firefoxCapabilities.setBrowserName(BrowserType.FIREFOX);
+        firefoxCapabilities.setPlatform(Platform.LINUX);
+        if (firefoxVersion != null && !firefoxVersion.isEmpty()) {
+            firefoxCapabilities.setVersion(firefoxVersion);
+        }
+        firefoxCapabilities.setCapability(RegistrationRequest.MAX_INSTANCES, 1);
+        dsCapabilities.add(firefoxCapabilities);
+        DesiredCapabilities chromeCapabilities = new DesiredCapabilities();
+        chromeCapabilities.setBrowserName(BrowserType.CHROME);
+        chromeCapabilities.setPlatform(Platform.LINUX);
+        if (chromeVersion != null && !chromeVersion.isEmpty()) {
+            chromeCapabilities.setVersion(chromeVersion);
+        }
+        chromeCapabilities.setCapability(RegistrationRequest.MAX_INSTANCES, 1);
+        dsCapabilities.add(chromeCapabilities);
+
+        dockerSeleniumCapabilities = dsCapabilities;
+        LOGGER.log(Level.INFO, LOGGING_PREFIX + "Capabilities grabbed from the docker-selenium image");
         return dockerSeleniumCapabilities;
     }
 
@@ -162,67 +185,77 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     }
 
     @VisibleForTesting
-    static void setCommonProxyUtilities(final CommonProxyUtilities utilities) {
-        commonProxyUtilities = utilities;
-    }
-
-    @VisibleForTesting
-    static void restoreCommonProxyUtilities() {
-        commonProxyUtilities = defaultCommonProxyUtilities;
-    }
-
-    static int getFirefoxContainersOnStartup() {
+    protected static int getFirefoxContainersOnStartup() {
         return firefoxContainersOnStartup;
     }
 
-    static void setFirefoxContainersOnStartup(int firefoxContainersOnStartup) {
+    @VisibleForTesting
+    protected static void setFirefoxContainersOnStartup(int firefoxContainersOnStartup) {
         DockerSeleniumStarterRemoteProxy.firefoxContainersOnStartup = firefoxContainersOnStartup < 0 ?
                 DEFAULT_AMOUNT_FIREFOX_CONTAINERS : firefoxContainersOnStartup;
     }
 
-    static int getChromeContainersOnStartup() {
+    public static String getContainerName() {
+        return containerName == null ? DEFAULT_ZALENIUM_CONTAINER_NAME : containerName;
+    }
+
+    private static void setContainerName(String containerName) {
+        DockerSeleniumStarterRemoteProxy.containerName = containerName;
+    }
+
+    @VisibleForTesting
+    protected static int getChromeContainersOnStartup() {
         return chromeContainersOnStartup;
     }
 
-    static void setChromeContainersOnStartup(int chromeContainersOnStartup) {
+    @VisibleForTesting
+    protected static void setChromeContainersOnStartup(int chromeContainersOnStartup) {
         DockerSeleniumStarterRemoteProxy.chromeContainersOnStartup = chromeContainersOnStartup < 0 ?
                 DEFAULT_AMOUNT_CHROME_CONTAINERS : chromeContainersOnStartup;
     }
 
-    static int getMaxDockerSeleniumContainers() {
+    @VisibleForTesting
+    protected static int getMaxDockerSeleniumContainers() {
         return maxDockerSeleniumContainers;
     }
 
-    static void setMaxDockerSeleniumContainers(int maxDockerSeleniumContainers) {
+    @VisibleForTesting
+    protected static void setMaxDockerSeleniumContainers(int maxDockerSeleniumContainers) {
         DockerSeleniumStarterRemoteProxy.maxDockerSeleniumContainers = maxDockerSeleniumContainers < 0 ?
                 DEFAULT_AMOUNT_DOCKER_SELENIUM_CONTAINERS_RUNNING : maxDockerSeleniumContainers;
     }
 
-    static String getTimeZone() {
+    @VisibleForTesting
+    protected static String getTimeZone() {
         return timeZone;
     }
 
-    static void setTimeZone(String timeZone) {
+    @VisibleForTesting
+    protected static void setTimeZone(String timeZone) {
         if (!Arrays.asList(TimeZone.getAvailableIDs()).contains(timeZone)) {
-            LOGGER.log(Level.WARNING, String.format("%s is not a real time zone.", timeZone));
+            LOGGER.log(Level.WARNING, () -> String.format("%s is not a real time zone.", timeZone));
         }
         DockerSeleniumStarterRemoteProxy.timeZone = Arrays.asList(TimeZone.getAvailableIDs()).contains(timeZone) ?
                 timeZone : DEFAULT_TZ;
     }
 
-    static int getScreenWidth() {
+    @VisibleForTesting
+    protected static int getScreenWidth() {
         return screenWidth;
     }
 
-    static void setScreenWidth(int screenWidth) {
+    @VisibleForTesting
+    protected static void setScreenWidth(int screenWidth) {
         DockerSeleniumStarterRemoteProxy.screenWidth = screenWidth <= 0 ? DEFAULT_SCREEN_WIDTH : screenWidth;
     }
 
-    static int getScreenHeight() {
+    @VisibleForTesting
+    protected static int getScreenHeight() {
         return screenHeight;
     }
 
-    static void setScreenHeight(int screenHeight) {
+    @VisibleForTesting
+    protected static void setScreenHeight(int screenHeight) {
         DockerSeleniumStarterRemoteProxy.screenHeight = screenHeight <= 0 ? DEFAULT_SCREEN_HEIGHT : screenHeight;
     }
 
@@ -234,45 +267,6 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     @VisibleForTesting
     static void restoreEnvironment() {
         env = defaultEnvironment;
-    }
-
-    private static List<DesiredCapabilities> getDockerSeleniumCapabilitiesFromGitHub(String url) {
-        JsonElement dsCapabilities = commonProxyUtilities.readJSONFromUrl(url);
-        List<DesiredCapabilities> desiredCapabilitiesArrayList = new ArrayList<>();
-        try {
-            if (dsCapabilities != null) {
-                for (JsonElement cap : dsCapabilities.getAsJsonObject().getAsJsonArray("caps")) {
-                    JsonObject capAsJsonObject = cap.getAsJsonObject();
-                    DesiredCapabilities desiredCapabilities = new DesiredCapabilities();
-                    desiredCapabilities.setCapability(RegistrationRequest.MAX_INSTANCES, 1);
-                    desiredCapabilities.setBrowserName(capAsJsonObject.get("BROWSER_NAME").getAsString());
-                    desiredCapabilities.setPlatform(Platform.fromString(capAsJsonObject.get("PLATFORM").getAsString()));
-                    desiredCapabilities.setVersion(capAsJsonObject.get("VERSION").getAsString());
-                    desiredCapabilitiesArrayList.add(desiredCapabilities);
-                }
-            }
-        } catch (Exception e) {
-            LOGGER.log(Level.WARNING, LOGGING_PREFIX + e.toString(), e);
-            ga.trackException(e);
-
-        }
-        return desiredCapabilitiesArrayList;
-    }
-
-    @VisibleForTesting
-    public static List<DesiredCapabilities> getDockerSeleniumFallbackCapabilities() {
-        List<DesiredCapabilities> dsCapabilities = new ArrayList<>();
-        DesiredCapabilities desiredCapabilities = new DesiredCapabilities();
-        desiredCapabilities.setBrowserName(BrowserType.FIREFOX);
-        desiredCapabilities.setPlatform(Platform.LINUX);
-        desiredCapabilities.setCapability(RegistrationRequest.MAX_INSTANCES, 1);
-        dsCapabilities.add(desiredCapabilities);
-        desiredCapabilities = new DesiredCapabilities();
-        desiredCapabilities.setBrowserName(BrowserType.CHROME);
-        desiredCapabilities.setPlatform(Platform.LINUX);
-        desiredCapabilities.setCapability(RegistrationRequest.MAX_INSTANCES, 1);
-        dsCapabilities.add(desiredCapabilities);
-        return dsCapabilities;
     }
 
     /**
@@ -289,7 +283,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
         }
 
         if (!requestedCapability.containsKey(CapabilityType.BROWSER_NAME)) {
-            LOGGER.log(Level.INFO, String.format("%s Capability %s does no contain %s key.", LOGGING_PREFIX,
+            LOGGER.log(Level.INFO, () -> String.format("%s Capability %s does no contain %s key.", LOGGING_PREFIX,
                     requestedCapability, CapabilityType.BROWSER_NAME));
             return null;
         }
@@ -376,9 +370,10 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
                 envVariables.add("FIREFOX=false");
             }
 
+            String networkMode = String.format("container:%s", getContainerName());
             HostConfig hostConfig = HostConfig.builder()
                     .shmSize(1073741824L) // 1GB
-                    .networkMode("container:zalenium")
+                    .networkMode(networkMode)
                     .autoRemove(true)
                     .build();
 
@@ -389,9 +384,9 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
                         .hostConfig(hostConfig)
                         .build();
 
-                String containerName = String.format("%s_%s", "zalenium", nodePort);
+                String dockerSeleniumContainerName = String.format("%s_%s", getContainerName(), nodePort);
                 final ContainerCreation dockerSeleniumContainer = dockerClient.createContainer(containerConfig,
-                        containerName);
+                        dockerSeleniumContainerName);
                 dockerClient.startContainer(dockerSeleniumContainer.id());
                 return true;
             } catch (Exception e) {
@@ -402,7 +397,8 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
         return false;
     }
 
-    private String getLatestDownloadedImage(String imageName) throws DockerException, InterruptedException {
+    @SuppressWarnings("ConstantConditions")
+    private static String getLatestDownloadedImage(String imageName) throws DockerException, InterruptedException {
         List<Image> images = dockerClient.listImages(DockerClient.ListImagesParam.byName(imageName));
         if (images.isEmpty()) {
             LOGGER.log(Level.SEVERE, "A downloaded docker-selenium image was not found!");
@@ -417,7 +413,8 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
         return images.get(0).repoTags().get(0);
     }
 
-    boolean isSetupCompleted() {
+    @VisibleForTesting
+    protected boolean isSetupCompleted() {
         return setupCompleted;
     }
 
@@ -477,7 +474,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
                 return false;
             }
 
-            LOGGER.log(Level.FINE, String.format("%s %s docker-selenium containers running", LOGGING_PREFIX,
+            LOGGER.log(Level.FINE, () -> String.format("%s %s docker-selenium containers running", LOGGING_PREFIX,
                     numberOfDockerSeleniumContainers));
             if (numberOfDockerSeleniumContainers >= getMaxDockerSeleniumContainers()) {
                 LOGGER.log(Level.FINE, LOGGING_PREFIX + "Max. number of docker-selenium containers has been reached, " +

@@ -2,6 +2,7 @@ package de.zalando.tip.zalenium.servlet;
 
 import com.google.gson.JsonObject;
 import de.zalando.tip.zalenium.proxy.DockerSeleniumRemoteProxy;
+import de.zalando.tip.zalenium.util.Environment;
 import org.openqa.grid.internal.TestSession;
 import org.openqa.grid.internal.TestSlot;
 import org.openqa.grid.internal.utils.HtmlRenderer;
@@ -18,6 +19,8 @@ public class LiveNodeHtmlRenderer implements HtmlRenderer {
 
     private static final Logger LOGGER = Logger.getLogger(LiveNodeHtmlRenderer.class.getName());
 
+    private final Environment defaultEnvironment = new Environment();
+    private Environment env = defaultEnvironment;
     private DockerSeleniumRemoteProxy proxy;
     private String serverName;
 
@@ -138,9 +141,10 @@ public class LiveNodeHtmlRenderer implements HtmlRenderer {
 
         // Adding live preview
         int vncPort = proxy.getRemoteHost().getPort() + 10000;
-        String vncViewBaseUrl = "http://%s:5555/proxy/%s/?nginx=%s&view_only=%s";
-        String vncReadOnlyUrl = String.format(vncViewBaseUrl, serverName, vncPort, vncPort, "true");
-        String vncInteractUrl = String.format(vncViewBaseUrl, serverName, vncPort, vncPort, "false");
+        int mainVncPort = env.getIntEnvVariable("ZALENIUM_CONTAINER_LIVE_PREVIEW_PORT", 5555);
+        String vncViewBaseUrl = "http://%s:%s/proxy/%s/?nginx=%s&view_only=%s";
+        String vncReadOnlyUrl = String.format(vncViewBaseUrl, serverName, mainVncPort, vncPort, vncPort, "true");
+        String vncInteractUrl = String.format(vncViewBaseUrl, serverName, mainVncPort, vncPort, vncPort, "false");
 
         builder.append("<p class='vnc'>");
         builder.append("<a href='").append(vncReadOnlyUrl).append("' target='_blank'>Read-only VNC</a>||");

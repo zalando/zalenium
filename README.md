@@ -2,7 +2,7 @@
 [![Quality Gate](https://sonarqube.com/api/badges/gate?key=de.zalando.tip:zalenium)](https://sonarqube.com/dashboard/index/de.zalando.tip:zalenium)
 [![codecov](https://codecov.io/gh/zalando/zalenium/branch/master/graph/badge.svg)](https://codecov.io/gh/zalando/zalenium)
 [![](https://images.microbadger.com/badges/version/dosel/zalenium.svg)](https://microbadger.com/images/dosel/zalenium)
-[![](https://images.microbadger.com/badges/version/dosel/zalenium:3.0.1c.svg)](https://microbadger.com/images/dosel/zalenium:3.0.1c)
+[![](https://images.microbadger.com/badges/version/dosel/zalenium:3.0.1d.svg)](https://microbadger.com/images/dosel/zalenium:3.0.1d)
 
 # What is Zalenium?
 A Selenium Grid extension to scale up and down your local grid dynamically with docker containers. It uses [docker-selenium](https://github.com/elgalu/docker-selenium) to run your tests in Firefox and Chrome locally, and when you need a different browser, your tests get redirected to [Sauce Labs](https://saucelabs.com/) and/or [BrowserStack](https://www.browserstack.com/) and/or [TestingBot](https://testingbot.com/).
@@ -35,8 +35,6 @@ You can use the Zalenium already, but it is still under development and open for
 
 #### Running it
 Zalenium uses docker to scale on-demand, therefore we need to give it the `docker.sock` full access, this is known as "Docker alongside docker".
-
-NB. The container must be called `zalenium`. This is required because a docker network with this name will be created to allow all containers to locate each other without too much hassle.
 
 * Basic usage, without any of the integrated cloud testing platforms enabled:
 
@@ -71,7 +69,10 @@ NB. The container must be called `zalenium`. This is required because a docker n
 * You can use the [integration tests](./src/test/java/de/zalando/tip/zalenium/it/ParallelIT.java) we have to try Zalenium.
 * Check the live preview of your running tests [http://localhost:4444/grid/admin/live](http://localhost:4444/grid/admin/live)
 * To see the recorded videos, check the `/tmp/videos` folder (or the folder that you mapped when starting the container).
-  * It is possible to customise the video name by adding a `name` capability in your test. The file name will look like `testName_browser_nodePort_timeStamp.mkv` 
+  * It is possible to customise the video name by adding a `name` capability in your test. The file name will look 
+  like `containerName_testName_browser_nodePort_timeStamp.mkv`. The `containerName` part is useful when more than one 
+  instance of Zalenium is running.
+
 
 ### Docker version
 
@@ -87,7 +88,7 @@ docker run --rm -ti --name zalenium -p 4444:4444 -p 5555:5555 \
 ```
 
 #### OSX
-Zalenium for OSX is currently compatible with Docker `1.11` and `1.12` __default__. In Mac is recommended that you explicitly tell Zalenium which major version you are using via `-e DOCKER=1.11` due to API compatibility issues. In the future this will be automated on our side as it is with Linux (read above)
+Zalenium for OSX is currently compatible with Docker `1.11`, `1.12` __default__ and `1.13`. In Mac is recommended that you explicitly tell Zalenium which major version you are using via `-e DOCKER=1.11` due to API compatibility issues. In the future this will be automated on our side as it is with Linux (read above)
 
 ```sh
 docker run --rm -ti --name zalenium -p 4444:4444 -p 5555:5555 \
