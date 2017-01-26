@@ -101,21 +101,7 @@ public class TestingBotRemoteProxyTest {
 
         // We need to mock all the needed objects to forward the session and see how in the beforeMethod
         // the SauceLabs user and api key get added to the body request.
-        WebDriverRequest request = mock(WebDriverRequest.class);
-        when(request.getRequestURI()).thenReturn("session");
-        when(request.getServletPath()).thenReturn("session");
-        when(request.getContextPath()).thenReturn("");
-        when(request.getMethod()).thenReturn("POST");
-        when(request.getRequestType()).thenReturn(RequestType.START_SESSION);
-        JsonObject jsonObject = new JsonObject();
-        JsonObject desiredCapabilities = new JsonObject();
-        desiredCapabilities.addProperty(CapabilityType.BROWSER_NAME, BrowserType.IE);
-        desiredCapabilities.addProperty(CapabilityType.PLATFORM, Platform.WIN8.name());
-        jsonObject.add("desiredCapabilities", desiredCapabilities);
-        when(request.getBody()).thenReturn(jsonObject.toString());
-
-        Enumeration<String> strings = Collections.emptyEnumeration();
-        when(request.getHeaderNames()).thenReturn(strings);
+        WebDriverRequest request = TestUtils.getMockedWebDriverRequestStartSession();
 
         HttpServletResponse response = mock(HttpServletResponse.class);
         ServletOutputStream stream = mock(ServletOutputStream.class);
