@@ -40,6 +40,7 @@ import java.util.logging.Logger;
 /*
     The implementation of this class was inspired on https://gist.github.com/krmahadevan/4649607
  */
+@SuppressWarnings("WeakerAccess")
 public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
 
     @VisibleForTesting
@@ -95,7 +96,8 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         env = defaultEnvironment;
     }
 
-    static boolean isVideoRecordingEnabled() {
+    @VisibleForTesting
+    protected static boolean isVideoRecordingEnabled() {
         return videoRecordingEnabled;
     }
 
@@ -161,7 +163,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         stopPolling();
     }
 
-    String getNodeIpAndPort() {
+    private String getNodeIpAndPort() {
         return getRemoteHost().getHost() + ":" + getRemoteHost().getPort();
     }
 
@@ -180,15 +182,18 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     /*
         Method to decide if the node can be removed based on the amount of executed tests.
      */
-    synchronized boolean isTestSessionLimitReached() {
+    @VisibleForTesting
+    protected synchronized boolean isTestSessionLimitReached() {
         return getAmountOfExecutedTests() >= MAX_UNIQUE_TEST_SESSIONS;
     }
 
-    int getAmountOfExecutedTests() {
+    @VisibleForTesting
+    protected int getAmountOfExecutedTests() {
         return amountOfExecutedTests;
     }
 
-    void videoRecording(final VideoRecordingAction action) {
+    @VisibleForTesting
+    protected void videoRecording(final VideoRecordingAction action) {
         if (isVideoRecordingEnabled()) {
             try {
                 String containerId = getContainerId();
@@ -277,7 +282,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         return dockerSeleniumNodePollerThread;
     }
 
-    boolean isStopSessionRequestReceived() {
+    private boolean isStopSessionRequestReceived() {
         return stopSessionRequestReceived;
     }
 
