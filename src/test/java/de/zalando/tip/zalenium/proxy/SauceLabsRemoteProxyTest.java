@@ -1,6 +1,5 @@
 package de.zalando.tip.zalenium.proxy;
 
-import com.google.gson.JsonObject;
 import de.zalando.tip.zalenium.util.CommonProxyUtilities;
 import de.zalando.tip.zalenium.util.Environment;
 import de.zalando.tip.zalenium.util.GoogleAnalyticsApi;
@@ -26,8 +25,6 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-import java.util.Collections;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -85,8 +82,8 @@ public class SauceLabsRemoteProxyTest {
     public void sessionIsCreatedWithCapabilitiesThatDockerSeleniumCannotProcess() {
         // Capability which should result in a created session
         Map<String, Object> requestedCapability = new HashMap<>();
-        requestedCapability.put(CapabilityType.BROWSER_NAME, BrowserType.SAFARI);
-        requestedCapability.put(CapabilityType.PLATFORM, Platform.MAC);
+        requestedCapability.put(CapabilityType.BROWSER_NAME, BrowserType.EDGE);
+        requestedCapability.put(CapabilityType.PLATFORM, Platform.WIN10);
 
         TestSession testSession = sauceLabsProxy.getNewSession(requestedCapability);
 
@@ -115,21 +112,7 @@ public class SauceLabsRemoteProxyTest {
 
         // We need to mock all the needed objects to forward the session and see how in the beforeMethod
         // the SauceLabs user and api key get added to the body request.
-        WebDriverRequest request = mock(WebDriverRequest.class);
-        when(request.getRequestURI()).thenReturn("session");
-        when(request.getServletPath()).thenReturn("session");
-        when(request.getContextPath()).thenReturn("");
-        when(request.getMethod()).thenReturn("POST");
-        when(request.getRequestType()).thenReturn(RequestType.START_SESSION);
-        JsonObject jsonObject = new JsonObject();
-        JsonObject desiredCapabilities = new JsonObject();
-        desiredCapabilities.addProperty(CapabilityType.BROWSER_NAME, BrowserType.SAFARI);
-        desiredCapabilities.addProperty(CapabilityType.PLATFORM, Platform.MAC.name());
-        jsonObject.add("desiredCapabilities", desiredCapabilities);
-        when(request.getBody()).thenReturn(jsonObject.toString());
-
-        Enumeration<String> strings = Collections.emptyEnumeration();
-        when(request.getHeaderNames()).thenReturn(strings);
+        WebDriverRequest request = TestUtils.getMockedWebDriverRequestStartSession();
 
         HttpServletResponse response = mock(HttpServletResponse.class);
         ServletOutputStream stream = mock(ServletOutputStream.class);
@@ -139,11 +122,11 @@ public class SauceLabsRemoteProxyTest {
 
         // The body should now have the SauceLabs variables
         String expectedBody = System.getenv("SAUCE_USERNAME") == null ?
-                String.format("{\"desiredCapabilities\":{\"browserName\":\"safari\",\"platform\":" +
-                        "\"MAC\",\"username\":%s,\"accessKey\":%s}}", System.getenv("SAUCE_USERNAME"),
+                String.format("{\"desiredCapabilities\":{\"browserName\":\"internet explorer\",\"platform\":" +
+                        "\"WIN8\",\"username\":%s,\"accessKey\":%s}}", System.getenv("SAUCE_USERNAME"),
                         System.getenv("SAUCE_ACCESS_KEY")) :
-                String.format("{\"desiredCapabilities\":{\"browserName\":\"safari\",\"platform\":" +
-                                "\"MAC\",\"username\":\"%s\",\"accessKey\":\"%s\"}}", System.getenv("SAUCE_USERNAME"),
+                String.format("{\"desiredCapabilities\":{\"browserName\":\"internet explorer\",\"platform\":" +
+                                "\"WIN8\",\"username\":\"%s\",\"accessKey\":\"%s\"}}", System.getenv("SAUCE_USERNAME"),
                         System.getenv("SAUCE_ACCESS_KEY"));
         verify(request).setBody(expectedBody);
     }

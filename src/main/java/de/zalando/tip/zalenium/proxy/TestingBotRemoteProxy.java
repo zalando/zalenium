@@ -57,19 +57,12 @@ public class TestingBotRemoteProxy extends CloudTestingRemoteProxy {
             DesiredCapabilities desiredCapabilities = new DesiredCapabilities();
             desiredCapabilities.setCapability(RegistrationRequest.MAX_INSTANCES, 5);
             desiredCapabilities.setBrowserName(capAsJsonObject.get("name").getAsString());
-            desiredCapabilities.setPlatform(getPlatform(capAsJsonObject.get("platform").getAsString()));
+            desiredCapabilities.setPlatform(Platform.extractFromSysProperty(capAsJsonObject.get("platform").getAsString()));
             if (!registrationRequest.getConfiguration().capabilities.contains(desiredCapabilities)) {
                 registrationRequest.getConfiguration().capabilities.add(desiredCapabilities);
             }
         }
         return registrationRequest;
-    }
-
-    private static Platform getPlatform(String os) {
-        if ("windows 2012".equalsIgnoreCase(os)) {
-            return Platform.WIN8;
-        }
-        return Platform.extractFromSysProperty(os);
     }
 
     @Override
@@ -79,27 +72,27 @@ public class TestingBotRemoteProxy extends CloudTestingRemoteProxy {
     }
 
     @Override
-    String getUserNameProperty() {
+    public String getUserNameProperty() {
         return "key";
     }
 
     @Override
-    String getUserNameValue() {
+    public String getUserNameValue() {
         return TESTINGBOT_KEY;
     }
 
     @Override
-    String getAccessKeyProperty() {
+    public String getAccessKeyProperty() {
         return "secret";
     }
 
     @Override
-    String getAccessKeyValue() {
+    public String getAccessKeyValue() {
         return TESTINGBOT_SECRET;
     }
 
     @Override
-    String getCloudTestingServiceUrl() {
+    public String getCloudTestingServiceUrl() {
         return TESTINGBOT_URL;
     }
 

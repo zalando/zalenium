@@ -28,11 +28,11 @@ public class ZaleniumCapabilityMatcher extends DefaultCapabilityMatcher {
 
     @Override
     public boolean matches(Map<String, Object> nodeCapability, Map<String, Object> requestedCapability) {
-        logger.log(Level.FINE, String.format("Validating %s in node with capabilities %s", requestedCapability,
+        logger.log(Level.FINE, ()-> String.format("Validating %s in node with capabilities %s", requestedCapability,
                 nodeCapability));
 
         if (!requestedCapability.containsKey(CapabilityType.BROWSER_NAME)) {
-            logger.log(Level.WARNING, String.format("Capability %s does no contain %s key.", requestedCapability,
+            logger.log(Level.WARNING, () -> String.format("Capability %s does no contain %s key.", requestedCapability,
                     CapabilityType.BROWSER_NAME));
             return false;
         }

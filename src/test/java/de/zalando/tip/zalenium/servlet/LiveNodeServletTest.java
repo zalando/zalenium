@@ -40,12 +40,12 @@ public class LiveNodeServletTest {
         RegistrationRequest registrationRequest = TestUtils.getRegistrationRequestForTesting(40000,
                 DockerSeleniumRemoteProxy.class.getCanonicalName());
         registrationRequest.getConfiguration().capabilities.clear();
-        registrationRequest.getConfiguration().capabilities.addAll(DockerSeleniumStarterRemoteProxy.getDockerSeleniumFallbackCapabilities());
+        registrationRequest.getConfiguration().capabilities.addAll(DockerSeleniumStarterRemoteProxy.getCapabilities());
         DockerSeleniumRemoteProxy proxyOne = DockerSeleniumRemoteProxy.getNewInstance(registrationRequest, registry);
         registrationRequest = TestUtils.getRegistrationRequestForTesting(40001,
                 DockerSeleniumRemoteProxy.class.getCanonicalName());
         registrationRequest.getConfiguration().capabilities.clear();
-        List<DesiredCapabilities> capabilities = DockerSeleniumStarterRemoteProxy.getDockerSeleniumFallbackCapabilities();
+        List<DesiredCapabilities> capabilities = DockerSeleniumStarterRemoteProxy.getCapabilities();
         DesiredCapabilities desiredCapabilities = new DesiredCapabilities();
         desiredCapabilities.setBrowserName("NEW_BROWSER");
         desiredCapabilities.setPlatform(Platform.LINUX);

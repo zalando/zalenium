@@ -12,7 +12,9 @@ before_install:
 
 script:
   - ./run_sonar_qube_analysis.sh
-  - travis_retry ./run_integration_tests.sh
+  - travis_retry ./run_integration_tests.sh sauceLabs
+  - travis_retry ./run_integration_tests.sh browserStack
+  - travis_retry ./run_integration_tests.sh testingBot
   # Run unit tests for coverage
   - mvn clean package -Pcoverage-report
 
@@ -33,5 +35,5 @@ branches:
   only:
     - master
     - selenium-3
-    # Regular expression for release branches -> 2.53.1a
+    # Regular expression for release branches. E.g. -> 2.53.1a, 3.0.1a
     - /^([0-9]|[0-9][0-9])[.]([0-9]|[0-9][0-9])[.]([0-9]|[0-9][0-9])[a-z]$/

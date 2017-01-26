@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+CONTAINER_NAME="zalenium"
+CONTAINER_LIVE_PREVIEW_PORT="5555"
 CHROME_CONTAINERS=1
 FIREFOX_CONTAINERS=1
 MAX_DOCKER_SELENIUM_CONTAINERS=10
@@ -63,7 +65,9 @@ WaitSauceLabsProxy()
 
     # Also wait for the sauce url though this is optional
     DONE_MSG="ondemand.saucelabs.com"
-    while ! docker logs zalenium | grep "${DONE_MSG}" >/dev/null; do
+    # Using the ZALENIUM_CONTAINER_NAME environment variable here because this method is exported and does not
+    # see the variables declared at the beginning
+    while ! docker logs ${ZALENIUM_CONTAINER_NAME} | grep "${DONE_MSG}" >/dev/null; do
         echo -n '.'
         sleep 0.2
     done
@@ -81,7 +85,9 @@ WaitBrowserStackProxy()
 
     # Also wait for the sauce url though this is optional
     DONE_MSG="hub-cloud.browserstack.com"
-    while ! docker logs zalenium | grep "${DONE_MSG}" >/dev/null; do
+    # Using the ZALENIUM_CONTAINER_NAME environment variable here because this method is exported and does not
+    # see the variables declared at the beginning
+    while ! docker logs ${ZALENIUM_CONTAINER_NAME} | grep "${DONE_MSG}" >/dev/null; do
         echo -n '.'
         sleep 0.2
     done
@@ -99,7 +105,9 @@ WaitTestingBotProxy()
 
     # Also wait for the testingbot url though this is optional
     DONE_MSG="hub.testingbot.com"
-    while ! docker logs zalenium | grep "${DONE_MSG}" >/dev/null; do
+    # Using the ZALENIUM_CONTAINER_NAME environment variable here because this method is exported and does not
+    # see the variables declared at the beginning
+    while ! docker logs ${ZALENIUM_CONTAINER_NAME} | grep "${DONE_MSG}" >/dev/null; do
         echo -n '.'
         sleep 0.2
     done
@@ -108,10 +116,10 @@ export -f WaitTestingBotProxy
 
 EnsureCleanEnv()
 {
-    CONTAINERS=$(docker ps -a -f name=zalenium_ -q | wc -l)
+    CONTAINERS=$(docker ps -a -f name=${CONTAINER_NAME}_ -q | wc -l)
     if [ ${CONTAINERS} -gt 0 ]; then
         echo "Removing exited docker-selenium containers..."
-        docker rm -f $(docker ps -a -f name=zalenium_ -q)
+        docker rm -f $(docker ps -a -f name=${CONTAINER_NAME}_ -q)
     fi
 }
 
@@ -185,6 +193,9 @@ trap DockerTerminate SIGTERM SIGINT SIGKILL
 StartUp()
 {
     EnsureDockerWorks
+    CONTAINER_ID=$(cat /proc/self/cgroup | grep -Po '(?<=docker/)([a-z0-9]+)' | head -1)
+    CONTAINER_NAME=$(docker inspect ${CONTAINER_ID} | jq -r '.[0].Name' | sed 's/\///g')
+    CONTAINER_LIVE_PREVIEW_PORT=$(docker inspect ${CONTAINER_ID} | jq -r '.[0].NetworkSettings.Ports."5555/tcp"' | jq -r '.[0].HostPort')
     EnsureCleanEnv
 
     DOCKER_SELENIUM_IMAGE_COUNT=$(docker images | grep "elgalu/selenium" | wc -l)
@@ -270,6 +281,8 @@ StartUp()
     export ZALENIUM_TZ=${TZ}
     export ZALENIUM_SCREEN_WIDTH=${SCREEN_WIDTH}
     export ZALENIUM_SCREEN_HEIGHT=${SCREEN_HEIGHT}
+    export ZALENIUM_CONTAINER_NAME=${CONTAINER_NAME}
+    export ZALENIUM_CONTAINER_LIVE_PREVIEW_PORT=${CONTAINER_LIVE_PREVIEW_PORT}
 
     # Random ID used for Google Analytics
     # If it is running inside the Zalando Jenkins env, we pick the team name from the $BUILD_URL
