@@ -501,7 +501,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
          */
         if (allocatedPorts.size() > (upperBoundary - lowerBoundary - 200)) {
             allocatedPorts.clear();
-            LOGGER.log(Level.INFO, LOGGING_PREFIX + "Cleaning allocated ports list.");
+            LOGGER.log(Level.INFO, () -> LOGGING_PREFIX + "Cleaning allocated ports list.");
         }
         for (int portNumber = lowerBoundary; portNumber <= upperBoundary; portNumber++) {
             if (!allocatedPorts.contains(portNumber)) {
