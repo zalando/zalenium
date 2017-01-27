@@ -2,7 +2,7 @@
 [![Quality Gate](https://sonarqube.com/api/badges/gate?key=de.zalando.tip:zalenium)](https://sonarqube.com/dashboard/index/de.zalando.tip:zalenium)
 [![codecov](https://codecov.io/gh/zalando/zalenium/branch/master/graph/badge.svg)](https://codecov.io/gh/zalando/zalenium)
 [![](https://images.microbadger.com/badges/version/dosel/zalenium.svg)](https://microbadger.com/images/dosel/zalenium)
-[![](https://images.microbadger.com/badges/version/dosel/zalenium:3.0.1d.svg)](https://microbadger.com/images/dosel/zalenium:3.0.1d)
+[![](https://images.microbadger.com/badges/version/dosel/zalenium:3.0.1e.svg)](https://microbadger.com/images/dosel/zalenium:3.0.1e)
 
 # What is Zalenium?
 A Selenium Grid extension to scale up and down your local grid dynamically with docker containers. It uses [docker-selenium](https://github.com/elgalu/docker-selenium) to run your tests in Firefox and Chrome locally, and when you need a different browser, your tests get redirected to [Sauce Labs](https://saucelabs.com/) and/or [BrowserStack](https://www.browserstack.com/) and/or [TestingBot](https://testingbot.com/).
@@ -45,7 +45,14 @@ Zalenium uses docker to scale on-demand, therefore we need to give it the `docke
       dosel/zalenium start 
   ```
 
-* More usage examples can be seen [here](./docs/usage_examples.md)
+* You can also try our one line installer and starter (it will check for the latest images and ask for missing 
+dependencies.)
+
+  ```sh
+    curl -sSL https://raw.githubusercontent.com/dosel/t/i/p | bash -s start
+  ```
+
+* More usage examples and one line starters can be seen [here](./docs/usage_examples.md)
 
 * After the output, you should see the DockerSeleniumStarter node in the [grid](http://localhost:4444/grid/console)
 

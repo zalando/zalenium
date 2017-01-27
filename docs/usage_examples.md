@@ -7,6 +7,13 @@
   * [with TestingBot enabled](#with-testingbot-enabled)
   * [with screen width and height, and time zone](#with-screen-width-and-height-and-time-zone)
 * [Starting Zalenium with Docker Compose](#starting-zalenium-with-docker-compose)
+* [One line starters](#one-line-starters)
+  * [Zalenium one-liner installer](#zalenium-one-liner-installer)
+  * [Install and start](#install-and-start)
+  * [Install and start with latest Selenium 3](#install-and-start-with-latest-selenium-3)
+  * [Install and start with latest Selenium 2](#install-and-start-with-latest-selenium-2)
+  * [Install and start a specific version](#install-and-start-a-specific-version)
+  * [Cleanup](#cleanup)
 * [Live preview](#live-preview)
   * [Displaying the live preview](#displaying-the-live-preview)
   * [Showing the test name on the live preview](#showing-the-test-name-on-the-live-preview)
@@ -81,6 +88,44 @@ Basic usage, without any of the integrated cloud testing platforms.
 
 You can see an example [here](./docker-compose.yaml)
 
+## One line starters
+
+### Zalenium one-liner installer
+
+  ```sh
+    curl -sSL https://raw.githubusercontent.com/dosel/t/i/p | bash
+  ```
+  
+### Install and start
+
+  ```sh
+    curl -sSL https://raw.githubusercontent.com/dosel/t/i/p | bash -s start
+  ```
+
+### Install and start with latest Selenium 3
+
+  ```sh
+    curl -sSL https://raw.githubusercontent.com/dosel/t/i/p | bash -s 3 start
+  ```
+
+### Install and start with latest Selenium 2
+
+  ```sh
+    curl -sSL https://raw.githubusercontent.com/dosel/t/i/p | bash -s 2 start
+  ```
+
+### Install and start a specific version
+
+  ```sh
+    curl -sSL https://raw.githubusercontent.com/dosel/t/i/p | bash -s 3.0.1a start
+  ```
+
+### Cleanup
+
+  ```sh
+    curl -sSL https://raw.githubusercontent.com/dosel/t/i/p | bash -s stop
+  ```
+
 ## Live preview
 
 ### Displaying the live preview
@@ -115,3 +160,5 @@ will let you filter the running tests in the live preview by passing `?group=myT
   ```
 
 * Filter in live preview: [http://localhost:4444/grid/admin/live?group=myTestGroup](http://localhost:4444/grid/admin/live?group=myTestGroup)
+
+

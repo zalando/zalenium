@@ -261,10 +261,12 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                     continue;
                 }
                 String fileExtension = entry.getName().substring(entry.getName().lastIndexOf('.'));
+                String folderName = entry.getName().substring(0, entry.getName().indexOf('/') + 1);
                 String fileName = String.format("%s_%s", entry.getName(), getCurrentDateAndTimeFormatted());
                 fileName = fileName.replace(fileExtension, "").concat(fileExtension);
                 fileName = getTestName().isEmpty() ? fileName : fileName.replace("vid_", getTestName() + "_");
-                fileName = DockerSeleniumStarterRemoteProxy.getContainerName() + "_" + fileName;
+                fileName = fileName.replace(folderName, "");
+                fileName = folderName + DockerSeleniumStarterRemoteProxy.getContainerName() + "_" + fileName;
                 File curFile = new File(localPath, fileName);
                 File parent = curFile.getParentFile();
                 if (!parent.exists()) {
@@ -274,6 +276,9 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                 IOUtils.copy(tarStream, outputStream);
                 outputStream.close();
             }
+        } catch (Exception e) {
+            LOGGER.log(Level.FINE, getNodeIpAndPort() + " Something happened while copying the video file, " +
+                    "most of the time it is an issue while closing the input/output stream, which is usually OK.", e);
         }
         LOGGER.log(Level.INFO, "{0} Video files copies to: {1}", new Object[]{getNodeIpAndPort(), localPath});
     }
