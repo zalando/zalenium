@@ -494,6 +494,16 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
         Method adapted from https://gist.github.com/vorburger/3429822
      */
     private int findFreePortInRange(int lowerBoundary, int upperBoundary) {
+        /*
+            If the list size is this big (~9800), it means that almost all ports have been used, but
+            probably many have been released already. The list is cleared so ports can be reused.
+            If by any chance one of the first allocated ports is still used, it will be skipped by the
+            existing validation.
+         */
+        if (allocatedPorts.size() > (upperBoundary - lowerBoundary - 200)) {
+            allocatedPorts.clear();
+            LOGGER.log(Level.INFO, () -> LOGGING_PREFIX + "Cleaning allocated ports list.");
+        }
         for (int portNumber = lowerBoundary; portNumber <= upperBoundary; portNumber++) {
             if (!allocatedPorts.contains(portNumber)) {
                 int freePort = -1;
