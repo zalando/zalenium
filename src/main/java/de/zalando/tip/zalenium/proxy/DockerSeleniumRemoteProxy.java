@@ -264,8 +264,8 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                 String folderName = entry.getName().substring(0, entry.getName().indexOf('/') + 1);
                 String fileName = String.format("%s_%s", entry.getName(), getCurrentDateAndTimeFormatted());
                 fileName = fileName.replace(fileExtension, "").concat(fileExtension);
-                fileName = fileName.replace(' ', '_');
                 fileName = getTestName().isEmpty() ? fileName : fileName.replace("vid_", getTestName() + "_");
+                fileName = fileName.replace(' ', '_');
                 fileName = fileName.replace(folderName, "");
                 fileName = folderName + DockerSeleniumStarterRemoteProxy.getContainerName() + "_" + fileName;
                 File curFile = new File(localPath, fileName);
