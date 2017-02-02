@@ -25,7 +25,7 @@ after_script:
   - bash <(curl -s https://codecov.io/bash)
 
 after_success:
-  - ~/jpm/bin/codacy-coverage-reporter -l Java -r build/reports/jacoco/test/jacocoTestReport.xml
+  - ~/jpm/bin/codacy-coverage-reporter -l Java -r ./target/site/jacoco/jacoco.xml
   # When a tag is set and a release is being done, the image is pushed
   - ./push_image.sh
 
