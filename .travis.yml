@@ -20,11 +20,10 @@ script:
   # Run unit tests for coverage
   - mvn clean package -Pcoverage-report
 
-after_script:
+after_success:
   # Report coverage results to Codecov
   - bash <(curl -s https://codecov.io/bash)
-
-after_success:
+  # Report coverage results to Codacy
   - ~/jpm/bin/codacy-coverage-reporter -l Java -r ./target/site/jacoco/jacoco.xml
   # When a tag is set and a release is being done, the image is pushed
   - ./push_image.sh
