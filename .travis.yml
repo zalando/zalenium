@@ -9,9 +9,11 @@ services:
 
 before_install:
   - docker pull elgalu/selenium
+  - curl -sL https://github.com/jpm4j/jpm4j.installers/raw/master/dist/biz.aQute.jpm.run.jar >jpm4j.jar
+  - java -jar jpm4j.jar -u init
+  - ~/jpm/bin/jpm install com.codacy:codacy-coverage-reporter:assembly
 
 script:
-  - ./run_sonar_qube_analysis.sh
   - travis_retry ./run_integration_tests.sh sauceLabs
   - travis_retry ./run_integration_tests.sh browserStack
   - travis_retry ./run_integration_tests.sh testingBot
@@ -23,6 +25,7 @@ after_script:
   - bash <(curl -s https://codecov.io/bash)
 
 after_success:
+  - ~/jpm/bin/codacy-coverage-reporter -l Java -r ./target/site/jacoco/jacoco.xml
   # When a tag is set and a release is being done, the image is pushed
   - ./push_image.sh
 
