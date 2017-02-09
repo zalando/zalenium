@@ -1,8 +1,8 @@
 package de.zalando.tip.zalenium.proxy;
 
 /*
-    Almost all concepts and ideas for common to the implementation that are inherited by the Sauce Labs and
-    BrowserStack proxy are taken from the open source project seen here: https://github.com/rossrowe/sauce-grid-plugin
+    Many concepts and ideas are inspired from the open source project seen here:
+    https://github.com/rossrowe/sauce-grid-plugin
  */
 
 import com.google.common.annotations.VisibleForTesting;
@@ -110,6 +110,11 @@ public class CloudTestingRemoteProxy extends DefaultRemoteProxy {
                 long executionTime = (System.currentTimeMillis() - session.getSlot().getLastSessionStart()) / 1000;
                 getGa().testEvent(BrowserStackRemoteProxy.class.getName(), session.getRequestedCapabilities().toString(),
                         executionTime);
+                String testName = session.getRequestedCapabilities().getOrDefault("name", "").toString();
+                if (testName.isEmpty()) {
+                    testName = session.getExternalKey().getKey();
+                }
+                downloadVideo(testName, session.getExternalKey().getKey());
             }
         }
         super.afterCommand(session, request, response);
@@ -133,6 +138,31 @@ public class CloudTestingRemoteProxy extends DefaultRemoteProxy {
 
     public String getCloudTestingServiceUrl() {
         return null;
+    }
+
+    public String getVideoUrl(String seleniumSessionId) {
+        return null;
+    }
+
+    public String getProxyName() {
+        return null;
+    }
+
+    public String getVideoFileExtension() {
+        return null;
+    }
+
+    public void downloadVideo(String testName, String seleniumSessionId) {
+        new Thread(() -> {
+            String localPath = commonProxyUtilities.currentLocalPath();
+            String videoFileNameWithFullPath = localPath + "/videos/" + getProxyName() + "_" + testName + "_" +
+                    commonProxyUtilities.getCurrentDateAndTimeFormatted() + getVideoFileExtension();
+            try {
+                commonProxyUtilities.downloadFile(videoFileNameWithFullPath, getVideoUrl(seleniumSessionId));
+            } catch (Exception e) {
+                logger.log(Level.SEVERE, e.toString(), e);
+            }
+        }).start();
     }
 
     @Override
