@@ -74,7 +74,6 @@ public class CommonProxyUtilities {
     public void downloadFile(String fileNameWithFullPath, String url) throws InterruptedException {
         int maxAttempts = 3;
         int currentAttempts = 0;
-        fileNameWithFullPath = fileNameWithFullPath.replace(' ', '_');
         while (currentAttempts < maxAttempts) {
             try {
                 LOG.log(Level.INFO, "Downloading video to " + fileNameWithFullPath);
