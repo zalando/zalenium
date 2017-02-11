@@ -72,11 +72,12 @@ public class CommonProxyUtilities {
         http://code.runnable.com/Uu83dm5vSScIAACw/download-a-file-from-the-web-for-java-files-and-save
      */
     public void downloadFile(String fileNameWithFullPath, String url) throws InterruptedException {
-        int maxAttempts = 3;
+        int maxAttempts = 10;
         int currentAttempts = 0;
+        // Videos are usually not ready right away, we put a little sleep to avoid falling into the catch/retry.
+        Thread.sleep(1000 * 5);
         while (currentAttempts < maxAttempts) {
             try {
-                LOG.log(Level.INFO, "Downloading video to " + fileNameWithFullPath);
                 URL link = new URL(url);
                 URLConnection urlConnection = link.openConnection();
 
@@ -102,29 +103,28 @@ public class CommonProxyUtilities {
                 fos.write(response);
                 fos.close();
                 //End download code
-                LOG.log(Level.INFO, "Video downloaded " + fileNameWithFullPath);
+                LOG.log(Level.INFO, "Video downloaded from " + url + " to " + fileNameWithFullPath);
                 currentAttempts = maxAttempts + 1;
-            } catch (FileNotFoundException e) {
+            } catch (IOException e) {
+                // Catching this exception generally means that the file was not ready, so we try again.
                 currentAttempts++;
                 if (currentAttempts >= maxAttempts) {
                     LOG.log(Level.SEVERE, e.toString(), e);
                 } else {
-                    LOG.log(Level.INFO, "Video not ready, trying download once again...");
-                    Thread.sleep(5 * 1000);
+                    LOG.log(Level.INFO, "Trying download once again from " + url);
+                    Thread.sleep(currentAttempts * 5 * 1000);
                 }
             } catch (Exception e) {
                 currentAttempts = maxAttempts + 1;
                 LOG.log(Level.SEVERE, e.toString(), e);
             }
         }
-
     }
 
     public String getCurrentDateAndTimeFormatted() {
         DateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
         return dateFormat.format(new Date());
     }
-
 
     private static String readAll(Reader reader) throws IOException {
         StringBuilder sb = new StringBuilder();
