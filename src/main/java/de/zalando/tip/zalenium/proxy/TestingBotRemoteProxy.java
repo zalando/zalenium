@@ -96,4 +96,20 @@ public class TestingBotRemoteProxy extends CloudTestingRemoteProxy {
         return TESTINGBOT_URL;
     }
 
+    @Override
+    public String getVideoUrl(String seleniumSessionId) {
+        String testingBotVideoUrl = "https://s3-eu-west-1.amazonaws.com/eurectestingbot/%s.mp4";
+        return String.format(testingBotVideoUrl, seleniumSessionId);
+    }
+
+    @Override
+    public String getVideoFileExtension() {
+        return ".mp4";
+    }
+
+    @Override
+    public String getProxyName() {
+        return "testingbot";
+    }
+
 }

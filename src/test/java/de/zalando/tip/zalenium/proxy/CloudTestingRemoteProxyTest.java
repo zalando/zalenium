@@ -21,6 +21,9 @@ public class CloudTestingRemoteProxyTest {
         Assert.assertNull(proxy.getUserNameProperty());
         Assert.assertNull(proxy.getUserNameValue());
         Assert.assertNull(proxy.getRemoteHost());
+        Assert.assertNull(proxy.getVideoUrl("testString"));
+        Assert.assertNull(proxy.getVideoFileExtension());
+        Assert.assertNull(proxy.getProxyName());
     }
 
 }

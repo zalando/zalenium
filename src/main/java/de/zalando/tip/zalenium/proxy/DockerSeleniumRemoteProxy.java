@@ -29,9 +29,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URISyntaxException;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -119,6 +116,11 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         if (increaseCounter()) {
             TestSession newSession = super.getNewSession(requestedCapability);
             testName = requestedCapability.getOrDefault("name", "").toString();
+            if (testName.isEmpty()) {
+                testName = newSession.getExternalKey() != null ?
+                        newSession.getExternalKey().getKey() :
+                        newSession.getInternalKey();
+            }
             testGroup = requestedCapability.getOrDefault("group", "").toString();
             videoRecording(VideoRecordingAction.START_RECORDING);
             return newSession;
@@ -262,7 +264,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                 }
                 String fileExtension = entry.getName().substring(entry.getName().lastIndexOf('.'));
                 String folderName = entry.getName().substring(0, entry.getName().indexOf('/') + 1);
-                String fileName = String.format("%s_%s", entry.getName(), getCurrentDateAndTimeFormatted());
+                String fileName = String.format("%s_%s", entry.getName(), commonProxyUtilities.getCurrentDateAndTimeFormatted());
                 fileName = fileName.replace(fileExtension, "").concat(fileExtension);
                 fileName = getTestName().isEmpty() ? fileName : fileName.replace("vid_", getTestName() + "_");
                 fileName = fileName.replace(' ', '_');
@@ -287,11 +289,6 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     @VisibleForTesting
     protected DockerSeleniumNodePoller getDockerSeleniumNodePollerThread() {
         return dockerSeleniumNodePollerThread;
-    }
-
-    private String getCurrentDateAndTimeFormatted() {
-        DateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
-        return dateFormat.format(new Date());
     }
 
     public enum VideoRecordingAction {

@@ -104,4 +104,20 @@ public class SauceLabsRemoteProxy extends CloudTestingRemoteProxy {
         return SAUCE_LABS_URL;
     }
 
+    @Override
+    public String getVideoUrl(String seleniumSessionId) {
+        String sauceLabsVideoUrl = "https://%s:%s@saucelabs.com/rest/v1/%s/jobs/%s/assets/video.flv";
+        return String.format(sauceLabsVideoUrl, getUserNameValue(), getAccessKeyValue(), getUserNameValue(), seleniumSessionId);
+    }
+
+    @Override
+    public String getVideoFileExtension() {
+        return ".flv";
+    }
+
+    @Override
+    public String getProxyName() {
+        return "saucelabs";
+    }
+
 }
