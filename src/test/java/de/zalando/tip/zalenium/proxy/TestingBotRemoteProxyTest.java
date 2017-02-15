@@ -174,7 +174,7 @@ public class TestingBotRemoteProxyTest {
         String seleniumSessionId = "testSeleniumSessionId";
         String expectedVideoUrl = String.format("https://s3-eu-west-1.amazonaws.com/eurectestingbot/%s.mp4",
                 seleniumSessionId);
-        org.testng.Assert.assertEquals(expectedVideoUrl, testingBotProxy.getVideoUrl(seleniumSessionId));
+        Assert.assertEquals(expectedVideoUrl, testingBotProxy.getVideoUrl(seleniumSessionId));
     }
 
 }

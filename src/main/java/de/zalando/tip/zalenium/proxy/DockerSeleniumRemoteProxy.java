@@ -286,11 +286,6 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         LOGGER.log(Level.INFO, "{0} Video files copies to: {1}", new Object[]{getNodeIpAndPort(), localPath});
     }
 
-    @VisibleForTesting
-    protected DockerSeleniumNodePoller getDockerSeleniumNodePollerThread() {
-        return dockerSeleniumNodePollerThread;
-    }
-
     public enum VideoRecordingAction {
         START_RECORDING("start-video"), STOP_RECORDING("stop-video");
 
