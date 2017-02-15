@@ -11,6 +11,7 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.openqa.grid.common.RegistrationRequest;
+import org.openqa.grid.internal.ExternalSessionKey;
 import org.openqa.grid.internal.Registry;
 import org.openqa.grid.internal.RemoteProxy;
 import org.openqa.grid.internal.TestSession;
@@ -197,6 +198,7 @@ public class SauceLabsRemoteProxyTest {
             when(webDriverRequest.getRequestType()).thenReturn(RequestType.STOP_SESSION);
 
             testSession.getSlot().doFinishRelease();
+            testSession.setExternalKey(new ExternalSessionKey("testKey"));
             sauceLabsProxy.afterCommand(testSession, webDriverRequest, response);
 
             verify(gaSpy, times(1)).testEvent(anyString(), anyString(), anyLong());

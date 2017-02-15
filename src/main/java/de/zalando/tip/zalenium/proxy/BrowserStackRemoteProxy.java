@@ -121,4 +121,23 @@ public class BrowserStackRemoteProxy extends CloudTestingRemoteProxy {
         return BROWSER_STACK_URL;
     }
 
+    @Override
+    public String getVideoUrl(String seleniumSessionId) {
+        // https://BS_USER:BS_KEY@www.browserstack.com/automate/sessions/SELENIUM_SESSION_ID.json
+        String browserStackTestUrl = "https://%s:%s@www.browserstack.com/automate/sessions/%s.json";
+        browserStackTestUrl = String.format(browserStackTestUrl, getUserNameValue(), getAccessKeyValue(), seleniumSessionId);
+        JsonObject testInformation = getCommonProxyUtilities().readJSONFromUrl(browserStackTestUrl).getAsJsonObject();
+        return testInformation.getAsJsonObject("automation_session").get("video_url").getAsString();
+    }
+
+    @Override
+    public String getVideoFileExtension() {
+        return ".mp4";
+    }
+
+    @Override
+    public String getProxyName() {
+        return "browserstack";
+    }
+
 }

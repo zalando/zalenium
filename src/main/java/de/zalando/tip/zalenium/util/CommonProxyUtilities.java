@@ -9,6 +9,9 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.nio.charset.Charset;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -62,6 +65,65 @@ public class CommonProxyUtilities {
             LOG.log(Level.SEVERE, e.toString(), e);
         }
         return null;
+    }
+
+    /*
+        Downloading a file, method adapted from:
+        http://code.runnable.com/Uu83dm5vSScIAACw/download-a-file-from-the-web-for-java-files-and-save
+     */
+    public void downloadFile(String fileNameWithFullPath, String url) throws InterruptedException {
+        int maxAttempts = 10;
+        int currentAttempts = 0;
+        // Videos are usually not ready right away, we put a little sleep to avoid falling into the catch/retry.
+        Thread.sleep(1000 * 5);
+        while (currentAttempts < maxAttempts) {
+            try {
+                URL link = new URL(url);
+                URLConnection urlConnection = link.openConnection();
+
+                if (link.getUserInfo() != null) {
+                    String basicAuth = "Basic " + new String(new Base64().encode(link.getUserInfo().getBytes()));
+                    urlConnection.setRequestProperty("Authorization", basicAuth);
+                }
+
+                //Code to download
+                InputStream in = new BufferedInputStream(urlConnection.getInputStream());
+                ByteArrayOutputStream out = new ByteArrayOutputStream();
+                byte[] buf = new byte[1024];
+                int n;
+                while (-1!=(n=in.read(buf)))
+                {
+                    out.write(buf, 0, n);
+                }
+                out.close();
+                in.close();
+                byte[] response = out.toByteArray();
+
+                FileOutputStream fos = new FileOutputStream(fileNameWithFullPath);
+                fos.write(response);
+                fos.close();
+                //End download code
+                LOG.log(Level.INFO, "Video downloaded from " + url + " to " + fileNameWithFullPath);
+                currentAttempts = maxAttempts + 1;
+            } catch (IOException e) {
+                // Catching this exception generally means that the file was not ready, so we try again.
+                currentAttempts++;
+                if (currentAttempts >= maxAttempts) {
+                    LOG.log(Level.SEVERE, e.toString(), e);
+                } else {
+                    LOG.log(Level.INFO, "Trying download once again from " + url);
+                    Thread.sleep(currentAttempts * 5 * 1000);
+                }
+            } catch (Exception e) {
+                currentAttempts = maxAttempts + 1;
+                LOG.log(Level.SEVERE, e.toString(), e);
+            }
+        }
+    }
+
+    public String getCurrentDateAndTimeFormatted() {
+        DateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
+        return dateFormat.format(new Date());
     }
 
     private static String readAll(Reader reader) throws IOException {

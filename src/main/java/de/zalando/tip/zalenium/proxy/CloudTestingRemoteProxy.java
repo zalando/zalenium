@@ -1,8 +1,8 @@
 package de.zalando.tip.zalenium.proxy;
 
 /*
-    Almost all concepts and ideas for common to the implementation that are inherited by the Sauce Labs and
-    BrowserStack proxy are taken from the open source project seen here: https://github.com/rossrowe/sauce-grid-plugin
+    Many concepts and ideas are inspired from the open source project seen here:
+    https://github.com/rossrowe/sauce-grid-plugin
  */
 
 import com.google.common.annotations.VisibleForTesting;
@@ -19,11 +19,13 @@ import org.openqa.grid.internal.utils.CapabilityMatcher;
 import org.openqa.grid.selenium.proxy.DefaultRemoteProxy;
 import org.openqa.grid.web.servlet.handler.RequestType;
 import org.openqa.grid.web.servlet.handler.WebDriverRequest;
+import org.openqa.selenium.remote.CapabilityType;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -110,6 +112,7 @@ public class CloudTestingRemoteProxy extends DefaultRemoteProxy {
                 long executionTime = (System.currentTimeMillis() - session.getSlot().getLastSessionStart()) / 1000;
                 getGa().testEvent(BrowserStackRemoteProxy.class.getName(), session.getRequestedCapabilities().toString(),
                         executionTime);
+                downloadVideo(session.getRequestedCapabilities(), session.getExternalKey().getKey());
             }
         }
         super.afterCommand(session, request, response);
@@ -133,6 +136,40 @@ public class CloudTestingRemoteProxy extends DefaultRemoteProxy {
 
     public String getCloudTestingServiceUrl() {
         return null;
+    }
+
+    public String getVideoUrl(String seleniumSessionId) {
+        return null;
+    }
+
+    public String getProxyName() {
+        return null;
+    }
+
+    public String getVideoFileExtension() {
+        return null;
+    }
+
+    public void downloadVideo(Map<String, Object> capabilities, String seleniumSessionId) {
+        String testName = capabilities.getOrDefault("name", "").toString();
+        if (testName.isEmpty()) {
+            testName = seleniumSessionId;
+        }
+        String browserName = capabilities.getOrDefault(CapabilityType.BROWSER_NAME, "").toString();
+        String platform = capabilities.getOrDefault(CapabilityType.PLATFORM, "").toString();
+        // proxyName_testNameOrSeleniumSessionId_browser_platform_timeStamp.fileExtension
+        String fileName = String.format("%s_%s_%s_%s_%s%s", getProxyName(), testName, browserName, platform,
+                commonProxyUtilities.getCurrentDateAndTimeFormatted(), getVideoFileExtension()).
+                replace(' ', '_');
+        new Thread(() -> {
+            String localPath = commonProxyUtilities.currentLocalPath();
+            String videoFileNameWithFullPath = localPath + "/videos/" + fileName;
+            try {
+                commonProxyUtilities.downloadFile(videoFileNameWithFullPath, getVideoUrl(seleniumSessionId));
+            } catch (Exception e) {
+                logger.log(Level.SEVERE, e.toString(), e);
+            }
+        }).start();
     }
 
     @Override
