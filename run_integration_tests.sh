@@ -18,8 +18,6 @@ else
     # If the environment var exists, then we run the integration tests. This is to allow external PRs ro tun
     if [ "$INTEGRATION_TO_TEST" = sauceLabs ]; then
         if [ -n "${SAUCE_USERNAME}" ]; then
-            rm -f ${VIDEOS_FOLDER}/*.flv || true
-            rm -f ${VIDEOS_FOLDER}/*.mp4 || true
             mvn clean verify -Pintegration-test -DthreadCountProperty=2 -Dskip.surefire.tests=true -DintegrationToTest=${INTEGRATION_TO_TEST}
             # Check for generated videos
             ls -la ${VIDEOS_FOLDER}/saucelabs*.flv || (echo "No Sauce Labs videos were downloaded." && exit 2)
@@ -28,7 +26,6 @@ else
     fi
     if [ "$INTEGRATION_TO_TEST" = browserStack ]; then
         if [ -n "${BROWSER_STACK_USER}" ]; then
-            rm -f ${VIDEOS_FOLDER}/*.mp4 || true
             mvn clean verify -Pintegration-test -DthreadCountProperty=2 -Dskip.surefire.tests=true -DintegrationToTest=${INTEGRATION_TO_TEST}
             # Check for generated videos
             ls -la ${VIDEOS_FOLDER}/browserstack*.mp4 || (echo "No BrowserStack videos were downloaded." && exit 2)
@@ -37,7 +34,6 @@ else
     fi
     if [ "$INTEGRATION_TO_TEST" = testingBot ]; then
         if [ -n "${TESTINGBOT_KEY}" ]; then
-            rm -f ${VIDEOS_FOLDER}/*.mp4 || true
             mvn clean verify -Pintegration-test -DthreadCountProperty=2 -Dskip.surefire.tests=true -DintegrationToTest=${INTEGRATION_TO_TEST}
             # Check for generated videos
             ls -la ${VIDEOS_FOLDER}/testingbot*.mp4 || (echo "No TestingBot videos were downloaded." && exit 2)
