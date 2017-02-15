@@ -117,7 +117,9 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
             TestSession newSession = super.getNewSession(requestedCapability);
             testName = requestedCapability.getOrDefault("name", "").toString();
             if (testName.isEmpty()) {
-                testName = newSession.getExternalKey().getKey();
+                testName = newSession.getExternalKey() != null ?
+                        newSession.getExternalKey().getKey() :
+                        newSession.getInternalKey();
             }
             testGroup = requestedCapability.getOrDefault("group", "").toString();
             videoRecording(VideoRecordingAction.START_RECORDING);
