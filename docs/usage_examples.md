@@ -8,7 +8,6 @@
   * [with screen width and height, and time zone](#with-screen-width-and-height-and-time-zone)
   * [with a multi-purpose folder mounted](#with-a-multi-purpose-folder-mounted)
   * [More configuration parameters](#more-configuration-parameters)
-* [Starting Zalenium with Docker Compose](#starting-zalenium-with-docker-compose)
 * [One line starters](#one-line-starters)
   * [Zalenium one-liner installer](#zalenium-one-liner-installer)
   * [Install and start](#install-and-start)
@@ -16,6 +15,8 @@
   * [Install and start with latest Selenium 2](#install-and-start-with-latest-selenium-2)
   * [Install and start a specific version](#install-and-start-a-specific-version)
   * [Cleanup](#cleanup)
+* [Video feature](#video-feature)
+* [Starting Zalenium with Docker Compose](#starting-zalenium-with-docker-compose)
 * [Live preview](#live-preview)
   * [Displaying the live preview](#displaying-the-live-preview)
   * [Showing the test name on the live preview](#showing-the-test-name-on-the-live-preview)
@@ -116,10 +117,6 @@ across all containers. Please note that the folder name in the host can be any y
   * `--timeZone` -> Sets the time zone in the containers. Defaults to "Europe/Berlin".
 
 
-## Starting Zalenium with Docker Compose
-
-You can see an example [here](./docker-compose.yaml)
-
 ## One line starters
 
 ### Zalenium one-liner installer
@@ -157,6 +154,34 @@ You can see an example [here](./docker-compose.yaml)
   ```sh
     curl -sSL https://raw.githubusercontent.com/dosel/t/i/p | bash -s stop
   ```
+
+## Video feature
+When you start Zalenium, and you map a host folder to `/home/seluser/videos`, it will copy all the generated videos from the executed tests into your host mapped folder.
+
+For example, starting Zalenium like this
+
+  ```sh
+    docker run --rm -ti --name zalenium -p 4444:4444 -p 5555:5555 \
+      -v /var/run/docker.sock:/var/run/docker.sock \
+      -v /tmp/videos:/home/seluser/videos \
+      dosel/zalenium start 
+  ```
+  
+will copy the generated videos to your local `/tmp/videos` folder. This means all videos generated from tests executed in 
+docker-selenium containers and also from the ones executed in an integrated cloud testing platform (Sauce Labs, BroserStack, TestingBot).
+
+The file name will be usually like this:
+* Zalenium: `containerName_testName_browser_nodePort_timeStamp.mp4`
+  * e.g. `zalenium_myTest_chrome_40000_20170216071201.mp4`
+* Cloud Testing Platform: `cloudPlatform_testName_browser_platform_timeStamp.mp4/flv`
+  * e.g. `saucelabs_myCloudTest_safari_mac_20170216071201.flv`
+  * e.g. `browserstack_myCloudTest_firefox_windows_20170216071201.mp4`
+  
+If the test name is not set via a capability, the Selenium session ID will be used.
+
+## Starting Zalenium with Docker Compose
+
+You can see an example [here](./docker-compose.yaml)
 
 ## Live preview
 
