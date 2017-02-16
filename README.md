@@ -73,11 +73,8 @@ dependencies.)
 * Just point your Selenium tests to [http://localhost:4444/wd/hub](http://localhost:4444/wd/hub) and that's it!
 * You can use the [integration tests](./src/test/java/de/zalando/tip/zalenium/it/ParallelIT.java) we have to try Zalenium.
 * Check the live preview of your running tests [http://localhost:4444/grid/admin/live](http://localhost:4444/grid/admin/live)
-* To see the recorded videos, check the `/tmp/videos` folder (or the folder that you mapped when starting the container).
-  * It is possible to customise the video name by adding a `name` capability in your test. The file name will look 
-  like `containerName_testName_browser_nodePort_timeStamp.mkv`. The `containerName` part is useful when more than one 
-  instance of Zalenium is running.
-
+* Check the recorded videos in the `/tmp/videos` folder (or the one you mapped when starting Zalenium). More details about the videos 
+feature can be seen [here](./docs/usage_examples.md#video-feature)
 
 ### Docker version
 
