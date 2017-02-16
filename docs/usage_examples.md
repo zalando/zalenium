@@ -171,11 +171,12 @@ will copy the generated videos to your local `/tmp/videos` folder. This means al
 docker-selenium containers and also from the ones executed in an integrated cloud testing platform (Sauce Labs, BroserStack, TestingBot).
 
 The file name will be usually like this:
-* Zalenium: `containerName_testName_browser_nodePort_timeStamp.mp4`
-  * e.g. `zalenium_myTest_chrome_40000_20170216071201.mp4`
-* Cloud Testing Platform: `cloudPlatform_testName_browser_platform_timeStamp.mp4/flv`
-  * e.g. `saucelabs_myCloudTest_safari_mac_20170216071201.flv`
-  * e.g. `browserstack_myCloudTest_firefox_windows_20170216071201.mp4`
+
+  * Zalenium: `containerName_testName_browser_nodePort_timeStamp.mp4`
+    * `zalenium_myTest_chrome_40000_20170216071201.mp4`
+  * Cloud Testing Platform: `cloudPlatform_testName_browser_platform_timeStamp.mp4/flv`
+    * Sauce Labs: `saucelabs_myCloudTest_safari_mac_20170216071201.flv` 
+    * BrowserStack: `browserstack_myCloudTest_firefox_windows_20170216071201.mp4`
   
 If the test name is not set via a capability, the Selenium session ID will be used.
 
