@@ -34,8 +34,7 @@ for more details.
 
 #### Prerequisites
 * Docker engine running, version >= 1.11.1 (probably works with earlier versions, not tested yet).
-* Download the [docker-selenium](https://github.com/elgalu/docker-selenium) image. `docker pull elgalu/selenium`
-* JDK8+
+* Pulling the [docker-selenium](https://github.com/elgalu/docker-selenium) image. `docker pull elgalu/selenium`
 * *nix platform (tested only in OSX and Ubuntu, not tested on Windows yet).
 * If you want to use the [Sauce Labs](https://saucelabs.com/) and/or the [BrowserStack](https://www.browserstack.com/) 
 and/or the [TestingBot](https://testingbot.com/) feature, you need an account with them.
@@ -64,22 +63,9 @@ dependencies.)
     curl -sSL https://raw.githubusercontent.com/dosel/t/i/p | bash -s start
   ```
 
-* More usage examples and one line starters can be seen [here](./docs/usage_examples.md)
+* More usage examples, more parameters, configurations, video usage and one line starters can be seen [here](./docs/usage_examples.md)
 
 * After the output, you should see the DockerSeleniumStarter node in the [grid](http://localhost:4444/grid/console)
-
-* The startup can receive different parameters:
-  * `--chromeContainers` -> Chrome nodes created on startup. Default is 1.
-  * `--firefoxContainers` -> Firefox nodes created on startup. Default is 1.
-  * `--maxDockerSeleniumContainers` -> Max number of docker-selenium containers running at the same time. Default is 10.
-  * `--sauceLabsEnabled` -> Start Sauce Labs node or not. Defaults to 'false'.
-  * `--browserStackEnabled` -> Start BrowserStack node or not. Defaults to 'false'.
-  * `--testingbotEnabled` -> Start TestingBot node or not. Defaults to 'false'.
-  * `--startTunnel` -> When using a cloud testing platform is enabled, starts the tunnel to allow local testing. Defaults to 'false'.
-  * `--videoRecordingEnabled` -> Sets if video is recorded in every test. Defaults to 'true'.
-  * `--screenWidth` -> Sets the screen width. Defaults to 1900.
-  * `--screenHeight` -> Sets the screen height. Defaults to 1880.
-  * `--timeZone` -> Sets the time zone in the containers. Defaults to "Europe/Berlin".
 
 * Stop it: `docker stop zalenium`
 
