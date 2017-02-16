@@ -6,7 +6,8 @@
   * [with BrowserStack enabled](#with-browserstack-enabled)
   * [with TestingBot enabled](#with-testingbot-enabled)
   * [with screen width and height, and time zone](#with-screen-width-and-height-and-time-zone)
-* [Starting Zalenium with Docker Compose](#starting-zalenium-with-docker-compose)
+  * [with a multi-purpose folder mounted](#with-a-multi-purpose-folder-mounted)
+  * [More configuration parameters](#more-configuration-parameters)
 * [One line starters](#one-line-starters)
   * [Zalenium one-liner installer](#zalenium-one-liner-installer)
   * [Install and start](#install-and-start)
@@ -14,6 +15,8 @@
   * [Install and start with latest Selenium 2](#install-and-start-with-latest-selenium-2)
   * [Install and start a specific version](#install-and-start-a-specific-version)
   * [Cleanup](#cleanup)
+* [Video feature](#video-feature)
+* [Starting Zalenium with Docker Compose](#starting-zalenium-with-docker-compose)
 * [Live preview](#live-preview)
   * [Displaying the live preview](#displaying-the-live-preview)
   * [Showing the test name on the live preview](#showing-the-test-name-on-the-live-preview)
@@ -84,9 +87,35 @@ Basic usage, without any of the integrated cloud testing platforms.
       dosel/zalenium start --screenWidth 1440 --screenHeight 810 --timeZone "America/Montreal"
   ```
 
-## Starting Zalenium with Docker Compose
+### with a multi-purpose folder mounted
+This is a folder that you can mount as a volume when starting Zalenium, and it will be mapped across all the docker-selenium containers. 
+It could be used to provide files needed to run your tests, such as filed that need to be open from the browser or folders to use when 
+starting Chrome with a specific profile.
 
-You can see an example [here](./docker-compose.yaml)
+  ```sh
+    docker run --rm -ti --name zalenium -p 4444:4444 -p 5555:5555 \
+      -v /var/run/docker.sock:/var/run/docker.sock \
+      -v /tmp/videos:/home/seluser/videos \
+      -v /tmp/mounted:/tmp/mounted \      
+      dosel/zalenium start 
+  ```
+After starting Zalenium with this mounted volume, any file created in the host in `/tmp/mounted`, will be available in `/tmp/mounted` 
+across all containers. Please note that the folder name in the host can be any you want, the important part is to map properly.
+
+### More configuration parameters
+
+  * `--chromeContainers` -> Chrome nodes created on startup. Default is 1.
+  * `--firefoxContainers` -> Firefox nodes created on startup. Default is 1.
+  * `--maxDockerSeleniumContainers` -> Max number of docker-selenium containers running at the same time. Default is 10.
+  * `--sauceLabsEnabled` -> Start Sauce Labs node or not. Defaults to 'false'.
+  * `--browserStackEnabled` -> Start BrowserStack node or not. Defaults to 'false'.
+  * `--testingbotEnabled` -> Start TestingBot node or not. Defaults to 'false'.
+  * `--startTunnel` -> When using a cloud testing platform is enabled, starts the tunnel to allow local testing. Defaults to 'false'.
+  * `--videoRecordingEnabled` -> Sets if video is recorded in every test. Defaults to 'true'.
+  * `--screenWidth` -> Sets the screen width. Defaults to 1900.
+  * `--screenHeight` -> Sets the screen height. Defaults to 1880.
+  * `--timeZone` -> Sets the time zone in the containers. Defaults to "Europe/Berlin".
+
 
 ## One line starters
 
@@ -125,6 +154,35 @@ You can see an example [here](./docker-compose.yaml)
   ```sh
     curl -sSL https://raw.githubusercontent.com/dosel/t/i/p | bash -s stop
   ```
+
+## Video feature
+When you start Zalenium, and you map a host folder to `/home/seluser/videos`, it will copy all the generated videos from the executed tests into your host mapped folder.
+
+For example, starting Zalenium like this
+
+  ```sh
+    docker run --rm -ti --name zalenium -p 4444:4444 -p 5555:5555 \
+      -v /var/run/docker.sock:/var/run/docker.sock \
+      -v /tmp/videos:/home/seluser/videos \
+      dosel/zalenium start 
+  ```
+  
+will copy the generated videos to your local `/tmp/videos` folder. This means all videos generated from tests executed in 
+docker-selenium containers and also from the ones executed in an integrated cloud testing platform (Sauce Labs, BroserStack, TestingBot).
+
+The file name will be usually like this:
+
+  * Zalenium: `containerName_testName_browser_nodePort_timeStamp.mp4`
+    * `zalenium_myTest_chrome_40000_20170216071201.mp4`
+  * Cloud Testing Platform: `cloudPlatform_testName_browser_platform_timeStamp.mp4/flv`
+    * Sauce Labs: `saucelabs_myCloudTest_safari_mac_20170216071201.flv` 
+    * BrowserStack: `browserstack_myCloudTest_firefox_windows_20170216071201.mp4`
+  
+If the test name is not set via a capability, the Selenium session ID will be used.
+
+## Starting Zalenium with Docker Compose
+
+You can see an example [here](./docker-compose.yaml)
 
 ## Live preview
 
