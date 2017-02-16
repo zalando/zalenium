@@ -6,6 +6,8 @@
   * [with BrowserStack enabled](#with-browserstack-enabled)
   * [with TestingBot enabled](#with-testingbot-enabled)
   * [with screen width and height, and time zone](#with-screen-width-and-height-and-time-zone)
+  * [with a multi-purpose folder mounted](#with-a-multi-purpose-folder-mounted)
+  * [More configuration parameters](#more-configuration-parameters)
 * [Starting Zalenium with Docker Compose](#starting-zalenium-with-docker-compose)
 * [One line starters](#one-line-starters)
   * [Zalenium one-liner installer](#zalenium-one-liner-installer)
@@ -83,6 +85,36 @@ Basic usage, without any of the integrated cloud testing platforms.
       -v /tmp/videos:/home/seluser/videos \
       dosel/zalenium start --screenWidth 1440 --screenHeight 810 --timeZone "America/Montreal"
   ```
+
+### with a multi-purpose folder mounted
+This is a folder that you can mount as a volume when starting Zalenium, and it will be mapped across all the docker-selenium containers. 
+It could be used to provide files needed to run your tests, such as filed that need to be open from the browser or folders to use when 
+starting Chrome with a specific profile.
+
+  ```sh
+    docker run --rm -ti --name zalenium -p 4444:4444 -p 5555:5555 \
+      -v /var/run/docker.sock:/var/run/docker.sock \
+      -v /tmp/videos:/home/seluser/videos \
+      -v /tmp/mounted:/tmp/mounted \      
+      dosel/zalenium start 
+  ```
+After starting Zalenium with this mounted volume, any file created in the host in `/tmp/mounted`, will be available in `/tmp/mounted` 
+across all containers. Please note that the folder name in the host can be any you want, the important part is to map properly.
+
+### More configuration parameters
+
+  * `--chromeContainers` -> Chrome nodes created on startup. Default is 1.
+  * `--firefoxContainers` -> Firefox nodes created on startup. Default is 1.
+  * `--maxDockerSeleniumContainers` -> Max number of docker-selenium containers running at the same time. Default is 10.
+  * `--sauceLabsEnabled` -> Start Sauce Labs node or not. Defaults to 'false'.
+  * `--browserStackEnabled` -> Start BrowserStack node or not. Defaults to 'false'.
+  * `--testingbotEnabled` -> Start TestingBot node or not. Defaults to 'false'.
+  * `--startTunnel` -> When using a cloud testing platform is enabled, starts the tunnel to allow local testing. Defaults to 'false'.
+  * `--videoRecordingEnabled` -> Sets if video is recorded in every test. Defaults to 'true'.
+  * `--screenWidth` -> Sets the screen width. Defaults to 1900.
+  * `--screenHeight` -> Sets the screen height. Defaults to 1880.
+  * `--timeZone` -> Sets the time zone in the containers. Defaults to "Europe/Berlin".
+
 
 ## Starting Zalenium with Docker Compose
 
