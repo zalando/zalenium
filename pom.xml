@@ -334,6 +334,7 @@
                         <configuration>
                             <parallel>methods</parallel>
                             <threadCount>${threadCountProperty}</threadCount>
+                            <skipAfterFailureCount>10</skipAfterFailureCount>
                         </configuration>
                         <executions>
                             <execution>
