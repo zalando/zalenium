@@ -170,6 +170,6 @@ public class BrowserStackRemoteProxyTest {
     @Test
     public void checkVideoFileExtensionAndProxyName() {
         Assert.assertEquals(".mp4", browserStackProxy.getVideoFileExtension());
-        Assert.assertEquals("browserstack", browserStackProxy.getProxyName());
+        Assert.assertEquals("BrowserStack", browserStackProxy.getProxyName());
     }
 }
