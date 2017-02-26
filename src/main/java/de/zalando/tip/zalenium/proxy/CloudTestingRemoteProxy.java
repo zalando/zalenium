@@ -40,6 +40,7 @@ public class CloudTestingRemoteProxy extends DefaultRemoteProxy {
     private static CommonProxyUtilities commonProxyUtilities = defaultCommonProxyUtilities;
     private static Environment env = defaultEnvironment;
     private CapabilityMatcher capabilityHelper;
+    private long executionTime = 0;
 
     @SuppressWarnings("WeakerAccess")
     public CloudTestingRemoteProxy(RegistrationRequest request, Registry registry) {
@@ -109,7 +110,7 @@ public class CloudTestingRemoteProxy extends DefaultRemoteProxy {
         if (request instanceof WebDriverRequest && "DELETE".equalsIgnoreCase(request.getMethod())) {
             WebDriverRequest seleniumRequest = (WebDriverRequest) request;
             if (seleniumRequest.getRequestType().equals(RequestType.STOP_SESSION)) {
-                long executionTime = (System.currentTimeMillis() - session.getSlot().getLastSessionStart()) / 1000;
+                executionTime = (System.currentTimeMillis() - session.getSlot().getLastSessionStart()) / 1000;
                 getGa().testEvent(BrowserStackRemoteProxy.class.getName(), session.getRequestedCapabilities().toString(),
                         executionTime);
                 downloadVideo(session.getRequestedCapabilities(), session.getExternalKey().getKey());
@@ -158,14 +159,17 @@ public class CloudTestingRemoteProxy extends DefaultRemoteProxy {
         String browserName = capabilities.getOrDefault(CapabilityType.BROWSER_NAME, "").toString();
         String platform = capabilities.getOrDefault(CapabilityType.PLATFORM, "").toString();
         // proxyName_testNameOrSeleniumSessionId_browser_platform_timeStamp.fileExtension
-        String fileName = String.format("%s_%s_%s_%s_%s%s", getProxyName(), testName, browserName, platform,
+        String fileName = String.format("%s_%s_%s_%s_%s%s", getProxyName().toLowerCase(), testName, browserName, platform,
                 commonProxyUtilities.getCurrentDateAndTimeFormatted(), getVideoFileExtension()).
                 replace(' ', '_');
+        String finalTestName = testName;
         new Thread(() -> {
-            String localPath = commonProxyUtilities.currentLocalPath();
-            String videoFileNameWithFullPath = localPath + "/videos/" + fileName;
+            String localPath = commonProxyUtilities.currentLocalPath() + "/videos/";
+            String videoFileNameWithFullPath = localPath + fileName;
             try {
                 commonProxyUtilities.downloadFile(videoFileNameWithFullPath, getVideoUrl(seleniumSessionId));
+                commonProxyUtilities.updateDashboard(finalTestName, executionTime, getProxyName(),
+                        browserName, platform, fileName, localPath);
             } catch (Exception e) {
                 logger.log(Level.SEVERE, e.toString(), e);
             }
