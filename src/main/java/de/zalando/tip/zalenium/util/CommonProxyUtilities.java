@@ -10,6 +10,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -134,7 +135,7 @@ public class CommonProxyUtilities {
         long seconds = duration - (minutes * 60);
         String testDuration = String.format("%sm%ss", minutes, seconds);
 
-        String testEntry = FileUtils.readFileToString(new File(currentLocalPath(), "list_template.html"));
+        String testEntry = FileUtils.readFileToString(new File(currentLocalPath(), "list_template.html"), StandardCharsets.UTF_8);
         testEntry = testEntry.replace("{fileName}", fileName).
                 replace("{testName}", testName).
                 replace("{testDuration}", testDuration).
@@ -145,15 +146,15 @@ public class CommonProxyUtilities {
         File testList = new File(path, "list.html");
         // Putting the new entry at the top
         if (testList.exists()) {
-            String testListContents = FileUtils.readFileToString(testList);
+            String testListContents = FileUtils.readFileToString(testList, StandardCharsets.UTF_8);
             testEntry = testEntry.concat("\n").concat(testListContents);
         }
-        FileUtils.writeStringToFile(testList, testEntry);
+        FileUtils.writeStringToFile(testList, testEntry, StandardCharsets.UTF_8);
 
         File dashboardHtml = new File(path, "dashboard.html");
-        String dashboard = FileUtils.readFileToString(new File(currentLocalPath(), "dashboard_template.html"));
+        String dashboard = FileUtils.readFileToString(new File(currentLocalPath(), "dashboard_template.html"), StandardCharsets.UTF_8);
         dashboard = dashboard.replace("{testList}", testEntry);
-        FileUtils.writeStringToFile(dashboardHtml, dashboard);
+        FileUtils.writeStringToFile(dashboardHtml, dashboard, StandardCharsets.UTF_8);
 
         File dashboardCss = new File(path, "dashboard.css");
         if (!dashboardCss.exists()) {
