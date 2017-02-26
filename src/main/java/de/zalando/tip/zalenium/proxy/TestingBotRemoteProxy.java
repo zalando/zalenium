@@ -109,7 +109,7 @@ public class TestingBotRemoteProxy extends CloudTestingRemoteProxy {
 
     @Override
     public String getProxyName() {
-        return "testingbot";
+        return "TestingBot";
     }
 
 }

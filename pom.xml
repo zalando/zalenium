@@ -162,6 +162,15 @@
                                         <include>testingbot_capabilities.json</include>
                                     </includes>
                                 </resource>
+                                <resource>
+                                    <directory>dashboard</directory>
+                                    <includes>
+                                        <include>list_template.html</include>
+                                        <include>dashboard_template.html</include>
+                                        <include>dashboard.css</include>
+                                        <include>zalando.ico</include>
+                                    </includes>
+                                </resource>
                             </resources>
                         </configuration>
                     </execution>
@@ -325,6 +334,7 @@
                         <configuration>
                             <parallel>methods</parallel>
                             <threadCount>${threadCountProperty}</threadCount>
+                            <skipAfterFailureCount>10</skipAfterFailureCount>
                         </configuration>
                         <executions>
                             <execution>

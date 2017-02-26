@@ -2,7 +2,7 @@
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/c719a14f5537488b8fb95d70e27acd5f)](https://www.codacy.com/app/diemol_zalenium/zalenium?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=zalando/zalenium&amp;utm_campaign=Badge_Grade)
 [![codecov](https://codecov.io/gh/zalando/zalenium/branch/master/graph/badge.svg)](https://codecov.io/gh/zalando/zalenium)
 [![](https://images.microbadger.com/badges/version/dosel/zalenium.svg)](https://microbadger.com/images/dosel/zalenium)
-[![](https://images.microbadger.com/badges/version/dosel/zalenium:3.0.1g.svg)](https://microbadger.com/images/dosel/zalenium:3.0.1g)
+[![](https://images.microbadger.com/badges/version/dosel/zalenium:3.1.0a.svg)](https://microbadger.com/images/dosel/zalenium:3.1.0a)
 
 # What is Zalenium?
 A Selenium Grid extension to scale up and down your local grid dynamically with docker containers. It uses 
@@ -75,6 +75,8 @@ dependencies.)
 * Check the live preview of your running tests [http://localhost:4444/grid/admin/live](http://localhost:4444/grid/admin/live)
 * Check the recorded videos in the `/tmp/videos` folder (or the one you mapped when starting Zalenium). More details about the videos 
 feature can be seen [here](./docs/usage_examples.md#video-feature)
+* __[BETA]__ Check the [dashboard](http://localhost:5555/dashboard.html) to see all the recorded and downloaded videos 
+(available after the 1st video is ready). 
 
 ### Docker version
 
@@ -152,9 +154,10 @@ Basically, the tool makes the grid expand or contract depending on the amount of
 ## Selenium 2 and Selenium 3 - About the project versioning
 * To make life easy for people who want to use it, we are now using as a version number the Selenium version being supported.
 * The major-minor version combined with the patch level will indicate the Selenium version being supported. E.g.
-  * When a release is `2.53.1a`, it supports Selenium 2.53.1.
-  * When a release is `3.0.0a`, it supports Selenium 3.0.0.
-  * The badges above show the latest image versions for Selenium 2 and 3.
+  * When a release is `2.53.1a`, it supports Selenium 2.53.1
+  * When a release is `3.1.0a`, it supports Selenium 3.1.0
+  * The badges above show the latest image versions for Selenium 2 and 3
+  * Alias for the latest Selenium 2 and 3 images, use `dosel/zalenium:2` and `dosel/zalenium:3`.
   
 * The versioning will be similar to the one used in [docker-selenium](https://github.com/elgalu/docker-selenium)
 * Until Selenium 3 gets more widely used than Selenium 2, `latest` will refer to the most recent docker image supporting Selenium 2. 

@@ -21,6 +21,7 @@ import org.openqa.grid.internal.TestSession;
 import org.openqa.grid.selenium.proxy.DefaultRemoteProxy;
 import org.openqa.grid.web.servlet.handler.RequestType;
 import org.openqa.grid.web.servlet.handler.WebDriverRequest;
+import org.openqa.selenium.remote.CapabilityType;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -54,8 +55,10 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     private static Environment env = defaultEnvironment;
     private static CommonProxyUtilities commonProxyUtilities = new CommonProxyUtilities();
     private int amountOfExecutedTests;
+    private long executionTime = 0;
     private String testName;
     private String testGroup;
+    private String browserName;
     private boolean stopSessionRequestReceived = false;
     private DockerSeleniumNodePoller dockerSeleniumNodePollerThread = null;
     private GoogleAnalyticsApi ga = new GoogleAnalyticsApi();
@@ -115,6 +118,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         }
         if (increaseCounter()) {
             TestSession newSession = super.getNewSession(requestedCapability);
+            browserName = requestedCapability.getOrDefault(CapabilityType.BROWSER_NAME, "").toString();
             testName = requestedCapability.getOrDefault("name", "").toString();
             if (testName.isEmpty()) {
                 testName = newSession.getExternalKey() != null ?
@@ -138,7 +142,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                 String message = String.format("%s STOP_SESSION command received. Node should shutdown soon...",
                         getNodeIpAndPort());
                 LOGGER.log(Level.INFO, message);
-                long executionTime = (System.currentTimeMillis() - session.getSlot().getLastSessionStart()) / 1000;
+                executionTime = (System.currentTimeMillis() - session.getSlot().getLastSessionStart()) / 1000;
                 ga.testEvent(DockerSeleniumRemoteProxy.class.getName(), session.getRequestedCapabilities().toString(),
                         executionTime);
             }
@@ -278,6 +282,8 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                 OutputStream outputStream = new FileOutputStream(curFile);
                 IOUtils.copy(tarStream, outputStream);
                 outputStream.close();
+                commonProxyUtilities.updateDashboard(testName, executionTime, "Zalenium",
+                        browserName, "Linux", fileName.replace("videos/", ""), localPath + "/videos");
             }
         } catch (Exception e) {
             LOGGER.log(Level.FINE, getNodeIpAndPort() + " Something happened while copying the video file, " +
