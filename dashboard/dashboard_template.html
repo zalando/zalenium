@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="icon" href="zalando.ico">
+
+    <title>Zalenium - Dashboard</title>
+
+    <!-- Bootstrap core CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
+
+    <!-- Custom styles for this template -->
+    <link href="dashboard.css" rel="stylesheet">
+  </head>
+
+  <body>
+    <nav class="navbar navbar-toggleable-md navbar-inverse fixed-top bg-inverse">
+      <a class="navbar-brand" href="#">Zalenium - Dashboard</a>
+    </nav>
+
+    <div class="container-fluid">
+      <div class="row">
+
+        <nav class="col-sm-4 col-md-3 hidden-xs-down bg-faded sidebar">
+          <ul class="nav nav-pills flex-column">
+            <li class="nav-item">
+              <a class="nav-link bg-success text-white text-center font-weight-bold" href="#">Tests</a>
+            </li>
+
+            {testList}
+
+          </ul>
+
+        </nav>
+
+        <main class="col-sm-8 offset-sm-3 col-md-9 offset-md-3 pt-3">
+          <div align="center" class="embed-responsive embed-responsive-16by9">
+            <video id="video" controls autoplay class="embed-responsive-item">
+              <source id="video-source" src="" type=video/mp4>
+            </video>
+          </div>
+        </main>
+
+      </div>
+    </div>
+
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="https://code.jquery.com/jquery-3.1.1.slim.min.js" integrity="sha384-A7FZj7v+d/sdmMqp/nOQwliLvUsJfDHW+k9Omg/a/EheAdgtzNs3hpfag6Ed950n" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js" integrity="sha384-DztdAPBWPRXSA/3eYEEUWrWCy7G5KFbe8fFjk5JAIxUYHKkDx6Qin1DkWx51bBrb" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js" integrity="sha384-vBWWzlZJ8ea9aCX4pEW3rVHjgjt7zpkNpZk+02D9phzyeVkE+jo0ieGizqPLForn" crossorigin="anonymous"></script>
+    <script>
+        $(".list-group-item").on("click", function() {
+            var $this = $(this);
+            var $video = $this.data("video");
+
+            $('.active').removeClass("active");
+            $this.toggleClass("active");
+
+            // Pass clicked link element to another function
+            playVideo($video)
+        });
+
+        function playVideo($video) {
+            var video = document.getElementById("video");
+            var source = document.getElementById("video-source");
+            source.setAttribute("src", $video);
+            source.setAttribute("type", "video/mp4");
+            video.pause();
+            video.load();
+            video.play();
+        }
+    </script>
+  </body>
+</html>

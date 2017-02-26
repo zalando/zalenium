@@ -137,7 +137,7 @@ public class BrowserStackRemoteProxy extends CloudTestingRemoteProxy {
 
     @Override
     public String getProxyName() {
-        return "browserstack";
+        return "BrowserStack";
     }
 
 }
