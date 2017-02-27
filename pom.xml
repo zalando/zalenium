@@ -6,7 +6,7 @@
 
     <groupId>de.zalando.tip</groupId>
     <artifactId>zalenium</artifactId>
-    <version>3.0.1i-SNAPSHOT</version>
+    <version>3.1.0a-SNAPSHOT</version>
     <name>Zalenium</name>
     <description>An on-demand, dynamic local Selenium Grid with an extension to a cloud testing platform.</description>
 
@@ -48,8 +48,8 @@
     </developers>
 
     <properties>
-        <selenium-server.major-minor.version>3.0</selenium-server.major-minor.version>
-        <selenium-server.patch-level.version>1</selenium-server.patch-level.version>
+        <selenium-server.major-minor.version>3.1</selenium-server.major-minor.version>
+        <selenium-server.patch-level.version>0</selenium-server.patch-level.version>
         <docker-client.version>7.0.2</docker-client.version>
         <junit.version>4.12</junit.version>
         <mockito.version>2.6.2</mockito.version>
@@ -85,6 +85,10 @@
                 <exclusion>
                     <groupId>org.slf4j</groupId>
                     <artifactId>slf4j-api</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.google.guava</groupId>
+                    <artifactId>guava</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
