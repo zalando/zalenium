@@ -80,9 +80,9 @@ public class live extends RegistryBasedServlet {
 
         builder.append("<html>");
         builder.append("<head>");
-        builder.append("<script src='//ajax.googleapis.com/ajax/libs/jquery/1.6.1/jquery.min.js'></script>");
-        builder.append("<script src='/grid/resources/org/openqa/grid/images/console-beta.js'></script>");
-        builder.append("<link href='/grid/resources/org/openqa/grid/images/console-beta.css' rel='stylesheet' type='text/css' />");
+        builder.append("<script src='/grid/resources/org/openqa/grid/images/jquery-3.1.1.min.js'></script>");
+        builder.append("<script src='/grid/resources/org/openqa/grid/images/consoleservlet.js'></script>");
+        builder.append("<link href='/grid/resources/org/openqa/grid/images/consoleservlet.css' rel='stylesheet' type='text/css' />");
         builder.append("<link href='/grid/resources/org/openqa/grid/images/favicon.ico' rel='icon' type='image/x-icon' />");
 
         if (refresh != -1) {
@@ -118,13 +118,13 @@ public class live extends RegistryBasedServlet {
         int rightColumnSize = size / 2;
         int leftColumnSize = size - rightColumnSize;
 
-        builder.append("<div id='leftColumn'>");
+        builder.append("<div id='left-column'>");
         for (int i = 0; i < leftColumnSize; i++) {
             builder.append(nodes.get(i));
         }
         builder.append("</div>");
 
-        builder.append("<div id='rightColumn'>");
+        builder.append("<div id='right-column'>");
         for (int i = leftColumnSize; i < nodes.size(); i++) {
             builder.append(nodes.get(i));
         }
