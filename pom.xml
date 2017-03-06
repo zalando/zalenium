@@ -55,7 +55,7 @@
         <mockito.version>2.6.2</mockito.version>
         <awaitility.version>2.0.0</awaitility.version>
         <testng.version>6.10</testng.version>
-        <slf4j.version>1.7.22</slf4j.version>
+        <slf4j.version>1.7.24</slf4j.version>
         <surefire.version>2.19.1</surefire.version>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
