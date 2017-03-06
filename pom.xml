@@ -62,7 +62,7 @@
         <maven.compiler.plugin>3.6.1</maven.compiler.plugin>
         <maven-resources-plugin.version>3.0.2</maven-resources-plugin.version>
         <maven-shade-plugin.version>3.0.0</maven-shade-plugin.version>
-        <jacoco-maven-plugin.version>0.7.8</jacoco-maven-plugin.version>
+        <jacoco-maven-plugin.version>0.7.9</jacoco-maven-plugin.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <threadCountProperty>1</threadCountProperty>

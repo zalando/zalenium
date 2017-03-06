@@ -3,6 +3,8 @@
 [![codecov](https://codecov.io/gh/zalando/zalenium/branch/master/graph/badge.svg)](https://codecov.io/gh/zalando/zalenium)
 [![](https://images.microbadger.com/badges/version/dosel/zalenium.svg)](https://microbadger.com/images/dosel/zalenium)
 [![](https://images.microbadger.com/badges/version/dosel/zalenium:3.1.0a.svg)](https://microbadger.com/images/dosel/zalenium:3.1.0a)
+[![Gitter](https://badges.gitter.im/zalando/zalenium.svg)](https://gitter.im/zalando/zalenium?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
+
 
 # What is Zalenium?
 A Selenium Grid extension to scale up and down your local grid dynamically with docker containers. It uses 
