@@ -61,6 +61,7 @@
         <maven.compiler.target>1.8</maven.compiler.target>
         <maven.compiler.plugin>3.6.1</maven.compiler.plugin>
         <maven-resources-plugin.version>3.0.2</maven-resources-plugin.version>
+        <maven-shade-plugin.version>3.0.0</maven-shade-plugin.version>
         <jacoco-maven-plugin.version>0.7.8</jacoco-maven-plugin.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
@@ -207,7 +208,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
-                <version>2.4.3</version>
+                <version>${maven-shade-plugin.version}</version>
                 <executions>
                     <execution>
                         <phase>package</phase>
