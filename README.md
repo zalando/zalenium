@@ -157,12 +157,12 @@ Basically, the tool makes the grid expand or contract depending on the amount of
 * To make life easy for people who want to use it, we are now using as a version number the Selenium version being supported.
 * The major-minor version combined with the patch level will indicate the Selenium version being supported. E.g.
   * When a release is `2.53.1a`, it supports Selenium 2.53.1
-  * When a release is `3.1.0a`, it supports Selenium 3.1.0
+  * When a release is `3.2.0a`, it supports Selenium 3.2.0
   * The badges above show the latest image versions for Selenium 2 and 3
   * Alias for the latest Selenium 2 and 3 images, use `dosel/zalenium:2` and `dosel/zalenium:3`.
-  
-* The versioning will be similar to the one used in [docker-selenium](https://github.com/elgalu/docker-selenium)
-* Until Selenium 3 gets more widely used than Selenium 2, `latest` will refer to the most recent docker image supporting Selenium 2. 
+
+* From version `3.2.0a`, `latest` is pointing to the most recent docker image supporting Selenium 3 (GA data shows now 
+slight more usage of Selenium 3 than Selenium 2.)
 
 ## Integrated Cloud Testing solutions
 * Thanks to the open source accounts we got, we have integrated so far:
