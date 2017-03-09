@@ -7,10 +7,7 @@ import com.spotify.docker.client.LogStream;
 import com.spotify.docker.client.exceptions.DockerException;
 import com.spotify.docker.client.messages.Container;
 import com.spotify.docker.client.messages.ExecCreation;
-import de.zalando.tip.zalenium.util.CommonProxyUtilities;
-import de.zalando.tip.zalenium.util.Dashboard;
-import de.zalando.tip.zalenium.util.Environment;
-import de.zalando.tip.zalenium.util.GoogleAnalyticsApi;
+import de.zalando.tip.zalenium.util.*;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.compress.utils.IOUtils;
@@ -57,7 +54,6 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     private static Environment env = defaultEnvironment;
     private static CommonProxyUtilities commonProxyUtilities = new CommonProxyUtilities();
     private int amountOfExecutedTests;
-    private long executionTime = 0;
     private String testName;
     private String testGroup;
     private String browserName;
@@ -144,7 +140,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                 String message = String.format("%s STOP_SESSION command received. Node should shutdown soon...",
                         getNodeIpAndPort());
                 LOGGER.log(Level.INFO, message);
-                executionTime = (System.currentTimeMillis() - session.getSlot().getLastSessionStart()) / 1000;
+                long executionTime = (System.currentTimeMillis() - session.getSlot().getLastSessionStart()) / 1000;
                 ga.testEvent(DockerSeleniumRemoteProxy.class.getName(), session.getRequestedCapabilities().toString(),
                         executionTime);
             }
@@ -268,8 +264,11 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                 if (entry.isDirectory()) {
                     continue;
                 }
-                String fileName = buildVideoFileName(entry.getName());
-                File videoFile = new File(localVideosPath, fileName);
+                String fileExtension = entry.getName().substring(entry.getName().lastIndexOf('.'));
+                // TODO Add proper browserVersion and platformVersion, see what to do with the videoUrl.
+                TestInformation testInformation = new TestInformation(getTestName(), "Zalenium", browserName,
+                        "", Platform.LINUX.name(), "", fileExtension, "");
+                File videoFile = new File(localVideosPath, testInformation.getFileName());
                 File parent = videoFile.getParentFile();
                 if (!parent.exists()) {
                     parent.mkdirs();
@@ -277,27 +276,13 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                 OutputStream outputStream = new FileOutputStream(videoFile);
                 IOUtils.copy(tarStream, outputStream);
                 outputStream.close();
-                Dashboard.updateDashboard(getTestName(), executionTime, "Zalenium", browserName,
-                        Platform.LINUX.name(), fileName, localVideosPath);
+                Dashboard.updateDashboard(testInformation);
             }
         } catch (Exception e) {
             LOGGER.log(Level.FINE, getNodeIpAndPort() + " Something happened while copying the video file, " +
                     "most of the time it is an issue while closing the input/output stream, which is usually OK.", e);
         }
         LOGGER.log(Level.INFO, "{0} Video files copies to: {1}", new Object[]{getNodeIpAndPort(), localVideosPath});
-    }
-
-    private String buildVideoFileName(String entryName) {
-        String fileExtension = entryName.substring(entryName.lastIndexOf('.'));
-
-        String fileNameTemplate = "{proxyName}_{testName}_{browser}_{platform}_{timestamp}{fileExtension}";
-
-        return fileNameTemplate.replace("{proxyName}", DockerSeleniumStarterRemoteProxy.getContainerName()).
-                replace("{testName}", getTestName()).
-                replace("{browser}", browserName).
-                replace("{platform}", Platform.LINUX.name()).
-                replace("{timestamp}", commonProxyUtilities.getCurrentDateAndTimeFormatted()).
-                replace("{fileExtension}", fileExtension);
     }
 
     public enum VideoRecordingAction {

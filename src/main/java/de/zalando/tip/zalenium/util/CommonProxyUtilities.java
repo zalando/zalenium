@@ -126,6 +126,12 @@ public class CommonProxyUtilities {
         return dateFormat.format(new Date());
     }
 
+    @SuppressWarnings("WeakerAccess")
+    public String getShortDateAndTime() {
+        DateFormat dateFormat = new SimpleDateFormat("dd-MMM HH:mm:ss");
+        return dateFormat.format(new Date());
+    }
+
     private static String readAll(Reader reader) throws IOException {
         StringBuilder sb = new StringBuilder();
         int cp;
