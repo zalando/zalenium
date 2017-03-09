@@ -14,12 +14,11 @@ public class TestInformation {
     private String platformVersion;
     private String fileName;
     private String videoUrl;
+    private String videoFolderPath;
 
     public String getVideoFolderPath() {
         return videoFolderPath;
     }
-
-    private String videoFolderPath;
 
     public String getTestName() {
         return testName;

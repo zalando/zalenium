@@ -52,7 +52,6 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     private static boolean videoRecordingEnabled;
     private static DockerClient dockerClient = defaultDockerClient;
     private static Environment env = defaultEnvironment;
-    private static CommonProxyUtilities commonProxyUtilities = new CommonProxyUtilities();
     private int amountOfExecutedTests;
     private String testName;
     private String testGroup;
