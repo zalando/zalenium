@@ -258,7 +258,6 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     @SuppressWarnings("ResultOfMethodCallIgnored")
     @VisibleForTesting
     void copyVideos(final String containerId) throws IOException, DockerException, InterruptedException, URISyntaxException {
-        String localVideosPath = commonProxyUtilities.currentLocalPath() + "/" + Dashboard.VIDEOS_FOLDER_NAME;
         try (TarArchiveInputStream tarStream = new TarArchiveInputStream(dockerClient.archiveContainer(containerId,
                 "/videos/"))) {
             TarArchiveEntry entry;
@@ -269,7 +268,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                 String fileExtension = entry.getName().substring(entry.getName().lastIndexOf('.'));
                 TestInformation testInformation = new TestInformation(testName, "Zalenium", browserName,
                         browserVersion, Platform.LINUX.name(), "", fileExtension, "");
-                File videoFile = new File(localVideosPath, testInformation.getFileName());
+                File videoFile = new File(testInformation.getVideoFolderPath(), testInformation.getFileName());
                 File parent = videoFile.getParentFile();
                 if (!parent.exists()) {
                     parent.mkdirs();
@@ -278,12 +277,13 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                 IOUtils.copy(tarStream, outputStream);
                 outputStream.close();
                 Dashboard.updateDashboard(testInformation);
+                LOGGER.log(Level.INFO, "{0} Video files copies to: {1}", new Object[]{getNodeIpAndPort(),
+                        testInformation.getVideoFolderPath()});
             }
         } catch (Exception e) {
             LOGGER.log(Level.FINE, getNodeIpAndPort() + " Something happened while copying the video file, " +
                     "most of the time it is an issue while closing the input/output stream, which is usually OK.", e);
         }
-        LOGGER.log(Level.INFO, "{0} Video files copies to: {1}", new Object[]{getNodeIpAndPort(), localVideosPath});
     }
 
     public enum VideoRecordingAction {

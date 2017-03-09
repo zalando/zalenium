@@ -15,6 +15,12 @@ public class TestInformation {
     private String fileName;
     private String videoUrl;
 
+    public String getVideoFolderPath() {
+        return videoFolderPath;
+    }
+
+    private String videoFolderPath;
+
     public String getTestName() {
         return testName;
     }
@@ -56,6 +62,7 @@ public class TestInformation {
         this.platform = platform;
         this.platformVersion = platformVersion;
         this.videoUrl = videoUrl;
+        this.videoFolderPath = commonProxyUtilities.currentLocalPath() + "/" + Dashboard.VIDEOS_FOLDER_NAME;
         this.fileName = FILE_NAME_TEMPLATE.replace("{proxyName}", this.proxyName.toLowerCase()).
                 replace("{testName}", this.testName).
                 replace("{browser}", this.browser).

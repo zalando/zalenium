@@ -153,10 +153,9 @@ public class CloudTestingRemoteProxy extends DefaultRemoteProxy {
 
     public void addTestToDashboard(String seleniumSessionId) {
         new Thread(() -> {
-            String localPath = commonProxyUtilities.currentLocalPath() + "/" + Dashboard.VIDEOS_FOLDER_NAME + "/";
             try {
                 TestInformation testInformation = getTestInformation(seleniumSessionId);
-                String videoFileNameWithFullPath = localPath + testInformation.getFileName();
+                String videoFileNameWithFullPath = testInformation.getVideoFolderPath() + "/" + testInformation.getFileName();
                 commonProxyUtilities.downloadFile(videoFileNameWithFullPath, testInformation.getVideoUrl());
                 Dashboard.updateDashboard(testInformation);
             } catch (Exception e) {
