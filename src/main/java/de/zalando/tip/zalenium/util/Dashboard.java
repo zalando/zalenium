@@ -12,6 +12,7 @@ import java.nio.charset.StandardCharsets;
 
 public class Dashboard {
 
+    @SuppressWarnings("WeakerAccess")
     public static final String VIDEOS_FOLDER_NAME = "videos";
 
     private static CommonProxyUtilities commonProxyUtilities = new CommonProxyUtilities();
