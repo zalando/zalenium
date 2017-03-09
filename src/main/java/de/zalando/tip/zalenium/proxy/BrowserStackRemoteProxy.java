@@ -3,6 +3,7 @@ package de.zalando.tip.zalenium.proxy;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import de.zalando.tip.zalenium.util.TestInformation;
 import org.openqa.grid.common.RegistrationRequest;
 import org.openqa.grid.internal.Registry;
 import org.openqa.grid.internal.TestSession;
@@ -122,12 +123,19 @@ public class BrowserStackRemoteProxy extends CloudTestingRemoteProxy {
     }
 
     @Override
-    public String getVideoUrl(String seleniumSessionId) {
+    public TestInformation getTestInformation(String seleniumSessionId) {
         // https://BS_USER:BS_KEY@www.browserstack.com/automate/sessions/SELENIUM_SESSION_ID.json
         String browserStackTestUrl = "https://%s:%s@www.browserstack.com/automate/sessions/%s.json";
         browserStackTestUrl = String.format(browserStackTestUrl, getUserNameValue(), getAccessKeyValue(), seleniumSessionId);
-        JsonObject testInformation = getCommonProxyUtilities().readJSONFromUrl(browserStackTestUrl).getAsJsonObject();
-        return testInformation.getAsJsonObject("automation_session").get("video_url").getAsString();
+        JsonObject testData = getCommonProxyUtilities().readJSONFromUrl(browserStackTestUrl).getAsJsonObject();
+        String testName = testData.getAsJsonObject("automation_session").get("name").getAsString();
+        String browser = testData.getAsJsonObject("automation_session").get("browser").getAsString();
+        String browserVersion = testData.getAsJsonObject("automation_session").get("browser_version").getAsString();
+        String platform = testData.getAsJsonObject("automation_session").get("os").getAsString();
+        String platformVersion = testData.getAsJsonObject("automation_session").get("os_version").getAsString();
+        String videoUrl = testData.getAsJsonObject("automation_session").get("video_url").getAsString();
+        return new TestInformation(testName, getProxyName(), browser, browserVersion, platform, platformVersion,
+                getVideoFileExtension(), videoUrl);
     }
 
     @Override

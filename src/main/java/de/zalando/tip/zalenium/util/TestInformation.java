@@ -61,6 +61,7 @@ public class TestInformation {
                 replace("{browser}", this.browser).
                 replace("{platform}", this.platform).
                 replace("{timestamp}", commonProxyUtilities.getCurrentDateAndTimeFormatted()).
-                replace("{fileExtension}", fileExtension);
+                replace("{fileExtension}", fileExtension).
+                replace(" ", "_");
     }
 }
