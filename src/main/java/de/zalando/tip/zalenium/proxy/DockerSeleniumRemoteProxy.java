@@ -277,8 +277,8 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                 OutputStream outputStream = new FileOutputStream(videoFile);
                 IOUtils.copy(tarStream, outputStream);
                 outputStream.close();
-                commonProxyUtilities.updateDashboard(getTestName(), executionTime, "Zalenium",
-                        browserName, Platform.LINUX.name(), fileName, localVideosPath);
+                Dashboard.updateDashboard(getTestName(), executionTime, "Zalenium", browserName,
+                        Platform.LINUX.name(), fileName, localVideosPath);
             }
         } catch (Exception e) {
             LOGGER.log(Level.FINE, getNodeIpAndPort() + " Something happened while copying the video file, " +

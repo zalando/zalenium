@@ -8,10 +8,7 @@ package de.zalando.tip.zalenium.proxy;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import de.zalando.tip.zalenium.util.CommonProxyUtilities;
-import de.zalando.tip.zalenium.util.Environment;
-import de.zalando.tip.zalenium.util.GoogleAnalyticsApi;
-import de.zalando.tip.zalenium.util.ZaleniumCapabilityMatcher;
+import de.zalando.tip.zalenium.util.*;
 import org.openqa.grid.common.RegistrationRequest;
 import org.openqa.grid.internal.Registry;
 import org.openqa.grid.internal.TestSession;
@@ -168,8 +165,8 @@ public class CloudTestingRemoteProxy extends DefaultRemoteProxy {
             String videoFileNameWithFullPath = localPath + fileName;
             try {
                 commonProxyUtilities.downloadFile(videoFileNameWithFullPath, getVideoUrl(seleniumSessionId));
-                commonProxyUtilities.updateDashboard(finalTestName, executionTime, getProxyName(),
-                        browserName, platform, fileName, localPath);
+                Dashboard.updateDashboard(finalTestName, executionTime, getProxyName(), browserName, platform,
+                        fileName, localPath);
             } catch (Exception e) {
                 logger.log(Level.SEVERE, e.toString(), e);
             }
