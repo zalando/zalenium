@@ -13,7 +13,6 @@ public class TestInformation {
     private String platform;
     private String platformVersion;
     private String fileName;
-    private String fileExtension;
     private String videoUrl;
 
     public String getTestName() {
@@ -56,13 +55,12 @@ public class TestInformation {
         this.browserVersion = browserVersion;
         this.platform = platform;
         this.platformVersion = platformVersion;
-        this.fileExtension = fileExtension;
         this.videoUrl = videoUrl;
         this.fileName = FILE_NAME_TEMPLATE.replace("{proxyName}", this.proxyName.toLowerCase()).
                 replace("{testName}", this.testName).
                 replace("{browser}", this.browser).
                 replace("{platform}", this.platform).
                 replace("{timestamp}", commonProxyUtilities.getCurrentDateAndTimeFormatted()).
-                replace("{fileExtension}", this.fileExtension);
+                replace("{fileExtension}", fileExtension);
     }
 }

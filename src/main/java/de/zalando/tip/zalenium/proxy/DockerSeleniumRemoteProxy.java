@@ -57,6 +57,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     private String testName;
     private String testGroup;
     private String browserName;
+    private String browserVersion;
     private boolean stopSessionRequestReceived = false;
     private DockerSeleniumNodePoller dockerSeleniumNodePollerThread = null;
     private GoogleAnalyticsApi ga = new GoogleAnalyticsApi();
@@ -124,6 +125,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                         newSession.getInternalKey();
             }
             testGroup = requestedCapability.getOrDefault("group", "").toString();
+            browserVersion = newSession.getSlot().getCapabilities().getOrDefault("version", "").toString();
             videoRecording(VideoRecordingAction.START_RECORDING);
             return newSession;
         }
@@ -265,9 +267,8 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                     continue;
                 }
                 String fileExtension = entry.getName().substring(entry.getName().lastIndexOf('.'));
-                // TODO Add proper browserVersion and platformVersion, see what to do with the videoUrl.
-                TestInformation testInformation = new TestInformation(getTestName(), "Zalenium", browserName,
-                        "", Platform.LINUX.name(), "", fileExtension, "");
+                TestInformation testInformation = new TestInformation(testName, "Zalenium", browserName,
+                        browserVersion, Platform.LINUX.name(), "", fileExtension, "");
                 File videoFile = new File(localVideosPath, testInformation.getFileName());
                 File parent = videoFile.getParentFile();
                 if (!parent.exists()) {
