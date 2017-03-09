@@ -156,7 +156,8 @@ across all containers. Please note that the folder name in the host can be any y
   ```
 
 ## Video feature
-When you start Zalenium, and you map a host folder to `/home/seluser/videos`, it will copy all the generated videos from the executed tests into your host mapped folder.
+When you start Zalenium, and you map a host folder to `/home/seluser/videos`, it will copy all the generated videos 
+from the executed tests into your host mapped folder.
 
 For example, starting Zalenium like this
 
@@ -167,16 +168,17 @@ For example, starting Zalenium like this
       dosel/zalenium start 
   ```
   
-will copy the generated videos to your local `/tmp/videos` folder. This means all videos generated from tests executed in 
-docker-selenium containers and also from the ones executed in an integrated cloud testing platform (Sauce Labs, BroserStack, TestingBot).
+will copy the generated videos to your local `/tmp/videos` folder. This means all videos generated from tests executed 
+in docker-selenium containers and also from the ones executed in an integrated cloud testing platform (Sauce Labs, 
+BrowserStack, TestingBot).
 
 The file name will be usually like this:
 
-  * Zalenium: `containerName_testName_browser_nodePort_timeStamp.mp4`
-    * `zalenium_myTest_chrome_40000_20170216071201.mp4`
-  * Cloud Testing Platform: `cloudPlatform_testName_browser_platform_timeStamp.mp4/flv`
-    * Sauce Labs: `saucelabs_myCloudTest_safari_mac_20170216071201.flv` 
-    * BrowserStack: `browserstack_myCloudTest_firefox_windows_20170216071201.mp4`
+  * Zalenium: `containerName_testName_browser_platform_timestamp.mp4`
+    * `zalenium_myTestName_chrome_linux_20170216071201.mp4`
+  * Cloud Testing Platform: `cloudPlatform_testName_browser_platform_timestamp.mp4/flv`
+    * Sauce Labs: `saucelabs_myCloudTestName_safari_mac_20170216071201.flv` 
+    * BrowserStack: `browserstack_myCloudTestName_firefox_windows_20170216071201.mp4`
   
 If the test name is not set via a capability, the Selenium session ID will be used.
 

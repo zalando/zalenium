@@ -8,6 +8,7 @@ import com.spotify.docker.client.exceptions.DockerException;
 import com.spotify.docker.client.messages.Container;
 import com.spotify.docker.client.messages.ExecCreation;
 import de.zalando.tip.zalenium.util.CommonProxyUtilities;
+import de.zalando.tip.zalenium.util.Dashboard;
 import de.zalando.tip.zalenium.util.Environment;
 import de.zalando.tip.zalenium.util.GoogleAnalyticsApi;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
@@ -21,6 +22,7 @@ import org.openqa.grid.internal.TestSession;
 import org.openqa.grid.selenium.proxy.DefaultRemoteProxy;
 import org.openqa.grid.web.servlet.handler.RequestType;
 import org.openqa.grid.web.servlet.handler.WebDriverRequest;
+import org.openqa.selenium.Platform;
 import org.openqa.selenium.remote.CapabilityType;
 
 import javax.servlet.http.HttpServletRequest;
@@ -258,7 +260,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     @SuppressWarnings("ResultOfMethodCallIgnored")
     @VisibleForTesting
     void copyVideos(final String containerId) throws IOException, DockerException, InterruptedException, URISyntaxException {
-        String localPath = commonProxyUtilities.currentLocalPath();
+        String localVideosPath = commonProxyUtilities.currentLocalPath() + "/" + Dashboard.VIDEOS_FOLDER_NAME;
         try (TarArchiveInputStream tarStream = new TarArchiveInputStream(dockerClient.archiveContainer(containerId,
                 "/videos/"))) {
             TarArchiveEntry entry;
@@ -266,30 +268,36 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                 if (entry.isDirectory()) {
                     continue;
                 }
-                String fileExtension = entry.getName().substring(entry.getName().lastIndexOf('.'));
-                String folderName = entry.getName().substring(0, entry.getName().indexOf('/') + 1);
-                String fileName = String.format("%s_%s", entry.getName(), commonProxyUtilities.getCurrentDateAndTimeFormatted());
-                fileName = fileName.replace(fileExtension, "").concat(fileExtension);
-                fileName = getTestName().isEmpty() ? fileName : fileName.replace("vid_", getTestName() + "_");
-                fileName = fileName.replace(' ', '_');
-                fileName = fileName.replace(folderName, "");
-                fileName = folderName + DockerSeleniumStarterRemoteProxy.getContainerName() + "_" + fileName;
-                File curFile = new File(localPath, fileName);
-                File parent = curFile.getParentFile();
+                String fileName = buildVideoFileName(entry.getName());
+                File videoFile = new File(localVideosPath, fileName);
+                File parent = videoFile.getParentFile();
                 if (!parent.exists()) {
                     parent.mkdirs();
                 }
-                OutputStream outputStream = new FileOutputStream(curFile);
+                OutputStream outputStream = new FileOutputStream(videoFile);
                 IOUtils.copy(tarStream, outputStream);
                 outputStream.close();
-                commonProxyUtilities.updateDashboard(testName, executionTime, "Zalenium",
-                        browserName, "Linux", fileName.replace("videos/", ""), localPath + "/videos");
+                commonProxyUtilities.updateDashboard(getTestName(), executionTime, "Zalenium",
+                        browserName, Platform.LINUX.name(), fileName, localVideosPath);
             }
         } catch (Exception e) {
             LOGGER.log(Level.FINE, getNodeIpAndPort() + " Something happened while copying the video file, " +
                     "most of the time it is an issue while closing the input/output stream, which is usually OK.", e);
         }
-        LOGGER.log(Level.INFO, "{0} Video files copies to: {1}", new Object[]{getNodeIpAndPort(), localPath});
+        LOGGER.log(Level.INFO, "{0} Video files copies to: {1}", new Object[]{getNodeIpAndPort(), localVideosPath});
+    }
+
+    private String buildVideoFileName(String entryName) {
+        String fileExtension = entryName.substring(entryName.lastIndexOf('.'));
+
+        String fileNameTemplate = "{proxyName}_{testName}_{browser}_{platform}_{timestamp}{fileExtension}";
+
+        return fileNameTemplate.replace("{proxyName}", DockerSeleniumStarterRemoteProxy.getContainerName()).
+                replace("{testName}", getTestName()).
+                replace("{browser}", browserName).
+                replace("{platform}", Platform.LINUX.name()).
+                replace("{timestamp}", commonProxyUtilities.getCurrentDateAndTimeFormatted()).
+                replace("{fileExtension}", fileExtension);
     }
 
     public enum VideoRecordingAction {

@@ -156,14 +156,21 @@ public class CommonProxyUtilities {
         dashboard = dashboard.replace("{testList}", testEntry);
         FileUtils.writeStringToFile(dashboardHtml, dashboard, StandardCharsets.UTF_8);
 
-        File dashboardCss = new File(path, "dashboard.css");
-        if (!dashboardCss.exists()) {
-            FileUtils.copyFile(new File(currentLocalPath(), "dashboard.css"), dashboardCss);
-        }
         File zalandoIco = new File(path, "zalando.ico");
         if (!zalandoIco.exists()) {
             FileUtils.copyFile(new File(currentLocalPath(), "zalando.ico"), zalandoIco);
         }
+
+        File cssFolder = new File(path + "/css");
+        File jsFolder = new File(path + "/js");
+
+        if (!cssFolder.exists()) {
+            FileUtils.copyDirectory(new File(currentLocalPath() + "/css"), cssFolder);
+        }
+        if (!jsFolder.exists()) {
+            FileUtils.copyDirectory(new File(currentLocalPath() + "/js"), jsFolder);
+        }
+
     }
 
     private static String readAll(Reader reader) throws IOException {
