@@ -103,7 +103,7 @@ public class CommonProxyUtilities {
                 fos.write(response);
                 fos.close();
                 //End download code
-                LOG.log(Level.INFO, "Video downloaded from " + url + " to " + fileNameWithFullPath);
+                LOG.log(Level.INFO, "Video downloaded to " + fileNameWithFullPath);
                 currentAttempts = maxAttempts + 1;
             } catch (IOException e) {
                 // Catching this exception generally means that the file was not ready, so we try again.
@@ -121,6 +121,7 @@ public class CommonProxyUtilities {
         }
     }
 
+    @SuppressWarnings("WeakerAccess")
     public String getCurrentDateAndTimeFormatted() {
         DateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
         return dateFormat.format(new Date());
