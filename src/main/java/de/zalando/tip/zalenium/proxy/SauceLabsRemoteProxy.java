@@ -115,11 +115,11 @@ public class SauceLabsRemoteProxy extends CloudTestingRemoteProxy {
         JsonObject testData = getCommonProxyUtilities().readJSONFromUrl(sauceLabsTestUrl).getAsJsonObject();
         String testName = testData.get("name").getAsString();
         String browser = testData.get("browser").getAsString();
-        String browserVersion = testData.get("browser_version").getAsString();
+        String browserVersion = testData.get("browser_short_version").getAsString();
         String platform = testData.get("os").getAsString();
         String videoUrl = String.format(sauceLabsVideoUrl, getUserNameValue(), getAccessKeyValue(), getUserNameValue(),
                 seleniumSessionId);
-        return new TestInformation(testName, getProxyName(), browser, browserVersion, platform, "",
+        return new TestInformation(seleniumSessionId, testName, getProxyName(), browser, browserVersion, platform, "",
                 getVideoFileExtension(), videoUrl);
     }
 

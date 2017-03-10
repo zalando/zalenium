@@ -265,8 +265,8 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                     continue;
                 }
                 String fileExtension = entry.getName().substring(entry.getName().lastIndexOf('.'));
-                TestInformation testInformation = new TestInformation(testName, "Zalenium", browserName,
-                        browserVersion, Platform.LINUX.name(), "", fileExtension, "");
+                TestInformation testInformation = new TestInformation(testName, testName, "Zalenium",
+                        browserName, browserVersion, Platform.LINUX.name(), "", fileExtension, "");
                 File videoFile = new File(testInformation.getVideoFolderPath(), testInformation.getFileName());
                 File parent = videoFile.getParentFile();
                 if (!parent.exists()) {

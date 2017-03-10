@@ -109,7 +109,7 @@ public class TestingBotRemoteProxy extends CloudTestingRemoteProxy {
         String browserVersion = testData.get("browser_version").getAsString();
         String platform = testData.get("os").getAsString();
         String videoUrl = String.format(testingBotVideoUrl, seleniumSessionId);
-        return new TestInformation(testName, getProxyName(), browser, browserVersion, platform, "",
+        return new TestInformation(seleniumSessionId, testName, getProxyName(), browser, browserVersion, platform, "",
                 getVideoFileExtension(), videoUrl);
     }
 
