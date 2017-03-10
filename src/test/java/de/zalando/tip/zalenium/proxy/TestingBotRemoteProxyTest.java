@@ -171,10 +171,6 @@ public class TestingBotRemoteProxyTest {
     public void checkVideoFileExtensionAndProxyNameAndVideoUrl() {
         Assert.assertEquals(".mp4", testingBotProxy.getVideoFileExtension());
         Assert.assertEquals("TestingBot", testingBotProxy.getProxyName());
-        String seleniumSessionId = "testSeleniumSessionId";
-        String expectedVideoUrl = String.format("https://s3-eu-west-1.amazonaws.com/eurectestingbot/%s.mp4",
-                seleniumSessionId);
-        Assert.assertEquals(expectedVideoUrl, testingBotProxy.getVideoUrl(seleniumSessionId));
     }
 
 }

@@ -133,10 +133,6 @@ public class CloudTestingRemoteProxy extends DefaultRemoteProxy {
         return null;
     }
 
-    public String getVideoUrl(String seleniumSessionId) {
-        return null;
-    }
-
     public TestInformation getTestInformation(String seleniumSessionId) {
         return null;
     }
