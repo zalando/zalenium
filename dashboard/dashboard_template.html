@@ -27,7 +27,7 @@
       <div class="row">
 
         <nav class="col-sm-4 col-md-3 hidden-xs-down bg-faded sidebar">
-          <ul class="nav nav-pills flex-column">
+          <ul id="tests" class="nav nav-pills flex-column">
             <li class="nav-item">
               <a class="nav-link bg-success text-white text-center font-weight-bold" href="#">Tests</a>
             </li>
@@ -59,7 +59,7 @@
     <!-- Taken from https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js -->
     <script src="js/bootstrap.min.js"></script>
     <script>
-        $(".list-group-item").on("click", function() {
+        $("#tests").on("click", ".list-group-item", function() {
             var $this = $(this);
             var $video = $this.data("video");
 
@@ -79,6 +79,13 @@
             video.load();
             video.play();
         }
+
+        // This will only work when the page is accessed via a WebServer
+        // Loads new tests in the list as the file gets modified
+        setInterval(function() {
+            $('#tests').load(document.URL +  ' #tests');
+        }, 10000);
+
     </script>
   </body>
 </html>
