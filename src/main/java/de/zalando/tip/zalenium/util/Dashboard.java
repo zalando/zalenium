@@ -25,8 +25,7 @@ public class Dashboard {
         testEntry = testEntry.replace("{fileName}", testInformation.getFileName()).
                 replace("{testName}", testInformation.getTestName()).
                 replace("{dateAndTime}", commonProxyUtilities.getShortDateAndTime()).
-                replace("{browser}", testInformation.getBrowser()).
-                replace("{platform}", testInformation.getPlatform()).
+                replace("{browserAndPlatform}", testInformation.getBrowserAndPlatform()).
                 replace("{proxyName}", testInformation.getProxyName());
 
         File testList = new File(localVideosPath, "list.html");
