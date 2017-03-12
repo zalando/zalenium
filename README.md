@@ -77,8 +77,8 @@ dependencies.)
 * Check the live preview of your running tests [http://localhost:4444/grid/admin/live](http://localhost:4444/grid/admin/live)
 * Check the recorded videos in the `/tmp/videos` folder (or the one you mapped when starting Zalenium). More details about the videos 
 feature can be seen [here](./docs/usage_examples.md#video-feature)
-* __[BETA]__ Check the [dashboard](http://localhost:5555/dashboard.html) to see all the recorded and downloaded videos 
-(available after the 1st video is ready). 
+* __[BETA]__ Check the [dashboard](http://localhost:5555) to see all the recorded and downloaded videos (available after 
+the 1st video is ready). 
 
 ### Docker version
 
