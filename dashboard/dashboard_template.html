@@ -19,7 +19,7 @@
   </head>
 
   <body>
-    <nav class="navbar navbar-toggleable-md navbar-inverse fixed-top bg-inverse">
+    <nav class="navbar navbar-toggleable-md navbar-inverse fixed-top bg-primary">
       <a class="navbar-brand" href="#">Zalenium - Dashboard</a>
     </nav>
 
@@ -39,7 +39,21 @@
         </nav>
 
         <main class="col-sm-8 offset-sm-3 col-md-9 offset-md-3 pt-3">
-          <div align="center" class="embed-responsive embed-responsive-16by9">
+          <section class="row text-center placeholders">
+            <div class="col-6 col-sm-5 placeholder">
+              <label id="test-name"></label>
+            </div>
+            <div class="col-6 col-sm-3 placeholder">
+              <label id="browser-platform"></label>
+            </div>
+            <div class="col-6 col-sm-2 placeholder">
+              <label id="proxy-name"></label>
+            </div>
+            <div class="col-6 col-sm-2 placeholder">
+              <label id="date-time"></label>
+            </div>
+          </section>
+          <div align="center" class="embed-responsive embed-responsive-16by9 bg-faded">
             <video id="video" controls autoplay class="embed-responsive-item">
               <source id="video-source" src="" type=video/mp4>
             </video>
@@ -62,12 +76,19 @@
         $("#tests").on("click", ".list-group-item", function() {
             var $this = $(this);
             var $video = $this.data("video");
+            var $testName = $this.data("test-name");
+            var $browserPlatform = $this.data("browser-platform");
+            var $proxyName = $this.data("proxy-name");
+            var $dateTime = $this.data("date-time");
 
             $('.active').removeClass("active");
             $this.toggleClass("active");
 
             // Pass clicked link element to another function
-            playVideo($video)
+            playVideo($video);
+
+            // Set test info to be displayed
+            setTestInformation($testName, $browserPlatform, $proxyName, $dateTime);
         });
 
         function playVideo($video) {
@@ -78,6 +99,13 @@
             video.pause();
             video.load();
             video.play();
+        }
+
+        function setTestInformation($testName, $browserPlatform, $proxyName, $dateTime) {
+            document.getElementById("test-name").innerHTML = $testName;
+            document.getElementById("browser-platform").innerHTML = $browserPlatform;
+            document.getElementById("proxy-name").innerHTML = $proxyName;
+            document.getElementById("date-time").innerHTML = $dateTime;
         }
 
         // This will only work when the page is accessed via a WebServer
