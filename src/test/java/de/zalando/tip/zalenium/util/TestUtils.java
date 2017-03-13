@@ -1,6 +1,9 @@
 package de.zalando.tip.zalenium.util;
 
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import org.apache.commons.io.FileUtils;
 import org.openqa.grid.common.GridRole;
 import org.openqa.grid.common.RegistrationRequest;
 import org.openqa.grid.web.servlet.handler.RequestType;
@@ -9,6 +12,10 @@ import org.openqa.selenium.Platform;
 import org.openqa.selenium.remote.BrowserType;
 import org.openqa.selenium.remote.CapabilityType;
 
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.Enumeration;
 
@@ -50,6 +57,14 @@ public class TestUtils {
         when(request.getHeaderNames()).thenReturn(strings);
 
         return request;
+    }
+
+    @SuppressWarnings("ConstantConditions")
+    public static JsonElement getTestInformationSample(String fileName) throws IOException {
+        URL testInfoLocation = TestUtils.class.getClassLoader().getResource(fileName);
+        File testInformationFile = new File(testInfoLocation.getPath());
+        String testInformation = FileUtils.readFileToString(testInformationFile, StandardCharsets.UTF_8);
+        return new JsonParser().parse(testInformation);
     }
 
 }
