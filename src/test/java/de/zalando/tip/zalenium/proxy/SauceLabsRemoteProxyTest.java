@@ -143,8 +143,9 @@ public class SauceLabsRemoteProxyTest {
             JsonElement informationSample = TestUtils.getTestInformationSample("saucelabs_testinformation.json");
             CommonProxyUtilities commonProxyUtilities = mock(CommonProxyUtilities.class);
             Environment env = new Environment();
-            String mockTestInformationUrl = "https://%s:%s@saucelabs.com/rest/v1//jobs/72e4f8ecf04440fe965faf657864ed52";
+            String mockTestInformationUrl = "https://%s:%s@saucelabs.com/rest/v1/%s/jobs/72e4f8ecf04440fe965faf657864ed52";
             mockTestInformationUrl = String.format(mockTestInformationUrl, env.getStringEnvVariable("SAUCE_USERNAME", ""),
+                    env.getStringEnvVariable("SAUCE_USERNAME", ""),
                     env.getStringEnvVariable("SAUCE_ACCESS_KEY", ""));
             when(commonProxyUtilities.readJSONFromUrl(mockTestInformationUrl)).thenReturn(informationSample);
             when(commonProxyUtilities.readJSONFromFile(anyString())).thenCallRealMethod();
