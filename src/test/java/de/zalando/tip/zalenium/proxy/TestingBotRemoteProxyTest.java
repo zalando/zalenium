@@ -1,9 +1,11 @@
 package de.zalando.tip.zalenium.proxy;
 
 
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import de.zalando.tip.zalenium.util.CommonProxyUtilities;
 import de.zalando.tip.zalenium.util.Environment;
+import de.zalando.tip.zalenium.util.TestInformation;
 import de.zalando.tip.zalenium.util.TestUtils;
 import org.hamcrest.CoreMatchers;
 import org.junit.After;
@@ -11,6 +13,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.openqa.grid.common.RegistrationRequest;
+import org.openqa.grid.internal.ExternalSessionKey;
 import org.openqa.grid.internal.Registry;
 import org.openqa.grid.internal.RemoteProxy;
 import org.openqa.grid.internal.TestSession;
@@ -36,15 +39,21 @@ public class TestingBotRemoteProxyTest {
 
     @SuppressWarnings("ConstantConditions")
     @Before
-    public void setUp() {
+    public void setUp() throws IOException {
         registry = Registry.newInstance();
         // Creating the configuration and the registration request of the proxy (node)
         RegistrationRequest request = TestUtils.getRegistrationRequestForTesting(30002,
                 TestingBotRemoteProxy.class.getCanonicalName());
         URL resource = TestingBotRemoteProxyTest.class.getClassLoader().getResource("testingbot_capabilities.json");
         File fileLocation = new File(resource.getPath());
+        JsonElement informationSample = TestUtils.getTestInformationSample("testingbot_testinformation.json");
         CommonProxyUtilities commonProxyUtilities = mock(CommonProxyUtilities.class);
-        when(commonProxyUtilities.readJSONFromUrl(anyString())).thenReturn(null);
+        when(commonProxyUtilities.readJSONFromUrl("https://api.testingbot.com/v1/browsers")).thenReturn(null);
+        Environment env = new Environment();
+        String mockTestInfoUrl = "https://%s:%s@api.testingbot.com/v1/tests/2cf5d115-ca6f-4bc4-bc06-a4fca00836ce";
+        mockTestInfoUrl = String.format(mockTestInfoUrl, env.getStringEnvVariable("TESTINGBOT_KEY", ""),
+                env.getStringEnvVariable("TESTINGBOT_SECRET", ""));
+        when(commonProxyUtilities.readJSONFromUrl(mockTestInfoUrl)).thenReturn(informationSample);
         when(commonProxyUtilities.readJSONFromFile(anyString())).thenCallRealMethod();
         when(commonProxyUtilities.currentLocalPath()).thenReturn(fileLocation.getParent());
         TestingBotRemoteProxy.setCommonProxyUtilities(commonProxyUtilities);
@@ -69,7 +78,7 @@ public class TestingBotRemoteProxyTest {
 
     @Test
     public void checkProxyOrdering() {
-        // Checking that the DockerSeleniumStarterProxy should come before SauceLabsProxy
+        // Checking that the DockerSeleniumStarterProxy should come before TestingBotProxy
         List<RemoteProxy> sorted = registry.getAllProxies().getSorted();
         Assert.assertEquals(2, sorted.size());
         Assert.assertEquals(DockerSeleniumStarterRemoteProxy.class, sorted.get(0).getClass());
@@ -95,12 +104,12 @@ public class TestingBotRemoteProxyTest {
         requestedCapability.put(CapabilityType.BROWSER_NAME, BrowserType.IE);
         requestedCapability.put(CapabilityType.PLATFORM, Platform.WIN8);
 
-        // Getting a test session in the sauce labs node
+        // Getting a test session in the TestingBot node
         TestSession testSession = testingBotProxy.getNewSession(requestedCapability);
         Assert.assertNotNull(testSession);
 
         // We need to mock all the needed objects to forward the session and see how in the beforeMethod
-        // the SauceLabs user and api key get added to the body request.
+        // the TestingBot user and api key get added to the body request.
         WebDriverRequest request = TestUtils.getMockedWebDriverRequestStartSession();
 
         HttpServletResponse response = mock(HttpServletResponse.class);
@@ -126,12 +135,12 @@ public class TestingBotRemoteProxyTest {
         requestedCapability.put(CapabilityType.BROWSER_NAME, BrowserType.IE);
         requestedCapability.put(CapabilityType.PLATFORM, Platform.WIN8);
 
-        // Getting a test session in the sauce labs node
+        // Getting a test session in the TestingBot node
         TestSession testSession = testingBotProxy.getNewSession(requestedCapability);
         Assert.assertNotNull(testSession);
 
         // We need to mock all the needed objects to forward the session and see how in the beforeMethod
-        // the SauceLabs user and api key get added to the body request.
+        // the TestingBot user and api key get added to the body request.
         WebDriverRequest request = mock(WebDriverRequest.class);
         when(request.getRequestURI()).thenReturn("session");
         when(request.getServletPath()).thenReturn("session");
@@ -168,13 +177,41 @@ public class TestingBotRemoteProxyTest {
     }
 
     @Test
-    public void checkVideoFileExtensionAndProxyNameAndVideoUrl() {
+    public void testInformationIsRetrievedWhenStoppingSession() throws IOException {
+        // Capability which should result in a created session
+        Map<String, Object> requestedCapability = new HashMap<>();
+        requestedCapability.put(CapabilityType.BROWSER_NAME, BrowserType.CHROME);
+        requestedCapability.put(CapabilityType.PLATFORM, Platform.MAC);
+
+        // Getting a test session in the TestingBot node
+        TestingBotRemoteProxy spyProxy = spy(testingBotProxy);
+        TestSession testSession = spyProxy.getNewSession(requestedCapability);
+        Assert.assertNotNull(testSession);
+        String mockSeleniumSessionId = "2cf5d115-ca6f-4bc4-bc06-a4fca00836ce";
+        testSession.setExternalKey(new ExternalSessionKey(mockSeleniumSessionId));
+
+        // We release the session, the node should be free
+        WebDriverRequest request = mock(WebDriverRequest.class);
+        HttpServletResponse response = mock(HttpServletResponse.class);
+        when(request.getMethod()).thenReturn("DELETE");
+        when(request.getRequestType()).thenReturn(RequestType.STOP_SESSION);
+
+        testSession.getSlot().doFinishRelease();
+        spyProxy.afterCommand(testSession, request, response);
+
+        verify(spyProxy, timeout(1000 * 5)).getTestInformation(mockSeleniumSessionId);
+        TestInformation testInformation = spyProxy.getTestInformation(mockSeleniumSessionId);
+        Assert.assertEquals("loadZalandoPageAndCheckTitle", testInformation.getTestName());
+        Assert.assertThat(testInformation.getFileName(), CoreMatchers.containsString("testingbot_loadZalandoPageAndCheckTitle_Safari9_CAPITAN"));
+        Assert.assertEquals("Safari9 9, CAPITAN", testInformation.getBrowserAndPlatform());
+        Assert.assertEquals("https://s3-eu-west-1.amazonaws.com/eurectestingbot/2cf5d115-ca6f-4bc4-bc06-a4fca00836ce.mp4",
+                testInformation.getVideoUrl());
+    }
+
+    @Test
+    public void checkVideoFileExtensionAndProxyName() {
         Assert.assertEquals(".mp4", testingBotProxy.getVideoFileExtension());
         Assert.assertEquals("TestingBot", testingBotProxy.getProxyName());
-        String seleniumSessionId = "testSeleniumSessionId";
-        String expectedVideoUrl = String.format("https://s3-eu-west-1.amazonaws.com/eurectestingbot/%s.mp4",
-                seleniumSessionId);
-        Assert.assertEquals(expectedVideoUrl, testingBotProxy.getVideoUrl(seleniumSessionId));
     }
 
 }

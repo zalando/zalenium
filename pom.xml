@@ -52,9 +52,9 @@
         <selenium-server.patch-level.version>1</selenium-server.patch-level.version>
         <docker-client.version>8.1.1</docker-client.version>
         <junit.version>4.12</junit.version>
-        <mockito.version>2.7.12</mockito.version>
+        <mockito.version>2.7.14</mockito.version>
         <awaitility.version>2.0.0</awaitility.version>
-        <testng.version>6.10</testng.version>
+        <testng.version>6.11</testng.version>
         <slf4j.version>1.7.24</slf4j.version>
         <surefire.version>2.19.1</surefire.version>
         <maven.compiler.source>1.8</maven.compiler.source>
@@ -143,11 +143,6 @@
                                 <resource>
                                     <directory>docker</directory>
                                     <filtering>true</filtering>
-                                    <includes>
-                                        <include>Dockerfile</include>
-                                        <include>nginx.conf</include>
-                                        <include>.dockerignore</include>
-                                    </includes>
                                 </resource>
                                 <resource>
                                     <directory>.</directory>
@@ -165,12 +160,6 @@
                                 </resource>
                                 <resource>
                                     <directory>dashboard</directory>
-                                    <includes>
-                                        <include>list_template.html</include>
-                                        <include>dashboard_template.html</include>
-                                        <include>dashboard.css</include>
-                                        <include>zalando.ico</include>
-                                    </includes>
                                 </resource>
                             </resources>
                         </configuration>

@@ -10,14 +10,16 @@
     <title>Zalenium - Dashboard</title>
 
     <!-- Bootstrap core CSS -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
+    <!-- Current Bootstrap version - 4.0.0-alpha.6 -->
+    <!-- Taken from https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css -->
+    <link rel="stylesheet" href="css/bootstrap.min.css">
 
     <!-- Custom styles for this template -->
-    <link href="dashboard.css" rel="stylesheet">
+    <link href="css/dashboard.css" rel="stylesheet">
   </head>
 
   <body>
-    <nav class="navbar navbar-toggleable-md navbar-inverse fixed-top bg-inverse">
+    <nav class="navbar navbar-toggleable-md navbar-inverse fixed-top bg-primary">
       <a class="navbar-brand" href="#">Zalenium - Dashboard</a>
     </nav>
 
@@ -25,9 +27,9 @@
       <div class="row">
 
         <nav class="col-sm-4 col-md-3 hidden-xs-down bg-faded sidebar">
-          <ul class="nav nav-pills flex-column">
+          <ul id="tests" class="nav nav-pills flex-column">
             <li class="nav-item">
-              <a class="nav-link bg-success text-white text-center font-weight-bold" href="#">Tests</a>
+              <h6 class="nav-link bg-success text-white text-center font-weight-bold">Tests</h6>
             </li>
 
             {testList}
@@ -37,7 +39,21 @@
         </nav>
 
         <main class="col-sm-8 offset-sm-3 col-md-9 offset-md-3 pt-3">
-          <div align="center" class="embed-responsive embed-responsive-16by9">
+          <section class="row text-center placeholders">
+            <div class="col-6 col-sm-5 placeholder">
+              <label id="test-name"></label>
+            </div>
+            <div class="col-6 col-sm-3 placeholder">
+              <label id="browser-platform"></label>
+            </div>
+            <div class="col-6 col-sm-2 placeholder">
+              <label id="proxy-name"></label>
+            </div>
+            <div class="col-6 col-sm-2 placeholder">
+              <label id="date-time"></label>
+            </div>
+          </section>
+          <div align="center" class="embed-responsive embed-responsive-16by9 bg-faded">
             <video id="video" controls autoplay class="embed-responsive-item">
               <source id="video-source" src="" type=video/mp4>
             </video>
@@ -50,19 +66,29 @@
     <!-- Bootstrap core JavaScript
     ================================================== -->
     <!-- Placed at the end of the document so the pages load faster -->
-    <script src="https://code.jquery.com/jquery-3.1.1.slim.min.js" integrity="sha384-A7FZj7v+d/sdmMqp/nOQwliLvUsJfDHW+k9Omg/a/EheAdgtzNs3hpfag6Ed950n" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js" integrity="sha384-DztdAPBWPRXSA/3eYEEUWrWCy7G5KFbe8fFjk5JAIxUYHKkDx6Qin1DkWx51bBrb" crossorigin="anonymous"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js" integrity="sha384-vBWWzlZJ8ea9aCX4pEW3rVHjgjt7zpkNpZk+02D9phzyeVkE+jo0ieGizqPLForn" crossorigin="anonymous"></script>
+    <!-- Taken from https://code.jquery.com/jquery-3.1.1.min.js -->
+    <script src="js/jquery.min.js"></script>
+    <!-- Taken from https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js -->
+    <script src="js/tether.min.js"></script>
+    <!-- Taken from https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js -->
+    <script src="js/bootstrap.min.js"></script>
     <script>
-        $(".list-group-item").on("click", function() {
+        $("#tests").on("click", ".list-group-item", function() {
             var $this = $(this);
             var $video = $this.data("video");
+            var $testName = $this.data("test-name");
+            var $browserPlatform = $this.data("browser-platform");
+            var $proxyName = $this.data("proxy-name");
+            var $dateTime = $this.data("date-time");
 
             $('.active').removeClass("active");
             $this.toggleClass("active");
 
             // Pass clicked link element to another function
-            playVideo($video)
+            playVideo($video);
+
+            // Set test info to be displayed
+            setTestInformation($testName, $browserPlatform, $proxyName, $dateTime);
         });
 
         function playVideo($video) {
@@ -74,6 +100,20 @@
             video.load();
             video.play();
         }
+
+        function setTestInformation($testName, $browserPlatform, $proxyName, $dateTime) {
+            document.getElementById("test-name").innerHTML = $testName;
+            document.getElementById("browser-platform").innerHTML = $browserPlatform;
+            document.getElementById("proxy-name").innerHTML = $proxyName;
+            document.getElementById("date-time").innerHTML = $dateTime;
+        }
+
+        // This will only work when the page is accessed via a WebServer
+        // Loads new tests in the list as the file gets modified
+        setInterval(function() {
+            $('#tests').load(document.URL +  ' #tests');
+        }, 10000);
+
     </script>
   </body>
 </html>
