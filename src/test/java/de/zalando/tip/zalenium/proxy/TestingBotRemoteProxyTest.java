@@ -49,7 +49,10 @@ public class TestingBotRemoteProxyTest {
         JsonElement informationSample = TestUtils.getTestInformationSample("testingbot_testinformation.json");
         CommonProxyUtilities commonProxyUtilities = mock(CommonProxyUtilities.class);
         when(commonProxyUtilities.readJSONFromUrl("https://api.testingbot.com/v1/browsers")).thenReturn(null);
-        String mockTestInfoUrl = "https://:@api.testingbot.com/v1/tests/2cf5d115-ca6f-4bc4-bc06-a4fca00836ce";
+        Environment env = new Environment();
+        String mockTestInfoUrl = "https://%s:%s@api.testingbot.com/v1/tests/2cf5d115-ca6f-4bc4-bc06-a4fca00836ce";
+        mockTestInfoUrl = String.format(mockTestInfoUrl, env.getStringEnvVariable("TESTINGBOT_KEY", ""),
+                env.getStringEnvVariable("TESTINGBOT_SECRET", ""));
         when(commonProxyUtilities.readJSONFromUrl(mockTestInfoUrl)).thenReturn(informationSample);
         when(commonProxyUtilities.readJSONFromFile(anyString())).thenCallRealMethod();
         when(commonProxyUtilities.currentLocalPath()).thenReturn(fileLocation.getParent());
