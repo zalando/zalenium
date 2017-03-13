@@ -148,7 +148,6 @@ public class SauceLabsRemoteProxyTest {
                     env.getStringEnvVariable("SAUCE_ACCESS_KEY", ""));
             when(commonProxyUtilities.readJSONFromUrl(mockTestInformationUrl)).thenReturn(informationSample);
             when(commonProxyUtilities.readJSONFromFile(anyString())).thenCallRealMethod();
-            // when(commonProxyUtilities.currentLocalPath()).thenReturn(fileLocation.getParent());
             SauceLabsRemoteProxy.setCommonProxyUtilities(commonProxyUtilities);
 
             TestSession testSession = sauceLabsSpyProxy.getNewSession(requestedCapability);
@@ -170,8 +169,8 @@ public class SauceLabsRemoteProxyTest {
             Assert.assertThat(testInformation.getFileName(),
                     CoreMatchers.containsString("saucelabs_72e4f8ecf04440fe965faf657864ed52_googlechrome_Windows_2008"));
             Assert.assertEquals("googlechrome 56, Windows 2008", testInformation.getBrowserAndPlatform());
-            Assert.assertEquals("https://:@saucelabs.com/rest/v1//jobs/72e4f8ecf04440fe965faf657864ed52/assets/video.flv",
-                    testInformation.getVideoUrl());
+            Assert.assertThat(testInformation.getVideoUrl(),
+                    CoreMatchers.containsString("saucelabs.com/rest/v1//jobs/72e4f8ecf04440fe965faf657864ed52/assets/video.flv"));
         } finally {
             SauceLabsRemoteProxy.restoreCommonProxyUtilities();
         }
