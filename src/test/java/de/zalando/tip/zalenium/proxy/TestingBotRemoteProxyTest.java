@@ -5,6 +5,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import de.zalando.tip.zalenium.util.CommonProxyUtilities;
 import de.zalando.tip.zalenium.util.Environment;
+import de.zalando.tip.zalenium.util.TestInformation;
 import de.zalando.tip.zalenium.util.TestUtils;
 import org.hamcrest.CoreMatchers;
 import org.junit.After;
@@ -196,6 +197,12 @@ public class TestingBotRemoteProxyTest {
         spyProxy.afterCommand(testSession, request, response);
 
         verify(spyProxy, timeout(1000 * 5)).getTestInformation(mockSeleniumSessionId);
+        TestInformation testInformation = spyProxy.getTestInformation(mockSeleniumSessionId);
+        Assert.assertEquals("loadZalandoPageAndCheckTitle", testInformation.getTestName());
+        Assert.assertThat(testInformation.getFileName(), CoreMatchers.containsString("testingbot_loadZalandoPageAndCheckTitle_Safari9_CAPITAN"));
+        Assert.assertEquals("Safari9 9, CAPITAN", testInformation.getBrowserAndPlatform());
+        Assert.assertEquals("https://s3-eu-west-1.amazonaws.com/eurectestingbot/2cf5d115-ca6f-4bc4-bc06-a4fca00836ce.mp4",
+                testInformation.getVideoUrl());
     }
 
     @Test

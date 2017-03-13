@@ -1,12 +1,11 @@
 package de.zalando.tip.zalenium.proxy;
 
-import de.zalando.tip.zalenium.util.CommonProxyUtilities;
-import de.zalando.tip.zalenium.util.Environment;
-import de.zalando.tip.zalenium.util.GoogleAnalyticsApi;
-import de.zalando.tip.zalenium.util.TestUtils;
+import com.google.gson.JsonElement;
+import de.zalando.tip.zalenium.util.*;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
+import org.hamcrest.CoreMatchers;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -121,15 +120,58 @@ public class SauceLabsRemoteProxyTest {
 
         testSession.forward(request, response, true);
 
+        Environment env = new Environment();
+
         // The body should now have the SauceLabs variables
-        String expectedBody = System.getenv("SAUCE_USERNAME") == null ?
-                String.format("{\"desiredCapabilities\":{\"browserName\":\"internet explorer\",\"platform\":" +
-                        "\"WIN8\",\"username\":%s,\"accessKey\":%s}}", System.getenv("SAUCE_USERNAME"),
-                        System.getenv("SAUCE_ACCESS_KEY")) :
-                String.format("{\"desiredCapabilities\":{\"browserName\":\"internet explorer\",\"platform\":" +
-                                "\"WIN8\",\"username\":\"%s\",\"accessKey\":\"%s\"}}", System.getenv("SAUCE_USERNAME"),
-                        System.getenv("SAUCE_ACCESS_KEY"));
+        String expectedBody = String.format("{\"desiredCapabilities\":{\"browserName\":\"internet explorer\",\"platform\":" +
+                        "\"WIN8\",\"username\":\"%s\",\"accessKey\":\"%s\"}}",
+                env.getStringEnvVariable("SAUCE_USERNAME", ""),
+                env.getStringEnvVariable("SAUCE_ACCESS_KEY", ""));
         verify(request).setBody(expectedBody);
+    }
+
+    @Test
+    public void testInformationIsRetrievedWhenStoppingSession() throws IOException {
+        try {
+            // Capability which should result in a created session
+            Map<String, Object> requestedCapability = new HashMap<>();
+            requestedCapability.put(CapabilityType.BROWSER_NAME, BrowserType.CHROME);
+            requestedCapability.put(CapabilityType.PLATFORM, Platform.MAC);
+
+            // Getting a test session in the sauce labs node
+            SauceLabsRemoteProxy sauceLabsSpyProxy = spy(sauceLabsProxy);
+            JsonElement informationSample = TestUtils.getTestInformationSample("saucelabs_testinformation.json");
+            CommonProxyUtilities commonProxyUtilities = mock(CommonProxyUtilities.class);
+            String mockTestInformationUrl = "https://:@saucelabs.com/rest/v1//jobs/72e4f8ecf04440fe965faf657864ed52";
+            when(commonProxyUtilities.readJSONFromUrl(mockTestInformationUrl)).thenReturn(informationSample);
+            when(commonProxyUtilities.readJSONFromFile(anyString())).thenCallRealMethod();
+            // when(commonProxyUtilities.currentLocalPath()).thenReturn(fileLocation.getParent());
+            SauceLabsRemoteProxy.setCommonProxyUtilities(commonProxyUtilities);
+
+            TestSession testSession = sauceLabsSpyProxy.getNewSession(requestedCapability);
+            Assert.assertNotNull(testSession);
+            String mockSeleniumSessionId = "72e4f8ecf04440fe965faf657864ed52";
+            testSession.setExternalKey(new ExternalSessionKey(mockSeleniumSessionId));
+
+            // We release the session, the node should be free
+            WebDriverRequest request = mock(WebDriverRequest.class);
+            HttpServletResponse response = mock(HttpServletResponse.class);
+            when(request.getMethod()).thenReturn("DELETE");
+            when(request.getRequestType()).thenReturn(RequestType.STOP_SESSION);
+            testSession.getSlot().doFinishRelease();
+            sauceLabsSpyProxy.afterCommand(testSession, request, response);
+
+            verify(sauceLabsSpyProxy, timeout(1000 * 5)).getTestInformation(mockSeleniumSessionId);
+            TestInformation testInformation = sauceLabsSpyProxy.getTestInformation(mockSeleniumSessionId);
+            Assert.assertEquals(mockSeleniumSessionId, testInformation.getTestName());
+            Assert.assertThat(testInformation.getFileName(),
+                    CoreMatchers.containsString("saucelabs_72e4f8ecf04440fe965faf657864ed52_googlechrome_Windows_2008"));
+            Assert.assertEquals("googlechrome 56, Windows 2008", testInformation.getBrowserAndPlatform());
+            Assert.assertEquals("https://:@saucelabs.com/rest/v1//jobs/72e4f8ecf04440fe965faf657864ed52/assets/video.flv",
+                    testInformation.getVideoUrl());
+        } finally {
+            SauceLabsRemoteProxy.restoreCommonProxyUtilities();
+        }
     }
 
     @SuppressWarnings("ConstantConditions")

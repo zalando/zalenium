@@ -23,8 +23,8 @@ public class SauceLabsRemoteProxy extends CloudTestingRemoteProxy {
 
     @VisibleForTesting
     static final String SAUCE_LABS_CAPABILITIES_URL = "http://saucelabs.com/rest/v1/info/platforms/webdriver";
-    private static final String SAUCE_LABS_USER_NAME = System.getenv("SAUCE_USERNAME");
-    private static final String SAUCE_LABS_ACCESS_KEY = System.getenv("SAUCE_ACCESS_KEY");
+    private static final String SAUCE_LABS_USER_NAME = getEnv().getStringEnvVariable("SAUCE_USERNAME", "");
+    private static final String SAUCE_LABS_ACCESS_KEY = getEnv().getStringEnvVariable("SAUCE_ACCESS_KEY", "");
     private static final String SAUCE_LABS_URL = "http://ondemand.saucelabs.com:80";
     private static final Logger LOGGER = Logger.getLogger(SauceLabsRemoteProxy.class.getName());
     private static final String SAUCE_LABS_DEFAULT_CAPABILITIES_BK_FILE = "saucelabs_capabilities.json";
@@ -113,7 +113,7 @@ public class SauceLabsRemoteProxy extends CloudTestingRemoteProxy {
         sauceLabsTestUrl = String.format(sauceLabsTestUrl, getUserNameValue(), getAccessKeyValue(), getUserNameValue(),
                 seleniumSessionId);
         JsonObject testData = getCommonProxyUtilities().readJSONFromUrl(sauceLabsTestUrl).getAsJsonObject();
-        String testName = testData.get("name").getAsString();
+        String testName = testData.get("name").isJsonNull() ? null : testData.get("name").getAsString();
         String browser = testData.get("browser").getAsString();
         String browserVersion = testData.get("browser_short_version").getAsString();
         String platform = testData.get("os").getAsString();
