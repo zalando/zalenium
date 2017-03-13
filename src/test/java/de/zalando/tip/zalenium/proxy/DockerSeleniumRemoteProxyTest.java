@@ -94,6 +94,8 @@ public class DockerSeleniumRemoteProxyTest {
     public void secondRequestGetsANullTestRequest() {
         // Supported desired capability for the test session
         Map<String, Object> requestedCapability = getCapabilitySupportedByDockerSelenium();
+        requestedCapability.put("name", "anyRandomTestName");
+        requestedCapability.put("group", "anyRandomTestGroup");
 
         {
             TestSession newSession = proxy.getNewSession(requestedCapability);
@@ -146,6 +148,36 @@ public class DockerSeleniumRemoteProxyTest {
         // After running one test, the node shouldn't be busy and also down
         Assert.assertFalse(proxy.isBusy());
         Callable<Boolean> callable = () -> proxy.isDown();
+        await().pollInterval(Duration.FIVE_HUNDRED_MILLISECONDS).atMost(Duration.TWO_SECONDS).until(callable);
+    }
+
+    @Test
+    public void normalSessionCommandsDoNotStopNode() throws IOException {
+
+        // Supported desired capability for the test session
+        Map<String, Object> requestedCapability = getCapabilitySupportedByDockerSelenium();
+
+        // Start poller thread
+        proxy.startPolling();
+
+        // Get a test session
+        TestSession newSession = proxy.getNewSession(requestedCapability);
+        Assert.assertNotNull(newSession);
+
+        // The node should be busy since there is a session in it
+        Assert.assertTrue(proxy.isBusy());
+
+        // We release the session, the node should be free
+        WebDriverRequest request = mock(WebDriverRequest.class);
+        HttpServletResponse response = mock(HttpServletResponse.class);
+        when(request.getMethod()).thenReturn("PUT");
+        when(request.getRequestType()).thenReturn(RequestType.REGULAR);
+
+        proxy.afterCommand(newSession, request, response);
+
+        // The node should not tear down
+        Assert.assertTrue(proxy.isBusy());
+        Callable<Boolean> callable = () -> !proxy.isDown();
         await().pollInterval(Duration.FIVE_HUNDRED_MILLISECONDS).atMost(Duration.TWO_SECONDS).until(callable);
     }
 

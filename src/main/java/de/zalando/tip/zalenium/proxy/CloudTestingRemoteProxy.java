@@ -69,11 +69,6 @@ public class CloudTestingRemoteProxy extends DefaultRemoteProxy {
     }
 
     @VisibleForTesting
-    public static void setEnv(final Environment env) {
-        CloudTestingRemoteProxy.env = env;
-    }
-
-    @VisibleForTesting
     static void restoreCommonProxyUtilities() {
         commonProxyUtilities = defaultCommonProxyUtilities;
     }
