@@ -302,6 +302,11 @@ StartUp()
         export ZALENIUM_SEND_ANONYMOUS_USAGE_INFO=${SEND_ANONYMOUS_USAGE_INFO}
     fi
 
+    echo "Copying files for Dashboard..."
+    cp /home/seluser/index.html /home/seluser/videos/index.html
+    cp -r /home/seluser/css /home/seluser/videos
+    cp -r /home/seluser/js /home/seluser/videos
+
     echo "Starting Nginx reverse proxy..."
     nginx
 

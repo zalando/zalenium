@@ -3,6 +3,7 @@ package de.zalando.tip.zalenium.proxy;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import de.zalando.tip.zalenium.util.TestInformation;
 import org.openqa.grid.common.RegistrationRequest;
 import org.openqa.grid.internal.Registry;
 import org.openqa.grid.internal.TestSession;
@@ -22,8 +23,8 @@ public class SauceLabsRemoteProxy extends CloudTestingRemoteProxy {
 
     @VisibleForTesting
     static final String SAUCE_LABS_CAPABILITIES_URL = "http://saucelabs.com/rest/v1/info/platforms/webdriver";
-    private static final String SAUCE_LABS_USER_NAME = System.getenv("SAUCE_USERNAME");
-    private static final String SAUCE_LABS_ACCESS_KEY = System.getenv("SAUCE_ACCESS_KEY");
+    private static final String SAUCE_LABS_USER_NAME = getEnv().getStringEnvVariable("SAUCE_USERNAME", "");
+    private static final String SAUCE_LABS_ACCESS_KEY = getEnv().getStringEnvVariable("SAUCE_ACCESS_KEY", "");
     private static final String SAUCE_LABS_URL = "http://ondemand.saucelabs.com:80";
     private static final Logger LOGGER = Logger.getLogger(SauceLabsRemoteProxy.class.getName());
     private static final String SAUCE_LABS_DEFAULT_CAPABILITIES_BK_FILE = "saucelabs_capabilities.json";
@@ -105,9 +106,21 @@ public class SauceLabsRemoteProxy extends CloudTestingRemoteProxy {
     }
 
     @Override
-    public String getVideoUrl(String seleniumSessionId) {
+    public TestInformation getTestInformation(String seleniumSessionId) {
+        // https://SL_USER:SL_KEY@saucelabs.com/rest/v1/SL_USER/jobs/SELENIUM_SESSION_ID
         String sauceLabsVideoUrl = "https://%s:%s@saucelabs.com/rest/v1/%s/jobs/%s/assets/video.flv";
-        return String.format(sauceLabsVideoUrl, getUserNameValue(), getAccessKeyValue(), getUserNameValue(), seleniumSessionId);
+        String sauceLabsTestUrl = "https://%s:%s@saucelabs.com/rest/v1/%s/jobs/%s";
+        sauceLabsTestUrl = String.format(sauceLabsTestUrl, getUserNameValue(), getAccessKeyValue(), getUserNameValue(),
+                seleniumSessionId);
+        JsonObject testData = getCommonProxyUtilities().readJSONFromUrl(sauceLabsTestUrl).getAsJsonObject();
+        String testName = testData.get("name").isJsonNull() ? null : testData.get("name").getAsString();
+        String browser = testData.get("browser").getAsString();
+        String browserVersion = testData.get("browser_short_version").getAsString();
+        String platform = testData.get("os").getAsString();
+        String videoUrl = String.format(sauceLabsVideoUrl, getUserNameValue(), getAccessKeyValue(), getUserNameValue(),
+                seleniumSessionId);
+        return new TestInformation(seleniumSessionId, testName, getProxyName(), browser, browserVersion, platform, "",
+                getVideoFileExtension(), videoUrl);
     }
 
     @Override

@@ -1,0 +1,59 @@
+{
+  "created_at": "2017-03-07T13:52:58.000Z",
+  "completed_at": "2017-03-07T13:53:19.000Z",
+  "extra": "",
+  "id": 8501850,
+  "name": "loadZalandoPageAndCheckTitle",
+  "session_id": "2cf5d115-ca6f-4bc4-bc06-a4fca00836ce",
+  "status_message": null,
+  "success": false,
+  "state": "COMPLETE",
+  "unknown": true,
+  "video": "https://s3-eu-west-1.amazonaws.com/eurectestingbot/2cf5d115-ca6f-4bc4-bc06-a4fca00836ce.mp4",
+  "groups": [],
+  "browser": "Safari9",
+  "browser_version": "9",
+  "os": "CAPITAN",
+  "type": "WEBDRIVER",
+  "duration": 35,
+  "build": null,
+  "steps": [
+    {
+      "command": "/session",
+      "arguments": "{\"capabilities\":{\"desiredCapabilities\":{\"name\":\"loadZalandoPageAndCheckTitle\",\"browserName\":\"safari\",\"platform\":\"MAC\"},\"requiredCapabilities\":{}},\"desiredCapabilities\":{\"platform\":\"CAPITAN\",\"browserName\":\"safari\",\"version\":\"9\",\"name\":\"loadZalandoPageAndCheckTitle\",\"key\":\"8ff5cac2d26bd1c3873d776cc3969a1f\",\"secret\":\"389af5998bd06d263c5a2278e95f4cd9\"},\"requiredCapabilities\":{}}",
+      "response": "2cf5d115-ca6f-4bc4-bc06-a4fca00836ce",
+      "time": 1488894779373
+    },
+    {
+      "command": "POST maximize <br />windowHandle : current<br />handle : current<br />",
+      "arguments": "",
+      "response": "",
+      "time": 1488894781089
+    },
+    {
+      "command": "POST url <br />url : http://www.zalando.de<br />",
+      "arguments": "",
+      "response": "",
+      "time": 1488894799366
+    },
+    {
+      "command": "GET title ",
+      "arguments": "",
+      "response": "Schuhe & Mode online kaufen | ZALANDO Online Shop",
+      "time": 1488894799672
+    },
+    {
+      "command": "DELETE 2cf5d115-ca6f-4bc4-bc06-a4fca00836ce ",
+      "arguments": "",
+      "response": "",
+      "time": 1488894800726
+    }
+  ],
+  "thumbs": [],
+  "logs": {
+    "vm": "https://s3-eu-west-1.amazonaws.com/eulogtestingbot/2cf5d115-ca6f-4bc4-bc06-a4fca00836ce.txt",
+    "selenium": "https://s3-eu-west-1.amazonaws.com/eulogtestingbot/2cf5d115-ca6f-4bc4-bc06-a4fca00836ce_selenium.txt",
+    "appium": "https://s3-eu-west-1.amazonaws.com/eulogtestingbot/2cf5d115-ca6f-4bc4-bc06-a4fca00836ce_appium.txt",
+    "safari": "https://s3-eu-west-1.amazonaws.com/eulogtestingbot/2cf5d115-ca6f-4bc4-bc06-a4fca00836ce_safari.txt"
+  }
+}

@@ -8,10 +8,7 @@ package de.zalando.tip.zalenium.proxy;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import de.zalando.tip.zalenium.util.CommonProxyUtilities;
-import de.zalando.tip.zalenium.util.Environment;
-import de.zalando.tip.zalenium.util.GoogleAnalyticsApi;
-import de.zalando.tip.zalenium.util.ZaleniumCapabilityMatcher;
+import de.zalando.tip.zalenium.util.*;
 import org.openqa.grid.common.RegistrationRequest;
 import org.openqa.grid.internal.Registry;
 import org.openqa.grid.internal.TestSession;
@@ -19,13 +16,11 @@ import org.openqa.grid.internal.utils.CapabilityMatcher;
 import org.openqa.grid.selenium.proxy.DefaultRemoteProxy;
 import org.openqa.grid.web.servlet.handler.RequestType;
 import org.openqa.grid.web.servlet.handler.WebDriverRequest;
-import org.openqa.selenium.remote.CapabilityType;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -40,7 +35,6 @@ public class CloudTestingRemoteProxy extends DefaultRemoteProxy {
     private static CommonProxyUtilities commonProxyUtilities = defaultCommonProxyUtilities;
     private static Environment env = defaultEnvironment;
     private CapabilityMatcher capabilityHelper;
-    private long executionTime = 0;
 
     @SuppressWarnings("WeakerAccess")
     public CloudTestingRemoteProxy(RegistrationRequest request, Registry registry) {
@@ -75,11 +69,6 @@ public class CloudTestingRemoteProxy extends DefaultRemoteProxy {
     }
 
     @VisibleForTesting
-    public static void setEnv(final Environment env) {
-        CloudTestingRemoteProxy.env = env;
-    }
-
-    @VisibleForTesting
     static void restoreCommonProxyUtilities() {
         commonProxyUtilities = defaultCommonProxyUtilities;
     }
@@ -110,10 +99,10 @@ public class CloudTestingRemoteProxy extends DefaultRemoteProxy {
         if (request instanceof WebDriverRequest && "DELETE".equalsIgnoreCase(request.getMethod())) {
             WebDriverRequest seleniumRequest = (WebDriverRequest) request;
             if (seleniumRequest.getRequestType().equals(RequestType.STOP_SESSION)) {
-                executionTime = (System.currentTimeMillis() - session.getSlot().getLastSessionStart()) / 1000;
+                long executionTime = (System.currentTimeMillis() - session.getSlot().getLastSessionStart()) / 1000;
                 getGa().testEvent(BrowserStackRemoteProxy.class.getName(), session.getRequestedCapabilities().toString(),
                         executionTime);
-                downloadVideo(session.getRequestedCapabilities(), session.getExternalKey().getKey());
+                addTestToDashboard(session.getExternalKey().getKey());
             }
         }
         super.afterCommand(session, request, response);
@@ -139,7 +128,7 @@ public class CloudTestingRemoteProxy extends DefaultRemoteProxy {
         return null;
     }
 
-    public String getVideoUrl(String seleniumSessionId) {
+    public TestInformation getTestInformation(String seleniumSessionId) {
         return null;
     }
 
@@ -151,25 +140,13 @@ public class CloudTestingRemoteProxy extends DefaultRemoteProxy {
         return null;
     }
 
-    public void downloadVideo(Map<String, Object> capabilities, String seleniumSessionId) {
-        String testName = capabilities.getOrDefault("name", "").toString();
-        if (testName.isEmpty()) {
-            testName = seleniumSessionId;
-        }
-        String browserName = capabilities.getOrDefault(CapabilityType.BROWSER_NAME, "").toString();
-        String platform = capabilities.getOrDefault(CapabilityType.PLATFORM, "").toString();
-        // proxyName_testNameOrSeleniumSessionId_browser_platform_timeStamp.fileExtension
-        String fileName = String.format("%s_%s_%s_%s_%s%s", getProxyName().toLowerCase(), testName, browserName, platform,
-                commonProxyUtilities.getCurrentDateAndTimeFormatted(), getVideoFileExtension()).
-                replace(' ', '_');
-        String finalTestName = testName;
+    public void addTestToDashboard(String seleniumSessionId) {
         new Thread(() -> {
-            String localPath = commonProxyUtilities.currentLocalPath() + "/videos/";
-            String videoFileNameWithFullPath = localPath + fileName;
             try {
-                commonProxyUtilities.downloadFile(videoFileNameWithFullPath, getVideoUrl(seleniumSessionId));
-                commonProxyUtilities.updateDashboard(finalTestName, executionTime, getProxyName(),
-                        browserName, platform, fileName, localPath);
+                TestInformation testInformation = getTestInformation(seleniumSessionId);
+                String videoFileNameWithFullPath = testInformation.getVideoFolderPath() + "/" + testInformation.getFileName();
+                commonProxyUtilities.downloadFile(videoFileNameWithFullPath, testInformation.getVideoUrl());
+                Dashboard.updateDashboard(testInformation);
             } catch (Exception e) {
                 logger.log(Level.SEVERE, e.toString(), e);
             }

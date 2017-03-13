@@ -3,6 +3,7 @@ package de.zalando.tip.zalenium.proxy;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import de.zalando.tip.zalenium.util.TestInformation;
 import org.openqa.grid.common.RegistrationRequest;
 import org.openqa.grid.internal.Registry;
 import org.openqa.grid.internal.TestSession;
@@ -97,10 +98,21 @@ public class TestingBotRemoteProxy extends CloudTestingRemoteProxy {
     }
 
     @Override
-    public String getVideoUrl(String seleniumSessionId) {
+    public TestInformation getTestInformation(String seleniumSessionId) {
+        // https://TB_KEY:TB_SECRET@api.testingbot.com/v1/tests/SELENIUM_SESSION_ID
         String testingBotVideoUrl = "https://s3-eu-west-1.amazonaws.com/eurectestingbot/%s.mp4";
-        return String.format(testingBotVideoUrl, seleniumSessionId);
+        String testingBotTestUrl = "https://%s:%s@api.testingbot.com/v1/tests/%s";
+        testingBotTestUrl = String.format(testingBotTestUrl, getUserNameValue(), getAccessKeyValue(), seleniumSessionId);
+        JsonObject testData = getCommonProxyUtilities().readJSONFromUrl(testingBotTestUrl).getAsJsonObject();
+        String testName = testData.get("name").getAsString();
+        String browser = testData.get("browser").getAsString();
+        String browserVersion = testData.get("browser_version").getAsString();
+        String platform = testData.get("os").getAsString();
+        String videoUrl = String.format(testingBotVideoUrl, seleniumSessionId);
+        return new TestInformation(seleniumSessionId, testName, getProxyName(), browser, browserVersion, platform, "",
+                getVideoFileExtension(), videoUrl);
     }
+
 
     @Override
     public String getVideoFileExtension() {

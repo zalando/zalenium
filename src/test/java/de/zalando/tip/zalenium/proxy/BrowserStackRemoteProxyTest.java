@@ -1,9 +1,11 @@
 package de.zalando.tip.zalenium.proxy;
 
 
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import de.zalando.tip.zalenium.util.CommonProxyUtilities;
 import de.zalando.tip.zalenium.util.Environment;
+import de.zalando.tip.zalenium.util.TestInformation;
 import de.zalando.tip.zalenium.util.TestUtils;
 import org.hamcrest.CoreMatchers;
 import org.junit.After;
@@ -11,6 +13,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.openqa.grid.common.RegistrationRequest;
+import org.openqa.grid.internal.ExternalSessionKey;
 import org.openqa.grid.internal.Registry;
 import org.openqa.grid.internal.RemoteProxy;
 import org.openqa.grid.internal.TestSession;
@@ -118,6 +121,77 @@ public class BrowserStackRemoteProxyTest {
                         env.getStringEnvVariable("BROWSER_STACK_KEY", ""));
         verify(request).setBody(expectedBody);
     }
+
+    @Test
+    public void testInformationIsRetrievedWhenStoppingSession() throws IOException {
+        // Capability which should result in a created session
+        try {
+            Map<String, Object> requestedCapability = new HashMap<>();
+            requestedCapability.put(CapabilityType.BROWSER_NAME, BrowserType.CHROME);
+            requestedCapability.put(CapabilityType.PLATFORM, Platform.WIN10);
+
+            JsonElement informationSample = TestUtils.getTestInformationSample("browserstack_testinformation.json");
+            CommonProxyUtilities commonProxyUtilities = mock(CommonProxyUtilities.class);
+            Environment env = new Environment();
+            String mockTestInformationUrl = "https://%s:%s@www.browserstack.com/automate/sessions/77e51cead8e6e37b0a0feb0dfa69325b2c4acf97.json";
+            mockTestInformationUrl = String.format(mockTestInformationUrl, env.getStringEnvVariable("BROWSER_STACK_USER", ""),
+                    env.getStringEnvVariable("BROWSER_STACK_KEY", ""));
+            when(commonProxyUtilities.readJSONFromUrl(mockTestInformationUrl)).thenReturn(informationSample);
+            when(commonProxyUtilities.readJSONFromFile(anyString())).thenCallRealMethod();
+            BrowserStackRemoteProxy.setCommonProxyUtilities(commonProxyUtilities);
+
+            // Getting a test session in the sauce labs node
+            BrowserStackRemoteProxy bsSpyProxy = spy(browserStackProxy);
+            TestSession testSession = bsSpyProxy.getNewSession(requestedCapability);
+            Assert.assertNotNull(testSession);
+            String mockSeleniumSessionId = "77e51cead8e6e37b0a0feb0dfa69325b2c4acf97";
+            testSession.setExternalKey(new ExternalSessionKey(mockSeleniumSessionId));
+
+            // We release the session, the node should be free
+            WebDriverRequest request = mock(WebDriverRequest.class);
+            HttpServletResponse response = mock(HttpServletResponse.class);
+            when(request.getMethod()).thenReturn("DELETE");
+            when(request.getRequestType()).thenReturn(RequestType.STOP_SESSION);
+            testSession.getSlot().doFinishRelease();
+            bsSpyProxy.afterCommand(testSession, request, response);
+
+            verify(bsSpyProxy, timeout(1000 * 5)).getTestInformation(mockSeleniumSessionId);
+            TestInformation testInformation = bsSpyProxy.getTestInformation(mockSeleniumSessionId);
+            Assert.assertEquals("loadZalandoPageAndCheckTitle", testInformation.getTestName());
+            Assert.assertThat(testInformation.getFileName(),
+                    CoreMatchers.containsString("browserstack_loadZalandoPageAndCheckTitle_safari_OS_X"));
+            Assert.assertEquals("safari 6.2, OS X Mountain Lion", testInformation.getBrowserAndPlatform());
+            Assert.assertEquals("https://www.browserstack.com/s3-upload/bs-video-logs-use/s3/77e51cead8e6e37b0" +
+                            "a0feb0dfa69325b2c4acf97/video-77e51cead8e6e37b0a0feb0dfa69325b2c4acf97.mp4?AWSAccessKeyId=" +
+                            "AKIAIOW7IEY5D4X2OFIA&Expires=1497088589&Signature=tQ9SCH1lgg6FjlBIhlTDwummLWc%3D&response-" +
+                            "content-type=video%2Fmp4",
+                    testInformation.getVideoUrl());
+
+        } finally {
+            BrowserStackRemoteProxy.restoreCommonProxyUtilities();
+            BrowserStackRemoteProxy.restoreGa();
+            BrowserStackRemoteProxy.restoreEnvironment();
+        }
+    }
+    /*
+    @Test
+    public void testInformationIsRetrievedWhenStoppingSession() throws IOException {
+        try {
+
+            verify(sauceLabsSpyProxy, timeout(1000 * 5)).getTestInformation(mockSeleniumSessionId);
+            TestInformation testInformation = sauceLabsSpyProxy.getTestInformation(mockSeleniumSessionId);
+            Assert.assertEquals(mockSeleniumSessionId, testInformation.getTestName());
+            Assert.assertThat(testInformation.getFileName(),
+                    CoreMatchers.containsString("saucelabs_72e4f8ecf04440fe965faf657864ed52_googlechrome_Windows_2008"));
+            Assert.assertEquals("googlechrome 56, Windows 2008", testInformation.getBrowserAndPlatform());
+            Assert.assertEquals("https://:@saucelabs.com/rest/v1//jobs/72e4f8ecf04440fe965faf657864ed52/assets/video.flv",
+                    testInformation.getVideoUrl());
+        } finally {
+            SauceLabsRemoteProxy.restoreCommonProxyUtilities();
+        }
+    }
+
+     */
 
     @Test
     public void requestIsNotModifiedInOtherRequestTypes() throws IOException {

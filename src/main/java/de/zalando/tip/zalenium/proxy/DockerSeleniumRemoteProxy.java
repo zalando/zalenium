@@ -7,9 +7,7 @@ import com.spotify.docker.client.LogStream;
 import com.spotify.docker.client.exceptions.DockerException;
 import com.spotify.docker.client.messages.Container;
 import com.spotify.docker.client.messages.ExecCreation;
-import de.zalando.tip.zalenium.util.CommonProxyUtilities;
-import de.zalando.tip.zalenium.util.Environment;
-import de.zalando.tip.zalenium.util.GoogleAnalyticsApi;
+import de.zalando.tip.zalenium.util.*;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.compress.utils.IOUtils;
@@ -21,6 +19,7 @@ import org.openqa.grid.internal.TestSession;
 import org.openqa.grid.selenium.proxy.DefaultRemoteProxy;
 import org.openqa.grid.web.servlet.handler.RequestType;
 import org.openqa.grid.web.servlet.handler.WebDriverRequest;
+import org.openqa.selenium.Platform;
 import org.openqa.selenium.remote.CapabilityType;
 
 import javax.servlet.http.HttpServletRequest;
@@ -53,12 +52,11 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     private static boolean videoRecordingEnabled;
     private static DockerClient dockerClient = defaultDockerClient;
     private static Environment env = defaultEnvironment;
-    private static CommonProxyUtilities commonProxyUtilities = new CommonProxyUtilities();
     private int amountOfExecutedTests;
-    private long executionTime = 0;
     private String testName;
     private String testGroup;
     private String browserName;
+    private String browserVersion;
     private boolean stopSessionRequestReceived = false;
     private DockerSeleniumNodePoller dockerSeleniumNodePollerThread = null;
     private GoogleAnalyticsApi ga = new GoogleAnalyticsApi();
@@ -126,6 +124,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                         newSession.getInternalKey();
             }
             testGroup = requestedCapability.getOrDefault("group", "").toString();
+            browserVersion = newSession.getSlot().getCapabilities().getOrDefault("version", "").toString();
             videoRecording(VideoRecordingAction.START_RECORDING);
             return newSession;
         }
@@ -142,7 +141,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                 String message = String.format("%s STOP_SESSION command received. Node should shutdown soon...",
                         getNodeIpAndPort());
                 LOGGER.log(Level.INFO, message);
-                executionTime = (System.currentTimeMillis() - session.getSlot().getLastSessionStart()) / 1000;
+                long executionTime = (System.currentTimeMillis() - session.getSlot().getLastSessionStart()) / 1000;
                 ga.testEvent(DockerSeleniumRemoteProxy.class.getName(), session.getRequestedCapabilities().toString(),
                         executionTime);
             }
@@ -258,7 +257,6 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     @SuppressWarnings("ResultOfMethodCallIgnored")
     @VisibleForTesting
     void copyVideos(final String containerId) throws IOException, DockerException, InterruptedException, URISyntaxException {
-        String localPath = commonProxyUtilities.currentLocalPath();
         try (TarArchiveInputStream tarStream = new TarArchiveInputStream(dockerClient.archiveContainer(containerId,
                 "/videos/"))) {
             TarArchiveEntry entry;
@@ -267,29 +265,24 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                     continue;
                 }
                 String fileExtension = entry.getName().substring(entry.getName().lastIndexOf('.'));
-                String folderName = entry.getName().substring(0, entry.getName().indexOf('/') + 1);
-                String fileName = String.format("%s_%s", entry.getName(), commonProxyUtilities.getCurrentDateAndTimeFormatted());
-                fileName = fileName.replace(fileExtension, "").concat(fileExtension);
-                fileName = getTestName().isEmpty() ? fileName : fileName.replace("vid_", getTestName() + "_");
-                fileName = fileName.replace(' ', '_');
-                fileName = fileName.replace(folderName, "");
-                fileName = folderName + DockerSeleniumStarterRemoteProxy.getContainerName() + "_" + fileName;
-                File curFile = new File(localPath, fileName);
-                File parent = curFile.getParentFile();
+                TestInformation testInformation = new TestInformation(testName, testName, "Zalenium",
+                        browserName, browserVersion, Platform.LINUX.name(), "", fileExtension, "");
+                File videoFile = new File(testInformation.getVideoFolderPath(), testInformation.getFileName());
+                File parent = videoFile.getParentFile();
                 if (!parent.exists()) {
                     parent.mkdirs();
                 }
-                OutputStream outputStream = new FileOutputStream(curFile);
+                OutputStream outputStream = new FileOutputStream(videoFile);
                 IOUtils.copy(tarStream, outputStream);
                 outputStream.close();
-                commonProxyUtilities.updateDashboard(testName, executionTime, "Zalenium",
-                        browserName, "Linux", fileName.replace("videos/", ""), localPath + "/videos");
+                Dashboard.updateDashboard(testInformation);
+                LOGGER.log(Level.INFO, "{0} Video files copies to: {1}", new Object[]{getNodeIpAndPort(),
+                        testInformation.getVideoFolderPath()});
             }
         } catch (Exception e) {
             LOGGER.log(Level.FINE, getNodeIpAndPort() + " Something happened while copying the video file, " +
                     "most of the time it is an issue while closing the input/output stream, which is usually OK.", e);
         }
-        LOGGER.log(Level.INFO, "{0} Video files copies to: {1}", new Object[]{getNodeIpAndPort(), localPath});
     }
 
     public enum VideoRecordingAction {

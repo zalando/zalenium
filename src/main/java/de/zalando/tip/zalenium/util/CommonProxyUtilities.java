@@ -3,14 +3,12 @@ package de.zalando.tip.zalenium.util;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.io.FileUtils;
 
 import java.io.*;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -105,7 +103,7 @@ public class CommonProxyUtilities {
                 fos.write(response);
                 fos.close();
                 //End download code
-                LOG.log(Level.INFO, "Video downloaded from " + url + " to " + fileNameWithFullPath);
+                LOG.log(Level.INFO, "Video downloaded to " + fileNameWithFullPath);
                 currentAttempts = maxAttempts + 1;
             } catch (IOException e) {
                 // Catching this exception generally means that the file was not ready, so we try again.
@@ -123,47 +121,16 @@ public class CommonProxyUtilities {
         }
     }
 
+    @SuppressWarnings("WeakerAccess")
     public String getCurrentDateAndTimeFormatted() {
         DateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
         return dateFormat.format(new Date());
     }
 
-    public synchronized void updateDashboard(String testName, long duration, String proxyName, String browser,
-                                             String platform, String fileName, String path) throws IOException {
-        // Show duration of 80 seconds like 1m20s
-        long minutes = duration / 60;
-        long seconds = duration - (minutes * 60);
-        String testDuration = String.format("%sm%ss", minutes, seconds);
-
-        String testEntry = FileUtils.readFileToString(new File(currentLocalPath(), "list_template.html"), StandardCharsets.UTF_8);
-        testEntry = testEntry.replace("{fileName}", fileName).
-                replace("{testName}", testName).
-                replace("{testDuration}", testDuration).
-                replace("{browser}", browser).
-                replace("{platform}", platform).
-                replace("{proxyName}", proxyName);
-
-        File testList = new File(path, "list.html");
-        // Putting the new entry at the top
-        if (testList.exists()) {
-            String testListContents = FileUtils.readFileToString(testList, StandardCharsets.UTF_8);
-            testEntry = testEntry.concat("\n").concat(testListContents);
-        }
-        FileUtils.writeStringToFile(testList, testEntry, StandardCharsets.UTF_8);
-
-        File dashboardHtml = new File(path, "dashboard.html");
-        String dashboard = FileUtils.readFileToString(new File(currentLocalPath(), "dashboard_template.html"), StandardCharsets.UTF_8);
-        dashboard = dashboard.replace("{testList}", testEntry);
-        FileUtils.writeStringToFile(dashboardHtml, dashboard, StandardCharsets.UTF_8);
-
-        File dashboardCss = new File(path, "dashboard.css");
-        if (!dashboardCss.exists()) {
-            FileUtils.copyFile(new File(currentLocalPath(), "dashboard.css"), dashboardCss);
-        }
-        File zalandoIco = new File(path, "zalando.ico");
-        if (!zalandoIco.exists()) {
-            FileUtils.copyFile(new File(currentLocalPath(), "zalando.ico"), zalandoIco);
-        }
+    @SuppressWarnings("WeakerAccess")
+    public String getShortDateAndTime() {
+        DateFormat dateFormat = new SimpleDateFormat("dd-MMM HH:mm:ss");
+        return dateFormat.format(new Date());
     }
 
     private static String readAll(Reader reader) throws IOException {

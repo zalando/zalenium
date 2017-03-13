@@ -2,7 +2,7 @@
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/c719a14f5537488b8fb95d70e27acd5f)](https://www.codacy.com/app/diemol_zalenium/zalenium?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=zalando/zalenium&amp;utm_campaign=Badge_Grade)
 [![codecov](https://codecov.io/gh/zalando/zalenium/branch/master/graph/badge.svg)](https://codecov.io/gh/zalando/zalenium)
 [![](https://images.microbadger.com/badges/version/dosel/zalenium.svg)](https://microbadger.com/images/dosel/zalenium)
-[![](https://images.microbadger.com/badges/version/dosel/zalenium:3.2.0a.svg)](https://microbadger.com/images/dosel/zalenium:3.2.0a)
+[![](https://images.microbadger.com/badges/version/dosel/zalenium:2.53.1s.svg)](https://microbadger.com/images/dosel/zalenium:2.53.1s)
 [![Gitter](https://badges.gitter.im/zalando/zalenium.svg)](https://gitter.im/zalando/zalenium?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
 
@@ -77,8 +77,8 @@ dependencies.)
 * Check the live preview of your running tests [http://localhost:4444/grid/admin/live](http://localhost:4444/grid/admin/live)
 * Check the recorded videos in the `/tmp/videos` folder (or the one you mapped when starting Zalenium). More details about the videos 
 feature can be seen [here](./docs/usage_examples.md#video-feature)
-* __[BETA]__ Check the [dashboard](http://localhost:5555/dashboard.html) to see all the recorded and downloaded videos 
-(available after the 1st video is ready). 
+* __[BETA]__ Check the [dashboard](http://localhost:5555) to see all the recorded and downloaded videos (available after 
+the 1st video is ready). 
 
 ### Docker version
 
