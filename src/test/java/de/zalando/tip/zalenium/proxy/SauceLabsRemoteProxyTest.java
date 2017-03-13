@@ -171,7 +171,7 @@ public class SauceLabsRemoteProxyTest {
                     CoreMatchers.containsString("saucelabs_72e4f8ecf04440fe965faf657864ed52_googlechrome_Windows_2008"));
             Assert.assertEquals("googlechrome 56, Windows 2008", testInformation.getBrowserAndPlatform());
             Assert.assertThat(testInformation.getVideoUrl(),
-                    CoreMatchers.containsString("saucelabs.com/rest/v1//jobs/72e4f8ecf04440fe965faf657864ed52/assets/video.flv"));
+                    CoreMatchers.containsString("jobs/72e4f8ecf04440fe965faf657864ed52/assets/video.flv"));
         } finally {
             SauceLabsRemoteProxy.restoreCommonProxyUtilities();
         }
