@@ -1,9 +1,9 @@
 #== Ubuntu xenial is 16.04, i.e. FROM ubuntu:16.04
 # Find latest images at https://hub.docker.com/r/library/ubuntu/
-# Layer size: big: 127.2 MB
-FROM ubuntu:xenial-20170119
+# Layer size: big: ~130 MB
+FROM ubuntu:xenial-20170214
 ENV UBUNTU_FLAVOR="xenial" \
-    UBUNTU_DATE="20170119"
+    UBUNTU_DATE="20170214"
 
 #== Ubuntu flavors - common
 RUN  echo "deb http://archive.ubuntu.com/ubuntu ${UBUNTU_FLAVOR} main universe\n" > /etc/apt/sources.list \
@@ -241,12 +241,28 @@ RUN set -x \
   && rm -rf docker/ && rm docker.tgz \
   && docker --version | grep "${DOCKER_VERSION}"
 
+#----------------------------
+# Docker 17.03.0-ce -- 15 MB
+#----------------------------
+# https://github.com/docker-library/docker/blob/master/17.03/Dockerfile
+# Note: Starting with 1.13, newer CLIs can talk to older daemons
+RUN set -x \
+  && DOCKER_VERSION="17.03.0-ce" \
+     DOCKER_SHA256="4a9766d99c6818b2d54dc302db3c9f7b352ad0a80a2dc179ec164a3ba29c2d3e" \
+  && curl -fSL "https://${DOCKER_BUCKET}/builds/Linux/x86_64/docker-${DOCKER_VERSION}.tgz" \
+          -o docker.tgz \
+  && echo "${DOCKER_SHA256} *docker.tgz" | sha256sum -c - \
+  && tar -xzvf docker.tgz \
+  && mv docker/docker /usr/bin/docker \
+  && rm -rf docker/ && rm docker.tgz \
+  && docker --version | grep "${DOCKER_VERSION}"
+
 # ------------------------#
 # Sauce Connect Tunneling #
 # ------------------------#
 # https://docs.saucelabs.com/reference/sauce-connect/
 # Layer size: medium: 12.42 MB
-ENV SAUCE_CONN_VER="sc-4.4.3-linux" \
+ENV SAUCE_CONN_VER="sc-4.4.4-linux" \
     SAUCE_CONN_DOWN_URL="https://saucelabs.com/downloads"
 RUN cd /tmp \
   && wget -nv "${SAUCE_CONN_DOWN_URL}/${SAUCE_CONN_VER}.tar.gz" \
