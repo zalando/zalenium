@@ -107,6 +107,9 @@ public class DockerSeleniumRemoteProxyTest {
             TestSession newSession = proxy.getNewSession(requestedCapability);
             Assert.assertNull(newSession);
         }
+
+        Assert.assertEquals("anyRandomTestGroup", proxy.getTestGroup());
+        Assert.assertEquals("anyRandomTestName", proxy.getTestName());
     }
 
     @Test
@@ -118,6 +121,43 @@ public class DockerSeleniumRemoteProxyTest {
 
         TestSession newSession = proxy.getNewSession(requestedCapability);
         Assert.assertNull(newSession);
+    }
+
+    @Test
+    public void testIdleTimeoutUsesDefaultValueWhenCapabilityIsNotPresent() {
+        Map<String, Object> requestedCapability = getCapabilitySupportedByDockerSelenium();
+
+        TestSession newSession = proxy.getNewSession(requestedCapability);
+        Assert.assertNotNull(newSession);
+        Assert.assertEquals(proxy.getMaxTestIdleTimeSecs(), DockerSeleniumRemoteProxy.DEFAULT_MAX_TEST_IDLE_TIME_SECS);
+    }
+
+    @Test
+    public void testIdleTimeoutUsesDefaultValueWhenCapabilityHasNegativeValue() {
+        Map<String, Object> requestedCapability = getCapabilitySupportedByDockerSelenium();
+        requestedCapability.put("idleTimeout", -20L);
+
+        proxy.getNewSession(requestedCapability);
+        Assert.assertEquals(proxy.getMaxTestIdleTimeSecs(), DockerSeleniumRemoteProxy.DEFAULT_MAX_TEST_IDLE_TIME_SECS);
+    }
+
+    @Test
+    public void testIdleTimeoutUsesDefaultValueWhenCapabilityHasFaultyValue() {
+        Map<String, Object> requestedCapability = getCapabilitySupportedByDockerSelenium();
+        requestedCapability.put("idleTimeout", "thisValueIsNAN Should not work.");
+
+        proxy.getNewSession(requestedCapability);
+        Assert.assertEquals(proxy.getMaxTestIdleTimeSecs(), DockerSeleniumRemoteProxy.DEFAULT_MAX_TEST_IDLE_TIME_SECS);
+    }
+
+    @Test
+    public void testIdleTimeoutUsesValuePassedAsCapability() {
+        Map<String, Object> requestedCapability = getCapabilitySupportedByDockerSelenium();
+        requestedCapability.put("idleTimeout", 180L);
+
+        TestSession newSession = proxy.getNewSession(requestedCapability);
+        Assert.assertNotNull(newSession);
+        Assert.assertEquals(proxy.getMaxTestIdleTimeSecs(), 180L);
     }
 
     @Test
@@ -170,7 +210,7 @@ public class DockerSeleniumRemoteProxyTest {
         // We release the session, the node should be free
         WebDriverRequest request = mock(WebDriverRequest.class);
         HttpServletResponse response = mock(HttpServletResponse.class);
-        when(request.getMethod()).thenReturn("PUT");
+        when(request.getMethod()).thenReturn("POST");
         when(request.getRequestType()).thenReturn(RequestType.REGULAR);
 
         proxy.afterCommand(newSession, request, response);
@@ -179,6 +219,38 @@ public class DockerSeleniumRemoteProxyTest {
         Assert.assertTrue(proxy.isBusy());
         Callable<Boolean> callable = () -> !proxy.isDown();
         await().pollInterval(Duration.FIVE_HUNDRED_MILLISECONDS).atMost(Duration.TWO_SECONDS).until(callable);
+    }
+
+    @Test
+    public void nodeShutsDownWhenTestIsIdle() throws IOException {
+
+        // Supported desired capability for the test session
+        Map<String, Object> requestedCapability = getCapabilitySupportedByDockerSelenium();
+        requestedCapability.put("idleTimeout", 1L);
+
+        DockerSeleniumRemoteProxy spyProxy = spy(proxy);
+
+        // Start poller thread
+        spyProxy.startPolling();
+
+        // Get a test session
+        TestSession newSession = spyProxy.getNewSession(requestedCapability);
+        Assert.assertNotNull(newSession);
+
+        // Start the session
+        WebDriverRequest webDriverRequest = mock(WebDriverRequest.class);
+        HttpServletResponse response = mock(HttpServletResponse.class);
+        when(webDriverRequest.getMethod()).thenReturn("POST");
+        when(webDriverRequest.getRequestType()).thenReturn(RequestType.START_SESSION);
+        spyProxy.beforeCommand(newSession, webDriverRequest, response);
+
+        // The node should be busy since there is a session in it
+        Assert.assertTrue(spyProxy.isBusy());
+
+        // The node should tear down after the maximum idle time is elapsed
+        Assert.assertTrue(spyProxy.isBusy());
+        Callable<Boolean> callable = spyProxy::isDown;
+        await().pollInterval(Duration.FIVE_HUNDRED_MILLISECONDS).atMost(Duration.FIVE_SECONDS).until(callable);
     }
 
     @Test
@@ -231,14 +303,21 @@ public class DockerSeleniumRemoteProxyTest {
             TestSession newSession = spyProxy.getNewSession(getCapabilitySupportedByDockerSelenium());
             Assert.assertNotNull(newSession);
 
+            // We start the session, in order to start recording
+            WebDriverRequest webDriverRequest = mock(WebDriverRequest.class);
+            HttpServletResponse response = mock(HttpServletResponse.class);
+            when(webDriverRequest.getMethod()).thenReturn("POST");
+            when(webDriverRequest.getRequestType()).thenReturn(RequestType.START_SESSION);
+            spyProxy.beforeCommand(newSession, webDriverRequest, response);
+
             // Assert video recording started
             verify(spyProxy, times(1)).videoRecording(DockerSeleniumRemoteProxy.VideoRecordingAction.START_RECORDING);
             verify(spyProxy, times(1))
                     .processVideoAction(DockerSeleniumRemoteProxy.VideoRecordingAction.START_RECORDING, containerId);
 
             // We release the sessions, the node should be free
-            WebDriverRequest webDriverRequest = mock(WebDriverRequest.class);
-            HttpServletResponse response = mock(HttpServletResponse.class);
+            webDriverRequest = mock(WebDriverRequest.class);
+            response = mock(HttpServletResponse.class);
             when(webDriverRequest.getMethod()).thenReturn("DELETE");
             when(webDriverRequest.getRequestType()).thenReturn(RequestType.STOP_SESSION);
 
@@ -299,6 +378,13 @@ public class DockerSeleniumRemoteProxyTest {
             TestSession newSession = spyProxy.getNewSession(getCapabilitySupportedByDockerSelenium());
             Assert.assertNotNull(newSession);
 
+            // We start the session, in order to start recording
+            WebDriverRequest webDriverRequest = mock(WebDriverRequest.class);
+            HttpServletResponse response = mock(HttpServletResponse.class);
+            when(webDriverRequest.getMethod()).thenReturn("POST");
+            when(webDriverRequest.getRequestType()).thenReturn(RequestType.START_SESSION);
+            spyProxy.beforeCommand(newSession, webDriverRequest, response);
+
             // Assert no video recording was started, videoRecording is invoked but processVideoAction should not
             verify(spyProxy, times(1))
                     .videoRecording(DockerSeleniumRemoteProxy.VideoRecordingAction.START_RECORDING);
@@ -306,8 +392,8 @@ public class DockerSeleniumRemoteProxyTest {
                     .processVideoAction(DockerSeleniumRemoteProxy.VideoRecordingAction.START_RECORDING, containerId);
 
             // We release the sessions, the node should be free
-            WebDriverRequest webDriverRequest = mock(WebDriverRequest.class);
-            HttpServletResponse response = mock(HttpServletResponse.class);
+            webDriverRequest = mock(WebDriverRequest.class);
+            response = mock(HttpServletResponse.class);
             when(webDriverRequest.getMethod()).thenReturn("DELETE");
             when(webDriverRequest.getRequestType()).thenReturn(RequestType.STOP_SESSION);
 

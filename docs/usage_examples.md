@@ -21,6 +21,10 @@
   * [Displaying the live preview](#displaying-the-live-preview)
   * [Showing the test name on the live preview](#showing-the-test-name-on-the-live-preview)
   * [Filtering tests by group name](#filtering-tests-by-group-name)
+* [Test Configuration Options](#test-configuration-options)
+  * [Test name](#test-name)
+  * [Group name](#group-name)
+  * [Idle Timeout](#idle-timeout)
 
 
 ## Initial setup
@@ -196,8 +200,21 @@ You can see an example [here](./docker-compose.yaml)
 page every 20 seconds.
 
 ### Showing the test name on the live preview
-Add a `name` capability with the test name to display it in the live preview. This helps to identify where your test 
-is running. Example code in Java for the capability:
+Having a `name` capability with the test name will display it in the live preview. See [test name](#test-name) for more 
+information.
+
+### Filtering tests by group name
+If more than one person is using the same instance of Zalenium, with a `group` capability in your tests, the live 
+preview can be filtered to show only the tests that belong to a specific group. Pass `?group=myTestGroup` at the end 
+of the url. E.g. [http://localhost:4444/grid/admin/live?group=myTestGroup](http://localhost:4444/grid/admin/live?group=myTestGroup).
+See more details at [group name](#group-name).
+ 
+## Test Configuration Options
+
+### Test name
+Adding a `name` capability with the test name will do two things; it will be displayed in the live preview to help you
+identify where your test is running, and the video file will also use it in the file name. 
+Example code in Java for the capability:
 
   ```java
     DesiredCapabilities desiredCapabilities = new DesiredCapabilities();
@@ -206,19 +223,27 @@ is running. Example code in Java for the capability:
     desiredCapabilities.setCapability("name", "myTestName");
   ```
 
-### Filtering tests by group name
-When more than one develper/tester is using the same instance of Zalenium, add a `group` capability to your tests. This 
-will let you filter the running tests in the live preview by passing `?group=myTestGroup` at the end of the url. E.g.
- 
-* Added capability
+### Group name
+Useful to filter the live preview and only display a group of tests. Example code in Java for the capability:
+
+  ```java
+    DesiredCapabilities desiredCapabilities = new DesiredCapabilities();
+    desiredCapabilities.setCapability(CapabilityType.BROWSER_NAME, BrowserType.CHROME);
+    desiredCapabilities.setCapability(CapabilityType.PLATFORM, Platform.LINUX);
+    desiredCapabilities.setCapability("group", "myTestGroup");
+  ```
+
+### Idle timeout
+By default, Zalenium allows a test to be idle up to 90 seconds. After that elapsed time, the session will be terminated, 
+the node will be shutdown and the recorded video will be saved (if video recording is enabled). This prevents a test to 
+run indefinitely after something went wrong. If you need to have a longer idle timeout, just set an `idleTimeout` 
+capability in your test. Example code in Java for the capability (it sets the `idleTimeout` to 150 seconds):
 
   ```java
     DesiredCapabilities desiredCapabilities = new DesiredCapabilities();
     desiredCapabilities.setCapability(CapabilityType.BROWSER_NAME, BrowserType.FIREFOX);
     desiredCapabilities.setCapability(CapabilityType.PLATFORM, Platform.LINUX);
-    desiredCapabilities.setCapability("group", "myTestGroup");
+    desiredCapabilities.setCapability("idleTimeout", 150);
   ```
-
-* Filter in live preview: [http://localhost:4444/grid/admin/live?group=myTestGroup](http://localhost:4444/grid/admin/live?group=myTestGroup)
 
 
