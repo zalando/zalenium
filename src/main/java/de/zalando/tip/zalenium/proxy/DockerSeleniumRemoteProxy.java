@@ -228,20 +228,28 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
      */
     @VisibleForTesting
     protected synchronized boolean isTestIdle() {
-        TestSession testSession = getTestSlots().get(0).getSession();
-        return testSession != null && testSession.getInactivityTime() >= (getMaxTestIdleTimeSecs() * 1000L);
+        for (TestSlot testSlot : getTestSlots()) {
+            if (testSlot.getSession() != null) {
+                return testSlot.getSession().getInactivityTime() >= (getMaxTestIdleTimeSecs() * 1000L);
+            }
+        }
+        return false;
     }
 
     /*
         Method to terminate an idle session via the registry, the code works because each one has only one slot
+        We use BROWSER_TIMEOUT as a reason, but this could be changed in the future to show a more clear reason
      */
     @VisibleForTesting
     protected synchronized void terminateIdleTest() {
-        TestSlot testSlot = getTestSlots().get(0);
-        long executionTime = (System.currentTimeMillis() - testSlot.getLastSessionStart()) / 1000;
-        ga.testEvent(DockerSeleniumRemoteProxy.class.getName(), testSlot.getSession().getRequestedCapabilities().toString(),
-                executionTime);
-        getRegistry().forceRelease(testSlot, SessionTerminationReason.BROWSER_TIMEOUT);
+        for (TestSlot testSlot : getTestSlots()) {
+            if (testSlot.getSession() != null) {
+                long executionTime = (System.currentTimeMillis() - testSlot.getLastSessionStart()) / 1000;
+                ga.testEvent(DockerSeleniumRemoteProxy.class.getName(), testSlot.getSession().getRequestedCapabilities().toString(),
+                        executionTime);
+                getRegistry().forceRelease(testSlot, SessionTerminationReason.BROWSER_TIMEOUT);
+            }
+        }
     }
 
     @VisibleForTesting
