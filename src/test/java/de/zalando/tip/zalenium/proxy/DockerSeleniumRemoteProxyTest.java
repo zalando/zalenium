@@ -231,14 +231,21 @@ public class DockerSeleniumRemoteProxyTest {
             TestSession newSession = spyProxy.getNewSession(getCapabilitySupportedByDockerSelenium());
             Assert.assertNotNull(newSession);
 
+            // We start the session, in order to start recording
+            WebDriverRequest webDriverRequest = mock(WebDriverRequest.class);
+            HttpServletResponse response = mock(HttpServletResponse.class);
+            when(webDriverRequest.getMethod()).thenReturn("POST");
+            when(webDriverRequest.getRequestType()).thenReturn(RequestType.START_SESSION);
+            spyProxy.beforeCommand(newSession, webDriverRequest, response);
+
             // Assert video recording started
             verify(spyProxy, times(1)).videoRecording(DockerSeleniumRemoteProxy.VideoRecordingAction.START_RECORDING);
             verify(spyProxy, times(1))
                     .processVideoAction(DockerSeleniumRemoteProxy.VideoRecordingAction.START_RECORDING, containerId);
 
             // We release the sessions, the node should be free
-            WebDriverRequest webDriverRequest = mock(WebDriverRequest.class);
-            HttpServletResponse response = mock(HttpServletResponse.class);
+            webDriverRequest = mock(WebDriverRequest.class);
+            response = mock(HttpServletResponse.class);
             when(webDriverRequest.getMethod()).thenReturn("DELETE");
             when(webDriverRequest.getRequestType()).thenReturn(RequestType.STOP_SESSION);
 
@@ -299,6 +306,13 @@ public class DockerSeleniumRemoteProxyTest {
             TestSession newSession = spyProxy.getNewSession(getCapabilitySupportedByDockerSelenium());
             Assert.assertNotNull(newSession);
 
+            // We start the session, in order to start recording
+            WebDriverRequest webDriverRequest = mock(WebDriverRequest.class);
+            HttpServletResponse response = mock(HttpServletResponse.class);
+            when(webDriverRequest.getMethod()).thenReturn("POST");
+            when(webDriverRequest.getRequestType()).thenReturn(RequestType.START_SESSION);
+            spyProxy.beforeCommand(newSession, webDriverRequest, response);
+
             // Assert no video recording was started, videoRecording is invoked but processVideoAction should not
             verify(spyProxy, times(1))
                     .videoRecording(DockerSeleniumRemoteProxy.VideoRecordingAction.START_RECORDING);
@@ -306,8 +320,8 @@ public class DockerSeleniumRemoteProxyTest {
                     .processVideoAction(DockerSeleniumRemoteProxy.VideoRecordingAction.START_RECORDING, containerId);
 
             // We release the sessions, the node should be free
-            WebDriverRequest webDriverRequest = mock(WebDriverRequest.class);
-            HttpServletResponse response = mock(HttpServletResponse.class);
+            webDriverRequest = mock(WebDriverRequest.class);
+            response = mock(HttpServletResponse.class);
             when(webDriverRequest.getMethod()).thenReturn("DELETE");
             when(webDriverRequest.getRequestType()).thenReturn(RequestType.STOP_SESSION);
 
