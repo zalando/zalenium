@@ -103,7 +103,7 @@ public class TestingBotRemoteProxy extends CloudTestingRemoteProxy {
         TestInformation testInformation = null;
         String testingBotTestUrl = "https://%s:%s@api.testingbot.com/v1/tests/%s";
         testingBotTestUrl = String.format(testingBotTestUrl, getUserNameValue(), getAccessKeyValue(), seleniumSessionId);
-        for (int i = 0; i < 3; i++) {
+        for (int i = 0; i < 5; i++) {
             JsonObject testData = getCommonProxyUtilities().readJSONFromUrl(testingBotTestUrl).getAsJsonObject();
             String testName = testData.get("name").getAsString();
             String browser = testData.get("browser").getAsString();
@@ -118,7 +118,7 @@ public class TestingBotRemoteProxy extends CloudTestingRemoteProxy {
                 return testInformation;
             } else {
                 try {
-                    Thread.sleep(1000 * 5 * i);
+                    Thread.sleep(1000 * 5);
                 } catch (InterruptedException e) {
                     logger.log(Level.FINE, e.toString(), e);
                 }
