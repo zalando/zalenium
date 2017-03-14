@@ -210,7 +210,7 @@ public class DockerSeleniumRemoteProxyTest {
         // We release the session, the node should be free
         WebDriverRequest request = mock(WebDriverRequest.class);
         HttpServletResponse response = mock(HttpServletResponse.class);
-        when(request.getMethod()).thenReturn("PUT");
+        when(request.getMethod()).thenReturn("POST");
         when(request.getRequestType()).thenReturn(RequestType.REGULAR);
 
         proxy.afterCommand(newSession, request, response);
@@ -219,6 +219,38 @@ public class DockerSeleniumRemoteProxyTest {
         Assert.assertTrue(proxy.isBusy());
         Callable<Boolean> callable = () -> !proxy.isDown();
         await().pollInterval(Duration.FIVE_HUNDRED_MILLISECONDS).atMost(Duration.TWO_SECONDS).until(callable);
+    }
+
+    @Test
+    public void nodeShutsDownWhenTestIsIdle() throws IOException {
+
+        // Supported desired capability for the test session
+        Map<String, Object> requestedCapability = getCapabilitySupportedByDockerSelenium();
+        requestedCapability.put("idleTimeout", 1L);
+
+        DockerSeleniumRemoteProxy spyProxy = spy(proxy);
+
+        // Start poller thread
+        spyProxy.startPolling();
+
+        // Get a test session
+        TestSession newSession = spyProxy.getNewSession(requestedCapability);
+        Assert.assertNotNull(newSession);
+
+        // Start the session
+        WebDriverRequest webDriverRequest = mock(WebDriverRequest.class);
+        HttpServletResponse response = mock(HttpServletResponse.class);
+        when(webDriverRequest.getMethod()).thenReturn("POST");
+        when(webDriverRequest.getRequestType()).thenReturn(RequestType.START_SESSION);
+        spyProxy.beforeCommand(newSession, webDriverRequest, response);
+
+        // The node should be busy since there is a session in it
+        Assert.assertTrue(spyProxy.isBusy());
+
+        // The node should tear down after the maximum idle time is elapsed
+        Assert.assertTrue(spyProxy.isBusy());
+        Callable<Boolean> callable = spyProxy::isDown;
+        await().pollInterval(Duration.FIVE_HUNDRED_MILLISECONDS).atMost(Duration.FIVE_SECONDS).until(callable);
     }
 
     @Test

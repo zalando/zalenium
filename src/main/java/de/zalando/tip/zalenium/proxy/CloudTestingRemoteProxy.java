@@ -100,7 +100,7 @@ public class CloudTestingRemoteProxy extends DefaultRemoteProxy {
             WebDriverRequest seleniumRequest = (WebDriverRequest) request;
             if (seleniumRequest.getRequestType().equals(RequestType.STOP_SESSION)) {
                 long executionTime = (System.currentTimeMillis() - session.getSlot().getLastSessionStart()) / 1000;
-                getGa().testEvent(BrowserStackRemoteProxy.class.getName(), session.getRequestedCapabilities().toString(),
+                getGa().testEvent(CloudTestingRemoteProxy.class.getName(), session.getRequestedCapabilities().toString(),
                         executionTime);
                 addTestToDashboard(session.getExternalKey().getKey());
             }
