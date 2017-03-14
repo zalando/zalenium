@@ -129,7 +129,6 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
             testGroup = requestedCapability.getOrDefault("group", "").toString();
             browserVersion = newSession.getSlot().getCapabilities().getOrDefault("version", "").toString();
             maxTestIdleTimeSecs = getConfiguredIdleTimeout(requestedCapability);
-            videoRecording(VideoRecordingAction.START_RECORDING);
             return newSession;
         }
         LOGGER.log(Level.FINE, "{0} No more sessions allowed", getNodeIpAndPort());
@@ -152,8 +151,12 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
 
     @Override
     public void beforeCommand(TestSession session, HttpServletRequest request, HttpServletResponse response) {
-        RequestType requestType = ((WebDriverRequest) request).getRequestType();
-        LOGGER.log(Level.INFO, getNodeIpAndPort() + " RequestType: " + requestType.toString() + " About to execute " + request.toString());
+        if (request instanceof WebDriverRequest && "POST".equalsIgnoreCase(request.getMethod())) {
+            WebDriverRequest seleniumRequest = (WebDriverRequest) request;
+            if (RequestType.START_SESSION.equals(seleniumRequest.getRequestType())) {
+                videoRecording(VideoRecordingAction.START_RECORDING);
+            }
+        }
     }
 
     @Override
@@ -171,8 +174,6 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
             }
         }
         super.afterCommand(session, request, response);
-        RequestType requestType = ((WebDriverRequest) request).getRequestType();
-        LOGGER.log(Level.INFO, getNodeIpAndPort() + " RequestType: " + requestType.toString() + " Finished executing " + request.toString());
     }
 
     @Override
