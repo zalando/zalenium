@@ -107,6 +107,9 @@ public class DockerSeleniumRemoteProxyTest {
             TestSession newSession = proxy.getNewSession(requestedCapability);
             Assert.assertNull(newSession);
         }
+
+        Assert.assertEquals("anyRandomTestGroup", proxy.getTestGroup());
+        Assert.assertEquals("anyRandomTestName", proxy.getTestName());
     }
 
     @Test
@@ -118,6 +121,43 @@ public class DockerSeleniumRemoteProxyTest {
 
         TestSession newSession = proxy.getNewSession(requestedCapability);
         Assert.assertNull(newSession);
+    }
+
+    @Test
+    public void testIdleTimeoutUsesDefaultValueWhenCapabilityIsNotPresent() {
+        Map<String, Object> requestedCapability = getCapabilitySupportedByDockerSelenium();
+
+        TestSession newSession = proxy.getNewSession(requestedCapability);
+        Assert.assertNotNull(newSession);
+        Assert.assertEquals(proxy.getMaxTestIdleTimeSecs(), DockerSeleniumRemoteProxy.DEFAULT_MAX_TEST_IDLE_TIME_SECS);
+    }
+
+    @Test
+    public void testIdleTimeoutUsesDefaultValueWhenCapabilityHasNegativeValue() {
+        Map<String, Object> requestedCapability = getCapabilitySupportedByDockerSelenium();
+        requestedCapability.put("idleTimeout", -20L);
+
+        proxy.getNewSession(requestedCapability);
+        Assert.assertEquals(proxy.getMaxTestIdleTimeSecs(), DockerSeleniumRemoteProxy.DEFAULT_MAX_TEST_IDLE_TIME_SECS);
+    }
+
+    @Test
+    public void testIdleTimeoutUsesDefaultValueWhenCapabilityHasFaultyValue() {
+        Map<String, Object> requestedCapability = getCapabilitySupportedByDockerSelenium();
+        requestedCapability.put("idleTimeout", "thisValueIsNAN Should not work.");
+
+        proxy.getNewSession(requestedCapability);
+        Assert.assertEquals(proxy.getMaxTestIdleTimeSecs(), DockerSeleniumRemoteProxy.DEFAULT_MAX_TEST_IDLE_TIME_SECS);
+    }
+
+    @Test
+    public void testIdleTimeoutUsesValuePassedAsCapability() {
+        Map<String, Object> requestedCapability = getCapabilitySupportedByDockerSelenium();
+        requestedCapability.put("idleTimeout", 180L);
+
+        TestSession newSession = proxy.getNewSession(requestedCapability);
+        Assert.assertNotNull(newSession);
+        Assert.assertEquals(proxy.getMaxTestIdleTimeSecs(), 180L);
     }
 
     @Test

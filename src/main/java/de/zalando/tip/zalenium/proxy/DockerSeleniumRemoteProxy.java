@@ -7,7 +7,10 @@ import com.spotify.docker.client.LogStream;
 import com.spotify.docker.client.exceptions.DockerException;
 import com.spotify.docker.client.messages.Container;
 import com.spotify.docker.client.messages.ExecCreation;
-import de.zalando.tip.zalenium.util.*;
+import de.zalando.tip.zalenium.util.Dashboard;
+import de.zalando.tip.zalenium.util.Environment;
+import de.zalando.tip.zalenium.util.GoogleAnalyticsApi;
+import de.zalando.tip.zalenium.util.TestInformation;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.compress.utils.IOUtils;
@@ -46,9 +49,10 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     static final String ZALENIUM_VIDEO_RECORDING_ENABLED = "ZALENIUM_VIDEO_RECORDING_ENABLED";
     @VisibleForTesting
     static final boolean DEFAULT_VIDEO_RECORDING_ENABLED = true;
+    @VisibleForTesting
+    static final long DEFAULT_MAX_TEST_IDLE_TIME_SECS = 90L;
     private static final Logger LOGGER = Logger.getLogger(DockerSeleniumRemoteProxy.class.getName());
     private static final int MAX_UNIQUE_TEST_SESSIONS = 1;
-    private static final long DEFAULT_MAX_TEST_IDLE_TIME_SECS = 90L;
     private static final DockerClient defaultDockerClient = new DefaultDockerClient("unix:///var/run/docker.sock");
     private static final Environment defaultEnvironment = new Environment();
     private static boolean videoRecordingEnabled;
@@ -225,7 +229,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     @VisibleForTesting
     protected synchronized boolean isTestIdle() {
         TestSession testSession = getTestSlots().get(0).getSession();
-        return testSession != null && testSession.getInactivityTime() >= (maxTestIdleTimeSecs * 1000L);
+        return testSession != null && testSession.getInactivityTime() >= (getMaxTestIdleTimeSecs() * 1000L);
     }
 
     /*
