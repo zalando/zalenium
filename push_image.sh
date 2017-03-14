@@ -18,12 +18,13 @@ if [ "$TRAVIS_PULL_REQUEST" = "false" ] && [ -n "${TRAVIS_TAG}" ] && [ "${TRAVIS
     docker tag zalenium:${TRAVIS_TAG} dosel/zalenium:${TRAVIS_TAG}
     docker push dosel/zalenium:${TRAVIS_TAG} | tee docker_push.log
     if [[ "${TRAVIS_TAG}" == "3."* ]]; then
-        echo "Marking image with Selenium 3 as as zalenium:3..."
+        echo "Marking image with Selenium 3 as as zalenium:3 and latest..."
         docker tag zalenium:${TRAVIS_TAG} dosel/zalenium:3
         docker tag zalenium:${TRAVIS_TAG} dosel/zalenium:latest
         docker push dosel/zalenium:latest
         docker push dosel/zalenium:3
     else
+        echo "Marking image with Selenium 2 as as zalenium:2..."
         docker tag zalenium:${TRAVIS_TAG} dosel/zalenium:2
         docker push dosel/zalenium:2
     fi
