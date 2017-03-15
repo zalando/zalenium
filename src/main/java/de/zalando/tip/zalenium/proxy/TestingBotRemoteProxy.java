@@ -67,12 +67,6 @@ public class TestingBotRemoteProxy extends CloudTestingRemoteProxy {
     }
 
     @Override
-    public TestSession getNewSession(Map<String, Object> requestedCapability) {
-        logger.log(Level.INFO, "[TB] Test will be forwarded to TestingBot, {0}.", requestedCapability);
-        return super.getNewSession(requestedCapability);
-    }
-
-    @Override
     public String getUserNameProperty() {
         return "key";
     }

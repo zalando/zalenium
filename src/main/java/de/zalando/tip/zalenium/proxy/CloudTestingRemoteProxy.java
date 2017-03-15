@@ -21,6 +21,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -76,6 +77,12 @@ public class CloudTestingRemoteProxy extends DefaultRemoteProxy {
     @VisibleForTesting
     static void restoreEnvironment() {
         env = defaultEnvironment;
+    }
+
+    @Override
+    public TestSession getNewSession(Map<String, Object> requestedCapability) {
+        logger.log(Level.INFO, () ->"Test will be forwarded to " + getProxyName() + ", " + requestedCapability);
+        return super.getNewSession(requestedCapability);
     }
 
     @Override

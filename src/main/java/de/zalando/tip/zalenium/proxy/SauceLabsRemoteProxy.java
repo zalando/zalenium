@@ -75,12 +75,6 @@ public class SauceLabsRemoteProxy extends CloudTestingRemoteProxy {
     }
 
     @Override
-    public TestSession getNewSession(Map<String, Object> requestedCapability) {
-        LOGGER.log(Level.INFO, "[SL] Test will be forwarded to Sauce Labs, {0}.", requestedCapability);
-        return super.getNewSession(requestedCapability);
-    }
-
-    @Override
     public String getUserNameProperty() {
         return "username";
     }

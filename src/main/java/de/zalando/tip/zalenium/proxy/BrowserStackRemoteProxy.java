@@ -92,12 +92,6 @@ public class BrowserStackRemoteProxy extends CloudTestingRemoteProxy {
     }
 
     @Override
-    public TestSession getNewSession(Map<String, Object> requestedCapability) {
-        logger.log(Level.INFO, "[BS] Test will be forwarded to Browser Stack, {0}.", requestedCapability);
-        return super.getNewSession(requestedCapability);
-    }
-
-    @Override
     public String getUserNameProperty() {
         return "browserstack.user";
     }
