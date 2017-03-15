@@ -6,11 +6,9 @@ import com.google.gson.JsonObject;
 import de.zalando.tip.zalenium.util.TestInformation;
 import org.openqa.grid.common.RegistrationRequest;
 import org.openqa.grid.internal.Registry;
-import org.openqa.grid.internal.TestSession;
 import org.openqa.selenium.Platform;
 import org.openqa.selenium.remote.DesiredCapabilities;
 
-import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
