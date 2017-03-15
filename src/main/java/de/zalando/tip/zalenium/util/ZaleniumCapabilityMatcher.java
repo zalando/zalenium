@@ -12,7 +12,7 @@ import java.util.logging.Logger;
 
 /**
  * The purpose of this class is to check if the capabilities cannot be supplied by docker-selenium so they can be just
- * forwarded to Sauce Labs
+ * forwarded to the Cloud Testing Provider
  */
 
 public class ZaleniumCapabilityMatcher extends DefaultCapabilityMatcher {
@@ -41,7 +41,7 @@ public class ZaleniumCapabilityMatcher extends DefaultCapabilityMatcher {
             if ((remoteProxy instanceof DockerSeleniumStarterRemoteProxy) &&
                     remoteProxy.hasCapability(requestedCapability)) {
                 logger.log(Level.FINE, "Capability supported by docker-selenium, should not be processed by " +
-                        "Sauce Labs nor BrowserStack: {0}", requestedCapability);
+                        "a Cloud Testing Provider: {0}", requestedCapability);
                 return false;
             }
         }

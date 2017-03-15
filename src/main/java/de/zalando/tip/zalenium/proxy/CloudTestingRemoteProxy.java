@@ -16,11 +16,13 @@ import org.openqa.grid.internal.utils.CapabilityMatcher;
 import org.openqa.grid.selenium.proxy.DefaultRemoteProxy;
 import org.openqa.grid.web.servlet.handler.RequestType;
 import org.openqa.grid.web.servlet.handler.WebDriverRequest;
+import org.openqa.selenium.remote.CapabilityType;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -79,6 +81,12 @@ public class CloudTestingRemoteProxy extends DefaultRemoteProxy {
     }
 
     @Override
+    public TestSession getNewSession(Map<String, Object> requestedCapability) {
+        logger.log(Level.INFO, () ->"Test will be forwarded to " + getProxyName() + ", " + requestedCapability);
+        return super.getNewSession(requestedCapability);
+    }
+
+    @Override
     public void beforeCommand(TestSession session, HttpServletRequest request, HttpServletResponse response) {
         if (request instanceof WebDriverRequest && "POST".equalsIgnoreCase(request.getMethod())) {
             WebDriverRequest seleniumRequest = (WebDriverRequest) request;
@@ -88,6 +96,9 @@ public class CloudTestingRemoteProxy extends DefaultRemoteProxy {
                 JsonObject desiredCapabilities = jsonObject.getAsJsonObject("desiredCapabilities");
                 desiredCapabilities.addProperty(getUserNameProperty(), getUserNameValue());
                 desiredCapabilities.addProperty(getAccessKeyProperty(), getAccessKeyValue());
+                if (!desiredCapabilities.has(CapabilityType.VERSION) && proxySupportsLatestAsCapability()) {
+                    desiredCapabilities.addProperty(CapabilityType.VERSION, "latest");
+                }
                 seleniumRequest.setBody(jsonObject.toString());
             }
         }
@@ -138,6 +149,10 @@ public class CloudTestingRemoteProxy extends DefaultRemoteProxy {
 
     public String getVideoFileExtension() {
         return null;
+    }
+
+    public boolean proxySupportsLatestAsCapability() {
+        return false;
     }
 
     public void addTestToDashboard(String seleniumSessionId) {

@@ -114,6 +114,20 @@ public class DockerSeleniumStarterRemoteProxyTest {
     }
 
     @Test
+    public void containerIsStartedWhenBrowserIsSupportedAndLatestIsUsedAsBrowserVersion() {
+
+        // Supported desired capability for the test session
+        Map<String, Object> supportedCapability = new HashMap<>();
+        supportedCapability.put(CapabilityType.BROWSER_NAME, BrowserType.CHROME);
+        supportedCapability.put(CapabilityType.PLATFORM, Platform.ANY);
+        supportedCapability.put(CapabilityType.VERSION, "latest");
+        TestSession testSession = spyProxy.getNewSession(supportedCapability);
+
+        Assert.assertNull(testSession);
+        verify(spyProxy, times(1)).startDockerSeleniumContainer(BrowserType.CHROME);
+    }
+
+    @Test
     public void containerIsStartedWhenFirefoxCapabilitiesAreSupported() {
 
         // Supported desired capability for the test session

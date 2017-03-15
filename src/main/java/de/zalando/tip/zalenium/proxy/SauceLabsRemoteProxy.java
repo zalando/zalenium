@@ -6,11 +6,9 @@ import com.google.gson.JsonObject;
 import de.zalando.tip.zalenium.util.TestInformation;
 import org.openqa.grid.common.RegistrationRequest;
 import org.openqa.grid.internal.Registry;
-import org.openqa.grid.internal.TestSession;
 import org.openqa.selenium.Platform;
 import org.openqa.selenium.remote.DesiredCapabilities;
 
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -75,12 +73,6 @@ public class SauceLabsRemoteProxy extends CloudTestingRemoteProxy {
     }
 
     @Override
-    public TestSession getNewSession(Map<String, Object> requestedCapability) {
-        LOGGER.log(Level.INFO, "[SL] Test will be forwarded to Sauce Labs, {0}.", requestedCapability);
-        return super.getNewSession(requestedCapability);
-    }
-
-    @Override
     public String getUserNameProperty() {
         return "username";
     }
@@ -103,6 +95,11 @@ public class SauceLabsRemoteProxy extends CloudTestingRemoteProxy {
     @Override
     public String getCloudTestingServiceUrl() {
         return SAUCE_LABS_URL;
+    }
+
+    @Override
+    public boolean proxySupportsLatestAsCapability() {
+        return true;
     }
 
     @Override
