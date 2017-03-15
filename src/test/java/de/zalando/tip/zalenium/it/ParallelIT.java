@@ -76,7 +76,6 @@ public class ParallelIT  {
         DesiredCapabilities desiredCapabilities = new DesiredCapabilities();
         desiredCapabilities.setCapability(CapabilityType.BROWSER_NAME, browserType);
         desiredCapabilities.setCapability(CapabilityType.PLATFORM, platform);
-        desiredCapabilities.setCapability(CapabilityType.VERSION, "latest");
         desiredCapabilities.setCapability("name", method.getName());
         if (localTesting) {
             desiredCapabilities.setCapability("tunnel", "true");
@@ -152,23 +151,13 @@ public class ParallelIT  {
     }
 
     @Test(dataProvider = "browsersAndPlatforms")
-    public void loadZalandoPageAndCheckTitle(String browserType, Platform platform) {
-
-        // Go to the homepage
-        getWebDriver().get("http://www.zalando.de");
-
-        // Assert that the title is the expected one
-        assertThat(getWebDriver().getTitle(), equalTo("Schuhe & Mode online kaufen | ZALANDO Online Shop"));
-    }
-
-    @Test(dataProvider = "browsersAndPlatforms")
     public void loadGooglePageAndCheckTitle(String browserType, Platform platform) {
 
         // Go to the homepage
         getWebDriver().get("http://www.google.com");
 
         // Assert that the title is the expected one
-        assertThat(getWebDriver().getTitle(), equalTo("Google"));
+        assertThat(getWebDriver().getTitle(), containsString("Google"));
     }
 
 }
