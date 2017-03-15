@@ -5,12 +5,14 @@ import com.spotify.docker.client.DefaultDockerClient;
 import com.spotify.docker.client.DockerClient;
 import com.spotify.docker.client.exceptions.DockerException;
 import com.spotify.docker.client.messages.*;
+import de.zalando.tip.zalenium.util.DockerSeleniumCapabilityMatcher;
 import de.zalando.tip.zalenium.util.Environment;
 import de.zalando.tip.zalenium.util.GoogleAnalyticsApi;
 import org.openqa.grid.common.RegistrationRequest;
 import org.openqa.grid.internal.Registry;
 import org.openqa.grid.internal.TestSession;
 import org.openqa.grid.internal.listeners.RegistrationListener;
+import org.openqa.grid.internal.utils.CapabilityMatcher;
 import org.openqa.grid.selenium.proxy.DefaultRemoteProxy;
 import org.openqa.selenium.Platform;
 import org.openqa.selenium.remote.BrowserType;
@@ -83,6 +85,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     private static String containerName;
     private List<Integer> allocatedPorts = new ArrayList<>();
     private boolean setupCompleted;
+    private CapabilityMatcher capabilityHelper;
 
     @SuppressWarnings("WeakerAccess")
     public DockerSeleniumStarterRemoteProxy(RegistrationRequest request, Registry registry) {
@@ -269,6 +272,22 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
         env = defaultEnvironment;
     }
 
+    @SuppressWarnings("ConstantConditions")
+    private static String getLatestDownloadedImage(String imageName) throws DockerException, InterruptedException {
+        List<Image> images = dockerClient.listImages(DockerClient.ListImagesParam.byName(imageName));
+        if (images.isEmpty()) {
+            LOGGER.log(Level.SEVERE, "A downloaded docker-selenium image was not found!");
+            return DOCKER_SELENIUM_IMAGE;
+        }
+        for (int i = images.size() - 1; i >= 0; i--) {
+            if (images.get(i).repoTags() == null) {
+                images.remove(i);
+            }
+        }
+        images.sort((o1, o2) -> o2.created().compareTo(o1.created()));
+        return images.get(0).repoTags().get(0);
+    }
+
     /**
      * Receives a request to create a new session, but instead of accepting it, it will create a
      * docker-selenium container which will register to the hub, then reject the request and the hub
@@ -309,6 +328,14 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
         readConfigurationFromEnvVariables();
         setupCompleted = false;
         createStartupContainers();
+    }
+
+    @Override
+    public CapabilityMatcher getCapabilityHelper() {
+        if (capabilityHelper == null) {
+            capabilityHelper = new DockerSeleniumCapabilityMatcher();
+        }
+        return capabilityHelper;
     }
 
     /*
@@ -396,22 +423,6 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
             }
         }
         return false;
-    }
-
-    @SuppressWarnings("ConstantConditions")
-    private static String getLatestDownloadedImage(String imageName) throws DockerException, InterruptedException {
-        List<Image> images = dockerClient.listImages(DockerClient.ListImagesParam.byName(imageName));
-        if (images.isEmpty()) {
-            LOGGER.log(Level.SEVERE, "A downloaded docker-selenium image was not found!");
-            return DOCKER_SELENIUM_IMAGE;
-        }
-        for (int i = images.size() - 1; i >= 0; i--) {
-            if (images.get(i).repoTags() == null) {
-                images.remove(i);
-            }
-        }
-        images.sort((o1, o2) -> o2.created().compareTo(o1.created()));
-        return images.get(0).repoTags().get(0);
     }
 
     @VisibleForTesting
