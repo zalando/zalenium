@@ -13,10 +13,6 @@ import java.util.logging.Logger;
 public class DockerSeleniumCapabilityMatcher extends DefaultCapabilityMatcher {
     private static final Logger logger = Logger.getLogger(DockerSeleniumCapabilityMatcher.class.getName());
 
-    public DockerSeleniumCapabilityMatcher() {
-        super();
-    }
-
     @Override
     public boolean matches(Map<String, Object> nodeCapability, Map<String, Object> requestedCapability) {
         logger.log(Level.FINE, ()-> String.format("Validating %s in node with capabilities %s", requestedCapability,
