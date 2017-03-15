@@ -50,7 +50,7 @@ public class ParallelIT  {
     public static Object[][] browsersAndPlatformsWithTunnelProvider() {
         return new Object[][] {
                 new Object[]{BrowserType.CHROME, Platform.MAC, true},
-                new Object[]{BrowserType.FIREFOX, Platform.WINDOWS, true}
+                new Object[]{BrowserType.CHROME, Platform.WIN8, true}
         };
     }
 
@@ -151,23 +151,13 @@ public class ParallelIT  {
     }
 
     @Test(dataProvider = "browsersAndPlatforms")
-    public void loadZalandoPageAndCheckTitle(String browserType, Platform platform) {
-
-        // Go to the homepage
-        getWebDriver().get("http://www.zalando.de");
-
-        // Assert that the title is the expected one
-        assertThat(getWebDriver().getTitle(), equalTo("Schuhe & Mode online kaufen | ZALANDO Online Shop"));
-    }
-
-    @Test(dataProvider = "browsersAndPlatforms")
     public void loadGooglePageAndCheckTitle(String browserType, Platform platform) {
 
         // Go to the homepage
         getWebDriver().get("http://www.google.com");
 
         // Assert that the title is the expected one
-        assertThat(getWebDriver().getTitle(), equalTo("Google"));
+        assertThat(getWebDriver().getTitle(), containsString("Google"));
     }
 
 }

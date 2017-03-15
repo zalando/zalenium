@@ -124,7 +124,7 @@ public class SauceLabsRemoteProxyTest {
 
         // The body should now have the SauceLabs variables
         String expectedBody = String.format("{\"desiredCapabilities\":{\"browserName\":\"internet explorer\",\"platform\":" +
-                        "\"WIN8\",\"username\":\"%s\",\"accessKey\":\"%s\"}}",
+                        "\"WIN8\",\"username\":\"%s\",\"accessKey\":\"%s\",\"version\":\"latest\"}}",
                 env.getStringEnvVariable("SAUCE_USERNAME", ""),
                 env.getStringEnvVariable("SAUCE_ACCESS_KEY", ""));
         verify(request).setBody(expectedBody);
