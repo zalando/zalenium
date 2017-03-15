@@ -16,6 +16,7 @@ import org.openqa.grid.internal.utils.CapabilityMatcher;
 import org.openqa.grid.selenium.proxy.DefaultRemoteProxy;
 import org.openqa.grid.web.servlet.handler.RequestType;
 import org.openqa.grid.web.servlet.handler.WebDriverRequest;
+import org.openqa.selenium.remote.CapabilityType;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -95,6 +96,9 @@ public class CloudTestingRemoteProxy extends DefaultRemoteProxy {
                 JsonObject desiredCapabilities = jsonObject.getAsJsonObject("desiredCapabilities");
                 desiredCapabilities.addProperty(getUserNameProperty(), getUserNameValue());
                 desiredCapabilities.addProperty(getAccessKeyProperty(), getAccessKeyValue());
+                if (!desiredCapabilities.has(CapabilityType.VERSION)) {
+                    desiredCapabilities.addProperty(CapabilityType.VERSION, "latest");
+                }
                 seleniumRequest.setBody(jsonObject.toString());
             }
         }
