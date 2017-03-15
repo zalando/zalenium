@@ -96,7 +96,7 @@ public class CloudTestingRemoteProxy extends DefaultRemoteProxy {
                 JsonObject desiredCapabilities = jsonObject.getAsJsonObject("desiredCapabilities");
                 desiredCapabilities.addProperty(getUserNameProperty(), getUserNameValue());
                 desiredCapabilities.addProperty(getAccessKeyProperty(), getAccessKeyValue());
-                if (!desiredCapabilities.has(CapabilityType.VERSION)) {
+                if (!desiredCapabilities.has(CapabilityType.VERSION) && proxySupportsLatestAsCapability()) {
                     desiredCapabilities.addProperty(CapabilityType.VERSION, "latest");
                 }
                 seleniumRequest.setBody(jsonObject.toString());
@@ -149,6 +149,10 @@ public class CloudTestingRemoteProxy extends DefaultRemoteProxy {
 
     public String getVideoFileExtension() {
         return null;
+    }
+
+    public boolean proxySupportsLatestAsCapability() {
+        return false;
     }
 
     public void addTestToDashboard(String seleniumSessionId) {

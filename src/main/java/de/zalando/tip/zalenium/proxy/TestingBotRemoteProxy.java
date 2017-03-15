@@ -90,6 +90,11 @@ public class TestingBotRemoteProxy extends CloudTestingRemoteProxy {
     }
 
     @Override
+    public boolean proxySupportsLatestAsCapability() {
+        return true;
+    }
+
+    @Override
     public TestInformation getTestInformation(String seleniumSessionId) {
         // https://TB_KEY:TB_SECRET@api.testingbot.com/v1/tests/SELENIUM_SESSION_ID
         TestInformation testInformation = null;
