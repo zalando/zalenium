@@ -50,7 +50,7 @@ public class ParallelIT  {
     public static Object[][] browsersAndPlatformsWithTunnelProvider() {
         return new Object[][] {
                 new Object[]{BrowserType.CHROME, Platform.MAC, true},
-                new Object[]{BrowserType.FIREFOX, Platform.WINDOWS, true}
+                new Object[]{BrowserType.CHROME, Platform.WIN8, true}
         };
     }
 
@@ -76,6 +76,7 @@ public class ParallelIT  {
         DesiredCapabilities desiredCapabilities = new DesiredCapabilities();
         desiredCapabilities.setCapability(CapabilityType.BROWSER_NAME, browserType);
         desiredCapabilities.setCapability(CapabilityType.PLATFORM, platform);
+        desiredCapabilities.setCapability(CapabilityType.VERSION, "latest");
         desiredCapabilities.setCapability("name", method.getName());
         if (localTesting) {
             desiredCapabilities.setCapability("tunnel", "true");
