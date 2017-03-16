@@ -82,6 +82,12 @@ public class CloudTestingRemoteProxy extends DefaultRemoteProxy {
 
     @Override
     public TestSession getNewSession(Map<String, Object> requestedCapability) {
+        /*
+            Validate first if the capability is matched
+         */
+        if (!hasCapability(requestedCapability)) {
+            return null;
+        }
         logger.log(Level.INFO, () ->"Test will be forwarded to " + getProxyName() + ", " + requestedCapability);
         return super.getNewSession(requestedCapability);
     }
