@@ -160,7 +160,7 @@ public class CloudTestingRemoteProxy extends DefaultRemoteProxy {
             try {
                 TestInformation testInformation = getTestInformation(seleniumSessionId);
                 String videoFileNameWithFullPath = testInformation.getVideoFolderPath() + "/" + testInformation.getFileName();
-                commonProxyUtilities.downloadFile(videoFileNameWithFullPath, testInformation.getVideoUrl());
+                commonProxyUtilities.downloadFile(testInformation);
                 Dashboard.updateDashboard(testInformation);
             } catch (Exception e) {
                 logger.log(Level.SEVERE, e.toString(), e);

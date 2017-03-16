@@ -71,14 +71,14 @@ public class CommonProxyUtilities {
         Downloading a file, method adapted from:
         http://code.runnable.com/Uu83dm5vSScIAACw/download-a-file-from-the-web-for-java-files-and-save
      */
-    public void downloadFile(String fileNameWithFullPath, String url) throws InterruptedException {
+    public void downloadFile(TestInformation testInformation) throws InterruptedException {
         int maxAttempts = 10;
         int currentAttempts = 0;
         // Videos are usually not ready right away, we put a little sleep to avoid falling into the catch/retry.
         Thread.sleep(1000 * 5);
         while (currentAttempts < maxAttempts) {
             try {
-                URL link = new URL(url);
+                URL link = new URL(testInformation.getVideoUrl());
                 URLConnection urlConnection = link.openConnection();
 
                 if (link.getUserInfo() != null) {
@@ -98,7 +98,7 @@ public class CommonProxyUtilities {
                 out.close();
                 in.close();
                 byte[] response = out.toByteArray();
-
+                String fileNameWithFullPath = testInformation.getVideoFolderPath() + "/" + testInformation.getFileName();
                 FileOutputStream fos = new FileOutputStream(fileNameWithFullPath);
                 fos.write(response);
                 fos.close();
@@ -111,7 +111,7 @@ public class CommonProxyUtilities {
                 if (currentAttempts >= maxAttempts) {
                     LOG.log(Level.SEVERE, e.toString(), e);
                 } else {
-                    LOG.log(Level.INFO, "Trying download once again from " + url);
+                    LOG.log(Level.INFO, "Trying download once again from " + testInformation.getVideoUrl());
                     Thread.sleep(currentAttempts * 5 * 1000);
                 }
             } catch (Exception e) {
