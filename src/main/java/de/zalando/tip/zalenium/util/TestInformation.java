@@ -15,6 +15,7 @@ public class TestInformation {
     private String platform;
     private String platformVersion;
     private String fileName;
+    private String fileExtension;
     private String videoUrl;
     private String videoFolderPath;
 
@@ -38,6 +39,20 @@ public class TestInformation {
         return videoUrl;
     }
 
+    public void setFileExtension(String fileExtension) {
+        this.fileExtension = fileExtension;
+    }
+
+    public void buildVideoFileName() {
+        this.fileName = FILE_NAME_TEMPLATE.replace("{proxyName}", this.proxyName.toLowerCase()).
+                replace("{testName}", getTestName()).
+                replace("{browser}", this.browser).
+                replace("{platform}", this.platform).
+                replace("{timestamp}", commonProxyUtilities.getCurrentDateAndTimeFormatted()).
+                replace("{fileExtension}", fileExtension).
+                replace(" ", "_");
+    }
+
     public String getBrowserAndPlatform() {
         if ("BrowserStack".equalsIgnoreCase(proxyName)) {
             return String.format("%s %s, %s %s", browser, browserVersion, platform, platformVersion);
@@ -57,12 +72,7 @@ public class TestInformation {
         this.platformVersion = platformVersion;
         this.videoUrl = videoUrl;
         this.videoFolderPath = commonProxyUtilities.currentLocalPath() + "/" + Dashboard.VIDEOS_FOLDER_NAME;
-        this.fileName = FILE_NAME_TEMPLATE.replace("{proxyName}", this.proxyName.toLowerCase()).
-                replace("{testName}", getTestName()).
-                replace("{browser}", this.browser).
-                replace("{platform}", this.platform).
-                replace("{timestamp}", commonProxyUtilities.getCurrentDateAndTimeFormatted()).
-                replace("{fileExtension}", fileExtension).
-                replace(" ", "_");
+        this.fileExtension = fileExtension;
+        buildVideoFileName();
     }
 }

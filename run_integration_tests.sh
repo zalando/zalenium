@@ -20,7 +20,7 @@ else
         if [ -n "${SAUCE_USERNAME}" ]; then
             mvn clean verify -Pintegration-test -DthreadCountProperty=2 -Dskip.surefire.tests=true -DintegrationToTest=${INTEGRATION_TO_TEST}
             # Check for generated videos
-            ls -la ${VIDEOS_FOLDER}/saucelabs*.flv || (echo "No Sauce Labs videos were downloaded." && exit 2)
+            ls -la ${VIDEOS_FOLDER}/saucelabs*.mp4 || (echo "No Sauce Labs videos were downloaded." && exit 2)
             ls -la ${VIDEOS_FOLDER}/zalenium*.mp4 || (echo "No Zalenium videos were generated." && exit 2)
         fi
     fi

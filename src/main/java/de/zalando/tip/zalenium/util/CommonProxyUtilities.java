@@ -3,6 +3,10 @@ package de.zalando.tip.zalenium.util;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.exec.CommandLine;
+import org.apache.commons.exec.DefaultExecutor;
+import org.apache.commons.exec.ExecuteWatchdog;
+import org.apache.commons.io.FileUtils;
 
 import java.io.*;
 import java.net.URISyntaxException;
@@ -71,14 +75,14 @@ public class CommonProxyUtilities {
         Downloading a file, method adapted from:
         http://code.runnable.com/Uu83dm5vSScIAACw/download-a-file-from-the-web-for-java-files-and-save
      */
-    public void downloadFile(String fileNameWithFullPath, String url) throws InterruptedException {
+    public void downloadFile(TestInformation testInformation) throws InterruptedException {
         int maxAttempts = 10;
         int currentAttempts = 0;
         // Videos are usually not ready right away, we put a little sleep to avoid falling into the catch/retry.
         Thread.sleep(1000 * 5);
         while (currentAttempts < maxAttempts) {
             try {
-                URL link = new URL(url);
+                URL link = new URL(testInformation.getVideoUrl());
                 URLConnection urlConnection = link.openConnection();
 
                 if (link.getUserInfo() != null) {
@@ -98,7 +102,7 @@ public class CommonProxyUtilities {
                 out.close();
                 in.close();
                 byte[] response = out.toByteArray();
-
+                String fileNameWithFullPath = testInformation.getVideoFolderPath() + "/" + testInformation.getFileName();
                 FileOutputStream fos = new FileOutputStream(fileNameWithFullPath);
                 fos.write(response);
                 fos.close();
@@ -111,7 +115,7 @@ public class CommonProxyUtilities {
                 if (currentAttempts >= maxAttempts) {
                     LOG.log(Level.SEVERE, e.toString(), e);
                 } else {
-                    LOG.log(Level.INFO, "Trying download once again from " + url);
+                    LOG.log(Level.INFO, "Trying download once again from " + testInformation.getVideoUrl());
                     Thread.sleep(currentAttempts * 5 * 1000);
                 }
             } catch (Exception e) {
@@ -119,6 +123,35 @@ public class CommonProxyUtilities {
                 LOG.log(Level.SEVERE, e.toString(), e);
             }
         }
+    }
+
+    public void convertFlvFileToMP4(TestInformation testInformation) {
+        // Names of the old and the new file
+        String flvVideoFile = testInformation.getVideoFolderPath() + "/" + testInformation.getFileName();
+        testInformation.setFileExtension(".mp4");
+        testInformation.buildVideoFileName();
+        String mp4VideoFile = testInformation.getVideoFolderPath() + "/" + testInformation.getFileName();
+
+        // Command to convert the file to MP4
+        CommandLine commandLine = new CommandLine("ffmpeg");
+        commandLine.addArgument("-i");
+        commandLine.addArgument(flvVideoFile);
+        commandLine.addArgument(mp4VideoFile);
+        DefaultExecutor defaultExecutor = new DefaultExecutor();
+        ExecuteWatchdog executeWatchdog = new ExecuteWatchdog(10 * 1000);
+        defaultExecutor.setWatchdog(executeWatchdog);
+        try {
+            int exitValue = defaultExecutor.execute(commandLine);
+            if (exitValue != 0) {
+                LOG.log(Level.WARNING, () -> "File " + flvVideoFile + " could not be converted to MP4. Exit value: " +
+                exitValue);
+            }
+        } catch (IOException e) {
+            LOG.log(Level.SEVERE, e.toString(), e);
+        }
+
+        // Deleting the FLV file
+        FileUtils.deleteQuietly(new File(flvVideoFile));
     }
 
     @SuppressWarnings("WeakerAccess")
