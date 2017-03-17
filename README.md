@@ -2,7 +2,7 @@
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/c719a14f5537488b8fb95d70e27acd5f)](https://www.codacy.com/app/diemol_zalenium/zalenium?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=zalando/zalenium&amp;utm_campaign=Badge_Grade)
 [![codecov](https://codecov.io/gh/zalando/zalenium/branch/master/graph/badge.svg)](https://codecov.io/gh/zalando/zalenium)
 [![](https://images.microbadger.com/badges/version/dosel/zalenium.svg)](https://microbadger.com/images/dosel/zalenium)
-[![](https://images.microbadger.com/badges/version/dosel/zalenium:2.53.1t.svg)](https://microbadger.com/images/dosel/zalenium:2.53.1t)
+[![](https://images.microbadger.com/badges/version/dosel/zalenium:2.53.1u.svg)](https://microbadger.com/images/dosel/zalenium:2.53.1u)
 [![Gitter](https://badges.gitter.im/zalando/zalenium.svg)](https://gitter.im/zalando/zalenium?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
 
@@ -154,7 +154,8 @@ to the cloud platform.
 Basically, the tool makes the grid expand or contract depending on the amount of requests received.
 
 ## Selenium 2 and Selenium 3 - About the project versioning
-* To make life easy for people who want to use it, we are now using as a version number the Selenium version being supported.
+* To make life easy for people who want to use Zalenium, we are now using as a version number the Selenium version 
+being supported.
 * The major-minor version combined with the patch level will indicate the Selenium version being supported. E.g.
   * When a release is `2.53.1a`, it supports Selenium 2.53.1
   * When a release is `3.2.0a`, it supports Selenium 3.2.0
@@ -163,6 +164,8 @@ Basically, the tool makes the grid expand or contract depending on the amount of
 
 * From version `3.2.0a`, `latest` is pointing to the most recent docker image supporting Selenium 3 (GA data shows now 
 slight more usage of Selenium 3 than Selenium 2.)
+
+* Version `2.53.1u` is the last version/image supporting Selenium 2.53.1.
 
 ## Integrated Cloud Testing solutions
 * Thanks to the open source accounts we got, we have integrated so far:
