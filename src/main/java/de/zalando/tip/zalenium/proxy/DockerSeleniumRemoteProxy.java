@@ -7,10 +7,7 @@ import com.spotify.docker.client.LogStream;
 import com.spotify.docker.client.exceptions.DockerException;
 import com.spotify.docker.client.messages.Container;
 import com.spotify.docker.client.messages.ExecCreation;
-import de.zalando.tip.zalenium.util.Dashboard;
-import de.zalando.tip.zalenium.util.Environment;
-import de.zalando.tip.zalenium.util.GoogleAnalyticsApi;
-import de.zalando.tip.zalenium.util.TestInformation;
+import de.zalando.tip.zalenium.util.*;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.compress.utils.IOUtils;
@@ -135,7 +132,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
             maxTestIdleTimeSecs = getConfiguredIdleTimeout(requestedCapability);
             return newSession;
         }
-        LOGGER.log(Level.FINE, "{0} No more sessions allowed", getNodeIpAndPort());
+        LOGGER.log(Level.FINE, "{0} No more sessions allowed", getId());
         return null;
     }
 
@@ -145,7 +142,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
             configuredIdleTimeout = (long) requestedCapability.getOrDefault("idleTimeout", DEFAULT_MAX_TEST_IDLE_TIME_SECS);
         } catch (Exception e) {
             configuredIdleTimeout = DEFAULT_MAX_TEST_IDLE_TIME_SECS;
-            LOGGER.log(Level.FINE, getNodeIpAndPort() + " " + e.toString(), e);
+            LOGGER.log(Level.FINE, getId() + " " + e.toString(), e);
         }
         if (configuredIdleTimeout <= 0) {
             configuredIdleTimeout = DEFAULT_MAX_TEST_IDLE_TIME_SECS;
@@ -161,6 +158,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                 videoRecording(VideoRecordingAction.START_RECORDING);
             }
         }
+        super.beforeCommand(session, request, response);
     }
 
     @Override
@@ -169,8 +167,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
             WebDriverRequest seleniumRequest = (WebDriverRequest) request;
             if (RequestType.STOP_SESSION.equals(seleniumRequest.getRequestType())) {
                 this.stopSessionRequestReceived = true;
-                String message = String.format("%s STOP_SESSION command received. Node should shutdown soon...",
-                        getNodeIpAndPort());
+                String message = String.format("%s STOP_SESSION command received. Node should shutdown soon...", getId());
                 LOGGER.log(Level.INFO, message);
                 long executionTime = (System.currentTimeMillis() - session.getSlot().getLastSessionStart()) / 1000;
                 ga.testEvent(DockerSeleniumRemoteProxy.class.getName(), session.getRequestedCapabilities().toString(),
@@ -197,10 +194,6 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     public void teardown() {
         super.teardown();
         stopPolling();
-    }
-
-    private String getNodeIpAndPort() {
-        return getRemoteHost().getHost() + ":" + getRemoteHost().getPort();
     }
 
     /*
@@ -264,12 +257,11 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                 String containerId = getContainerId();
                 processVideoAction(action, containerId);
             } catch (Exception e) {
-                LOGGER.log(Level.SEVERE, getNodeIpAndPort() + e.toString(), e);
+                LOGGER.log(Level.SEVERE, getId() + e.toString(), e);
                 ga.trackException(e);
             }
         } else {
-            String message = String.format("%s %s: Video recording is disabled", getNodeIpAndPort(),
-                    action.getRecordingAction());
+            String message = String.format("%s %s: Video recording is disabled", getId(), action.getRecordingAction());
             LOGGER.log(Level.INFO, message);
         }
     }
@@ -305,11 +297,11 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         final ExecCreation execCreation = dockerClient.execCreate(containerId, command,
                 DockerClient.ExecCreateParam.attachStdout(), DockerClient.ExecCreateParam.attachStderr());
         final LogStream output = dockerClient.execStart(execCreation.id());
-        LOGGER.log(Level.INFO, () -> String.format("%s %s", getNodeIpAndPort(), action.getRecordingAction()));
+        LOGGER.log(Level.INFO, () -> String.format("%s %s", getId(), action.getRecordingAction()));
         try {
-            LOGGER.log(Level.INFO, () -> String.format("%s %s", getNodeIpAndPort(), output.readFully()));
+            LOGGER.log(Level.INFO, () -> String.format("%s %s", getId(), output.readFully()));
         } catch (RuntimeException e) {
-            LOGGER.log(Level.FINE, getNodeIpAndPort() + " " + e.toString(), e);
+            LOGGER.log(Level.FINE, getId() + " " + e.toString(), e);
             ga.trackException(e);
         }
 
@@ -340,11 +332,11 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                 IOUtils.copy(tarStream, outputStream);
                 outputStream.close();
                 Dashboard.updateDashboard(testInformation);
-                LOGGER.log(Level.INFO, "{0} Video files copies to: {1}", new Object[]{getNodeIpAndPort(),
+                LOGGER.log(Level.INFO, "{0} Video files copies to: {1}", new Object[]{getId(),
                         testInformation.getVideoFolderPath()});
             }
         } catch (Exception e) {
-            LOGGER.log(Level.FINE, getNodeIpAndPort() + " Something happened while copying the video file, " +
+            LOGGER.log(Level.FINE, getId() + " Something happened while copying the video file, " +
                     "most of the time it is an issue while closing the input/output stream, which is usually OK.", e);
         }
     }
@@ -403,7 +395,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                 try {
                     Thread.sleep(getSleepTimeBetweenChecks());
                 } catch (InterruptedException e) {
-                    LOGGER.log(Level.FINE, dockerSeleniumRemoteProxy.getNodeIpAndPort() + " Error while sleeping the " +
+                    LOGGER.log(Level.FINE, dockerSeleniumRemoteProxy.getId() + " Error while sleeping the " +
                             "thread, stopping thread execution.", e);
                     Thread.currentThread().interrupt();
                     dockerSeleniumRemoteProxy.ga.trackException(e);
@@ -414,19 +406,19 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
 
         private void shutdownNode(boolean isTestIdle) {
             String shutdownReason = String.format("%s Marking the node as down because it was stopped after %s tests.",
-                    dockerSeleniumRemoteProxy.getNodeIpAndPort(), MAX_UNIQUE_TEST_SESSIONS);
+                    dockerSeleniumRemoteProxy.getId(), MAX_UNIQUE_TEST_SESSIONS);
 
             if (isTestIdle) {
                 dockerSeleniumRemoteProxy.terminateIdleTest();
                 shutdownReason = String.format("%s Marking the node as down because the test has been idle for more than %s seconds.",
-                        dockerSeleniumRemoteProxy.getNodeIpAndPort(), dockerSeleniumRemoteProxy.getMaxTestIdleTimeSecs());
+                        dockerSeleniumRemoteProxy.getId(), dockerSeleniumRemoteProxy.getMaxTestIdleTimeSecs());
             }
 
             try {
                 String containerId = dockerSeleniumRemoteProxy.getContainerId();
                 dockerClient.stopContainer(containerId, 5);
             } catch (Exception e) {
-                LOGGER.log(Level.SEVERE, dockerSeleniumRemoteProxy.getNodeIpAndPort() + " " + e.getMessage(), e);
+                LOGGER.log(Level.SEVERE, dockerSeleniumRemoteProxy.getId() + " " + e.getMessage(), e);
                 dockerSeleniumRemoteProxy.ga.trackException(e);
             } finally {
                 dockerSeleniumRemoteProxy.addNewEvent(new RemoteNotReachableException(shutdownReason));
