@@ -103,6 +103,12 @@ public class SauceLabsRemoteProxy extends CloudTestingRemoteProxy {
     }
 
     @Override
+    public boolean convertVideoFileToMP4() {
+        return true;
+    }
+
+
+    @Override
     public TestInformation getTestInformation(String seleniumSessionId) {
         // https://SL_USER:SL_KEY@saucelabs.com/rest/v1/SL_USER/jobs/SELENIUM_SESSION_ID
         String sauceLabsVideoUrl = "https://%s:%s@saucelabs.com/rest/v1/%s/jobs/%s/assets/video.flv";

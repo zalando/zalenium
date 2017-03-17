@@ -10,6 +10,7 @@ import de.zalando.tip.zalenium.util.Environment;
 import de.zalando.tip.zalenium.util.GoogleAnalyticsApi;
 import org.openqa.grid.common.RegistrationRequest;
 import org.openqa.grid.internal.Registry;
+import org.openqa.grid.internal.RemoteProxy;
 import org.openqa.grid.internal.TestSession;
 import org.openqa.grid.internal.listeners.RegistrationListener;
 import org.openqa.grid.internal.utils.CapabilityMatcher;
@@ -478,9 +479,19 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
                 The remaining 16 are not registered because they are all trying to do it and the hub just cannot
                 process all the registrations fast enough, causing many unexpected errors.
             */
-            int tolerableDifference = 4;
-            int numberOfProxies = getRegistry().getAllProxies().size() + tolerableDifference;
-            if (numberOfDockerSeleniumContainers > numberOfProxies) {
+            int numberOfProxies = 0;
+            for (RemoteProxy remoteProxy : getRegistry().getAllProxies()) {
+                if (remoteProxy instanceof DockerSeleniumRemoteProxy) {
+                    numberOfProxies++;
+                }
+            }
+            LOGGER.log(Level.FINE, "Number of proxies -> " + numberOfProxies);
+            int newSessionRequestCount = getRegistry().getNewSessionRequestCount();
+            LOGGER.log(Level.FINE, "(getNewSessionRequestCount()) -> " + newSessionRequestCount);
+            int proxiesAndNewSessions = numberOfProxies + newSessionRequestCount;
+            LOGGER.log(Level.FINE, "Number of proxies + new sessions requested -> " + proxiesAndNewSessions);
+            LOGGER.log(Level.FINE, "Number of DockerSelenium containers -> " + numberOfDockerSeleniumContainers);
+            if (numberOfDockerSeleniumContainers > proxiesAndNewSessions) {
                 LOGGER.log(Level.FINE, LOGGING_PREFIX + "More docker-selenium containers running than proxies, {0} vs. {1}",
                         new Object[]{numberOfDockerSeleniumContainers, numberOfProxies});
                 Thread.sleep(500);

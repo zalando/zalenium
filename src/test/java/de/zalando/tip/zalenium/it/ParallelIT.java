@@ -50,7 +50,7 @@ public class ParallelIT  {
     public static Object[][] browsersAndPlatformsWithTunnelProvider() {
         return new Object[][] {
                 new Object[]{BrowserType.CHROME, Platform.MAC, true},
-                new Object[]{BrowserType.CHROME, Platform.WIN8, true}
+                new Object[]{BrowserType.FIREFOX, Platform.WIN8, true}
         };
     }
 

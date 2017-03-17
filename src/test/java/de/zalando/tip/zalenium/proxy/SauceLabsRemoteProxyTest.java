@@ -149,6 +149,7 @@ public class SauceLabsRemoteProxyTest {
                     env.getStringEnvVariable("SAUCE_USERNAME", ""));
             when(commonProxyUtilities.readJSONFromUrl(mockTestInformationUrl)).thenReturn(informationSample);
             when(commonProxyUtilities.readJSONFromFile(anyString())).thenCallRealMethod();
+            doCallRealMethod().when(commonProxyUtilities).convertFlvFileToMP4(any(TestInformation.class));
             SauceLabsRemoteProxy.setCommonProxyUtilities(commonProxyUtilities);
 
             TestSession testSession = sauceLabsSpyProxy.getNewSession(requestedCapability);
