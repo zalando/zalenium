@@ -33,7 +33,7 @@ public class TestingBotRemoteProxy extends CloudTestingRemoteProxy {
     private static RegistrationRequest updateTBCapabilities(RegistrationRequest registrationRequest, String url) {
         JsonElement tbCapabilities = getCommonProxyUtilities().readJSONFromUrl(url);
         try {
-            registrationRequest.getCapabilities().clear();
+            registrationRequest.getConfiguration().capabilities.clear();
             String userPasswordSuppress = String.format("%s:%s@", TESTINGBOT_KEY, TESTINGBOT_SECRET);
             String logMessage = String.format("[TB] Capabilities fetched from %s", url.replace(userPasswordSuppress, ""));
             if (tbCapabilities == null) {
@@ -57,8 +57,8 @@ public class TestingBotRemoteProxy extends CloudTestingRemoteProxy {
             desiredCapabilities.setCapability(RegistrationRequest.MAX_INSTANCES, 5);
             desiredCapabilities.setBrowserName(capAsJsonObject.get("name").getAsString());
             desiredCapabilities.setPlatform(Platform.extractFromSysProperty(capAsJsonObject.get("platform").getAsString()));
-            if (!registrationRequest.getCapabilities().contains(desiredCapabilities)) {
-                registrationRequest.addDesiredCapability(desiredCapabilities);
+            if (!registrationRequest.getConfiguration().capabilities.contains(desiredCapabilities)) {
+                registrationRequest.getConfiguration().capabilities.add(desiredCapabilities);
             }
         }
         return registrationRequest;

@@ -36,7 +36,7 @@ public class SauceLabsRemoteProxy extends CloudTestingRemoteProxy {
         JsonElement slCapabilities = getCommonProxyUtilities().readJSONFromUrl(url);
 
         try {
-            registrationRequest.getCapabilities().clear();
+            registrationRequest.getConfiguration().capabilities.clear();
             String logMessage = String.format("[SL] Capabilities fetched from %s", url);
             if (slCapabilities == null) {
                 logMessage = String.format("[SL] Capabilities were NOT fetched from %s, loading from backup file", url);
@@ -58,8 +58,8 @@ public class SauceLabsRemoteProxy extends CloudTestingRemoteProxy {
             desiredCapabilities.setCapability(RegistrationRequest.MAX_INSTANCES, 5);
             desiredCapabilities.setBrowserName(capAsJsonObject.get("api_name").getAsString());
             desiredCapabilities.setPlatform(getPlatform(capAsJsonObject.get("os").getAsString()));
-            if (!registrationRequest.getCapabilities().contains(desiredCapabilities)) {
-                registrationRequest.addDesiredCapability(desiredCapabilities);
+            if (!registrationRequest.getConfiguration().capabilities.contains(desiredCapabilities)) {
+                registrationRequest.getConfiguration().capabilities.add(desiredCapabilities);
             }
         }
         return registrationRequest;

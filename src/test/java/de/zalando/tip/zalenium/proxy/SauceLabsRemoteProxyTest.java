@@ -194,14 +194,11 @@ public class SauceLabsRemoteProxyTest {
             RegistrationRequest request = TestUtils.getRegistrationRequestForTesting(30001,
                     SauceLabsRemoteProxy.class.getCanonicalName());
 
-            // Assuring the capabilities are empty
-            Assert.assertTrue(request.getCapabilities().isEmpty());
-
             request = SauceLabsRemoteProxy.updateSLCapabilities(request,
                     SauceLabsRemoteProxy.SAUCE_LABS_CAPABILITIES_URL);
 
             // Now the capabilities should be filled even if the url was not fetched
-            Assert.assertFalse(request.getCapabilities().isEmpty());
+            Assert.assertFalse(request.getConfiguration().capabilities.isEmpty());
         } finally {
             SauceLabsRemoteProxy.restoreCommonProxyUtilities();
         }

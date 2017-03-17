@@ -39,19 +39,19 @@ public class LiveNodeServletTest {
         // Creating the configuration and the registration request of the proxy (node)
         RegistrationRequest registrationRequest = TestUtils.getRegistrationRequestForTesting(40000,
                 DockerSeleniumRemoteProxy.class.getCanonicalName());
-        registrationRequest.getCapabilities().clear();
-        registrationRequest.getCapabilities().addAll(DockerSeleniumStarterRemoteProxy.getCapabilities());
+        registrationRequest.getConfiguration().capabilities.clear();
+        registrationRequest.getConfiguration().capabilities.addAll(DockerSeleniumStarterRemoteProxy.getCapabilities());
         DockerSeleniumRemoteProxy proxyOne = DockerSeleniumRemoteProxy.getNewInstance(registrationRequest, registry);
         registrationRequest = TestUtils.getRegistrationRequestForTesting(40001,
                 DockerSeleniumRemoteProxy.class.getCanonicalName());
-        registrationRequest.getCapabilities().clear();
+        registrationRequest.getConfiguration().capabilities.clear();
         List<DesiredCapabilities> capabilities = DockerSeleniumStarterRemoteProxy.getCapabilities();
         DesiredCapabilities desiredCapabilities = new DesiredCapabilities();
         desiredCapabilities.setBrowserName("NEW_BROWSER");
         desiredCapabilities.setPlatform(Platform.LINUX);
         desiredCapabilities.setCapability(RegistrationRequest.MAX_INSTANCES, 1);
         capabilities.add(desiredCapabilities);
-        registrationRequest.getCapabilities().addAll(capabilities);
+        registrationRequest.getConfiguration().capabilities.addAll(capabilities);
         DockerSeleniumRemoteProxy proxyTwo = DockerSeleniumRemoteProxy.getNewInstance(registrationRequest, registry);
 
         registry.add(proxyOne);

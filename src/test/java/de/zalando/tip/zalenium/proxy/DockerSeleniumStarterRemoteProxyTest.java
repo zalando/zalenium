@@ -291,4 +291,5 @@ public class DockerSeleniumStarterRemoteProxyTest {
         Assert.assertEquals(DockerSeleniumStarterRemoteProxy.DEFAULT_SCREEN_WIDTH,
                 DockerSeleniumStarterRemoteProxy.getScreenWidth());
     }
+
 }

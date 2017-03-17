@@ -127,8 +127,8 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
      */
     @VisibleForTesting
     protected static RegistrationRequest updateDSCapabilities(RegistrationRequest registrationRequest) {
-        registrationRequest.getCapabilities().clear();
-        registrationRequest.getCapabilities().addAll(getCapabilities());
+        registrationRequest.getConfiguration().capabilities.clear();
+        registrationRequest.getConfiguration().capabilities.addAll(getCapabilities());
         return registrationRequest;
     }
 
@@ -146,8 +146,8 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
         try {
             String latestDownloadedImage = getLatestDownloadedImage(DOCKER_SELENIUM_IMAGE);
             ImageInfo imageInfo = dockerClient.inspectImage(latestDownloadedImage);
-            chromeVersion = imageInfo.config().labels().get("selenium2_chrome_version");
-            firefoxVersion = imageInfo.config().labels().get("selenium2_firefox_version");
+            chromeVersion = imageInfo.config().labels().get("selenium3_chrome_version");
+            firefoxVersion = imageInfo.config().labels().get("selenium3_firefox_version");
         } catch (DockerException | InterruptedException e) {
             LOGGER.log(Level.FINE, LOGGING_PREFIX + "Could not grab browser version information from the " +
                     "docker-selenium image", e);
@@ -370,6 +370,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
             envVariables.add("GRID=false");
             envVariables.add("RC_CHROME=false");
             envVariables.add("RC_FIREFOX=false");
+            envVariables.add("USE_SELENIUM=3");
             envVariables.add("WAIT_TIMEOUT=120s");
             envVariables.add("PICK_ALL_RANDMON_PORTS=true");
             envVariables.add("PICK_ALL_RANDOM_PORTS=true");
