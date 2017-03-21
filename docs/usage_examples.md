@@ -25,6 +25,7 @@
   * [Test name](#test-name)
   * [Group name](#group-name)
   * [Idle Timeout](#idle-timeout)
+  * [Screen resolution](#screen-resolution)
 
 
 ## Initial setup
@@ -244,6 +245,18 @@ capability in your test. Example code in Java for the capability (it sets the `i
     desiredCapabilities.setCapability(CapabilityType.BROWSER_NAME, BrowserType.FIREFOX);
     desiredCapabilities.setCapability(CapabilityType.PLATFORM, Platform.LINUX);
     desiredCapabilities.setCapability("idleTimeout", 150);
+  ```
+
+### Screen resolution
+You can pass a custom screen resolution for your test, just include a `screenResolution` with the desired value. E.g. 
+`screenResolution=1280x1024`. Also supported for the same purpose `resolution` and `screen-resolution`. Example code 
+in Java for the capability `screenResolution`
+
+  ```java
+    DesiredCapabilities desiredCapabilities = new DesiredCapabilities();
+    desiredCapabilities.setCapability(CapabilityType.BROWSER_NAME, BrowserType.FIREFOX);
+    desiredCapabilities.setCapability(CapabilityType.PLATFORM, Platform.LINUX);
+    desiredCapabilities.setCapability("screenResolution", "1280x720");
   ```
 
 
