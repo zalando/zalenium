@@ -268,7 +268,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     }
 
     public static int getConfiguredScreenWidth() {
-        return configuredScreenWidth;
+        return configuredScreenWidth <= 0 ? DEFAULT_SCREEN_WIDTH : configuredScreenWidth;
     }
 
     public static void setConfiguredScreenWidth(int configuredScreenWidth) {
@@ -276,7 +276,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     }
 
     public static int getConfiguredScreenHeight() {
-        return configuredScreenHeight;
+        return configuredScreenHeight <= 0 ? DEFAULT_SCREEN_HEIGHT : configuredScreenHeight;
     }
 
     public static void setConfiguredScreenHeight(int configuredScreenHeight) {
@@ -523,8 +523,8 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
                                 "defaults will be used. Passed value -> " + screenResolution);
                     }
                 } catch (Exception e) {
-                    setScreenWidth(configuredScreenWidth);
-                    setScreenHeight(configuredScreenHeight);
+                    setScreenWidth(getConfiguredScreenWidth());
+                    setScreenHeight(getConfiguredScreenHeight());
                     LOGGER.log(Level.FINE, "Values provided for screenResolution are not valid integers or " +
                             "either the width or the height is missing, defaults will be used. Passed value -> "
                             + screenResolution);

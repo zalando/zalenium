@@ -3,6 +3,7 @@ package de.zalando.tip.zalenium.util;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import de.zalando.tip.zalenium.proxy.DockerSeleniumStarterRemoteProxy;
 import org.apache.commons.io.FileUtils;
 import org.openqa.grid.common.RegistrationRequest;
 import org.openqa.grid.internal.utils.configuration.GridNodeConfiguration;
@@ -12,13 +13,16 @@ import org.openqa.grid.web.servlet.handler.WebDriverRequest;
 import org.openqa.selenium.Platform;
 import org.openqa.selenium.remote.BrowserType;
 import org.openqa.selenium.remote.CapabilityType;
+import org.openqa.selenium.remote.DesiredCapabilities;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
+import java.util.List;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -53,6 +57,25 @@ public class TestUtils {
         when(request.getHeaderNames()).thenReturn(strings);
 
         return request;
+    }
+
+    public static List<DesiredCapabilities> getDockerSeleniumCapabilitiesForTesting() {
+        String screenResolution = String.format("%sx%s", DockerSeleniumStarterRemoteProxy.getConfiguredScreenWidth(),
+                DockerSeleniumStarterRemoteProxy.getConfiguredScreenHeight());
+        List<DesiredCapabilities> dsCapabilities = new ArrayList<>();
+        DesiredCapabilities firefoxCapabilities = new DesiredCapabilities();
+        firefoxCapabilities.setBrowserName(BrowserType.FIREFOX);
+        firefoxCapabilities.setPlatform(Platform.LINUX);
+        firefoxCapabilities.setCapability(RegistrationRequest.MAX_INSTANCES, 1);
+        firefoxCapabilities.setCapability("screenResolution", screenResolution);
+        dsCapabilities.add(firefoxCapabilities);
+        DesiredCapabilities chromeCapabilities = new DesiredCapabilities();
+        chromeCapabilities.setBrowserName(BrowserType.CHROME);
+        chromeCapabilities.setPlatform(Platform.LINUX);
+        chromeCapabilities.setCapability(RegistrationRequest.MAX_INSTANCES, 1);
+        chromeCapabilities.setCapability("screenResolution", screenResolution);
+        dsCapabilities.add(chromeCapabilities);
+        return dsCapabilities;
     }
 
     @SuppressWarnings("ConstantConditions")
