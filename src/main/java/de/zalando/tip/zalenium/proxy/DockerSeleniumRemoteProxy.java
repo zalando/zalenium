@@ -342,7 +342,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                 IOUtils.copy(tarStream, outputStream);
                 outputStream.close();
                 Dashboard.updateDashboard(testInformation);
-                LOGGER.log(Level.INFO, "{0} Video files copies to: {1}", new Object[]{getId(),
+                LOGGER.log(Level.INFO, "{0} Video files copied to: {1}", new Object[]{getId(),
                         testInformation.getVideoFolderPath()});
             }
         } catch (Exception e) {
@@ -409,6 +409,8 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                             "thread, stopping thread execution.", e);
                     Thread.currentThread().interrupt();
                     dockerSeleniumRemoteProxy.ga.trackException(e);
+                    dockerSeleniumRemoteProxy.stopPolling();
+                    dockerSeleniumRemoteProxy.startPolling();
                     return;
                 }
             }

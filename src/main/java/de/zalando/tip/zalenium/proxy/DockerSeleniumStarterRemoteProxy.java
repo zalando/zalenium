@@ -81,7 +81,9 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     private static int firefoxContainersOnStartup;
     private static int maxDockerSeleniumContainers;
     private static String timeZone;
+    private static int configuredScreenWidth;
     private static int screenWidth;
+    private static int configuredScreenHeight;
     private static int screenHeight;
     private static String containerName;
     private List<Integer> allocatedPorts = new ArrayList<>();
@@ -110,9 +112,11 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
 
         int sWidth = env.getIntEnvVariable(ZALENIUM_SCREEN_WIDTH, DEFAULT_SCREEN_WIDTH);
         setScreenWidth(sWidth);
+        setConfiguredScreenWidth(sWidth);
 
         int sHeight = env.getIntEnvVariable(ZALENIUM_SCREEN_HEIGHT, DEFAULT_SCREEN_HEIGHT);
         setScreenHeight(sHeight);
+        setConfiguredScreenHeight(sHeight);
 
         String tz = env.getStringEnvVariable(ZALENIUM_TZ, DEFAULT_TZ);
         setTimeZone(tz);
@@ -263,6 +267,22 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
         DockerSeleniumStarterRemoteProxy.screenHeight = screenHeight <= 0 ? DEFAULT_SCREEN_HEIGHT : screenHeight;
     }
 
+    public static int getConfiguredScreenWidth() {
+        return configuredScreenWidth;
+    }
+
+    public static void setConfiguredScreenWidth(int configuredScreenWidth) {
+        DockerSeleniumStarterRemoteProxy.configuredScreenWidth = configuredScreenWidth;
+    }
+
+    public static int getConfiguredScreenHeight() {
+        return configuredScreenHeight;
+    }
+
+    public static void setConfiguredScreenHeight(int configuredScreenHeight) {
+        DockerSeleniumStarterRemoteProxy.configuredScreenHeight = configuredScreenHeight;
+    }
+
     @VisibleForTesting
     protected static void setEnv(final Environment env) {
         DockerSeleniumStarterRemoteProxy.env = env;
@@ -323,13 +343,14 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
         String waitingForNode = String.format("waitingFor_%s_Node", browserName.toUpperCase());
         if (!requestedCapability.containsKey(waitingForNode)) {
             LOGGER.log(Level.INFO, LOGGING_PREFIX + "Starting new node for {0}.", requestedCapability);
-            startDockerSeleniumContainer(browserName);
-            requestedCapability.put(waitingForNode, 1);
+            if (startDockerSeleniumContainer(browserName)) {
+                requestedCapability.put(waitingForNode, 1);
+            }
         } else {
             int attempts = (int) requestedCapability.get(waitingForNode);
             attempts++;
-            if (attempts >= 20) {
-                LOGGER.log(Level.INFO, LOGGING_PREFIX + "Request has waited 20 attempts for a node, something " +
+            if (attempts >= 10) {
+                LOGGER.log(Level.INFO, LOGGING_PREFIX + "Request has waited 10 attempts for a node, something " +
                         "went wrong with the previous attempts, creating a new node for {0}.", requestedCapability);
                 startDockerSeleniumContainer(browserName);
                 requestedCapability.put(waitingForNode, 1);
@@ -479,9 +500,6 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
         This method will search for a screenResolution capability to be passed when creating a docker-selenium node.
     */
     private void configureScreenResolutionFromCapabilities(Map<String, Object> requestedCapability) {
-        int configuredScreenWidth = env.getIntEnvVariable(ZALENIUM_SCREEN_WIDTH, DEFAULT_SCREEN_WIDTH);
-        int configuredScreenHeight = env.getIntEnvVariable(ZALENIUM_SCREEN_HEIGHT, DEFAULT_SCREEN_HEIGHT);
-
         boolean wasConfiguredScreenWidthAndHeightChanged = false;
         String[] screenResolutionNames = {"screenResolution", "resolution", "screen-resolution"};
         for (String screenResolutionName : screenResolutionNames) {
@@ -495,8 +513,8 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
                         setScreenWidth(screenWidth);
                         wasConfiguredScreenWidthAndHeightChanged = true;
                     } else {
-                        setScreenWidth(configuredScreenWidth);
-                        setScreenHeight(configuredScreenHeight);
+                        setScreenWidth(getConfiguredScreenWidth());
+                        setScreenHeight(getConfiguredScreenHeight());
                         LOGGER.log(Level.FINE, "One of the values provided for screenResolution is negative, " +
                                 "defaults will be used. Passed value -> " + screenResolution);
                     }
@@ -513,8 +531,8 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
         // Also in the capabilities, to avoid the situation where a request grabs the node from other request
         // just because the platform, version, and browser match.
         if (!wasConfiguredScreenWidthAndHeightChanged) {
-            setScreenWidth(configuredScreenWidth);
-            setScreenHeight(configuredScreenHeight);
+            setScreenWidth(getConfiguredScreenWidth());
+            setScreenHeight(getConfiguredScreenHeight());
             String screenResolution = String.format("%sx%s", getScreenWidth(), getScreenHeight());
             requestedCapability.put("screenResolution", screenResolution);
         }
