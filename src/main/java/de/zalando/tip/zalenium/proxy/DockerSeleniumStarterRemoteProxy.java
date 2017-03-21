@@ -337,7 +337,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     @Override
     public CapabilityMatcher getCapabilityHelper() {
         if (capabilityHelper == null) {
-            capabilityHelper = new DockerSeleniumCapabilityMatcher();
+            capabilityHelper = new DockerSeleniumCapabilityMatcher(this);
         }
         return capabilityHelper;
     }
