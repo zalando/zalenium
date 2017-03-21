@@ -349,10 +349,10 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
         } else {
             int attempts = (int) requestedCapability.get(waitingForNode);
             attempts++;
-            if (attempts >= 10) {
-                LOGGER.log(Level.INFO, LOGGING_PREFIX + "Request has waited 10 attempts for a node, something " +
+            if (attempts >= 20) {
+                LOGGER.log(Level.INFO, LOGGING_PREFIX + "Request has waited 20 attempts for a node, something " +
                         "went wrong with the previous attempts, creating a new node for {0}.", requestedCapability);
-                startDockerSeleniumContainer(browserName);
+                startDockerSeleniumContainer(browserName, true);
                 requestedCapability.put(waitingForNode, 1);
             } else {
                 requestedCapability.put(waitingForNode, attempts);
@@ -391,10 +391,14 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
         return 98;
     }
 
-    @VisibleForTesting
     boolean startDockerSeleniumContainer(String browser) {
+        return startDockerSeleniumContainer(browser, false);
+    }
 
-        if (validateAmountOfDockerSeleniumContainers()) {
+    @VisibleForTesting
+    boolean startDockerSeleniumContainer(String browser, boolean forceCreation) {
+
+        if (validateAmountOfDockerSeleniumContainers() || forceCreation) {
 
             String hostIpAddress = "localhost";
 
