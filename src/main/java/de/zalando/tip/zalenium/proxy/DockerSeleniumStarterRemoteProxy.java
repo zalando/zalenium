@@ -311,14 +311,33 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
         // Check and configure specific screen resolution capabilities when they have been passed in the test config.
         configureScreenResolutionFromCapabilities(requestedCapability);
 
-        LOGGER.log(Level.INFO, LOGGING_PREFIX + "Starting new node for {0}.", requestedCapability);
-
         String browserName = requestedCapability.get(CapabilityType.BROWSER_NAME).toString();
 
         /*
             Here a docker-selenium container will be started and it will register to the hub
+            We check first if a node has been created for this request already. If so, we skip it
+            but increment the number of times it has been received. In case something went wrong with the node
+            creation, we remove the mark* after 10 times and we create a node again.
+            * The mark is an added custom capability
          */
-        startDockerSeleniumContainer(browserName);
+        String waitingForNode = String.format("waitingFor_%s_Node", browserName.toUpperCase());
+        if (!requestedCapability.containsKey(waitingForNode)) {
+            LOGGER.log(Level.INFO, LOGGING_PREFIX + "Starting new node for {0}.", requestedCapability);
+            startDockerSeleniumContainer(browserName);
+            requestedCapability.put(waitingForNode, 1);
+        } else {
+            int attempts = (int) requestedCapability.get(waitingForNode);
+            attempts++;
+            if (attempts >= 20) {
+                LOGGER.log(Level.INFO, LOGGING_PREFIX + "Request has waited 20 attempts for a node, something " +
+                        "went wrong with the previous attempts, creating a new node for {0}.", requestedCapability);
+                startDockerSeleniumContainer(browserName);
+                requestedCapability.put(waitingForNode, 1);
+            } else {
+                requestedCapability.put(waitingForNode, attempts);
+                LOGGER.log(Level.INFO, LOGGING_PREFIX + "Request waiting for a node new node for {0}.", requestedCapability);
+            }
+        }
         return null;
     }
 
@@ -491,9 +510,13 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
             }
         }
         // If the screen resolution parameters were not changed, we just set the defaults again.
+        // Also in the capabilities, to avoid the situation where a request grabs the node from other request
+        // just because the platform, version, and browser match.
         if (!wasConfiguredScreenWidthAndHeightChanged) {
             setScreenWidth(configuredScreenWidth);
             setScreenHeight(configuredScreenHeight);
+            String screenResolution = String.format("%sx%s", getScreenWidth(), getScreenHeight());
+            requestedCapability.put("screenResolution", screenResolution);
         }
     }
 
