@@ -308,6 +308,9 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
             return null;
         }
 
+        // Check and configure specific screen resolution capabilities when they have been passed in the test config.
+        configureScreenResolutionFromCapabilities(requestedCapability);
+
         LOGGER.log(Level.INFO, LOGGING_PREFIX + "Starting new node for {0}.", requestedCapability);
 
         String browserName = requestedCapability.get(CapabilityType.BROWSER_NAME).toString();
@@ -451,6 +454,47 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
             LOGGER.log(Level.INFO, String.format("%s containers were created, it will take a bit more until all get registered.", createdContainers));
             setupCompleted = true;
         }).start();
+    }
+
+    /*
+        This method will search for a screenResolution capability to be passed when creating a docker-selenium node.
+    */
+    private void configureScreenResolutionFromCapabilities(Map<String, Object> requestedCapability) {
+        int configuredScreenWidth = env.getIntEnvVariable(ZALENIUM_SCREEN_WIDTH, DEFAULT_SCREEN_WIDTH);
+        int configuredScreenHeight = env.getIntEnvVariable(ZALENIUM_SCREEN_HEIGHT, DEFAULT_SCREEN_HEIGHT);
+
+        boolean wasConfiguredScreenWidthAndHeightChanged = false;
+        String[] screenResolutionNames = {"screenResolution", "resolution", "screen-resolution"};
+        for (String screenResolutionName : screenResolutionNames) {
+            if (requestedCapability.containsKey(screenResolutionName)) {
+                String screenResolution = requestedCapability.get(screenResolutionName).toString();
+                try {
+                    int screenWidth = Integer.parseInt(screenResolution.split("x")[0]);
+                    int screenHeight = Integer.parseInt(screenResolution.split("x")[1]);
+                    if (screenWidth > 0 && screenHeight > 0) {
+                        setScreenHeight(screenHeight);
+                        setScreenWidth(screenWidth);
+                        wasConfiguredScreenWidthAndHeightChanged = true;
+                    } else {
+                        setScreenWidth(configuredScreenWidth);
+                        setScreenHeight(configuredScreenHeight);
+                        LOGGER.log(Level.FINE, "One of the values provided for screenResolution is negative, " +
+                                "defaults will be used. Passed value -> " + screenResolution);
+                    }
+                } catch (Exception e) {
+                    setScreenWidth(configuredScreenWidth);
+                    setScreenHeight(configuredScreenHeight);
+                    LOGGER.log(Level.FINE, "Values provided for screenResolution are not valid integers or " +
+                            "either the width or the height is missing, defaults will be used. Passed value -> "
+                            + screenResolution);
+                }
+            }
+        }
+        // If the screen resolution parameters were not changed, we just set the defaults again.
+        if (!wasConfiguredScreenWidthAndHeightChanged) {
+            setScreenWidth(configuredScreenWidth);
+            setScreenHeight(configuredScreenHeight);
+        }
     }
 
     private int getNumberOfRunningContainers() {
