@@ -28,11 +28,36 @@ else
     fi
 fi
 
-# Make sure Docker works before continuing
-docker --version
-sudo docker images elgalu/selenium >/dev/null
+# If this was docker run with: -e HOST_GID="$(id -g)" -e HOST_UID="$(id -u)"
+if [ ${HOST_UID} != "" ] && [ ${HOST_GID} != "" ]; then
+    # Then we can create a user with the same group and user id (*nix)
+    # so it can run docker without sudo
+    sudo usermod -u ${HOST_UID} -g ${HOST_GID} seluser
 
-# To run docker alongside docker we still need sudo inside the container
-# TODO: this can potentially be fixed perhaps by passing $UID
-#       during docker run time.
-exec sudo --preserve-env ./zalenium.sh "$@"
+    export HOME="/home/seluser"
+    export USER="seluser"
+
+    DOCKER_HOST_GID="$(stat --format="%g" /var/run/docker.sock)"
+    if [ ${DOCKER_HOST_GID} != "0" ]; then
+        # We create a docker group to which we can add our seluser
+        sudo groupadd --gid ${DOCKER_HOST_GID} docker || true
+        DOCKER_GROUP_NAME=$(getent group ${DOCKER_HOST_GID} | cut -d: -f1)
+        if [ "${DOCKER_GROUP_NAME}" != "" ]; then
+            sudo gpasswd -a seluser ${DOCKER_GROUP_NAME}
+        else
+            error "Var DOCKER_GROUP_NAME is ${DOCKER_GROUP_NAME}"
+        fi
+    fi
+
+    exec gosu seluser ./zalenium.sh "$@"
+else
+    # We will need sudo to run docker alongside docker
+    # because we don't have the matching group and user id (*nix)
+
+    # Make sure Docker works (with sudo) before continuing
+    docker --version
+    sudo docker images elgalu/selenium >/dev/null
+
+    # Replace the current process with zalenium.sh
+    exec sudo --preserve-env ./zalenium.sh "$@"
+fi
