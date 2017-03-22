@@ -116,6 +116,7 @@ export -f WaitTestingBotProxy
 
 EnsureCleanEnv()
 {
+    log "Ensuring no stale Zalenium related containers are still around..."
     CONTAINERS=$(docker ps -a -f name=${CONTAINER_NAME}_ -q | wc -l)
     if [ ${CONTAINERS} -gt 0 ]; then
         echo "Removing exited docker-selenium containers..."
@@ -125,6 +126,7 @@ EnsureCleanEnv()
 
 EnsureDockerWorks()
 {
+    log "Ensuring docker works..."
     if ! docker images elgalu/selenium >/dev/null; then
         echo "Docker seems to be not working properly, check the above error."
         exit 1
@@ -198,12 +200,14 @@ StartUp()
     CONTAINER_LIVE_PREVIEW_PORT=$(docker inspect ${CONTAINER_ID} | jq -r '.[0].NetworkSettings.Ports."5555/tcp"' | jq -r '.[0].HostPort')
     EnsureCleanEnv
 
+    log "Ensuring docker-selenium is available..."
     DOCKER_SELENIUM_IMAGE_COUNT=$(docker images | grep "elgalu/selenium" | wc -l)
     if [ ${DOCKER_SELENIUM_IMAGE_COUNT} -eq 0 ]; then
         echo "Seems that docker-selenium's image has not been downloaded yet, please run 'docker pull elgalu/selenium' first"
         exit 1
     fi
 
+    log "Running additional checks..."
     if [ ! -f ${SELENIUM_ARTIFACT} ];
     then
         echo "Selenium JAR not present, exiting start script."
