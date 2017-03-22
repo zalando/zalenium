@@ -342,8 +342,8 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                 IOUtils.copy(tarStream, outputStream);
                 outputStream.close();
                 Dashboard.updateDashboard(testInformation);
-                LOGGER.log(Level.INFO, "{0} Video files copied to: {1}", new Object[]{getId(),
-                        testInformation.getVideoFolderPath()});
+                LOGGER.log(Level.INFO, "{0} Video file copied to: {1}/{2}", new Object[]{getId(),
+                        testInformation.getVideoFolderPath(), testInformation.getFileName()});
             }
         } catch (Exception e) {
             LOGGER.log(Level.FINE, getId() + " Something happened while copying the video file, " +
