@@ -30,6 +30,16 @@ PID_PATH_SAUCE_LABS_TUNNEL=/tmp/sauce-labs-tunnel-pid
 PID_PATH_TESTINGBOT_TUNNEL=/tmp/testingbot-tunnel-pid
 PID_PATH_BROWSER_STACK_TUNNEL=/tmp/browser-stack-tunnel-pid
 
+echoerr() { printf "%s\n" "$*" >&2; }
+
+# print error and exit
+die() {
+  echoerr "ERROR: $1"
+  # if $2 is defined AND NOT EMPTY, use $2; otherwise, set to "160"
+  errnum=${2-160}
+  exit $errnum
+}
+
 WaitSeleniumHub()
 {
     # Other option is to wait for certain text at
