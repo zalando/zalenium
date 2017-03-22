@@ -519,7 +519,7 @@ ShutDown()
         echo "Stopping Sauce Labs node..."
         PID=$(cat ${PID_PATH_SAUCE_LABS_NODE});
         kill ${PID};
-        if [ ${_returnedValue} -ne 0 ] ; then
+        if [ "${_returnedValue}" != "0" ] ; then
             echo "Failed to send kill signal to Sauce Labs node!"
         else
             rm ${PID_PATH_SAUCE_LABS_NODE}
@@ -531,7 +531,7 @@ ShutDown()
         echo "Stopping Browser Stack node..."
         PID=$(cat ${PID_PATH_BROWSER_STACK_NODE});
         kill ${PID};
-        if [ ${_returnedValue} -ne 0 ] ; then
+        if [ "${_returnedValue}" != "0" ] ; then
             echo "Failed to send kill signal to Browser Stack node!"
         else
             rm ${PID_PATH_BROWSER_STACK_NODE}
@@ -543,7 +543,7 @@ ShutDown()
         echo "Stopping TestingBot node..."
         PID=$(cat ${PID_PATH_TESTINGBOT_NODE});
         kill ${PID};
-        if [ ${_returnedValue} -ne 0 ] ; then
+        if [ "${_returnedValue}" != "0" ] ; then
             echo "Failed to send kill signal to TestingBot node!"
         else
             rm ${PID_PATH_TESTINGBOT_NODE}
@@ -556,7 +556,7 @@ ShutDown()
         PID=$(cat ${PID_PATH_SAUCE_LABS_TUNNEL});
         kill -SIGTERM ${PID};
         wait ${PID};
-        if [ ${_returnedValue} -ne 0 ] ; then
+        if [ "${_returnedValue}" != "0" ] ; then
             echo "Failed to send kill signal to Sauce Connect!"
         else
             rm ${PID_PATH_SAUCE_LABS_TUNNEL}
@@ -569,7 +569,7 @@ ShutDown()
         PID=$(cat ${PID_PATH_BROWSER_STACK_TUNNEL});
         kill -SIGTERM ${PID};
         wait ${PID};
-        if [ ${_returnedValue} -ne 0 ] ; then
+        if [ "${_returnedValue}" != "0" ] ; then
             echo "Failed to send kill signal to BrowserStackLocal!"
         else
             rm ${PID_PATH_BROWSER_STACK_TUNNEL}
@@ -582,7 +582,7 @@ ShutDown()
         PID=$(cat ${PID_PATH_TESTINGBOT_TUNNEL});
         kill -SIGTERM ${PID};
         wait ${PID};
-        if [ ${_returnedValue} -ne 0 ] ; then
+        if [ "${_returnedValue}" != "0" ] ; then
             echo "Failed to send kill signal to the TestingBot tunnel!"
         else
             rm ${PID_PATH_TESTINGBOT_TUNNEL}
