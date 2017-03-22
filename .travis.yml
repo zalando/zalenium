@@ -35,6 +35,5 @@ cache:
 branches:
   only:
     - master
-    - selenium-3
     # Regular expression for release branches. E.g. -> 2.53.1a, 3.0.1a
     - /^([0-9]|[0-9][0-9])[.]([0-9]|[0-9][0-9])[.]([0-9]|[0-9][0-9])[a-z]$/
