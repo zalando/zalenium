@@ -383,6 +383,8 @@ ENV ZAL_VER="${project.build.finalName}" \
     TESTINGBOT_WAIT_TIMEOUT="2m"
 
 COPY entry.sh /usr/bin/
+COPY log /usr/bin/
+COPY error /usr/bin/
 COPY zalenium.sh /home/seluser/
 COPY LICENSE.md /home/seluser/
 COPY Analytics.md /home/seluser/
@@ -411,6 +413,8 @@ RUN sudo chmod +x /home/seluser/zalenium.sh \
   && sudo chmod +x /home/seluser/wait-saucelabs.sh \
   && sudo chmod +x /home/seluser/start-testingbot.sh \
   && sudo chmod +x /home/seluser/wait-testingbot.sh \
+  && sudo chmod +x /usr/bin/log \
+  && sudo chmod +x /usr/bin/error \
   && sudo chmod +x /usr/bin/entry.sh
 
 # IMPORTANT: Using the string form `CMD "entry.sh"` without
