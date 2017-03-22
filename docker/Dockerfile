@@ -106,7 +106,14 @@ RUN apt-get -qqy update \
     nginx \
   && apt-get -qyy autoremove \
   && rm -rf /var/lib/apt/lists/* \
-  && nginx -v
+  && nginx -v \
+  && ln -s /usr/sbin/nginx /usr/bin/ \
+  && /usr/bin/nginx -v \
+  && chmod -R 777 /var/log/nginx \
+  && chmod -R 777 /var/run/ \
+  && chmod -R 777 /var/lib/nginx \
+  && chmod -R 777 /usr/share/nginx/ \
+  && chmod -R 777 /tmp
 
 #=================================================
 # ffmpeg/libav/avconv video codecs & dependencies
