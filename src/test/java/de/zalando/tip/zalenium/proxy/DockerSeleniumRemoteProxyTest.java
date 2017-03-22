@@ -49,7 +49,7 @@ public class DockerSeleniumRemoteProxyTest {
         RegistrationRequest request = TestUtils.getRegistrationRequestForTesting(40000,
                 DockerSeleniumRemoteProxy.class.getCanonicalName());
         request.getConfiguration().capabilities.clear();
-        request.getConfiguration().capabilities.addAll(DockerSeleniumStarterRemoteProxy.getCapabilities());
+        request.getConfiguration().capabilities.addAll(TestUtils.getDockerSeleniumCapabilitiesForTesting());
 
         // Creating the proxy
         proxy = DockerSeleniumRemoteProxy.getNewInstance(request, registry);

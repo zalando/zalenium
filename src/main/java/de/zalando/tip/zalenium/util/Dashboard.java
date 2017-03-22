@@ -17,6 +17,8 @@ public class Dashboard {
 
     private static CommonProxyUtilities commonProxyUtilities = new CommonProxyUtilities();
 
+    private static int executedTests = 0;
+
     public static synchronized void updateDashboard(TestInformation testInformation) throws IOException {
         String currentLocalPath = commonProxyUtilities.currentLocalPath();
         String localVideosPath = currentLocalPath + "/" + VIDEOS_FOLDER_NAME;
@@ -36,10 +38,15 @@ public class Dashboard {
         }
         FileUtils.writeStringToFile(testList, testEntry, StandardCharsets.UTF_8);
 
+        executedTests++;
+
         File dashboardHtml = new File(localVideosPath, "dashboard.html");
         String dashboard = FileUtils.readFileToString(new File(currentLocalPath, "dashboard_template.html"), StandardCharsets.UTF_8);
         dashboard = dashboard.replace("{testList}", testEntry);
         FileUtils.writeStringToFile(dashboardHtml, dashboard, StandardCharsets.UTF_8);
+
+        File testCountFile = new File(localVideosPath, "amount_of_run_tests.txt");
+        FileUtils.writeStringToFile(testCountFile, String.valueOf(executedTests), StandardCharsets.UTF_8);
 
         File zalandoIco = new File(localVideosPath, "zalando.ico");
         if (!zalandoIco.exists()) {
@@ -55,7 +62,6 @@ public class Dashboard {
         if (!jsFolder.exists()) {
             FileUtils.copyDirectory(new File(currentLocalPath + "/js"), jsFolder);
         }
-
     }
 
 }

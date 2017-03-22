@@ -81,7 +81,9 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     private static int firefoxContainersOnStartup;
     private static int maxDockerSeleniumContainers;
     private static String timeZone;
+    private static int configuredScreenWidth;
     private static int screenWidth;
+    private static int configuredScreenHeight;
     private static int screenHeight;
     private static String containerName;
     private List<Integer> allocatedPorts = new ArrayList<>();
@@ -110,9 +112,11 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
 
         int sWidth = env.getIntEnvVariable(ZALENIUM_SCREEN_WIDTH, DEFAULT_SCREEN_WIDTH);
         setScreenWidth(sWidth);
+        setConfiguredScreenWidth(sWidth);
 
         int sHeight = env.getIntEnvVariable(ZALENIUM_SCREEN_HEIGHT, DEFAULT_SCREEN_HEIGHT);
         setScreenHeight(sHeight);
+        setConfiguredScreenHeight(sHeight);
 
         String tz = env.getStringEnvVariable(ZALENIUM_TZ, DEFAULT_TZ);
         setTimeZone(tz);
@@ -263,6 +267,22 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
         DockerSeleniumStarterRemoteProxy.screenHeight = screenHeight <= 0 ? DEFAULT_SCREEN_HEIGHT : screenHeight;
     }
 
+    public static int getConfiguredScreenWidth() {
+        return configuredScreenWidth <= 0 ? DEFAULT_SCREEN_WIDTH : configuredScreenWidth;
+    }
+
+    public static void setConfiguredScreenWidth(int configuredScreenWidth) {
+        DockerSeleniumStarterRemoteProxy.configuredScreenWidth = configuredScreenWidth;
+    }
+
+    public static int getConfiguredScreenHeight() {
+        return configuredScreenHeight <= 0 ? DEFAULT_SCREEN_HEIGHT : configuredScreenHeight;
+    }
+
+    public static void setConfiguredScreenHeight(int configuredScreenHeight) {
+        DockerSeleniumStarterRemoteProxy.configuredScreenHeight = configuredScreenHeight;
+    }
+
     @VisibleForTesting
     protected static void setEnv(final Environment env) {
         DockerSeleniumStarterRemoteProxy.env = env;
@@ -308,14 +328,37 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
             return null;
         }
 
-        LOGGER.log(Level.INFO, LOGGING_PREFIX + "Starting new node for {0}.", requestedCapability);
+        // Check and configure specific screen resolution capabilities when they have been passed in the test config.
+        configureScreenResolutionFromCapabilities(requestedCapability);
 
         String browserName = requestedCapability.get(CapabilityType.BROWSER_NAME).toString();
 
         /*
             Here a docker-selenium container will be started and it will register to the hub
+            We check first if a node has been created for this request already. If so, we skip it
+            but increment the number of times it has been received. In case something went wrong with the node
+            creation, we remove the mark* after 10 times and we create a node again.
+            * The mark is an added custom capability
          */
-        startDockerSeleniumContainer(browserName);
+        String waitingForNode = String.format("waitingFor_%s_Node", browserName.toUpperCase());
+        if (!requestedCapability.containsKey(waitingForNode)) {
+            LOGGER.log(Level.INFO, LOGGING_PREFIX + "Starting new node for {0}.", requestedCapability);
+            if (startDockerSeleniumContainer(browserName)) {
+                requestedCapability.put(waitingForNode, 1);
+            }
+        } else {
+            int attempts = (int) requestedCapability.get(waitingForNode);
+            attempts++;
+            if (attempts >= 20) {
+                LOGGER.log(Level.INFO, LOGGING_PREFIX + "Request has waited 20 attempts for a node, something " +
+                        "went wrong with the previous attempts, creating a new node for {0}.", requestedCapability);
+                startDockerSeleniumContainer(browserName, true);
+                requestedCapability.put(waitingForNode, 1);
+            } else {
+                requestedCapability.put(waitingForNode, attempts);
+                LOGGER.log(Level.INFO, LOGGING_PREFIX + "Request waiting for a node new node for {0}.", requestedCapability);
+            }
+        }
         return null;
     }
 
@@ -334,7 +377,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     @Override
     public CapabilityMatcher getCapabilityHelper() {
         if (capabilityHelper == null) {
-            capabilityHelper = new DockerSeleniumCapabilityMatcher();
+            capabilityHelper = new DockerSeleniumCapabilityMatcher(this);
         }
         return capabilityHelper;
     }
@@ -348,10 +391,14 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
         return 98;
     }
 
-    @VisibleForTesting
     boolean startDockerSeleniumContainer(String browser) {
+        return startDockerSeleniumContainer(browser, false);
+    }
 
-        if (validateAmountOfDockerSeleniumContainers()) {
+    @VisibleForTesting
+    boolean startDockerSeleniumContainer(String browser, boolean forceCreation) {
+
+        if (validateAmountOfDockerSeleniumContainers() || forceCreation) {
 
             String hostIpAddress = "localhost";
 
@@ -451,6 +498,48 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
             LOGGER.log(Level.INFO, String.format("%s containers were created, it will take a bit more until all get registered.", createdContainers));
             setupCompleted = true;
         }).start();
+    }
+
+    /*
+        This method will search for a screenResolution capability to be passed when creating a docker-selenium node.
+    */
+    private void configureScreenResolutionFromCapabilities(Map<String, Object> requestedCapability) {
+        boolean wasConfiguredScreenWidthAndHeightChanged = false;
+        String[] screenResolutionNames = {"screenResolution", "resolution", "screen-resolution"};
+        for (String screenResolutionName : screenResolutionNames) {
+            if (requestedCapability.containsKey(screenResolutionName)) {
+                String screenResolution = requestedCapability.get(screenResolutionName).toString();
+                try {
+                    int screenWidth = Integer.parseInt(screenResolution.split("x")[0]);
+                    int screenHeight = Integer.parseInt(screenResolution.split("x")[1]);
+                    if (screenWidth > 0 && screenHeight > 0) {
+                        setScreenHeight(screenHeight);
+                        setScreenWidth(screenWidth);
+                        wasConfiguredScreenWidthAndHeightChanged = true;
+                    } else {
+                        setScreenWidth(getConfiguredScreenWidth());
+                        setScreenHeight(getConfiguredScreenHeight());
+                        LOGGER.log(Level.FINE, "One of the values provided for screenResolution is negative, " +
+                                "defaults will be used. Passed value -> " + screenResolution);
+                    }
+                } catch (Exception e) {
+                    setScreenWidth(getConfiguredScreenWidth());
+                    setScreenHeight(getConfiguredScreenHeight());
+                    LOGGER.log(Level.FINE, "Values provided for screenResolution are not valid integers or " +
+                            "either the width or the height is missing, defaults will be used. Passed value -> "
+                            + screenResolution);
+                }
+            }
+        }
+        // If the screen resolution parameters were not changed, we just set the defaults again.
+        // Also in the capabilities, to avoid the situation where a request grabs the node from other request
+        // just because the platform, version, and browser match.
+        if (!wasConfiguredScreenWidthAndHeightChanged) {
+            setScreenWidth(getConfiguredScreenWidth());
+            setScreenHeight(getConfiguredScreenHeight());
+            String screenResolution = String.format("%sx%s", getScreenWidth(), getScreenHeight());
+            requestedCapability.put("screenResolution", screenResolution);
+        }
     }
 
     private int getNumberOfRunningContainers() {

@@ -18,6 +18,7 @@ import org.openqa.grid.internal.Registry;
 import org.openqa.grid.internal.SessionTerminationReason;
 import org.openqa.grid.internal.TestSession;
 import org.openqa.grid.internal.TestSlot;
+import org.openqa.grid.internal.utils.CapabilityMatcher;
 import org.openqa.grid.selenium.proxy.DefaultRemoteProxy;
 import org.openqa.grid.web.servlet.handler.RequestType;
 import org.openqa.grid.web.servlet.handler.WebDriverRequest;
@@ -64,6 +65,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     private boolean stopSessionRequestReceived = false;
     private DockerSeleniumNodePoller dockerSeleniumNodePollerThread = null;
     private GoogleAnalyticsApi ga = new GoogleAnalyticsApi();
+    private CapabilityMatcher capabilityHelper;
 
     public DockerSeleniumRemoteProxy(RegistrationRequest request, Registry registry) {
         super(request, registry);
@@ -134,6 +136,14 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         }
         LOGGER.log(Level.FINE, "{0} No more sessions allowed", getId());
         return null;
+    }
+
+    @Override
+    public CapabilityMatcher getCapabilityHelper() {
+        if (capabilityHelper == null) {
+            capabilityHelper = new DockerSeleniumCapabilityMatcher(this);
+        }
+        return capabilityHelper;
     }
 
     private long getConfiguredIdleTimeout(Map<String, Object> requestedCapability) {
@@ -332,7 +342,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                 IOUtils.copy(tarStream, outputStream);
                 outputStream.close();
                 Dashboard.updateDashboard(testInformation);
-                LOGGER.log(Level.INFO, "{0} Video files copies to: {1}", new Object[]{getId(),
+                LOGGER.log(Level.INFO, "{0} Video files copied to: {1}", new Object[]{getId(),
                         testInformation.getVideoFolderPath()});
             }
         } catch (Exception e) {
@@ -399,6 +409,8 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                             "thread, stopping thread execution.", e);
                     Thread.currentThread().interrupt();
                     dockerSeleniumRemoteProxy.ga.trackException(e);
+                    dockerSeleniumRemoteProxy.stopPolling();
+                    dockerSeleniumRemoteProxy.startPolling();
                     return;
                 }
             }

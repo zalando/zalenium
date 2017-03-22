@@ -291,8 +291,8 @@ RUN set -x \
 # Sauce Connect Tunneling #
 # ------------------------#
 # https://docs.saucelabs.com/reference/sauce-connect/
-# Layer size: medium: 12.42 MB
-ENV SAUCE_CONN_VER="sc-4.4.4-linux" \
+# Layer size: medium: ~13 MB
+ENV SAUCE_CONN_VER="sc-4.4.5-linux" \
     SAUCE_CONN_DOWN_URL="https://saucelabs.com/downloads"
 RUN cd /tmp \
   && wget -nv "${SAUCE_CONN_DOWN_URL}/${SAUCE_CONN_VER}.tar.gz" \
