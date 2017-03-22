@@ -368,6 +368,7 @@ StartUp()
             export SAUCE_LOG_FILE="$(pwd)/logs/saucelabs-stdout.log"
             export SAUCE_TUNNEL="true"
             echo "Starting Sauce Connect..."
+            [ -z "${SAUCE_TUNNEL_ID}" ] && die "$0: Required env var SAUCE_TUNNEL_ID"
             ./start-saucelabs.sh &
             echo $! > ${PID_PATH_SAUCE_LABS_TUNNEL}
             # Now wait for the tunnel to be ready
