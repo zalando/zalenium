@@ -8,8 +8,6 @@ services:
   #--------------#
   zalenium:
     image: "dosel/zalenium"
-    # You can also specify which Zalenium tag, e.g.
-    # image: "dosel/zalenium:3.0.0a"
     container_name: zalenium
     hostname: zalenium
     tty: true
@@ -41,6 +39,7 @@ services:
       # For OSX remember to include the docker version
       # allowed values are: 1.11 or 1.12 or 1.13
       # - DOCKER=1.11
+      # but leave empty for latest or in general for docker >= 17.03.0
 
   # Feel free to add your services but remember
   # to put them on the same network as Zalenium e.g.
