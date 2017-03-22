@@ -127,7 +127,7 @@ EnsureCleanEnv()
 EnsureDockerWorks()
 {
     log "Ensuring docker works..."
-    if ! docker images elgalu/selenium >/dev/null; then
+    if ! docker ps >/dev/null; then
         echo "Docker seems to be not working properly, check the above error."
         exit 1
     fi
