@@ -488,32 +488,6 @@ StartUp()
 
 ShutDown()
 {
-
-    if [ -f ${PID_PATH_SELENIUM} ];
-    then
-        echo "Stopping Hub..."
-        PID=$(cat ${PID_PATH_SELENIUM});
-        kill ${PID};
-        _returnedValue=$?
-        if [ ${_returnedValue} -ne 0 ] ; then
-            echo "Failed to send kill signal to Selenium Hub!"
-        else
-            rm ${PID_PATH_SELENIUM}
-        fi
-    fi
-
-    if [ -f ${PID_PATH_DOCKER_SELENIUM_NODE} ];
-    then
-        echo "Stopping DockerSeleniumStarter node..."
-        PID=$(cat ${PID_PATH_DOCKER_SELENIUM_NODE});
-        kill ${PID};
-        if [ ${_returnedValue} -ne 0 ] ; then
-            echo "Failed to send kill signal to DockerSeleniumStarter node!"
-        else
-            rm ${PID_PATH_DOCKER_SELENIUM_NODE}
-        fi
-    fi
-
     if [ -f ${PID_PATH_SAUCE_LABS_NODE} ];
     then
         echo "Stopping Sauce Labs node..."
@@ -586,6 +560,31 @@ ShutDown()
             echo "Failed to send kill signal to the TestingBot tunnel!"
         else
             rm ${PID_PATH_TESTINGBOT_TUNNEL}
+        fi
+    fi
+
+    if [ -f ${PID_PATH_SELENIUM} ];
+    then
+        echo "Stopping Hub..."
+        PID=$(cat ${PID_PATH_SELENIUM});
+        kill ${PID};
+        _returnedValue=$?
+        if [ "${_returnedValue}" != "0" ] ; then
+            echo "Failed to send kill signal to Selenium Hub!"
+        else
+            rm ${PID_PATH_SELENIUM}
+        fi
+    fi
+
+    if [ -f ${PID_PATH_DOCKER_SELENIUM_NODE} ];
+    then
+        echo "Stopping DockerSeleniumStarter node..."
+        PID=$(cat ${PID_PATH_DOCKER_SELENIUM_NODE});
+        kill ${PID};
+        if [ "${_returnedValue}" != "0" ] ; then
+            echo "Failed to send kill signal to DockerSeleniumStarter node!"
+        else
+            rm ${PID_PATH_DOCKER_SELENIUM_NODE}
         fi
     fi
 
