@@ -224,6 +224,16 @@ RUN apt-get -qqy update \
   && apt-get -qyy autoremove \
   && rm -rf /var/lib/apt/lists/*
 
+#==============================================================
+# Simple Go-based setuid+setgid+setgroups+exec
+# drop-in replacement to avoid using `su` as is buggy in docker
+#==============================================================
+# https://github.com/tianon/gosu
+RUN wget -nv -O /usr/bin/gosu \
+        "https://github.com/tianon/gosu/releases/download/1.10/gosu-amd64" \
+  && chmod +x /usr/bin/gosu \
+  && gosu root bash -c 'whoami' | grep root
+
 #=====================
 # Get docker binaries
 #=====================
