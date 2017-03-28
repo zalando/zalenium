@@ -350,13 +350,13 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
             int attempts = (int) requestedCapability.get(waitingForNode);
             attempts++;
             if (attempts >= 20) {
-                LOGGER.log(Level.INFO, LOGGING_PREFIX + "Request has waited 20 attempts for a node, something " +
+                LOGGER.log(Level.FINE, LOGGING_PREFIX + "Request has waited 20 attempts for a node, something " +
                         "went wrong with the previous attempts, creating a new node for {0}.", requestedCapability);
                 startDockerSeleniumContainer(browserName, true);
                 requestedCapability.put(waitingForNode, 1);
             } else {
                 requestedCapability.put(waitingForNode, attempts);
-                LOGGER.log(Level.INFO, LOGGING_PREFIX + "Request waiting for a node new node for {0}.", requestedCapability);
+                LOGGER.log(Level.FINE, LOGGING_PREFIX + "Request waiting for a node new node for {0}.", requestedCapability);
             }
         }
         return null;
@@ -590,7 +590,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
             LOGGER.log(Level.FINE, () -> String.format("%s %s docker-selenium containers running", LOGGING_PREFIX,
                     numberOfDockerSeleniumContainers));
             if (numberOfDockerSeleniumContainers >= getMaxDockerSeleniumContainers()) {
-                LOGGER.log(Level.FINE, LOGGING_PREFIX + "Max. number of docker-selenium containers has been reached, " +
+                LOGGER.log(Level.WARNING, LOGGING_PREFIX + "Max. number of docker-selenium containers has been reached, " +
                         "no more will be created until the number decreases below {0}.", getMaxDockerSeleniumContainers());
                 return false;
             }
