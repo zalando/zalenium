@@ -184,6 +184,7 @@ public class DockerSeleniumRemoteProxyTest {
 
         newSession.getSlot().doFinishRelease();
         proxy.afterCommand(newSession, request, response);
+        proxy.afterSession(newSession);
 
         // After running one test, the node shouldn't be busy and also down
         Assert.assertFalse(proxy.isBusy());
@@ -323,6 +324,7 @@ public class DockerSeleniumRemoteProxyTest {
 
             newSession.getSlot().doFinishRelease();
             spyProxy.afterCommand(newSession, webDriverRequest, response);
+            spyProxy.afterSession(newSession);
 
             Assert.assertFalse(spyProxy.isBusy());
             verify(spyProxy, timeout(40000))
@@ -399,6 +401,7 @@ public class DockerSeleniumRemoteProxyTest {
 
             newSession.getSlot().doFinishRelease();
             spyProxy.afterCommand(newSession, webDriverRequest, response);
+            spyProxy.afterSession(newSession);
 
             Assert.assertFalse(spyProxy.isBusy());
             // Now we assert that videoRecording was invoked but processVideoAction not, neither copyVideos
