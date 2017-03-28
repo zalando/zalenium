@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+# Prints debug info with precise time
+exec echo "-- ERROR $(date "+%H:%M:%S:%N") $@" >&2

@@ -120,7 +120,7 @@ across all containers. Please note that the folder name in the host can be any y
   * `--screenWidth` -> Sets the screen width. Defaults to 1900.
   * `--screenHeight` -> Sets the screen height. Defaults to 1880.
   * `--timeZone` -> Sets the time zone in the containers. Defaults to "Europe/Berlin".
-
+  * `--debugEnabled` -> enables LogLevel.FINE. Defaults to 'false'.
 
 ## One line starters
 

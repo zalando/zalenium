@@ -62,7 +62,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     private String testGroup;
     private String browserName;
     private String browserVersion;
-    private boolean stopSessionRequestReceived = false;
+    private boolean afterSessionEventReceived = false;
     private DockerSeleniumNodePoller dockerSeleniumNodePollerThread = null;
     private GoogleAnalyticsApi ga = new GoogleAnalyticsApi();
     private CapabilityMatcher capabilityHelper;
@@ -172,19 +172,14 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     }
 
     @Override
-    public void afterCommand(TestSession session, HttpServletRequest request, HttpServletResponse response) {
-        if (request instanceof WebDriverRequest && "DELETE".equalsIgnoreCase(request.getMethod())) {
-            WebDriverRequest seleniumRequest = (WebDriverRequest) request;
-            if (RequestType.STOP_SESSION.equals(seleniumRequest.getRequestType())) {
-                this.stopSessionRequestReceived = true;
-                String message = String.format("%s STOP_SESSION command received. Node should shutdown soon...", getId());
-                LOGGER.log(Level.INFO, message);
-                long executionTime = (System.currentTimeMillis() - session.getSlot().getLastSessionStart()) / 1000;
-                ga.testEvent(DockerSeleniumRemoteProxy.class.getName(), session.getRequestedCapabilities().toString(),
-                        executionTime);
-            }
-        }
-        super.afterCommand(session, request, response);
+    public void afterSession(TestSession session) {
+        this.afterSessionEventReceived = true;
+        String message = String.format("%s AFTER_SESSION command received. Node should shutdown soon...", getId());
+        LOGGER.log(Level.INFO, message);
+        long executionTime = (System.currentTimeMillis() - session.getSlot().getLastSessionStart()) / 1000;
+        ga.testEvent(DockerSeleniumRemoteProxy.class.getName(), session.getRequestedCapabilities().toString(),
+                executionTime);
+        super.afterSession(session);
     }
 
     @Override
@@ -250,7 +245,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                 long executionTime = (System.currentTimeMillis() - testSlot.getLastSessionStart()) / 1000;
                 ga.testEvent(DockerSeleniumRemoteProxy.class.getName(), testSlot.getSession().getRequestedCapabilities().toString(),
                         executionTime);
-                getRegistry().forceRelease(testSlot, SessionTerminationReason.BROWSER_TIMEOUT);
+                getRegistry().forceRelease(testSlot, SessionTerminationReason.ORPHAN);
             }
         }
     }
@@ -342,8 +337,8 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                 IOUtils.copy(tarStream, outputStream);
                 outputStream.close();
                 Dashboard.updateDashboard(testInformation);
-                LOGGER.log(Level.INFO, "{0} Video files copied to: {1}", new Object[]{getId(),
-                        testInformation.getVideoFolderPath()});
+                LOGGER.log(Level.INFO, "{0} Video file copied to: {1}/{2}", new Object[]{getId(),
+                        testInformation.getVideoFolderPath(), testInformation.getFileName()});
             }
         } catch (Exception e) {
             LOGGER.log(Level.FINE, getId() + " Something happened while copying the video file, " +
@@ -393,7 +388,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                 */
                 boolean isTestCompleted = !dockerSeleniumRemoteProxy.isBusy()
                         && dockerSeleniumRemoteProxy.isTestSessionLimitReached()
-                        && dockerSeleniumRemoteProxy.stopSessionRequestReceived;
+                        && dockerSeleniumRemoteProxy.afterSessionEventReceived;
                 boolean isTestIdle = dockerSeleniumRemoteProxy.isTestIdle();
 
                 if (isTestCompleted || isTestIdle) {

@@ -16,6 +16,7 @@ SCREEN_HEIGHT=1880
 TZ="Europe/Berlin"
 SEND_ANONYMOUS_USAGE_INFO=true
 START_TUNNEL=false
+DEBUG_ENABLED=false
 
 GA_TRACKING_ID="UA-88441352-3"
 GA_ENDPOINT=https://www.google-analytics.com/collect
@@ -29,6 +30,16 @@ PID_PATH_BROWSER_STACK_NODE=/tmp/browser-stack-node-pid
 PID_PATH_SAUCE_LABS_TUNNEL=/tmp/sauce-labs-tunnel-pid
 PID_PATH_TESTINGBOT_TUNNEL=/tmp/testingbot-tunnel-pid
 PID_PATH_BROWSER_STACK_TUNNEL=/tmp/browser-stack-tunnel-pid
+
+echoerr() { printf "%s\n" "$*" >&2; }
+
+# print error and exit
+die() {
+  echoerr "ERROR: $1"
+  # if $2 is defined AND NOT EMPTY, use $2; otherwise, set to "160"
+  errnum=${2-160}
+  exit $errnum
+}
 
 WaitSeleniumHub()
 {
@@ -116,6 +127,7 @@ export -f WaitTestingBotProxy
 
 EnsureCleanEnv()
 {
+    log "Ensuring no stale Zalenium related containers are still around..."
     CONTAINERS=$(docker ps -a -f name=${CONTAINER_NAME}_ -q | wc -l)
     if [ ${CONTAINERS} -gt 0 ]; then
         echo "Removing exited docker-selenium containers..."
@@ -125,7 +137,8 @@ EnsureCleanEnv()
 
 EnsureDockerWorks()
 {
-    if ! docker images elgalu/selenium >/dev/null; then
+    log "Ensuring docker works..."
+    if ! docker ps >/dev/null; then
         echo "Docker seems to be not working properly, check the above error."
         exit 1
     fi
@@ -198,12 +211,14 @@ StartUp()
     CONTAINER_LIVE_PREVIEW_PORT=$(docker inspect ${CONTAINER_ID} | jq -r '.[0].NetworkSettings.Ports."5555/tcp"' | jq -r '.[0].HostPort')
     EnsureCleanEnv
 
+    log "Ensuring docker-selenium is available..."
     DOCKER_SELENIUM_IMAGE_COUNT=$(docker images | grep "elgalu/selenium" | wc -l)
     if [ ${DOCKER_SELENIUM_IMAGE_COUNT} -eq 0 ]; then
         echo "Seems that docker-selenium's image has not been downloaded yet, please run 'docker pull elgalu/selenium' first"
         exit 1
     fi
 
+    log "Running additional checks..."
     if [ ! -f ${SELENIUM_ARTIFACT} ];
     then
         echo "Selenium JAR not present, exiting start script."
@@ -315,7 +330,8 @@ StartUp()
     mkdir -p logs
 
     java -cp ${SELENIUM_ARTIFACT}:${ZALENIUM_ARTIFACT} org.openqa.grid.selenium.GridLauncherV3 \
-    -role hub -port 4445 -servlets de.zalando.tip.zalenium.servlet.live > logs/stdout.zalenium.hub.log &
+    -role hub -port 4445 -servlets de.zalando.tip.zalenium.servlet.live \
+    -debug ${DEBUG_ENABLED} > logs/stdout.zalenium.hub.log &
     echo $! > ${PID_PATH_SELENIUM}
 
     if ! timeout --foreground "1m" bash -c WaitSeleniumHub; then
@@ -329,7 +345,7 @@ StartUp()
 
     java -jar ${SELENIUM_ARTIFACT} -role node -hub http://localhost:4444/grid/register \
      -proxy de.zalando.tip.zalenium.proxy.DockerSeleniumStarterRemoteProxy \
-     -port 30000 > logs/stdout.zalenium.docker.node.log &
+     -port 30000 -debug ${DEBUG_ENABLED} > logs/stdout.zalenium.docker.node.log &
     echo $! > ${PID_PATH_DOCKER_SELENIUM_NODE}
 
     if ! timeout --foreground "30s" bash -c WaitStarterProxy; then
@@ -352,7 +368,7 @@ StartUp()
         echo "Starting Sauce Labs node..."
         java -jar ${SELENIUM_ARTIFACT} -role node -hub http://localhost:4444/grid/register \
          -proxy de.zalando.tip.zalenium.proxy.SauceLabsRemoteProxy \
-         -port 30001 > logs/stdout.zalenium.sauce.node.log &
+         -port 30001 -debug ${DEBUG_ENABLED} > logs/stdout.zalenium.sauce.node.log &
         echo $! > ${PID_PATH_SAUCE_LABS_NODE}
 
         if ! timeout --foreground "40s" bash -c WaitSauceLabsProxy; then
@@ -364,6 +380,7 @@ StartUp()
             export SAUCE_LOG_FILE="$(pwd)/logs/saucelabs-stdout.log"
             export SAUCE_TUNNEL="true"
             echo "Starting Sauce Connect..."
+            [ -z "${SAUCE_TUNNEL_ID}" ] && die "$0: Required env var SAUCE_TUNNEL_ID"
             ./start-saucelabs.sh &
             echo $! > ${PID_PATH_SAUCE_LABS_TUNNEL}
             # Now wait for the tunnel to be ready
@@ -377,7 +394,7 @@ StartUp()
         echo "Starting Browser Stack node..."
         java -jar ${SELENIUM_ARTIFACT} -role node -hub http://localhost:4444/grid/register \
          -proxy de.zalando.tip.zalenium.proxy.BrowserStackRemoteProxy \
-         -port 30002 > logs/stdout.zalenium.browserstack.node.log &
+         -port 30002 -debug ${DEBUG_ENABLED} > logs/stdout.zalenium.browserstack.node.log &
         echo $! > ${PID_PATH_BROWSER_STACK_NODE}
 
         if ! timeout --foreground "40s" bash -c WaitBrowserStackProxy; then
@@ -402,7 +419,7 @@ StartUp()
         echo "Starting TestingBot node..."
         java -jar ${SELENIUM_ARTIFACT} -role node -hub http://localhost:4444/grid/register \
          -proxy de.zalando.tip.zalenium.proxy.TestingBotRemoteProxy \
-         -port 30003 > logs/stdout.zalenium.testingbot.node.log &
+         -port 30003 -debug ${DEBUG_ENABLED} > logs/stdout.zalenium.testingbot.node.log &
         echo $! > ${PID_PATH_TESTINGBOT_NODE}
 
         if ! timeout --foreground "40s" bash -c WaitTestingBotProxy; then
@@ -483,38 +500,12 @@ StartUp()
 
 ShutDown()
 {
-
-    if [ -f ${PID_PATH_SELENIUM} ];
-    then
-        echo "Stopping Hub..."
-        PID=$(cat ${PID_PATH_SELENIUM});
-        kill ${PID};
-        _returnedValue=$?
-        if [ ${_returnedValue} -ne 0 ] ; then
-            echo "Failed to send kill signal to Selenium Hub!"
-        else
-            rm ${PID_PATH_SELENIUM}
-        fi
-    fi
-
-    if [ -f ${PID_PATH_DOCKER_SELENIUM_NODE} ];
-    then
-        echo "Stopping DockerSeleniumStarter node..."
-        PID=$(cat ${PID_PATH_DOCKER_SELENIUM_NODE});
-        kill ${PID};
-        if [ ${_returnedValue} -ne 0 ] ; then
-            echo "Failed to send kill signal to DockerSeleniumStarter node!"
-        else
-            rm ${PID_PATH_DOCKER_SELENIUM_NODE}
-        fi
-    fi
-
     if [ -f ${PID_PATH_SAUCE_LABS_NODE} ];
     then
         echo "Stopping Sauce Labs node..."
         PID=$(cat ${PID_PATH_SAUCE_LABS_NODE});
         kill ${PID};
-        if [ ${_returnedValue} -ne 0 ] ; then
+        if [ "${_returnedValue}" != "0" ] ; then
             echo "Failed to send kill signal to Sauce Labs node!"
         else
             rm ${PID_PATH_SAUCE_LABS_NODE}
@@ -526,7 +517,7 @@ ShutDown()
         echo "Stopping Browser Stack node..."
         PID=$(cat ${PID_PATH_BROWSER_STACK_NODE});
         kill ${PID};
-        if [ ${_returnedValue} -ne 0 ] ; then
+        if [ "${_returnedValue}" != "0" ] ; then
             echo "Failed to send kill signal to Browser Stack node!"
         else
             rm ${PID_PATH_BROWSER_STACK_NODE}
@@ -538,7 +529,7 @@ ShutDown()
         echo "Stopping TestingBot node..."
         PID=$(cat ${PID_PATH_TESTINGBOT_NODE});
         kill ${PID};
-        if [ ${_returnedValue} -ne 0 ] ; then
+        if [ "${_returnedValue}" != "0" ] ; then
             echo "Failed to send kill signal to TestingBot node!"
         else
             rm ${PID_PATH_TESTINGBOT_NODE}
@@ -551,7 +542,7 @@ ShutDown()
         PID=$(cat ${PID_PATH_SAUCE_LABS_TUNNEL});
         kill -SIGTERM ${PID};
         wait ${PID};
-        if [ ${_returnedValue} -ne 0 ] ; then
+        if [ "${_returnedValue}" != "0" ] ; then
             echo "Failed to send kill signal to Sauce Connect!"
         else
             rm ${PID_PATH_SAUCE_LABS_TUNNEL}
@@ -564,7 +555,7 @@ ShutDown()
         PID=$(cat ${PID_PATH_BROWSER_STACK_TUNNEL});
         kill -SIGTERM ${PID};
         wait ${PID};
-        if [ ${_returnedValue} -ne 0 ] ; then
+        if [ "${_returnedValue}" != "0" ] ; then
             echo "Failed to send kill signal to BrowserStackLocal!"
         else
             rm ${PID_PATH_BROWSER_STACK_TUNNEL}
@@ -577,10 +568,35 @@ ShutDown()
         PID=$(cat ${PID_PATH_TESTINGBOT_TUNNEL});
         kill -SIGTERM ${PID};
         wait ${PID};
-        if [ ${_returnedValue} -ne 0 ] ; then
+        if [ "${_returnedValue}" != "0" ] ; then
             echo "Failed to send kill signal to the TestingBot tunnel!"
         else
             rm ${PID_PATH_TESTINGBOT_TUNNEL}
+        fi
+    fi
+
+    if [ -f ${PID_PATH_SELENIUM} ];
+    then
+        echo "Stopping Hub..."
+        PID=$(cat ${PID_PATH_SELENIUM});
+        kill ${PID};
+        _returnedValue=$?
+        if [ "${_returnedValue}" != "0" ] ; then
+            echo "Failed to send kill signal to Selenium Hub!"
+        else
+            rm ${PID_PATH_SELENIUM}
+        fi
+    fi
+
+    if [ -f ${PID_PATH_DOCKER_SELENIUM_NODE} ];
+    then
+        echo "Stopping DockerSeleniumStarter node..."
+        PID=$(cat ${PID_PATH_DOCKER_SELENIUM_NODE});
+        kill ${PID};
+        if [ "${_returnedValue}" != "0" ] ; then
+            echo "Failed to send kill signal to DockerSeleniumStarter node!"
+        else
+            rm ${PID_PATH_DOCKER_SELENIUM_NODE}
         fi
     fi
 
@@ -606,6 +622,7 @@ function usage()
     echo -e "\t --screenHeight -> Sets the screen height. Defaults to 1880"
     echo -e "\t --timeZone -> Sets the time zone in the containers. Defaults to \"Europe/Berlin\""
     echo -e "\t --sendAnonymousUsageInfo -> Collects anonymous usage of the tool. Defaults to 'true'"
+    echo -e "\t --debugEnabled -> enables LogLevel.FINE. Defaults to 'false'"
     echo ""
     echo -e "\t stop"
     echo ""
@@ -673,6 +690,9 @@ case ${SCRIPT_ACTION} in
                     ;;
                 --startTunnel)
                     START_TUNNEL=${VALUE}
+                    ;;
+                --debugEnabled)
+                    DEBUG_ENABLED=${VALUE}
                     ;;
                 *)
                     echo "ERROR: unknown parameter \"$PARAM\""

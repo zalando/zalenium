@@ -106,7 +106,14 @@ RUN apt-get -qqy update \
     nginx \
   && apt-get -qyy autoremove \
   && rm -rf /var/lib/apt/lists/* \
-  && nginx -v
+  && nginx -v \
+  && ln -s /usr/sbin/nginx /usr/bin/ \
+  && /usr/bin/nginx -v \
+  && chmod -R 777 /var/log/nginx \
+  && chmod -R 777 /var/run/ \
+  && chmod -R 777 /var/lib/nginx \
+  && chmod -R 777 /usr/share/nginx/ \
+  && chmod -R 777 /tmp
 
 #=================================================
 # ffmpeg/libav/avconv video codecs & dependencies
@@ -216,6 +223,16 @@ RUN apt-get -qqy update \
   && update-rc.d haveged defaults \
   && apt-get -qyy autoremove \
   && rm -rf /var/lib/apt/lists/*
+
+#==============================================================
+# Simple Go-based setuid+setgid+setgroups+exec
+# drop-in replacement to avoid using `su` as is buggy in docker
+#==============================================================
+# https://github.com/tianon/gosu
+RUN wget -nv -O /usr/bin/gosu \
+        "https://github.com/tianon/gosu/releases/download/1.10/gosu-amd64" \
+  && chmod +x /usr/bin/gosu \
+  && gosu root bash -c 'whoami' | grep root
 
 #=====================
 # Get docker binaries
@@ -383,6 +400,8 @@ ENV ZAL_VER="${project.build.finalName}" \
     TESTINGBOT_WAIT_TIMEOUT="2m"
 
 COPY entry.sh /usr/bin/
+COPY log /usr/bin/
+COPY error /usr/bin/
 COPY zalenium.sh /home/seluser/
 COPY LICENSE.md /home/seluser/
 COPY Analytics.md /home/seluser/
@@ -411,7 +430,12 @@ RUN sudo chmod +x /home/seluser/zalenium.sh \
   && sudo chmod +x /home/seluser/wait-saucelabs.sh \
   && sudo chmod +x /home/seluser/start-testingbot.sh \
   && sudo chmod +x /home/seluser/wait-testingbot.sh \
+  && sudo chmod +x /usr/bin/log \
+  && sudo chmod +x /usr/bin/error \
   && sudo chmod +x /usr/bin/entry.sh
+
+# We need the entry.sh to run as root so we can change the uid later on
+USER root
 
 # IMPORTANT: Using the string form `CMD "entry.sh"` without
 # brackets [] causes Docker to run your process
