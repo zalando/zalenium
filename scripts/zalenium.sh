@@ -16,6 +16,7 @@ SCREEN_HEIGHT=1880
 TZ="Europe/Berlin"
 SEND_ANONYMOUS_USAGE_INFO=true
 START_TUNNEL=false
+DEBUG_ENABLED=false
 
 GA_TRACKING_ID="UA-88441352-3"
 GA_ENDPOINT=https://www.google-analytics.com/collect
@@ -329,7 +330,8 @@ StartUp()
     mkdir -p logs
 
     java -cp ${SELENIUM_ARTIFACT}:${ZALENIUM_ARTIFACT} org.openqa.grid.selenium.GridLauncherV3 \
-    -role hub -port 4445 -servlets de.zalando.tip.zalenium.servlet.live > logs/stdout.zalenium.hub.log &
+    -role hub -port 4445 -servlets de.zalando.tip.zalenium.servlet.live \
+    -debug ${DEBUG_ENABLED} > logs/stdout.zalenium.hub.log &
     echo $! > ${PID_PATH_SELENIUM}
 
     if ! timeout --foreground "1m" bash -c WaitSeleniumHub; then
@@ -343,7 +345,7 @@ StartUp()
 
     java -jar ${SELENIUM_ARTIFACT} -role node -hub http://localhost:4444/grid/register \
      -proxy de.zalando.tip.zalenium.proxy.DockerSeleniumStarterRemoteProxy \
-     -port 30000 > logs/stdout.zalenium.docker.node.log &
+     -port 30000 -debug ${DEBUG_ENABLED} > logs/stdout.zalenium.docker.node.log &
     echo $! > ${PID_PATH_DOCKER_SELENIUM_NODE}
 
     if ! timeout --foreground "30s" bash -c WaitStarterProxy; then
@@ -366,7 +368,7 @@ StartUp()
         echo "Starting Sauce Labs node..."
         java -jar ${SELENIUM_ARTIFACT} -role node -hub http://localhost:4444/grid/register \
          -proxy de.zalando.tip.zalenium.proxy.SauceLabsRemoteProxy \
-         -port 30001 > logs/stdout.zalenium.sauce.node.log &
+         -port 30001 -debug ${DEBUG_ENABLED} > logs/stdout.zalenium.sauce.node.log &
         echo $! > ${PID_PATH_SAUCE_LABS_NODE}
 
         if ! timeout --foreground "40s" bash -c WaitSauceLabsProxy; then
@@ -392,7 +394,7 @@ StartUp()
         echo "Starting Browser Stack node..."
         java -jar ${SELENIUM_ARTIFACT} -role node -hub http://localhost:4444/grid/register \
          -proxy de.zalando.tip.zalenium.proxy.BrowserStackRemoteProxy \
-         -port 30002 > logs/stdout.zalenium.browserstack.node.log &
+         -port 30002 -debug ${DEBUG_ENABLED} > logs/stdout.zalenium.browserstack.node.log &
         echo $! > ${PID_PATH_BROWSER_STACK_NODE}
 
         if ! timeout --foreground "40s" bash -c WaitBrowserStackProxy; then
@@ -417,7 +419,7 @@ StartUp()
         echo "Starting TestingBot node..."
         java -jar ${SELENIUM_ARTIFACT} -role node -hub http://localhost:4444/grid/register \
          -proxy de.zalando.tip.zalenium.proxy.TestingBotRemoteProxy \
-         -port 30003 > logs/stdout.zalenium.testingbot.node.log &
+         -port 30003 -debug ${DEBUG_ENABLED} > logs/stdout.zalenium.testingbot.node.log &
         echo $! > ${PID_PATH_TESTINGBOT_NODE}
 
         if ! timeout --foreground "40s" bash -c WaitTestingBotProxy; then
@@ -620,6 +622,7 @@ function usage()
     echo -e "\t --screenHeight -> Sets the screen height. Defaults to 1880"
     echo -e "\t --timeZone -> Sets the time zone in the containers. Defaults to \"Europe/Berlin\""
     echo -e "\t --sendAnonymousUsageInfo -> Collects anonymous usage of the tool. Defaults to 'true'"
+    echo -e "\t --debugEnabled -> enables LogLevel.FINE. Defaults to 'false'"
     echo ""
     echo -e "\t stop"
     echo ""
@@ -687,6 +690,9 @@ case ${SCRIPT_ACTION} in
                     ;;
                 --startTunnel)
                     START_TUNNEL=${VALUE}
+                    ;;
+                --debugEnabled)
+                    DEBUG_ENABLED=${VALUE}
                     ;;
                 *)
                     echo "ERROR: unknown parameter \"$PARAM\""
