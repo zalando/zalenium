@@ -4,7 +4,7 @@ package de.zalando.tip.zalenium.proxy;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import de.zalando.tip.zalenium.util.*;
-import org.awaitility.Duration;
+import org.apache.commons.io.FileUtils;
 import org.hamcrest.CoreMatchers;
 import org.junit.*;
 import org.junit.rules.TemporaryFolder;
@@ -25,10 +25,9 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.*;
-import java.util.concurrent.Callable;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.mockito.Mockito.*;
-import static org.awaitility.Awaitility.await;
 
 public class TestingBotRemoteProxyTest {
 
@@ -305,17 +304,16 @@ public class TestingBotRemoteProxyTest {
             File amountOfRunTests = new File(videosFolder, "amount_of_run_tests.txt");
             Assert.assertFalse(Dashboard.isFileOlderThanOneDay(amountOfRunTests.lastModified()));
             Assert.assertFalse(Dashboard.isFileOlderThanOneDay(testList.lastModified()));
-            Assert.assertEquals(2, Dashboard.getExecutedTests());
-            amountOfRunTests.setLastModified(25 * 60 * 60 * 1000);
-            testList.setLastModified(25 * 60 * 60 * 1000);
+            amountOfRunTests.setLastModified(new Date().getTime() - (25 * 60 * 60 * 1000));
+            testList.setLastModified(new Date().getTime() - (25 * 60 * 60 * 1000));
             Assert.assertTrue(Dashboard.isFileOlderThanOneDay(amountOfRunTests.lastModified()));
             Assert.assertTrue(Dashboard.isFileOlderThanOneDay(testList.lastModified()));
             Dashboard.updateDashboard(testInformation);
             Assert.assertFalse(Dashboard.isFileOlderThanOneDay(amountOfRunTests.lastModified()));
             Assert.assertFalse(Dashboard.isFileOlderThanOneDay(testList.lastModified()));
-            Assert.assertEquals(3, Dashboard.getExecutedTests());
             Dashboard.updateDashboard(testInformation);
-            Assert.assertEquals(4, Dashboard.getExecutedTests());
+            String executedTests = FileUtils.readFileToString(amountOfRunTests, UTF_8);
+            Assert.assertEquals(Dashboard.getExecutedTests(), Integer.valueOf(executedTests).intValue());
         } finally {
             Dashboard.restoreCommonProxyUtilities();
         }
