@@ -29,7 +29,7 @@ else
 fi
 
 # If this was docker run with: -e HOST_GID="$(id -g)" -e HOST_UID="$(id -u)"
-if [ ${HOST_UID} != "" ] && [ ${HOST_GID} != "" ]; then
+if [ "${HOST_UID}" != "" ] && [ "${HOST_GID}" != "" ]; then
     # Then we can create a user with the same group and user id (*nix)
     # so it can run docker without sudo
     sudo usermod -u ${HOST_UID} -g ${HOST_GID} seluser
