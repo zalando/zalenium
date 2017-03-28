@@ -25,6 +25,11 @@ public class Dashboard {
 
     private static CommonProxyUtilities commonProxyUtilities = new CommonProxyUtilities();
 
+    @VisibleForTesting
+    public static int getExecutedTests() {
+        return executedTests;
+    }
+
     private static int executedTests = 0;
 
     public static synchronized void updateDashboard(TestInformation testInformation) throws IOException {
