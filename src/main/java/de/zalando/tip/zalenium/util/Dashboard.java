@@ -1,5 +1,6 @@
 package de.zalando.tip.zalenium.util;
 
+import com.google.common.annotations.VisibleForTesting;
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
@@ -91,7 +92,17 @@ public class Dashboard {
         }
     }
 
-    private static boolean isFileOlderThanOneDay(long lastModified) {
+    @VisibleForTesting
+    public static CommonProxyUtilities restoreCommonProxyUtilities() {
+        return commonProxyUtilities = new CommonProxyUtilities();
+    }
+
+    public static void setCommonProxyUtilities(CommonProxyUtilities commonProxyUtilities) {
+        Dashboard.commonProxyUtilities = commonProxyUtilities;
+    }
+
+    @VisibleForTesting
+    public static boolean isFileOlderThanOneDay(long lastModified) {
         long timeSinceLastModification = new Date().getTime() - lastModified;
         return timeSinceLastModification > (24 * 60 * 60 * 1000);
     }

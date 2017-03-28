@@ -3,15 +3,10 @@ package de.zalando.tip.zalenium.proxy;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import de.zalando.tip.zalenium.util.CommonProxyUtilities;
-import de.zalando.tip.zalenium.util.Environment;
-import de.zalando.tip.zalenium.util.TestInformation;
-import de.zalando.tip.zalenium.util.TestUtils;
+import de.zalando.tip.zalenium.util.*;
 import org.hamcrest.CoreMatchers;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.*;
+import org.junit.rules.TemporaryFolder;
 import org.openqa.grid.common.RegistrationRequest;
 import org.openqa.grid.internal.ExternalSessionKey;
 import org.openqa.grid.internal.Registry;
@@ -36,6 +31,9 @@ public class TestingBotRemoteProxyTest {
 
     private TestingBotRemoteProxy testingBotProxy;
     private Registry registry;
+
+    @Rule
+    public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
     @SuppressWarnings("ConstantConditions")
     @Before
@@ -63,6 +61,13 @@ public class TestingBotRemoteProxyTest {
         request = TestUtils.getRegistrationRequestForTesting(30000,
                 DockerSeleniumStarterRemoteProxy.class.getCanonicalName());
         DockerSeleniumStarterRemoteProxy dsStarterProxy = DockerSeleniumStarterRemoteProxy.getNewInstance(request, registry);
+
+        // Temporal folder for dashboard files
+        temporaryFolder.newFile("list_template.html");
+        temporaryFolder.newFile("dashboard_template.html");
+        temporaryFolder.newFile("zalando.ico");
+        temporaryFolder.newFolder("css");
+        temporaryFolder.newFolder("js");
 
         // We add both nodes to the registry
         registry.add(testingBotProxy);
@@ -206,6 +211,107 @@ public class TestingBotRemoteProxyTest {
         Assert.assertEquals("Safari9 9, CAPITAN", testInformation.getBrowserAndPlatform());
         Assert.assertEquals("https://s3-eu-west-1.amazonaws.com/eurectestingbot/2cf5d115-ca6f-4bc4-bc06-a4fca00836ce.mp4",
                 testInformation.getVideoUrl());
+    }
+
+    @Test
+    public void dashboardFilesGetCopied() throws IOException {
+        try {
+            // Capability which should result in a created session
+            Map<String, Object> requestedCapability = new HashMap<>();
+            requestedCapability.put(CapabilityType.BROWSER_NAME, BrowserType.CHROME);
+            requestedCapability.put(CapabilityType.PLATFORM, Platform.MAC);
+
+            // Getting a test session in the TestingBot node
+            TestingBotRemoteProxy spyProxy = spy(testingBotProxy);
+            TestSession testSession = spyProxy.getNewSession(requestedCapability);
+            Assert.assertNotNull(testSession);
+            String mockSeleniumSessionId = "2cf5d115-ca6f-4bc4-bc06-a4fca00836ce";
+            testSession.setExternalKey(new ExternalSessionKey(mockSeleniumSessionId));
+
+            // We release the session, the node should be free
+            WebDriverRequest request = mock(WebDriverRequest.class);
+            HttpServletResponse response = mock(HttpServletResponse.class);
+            when(request.getMethod()).thenReturn("DELETE");
+            when(request.getRequestType()).thenReturn(RequestType.STOP_SESSION);
+
+            testSession.getSlot().doFinishRelease();
+            spyProxy.afterCommand(testSession, request, response);
+
+            CommonProxyUtilities commonProxyUtilities = mock(CommonProxyUtilities.class);
+            when(commonProxyUtilities.currentLocalPath()).thenReturn(temporaryFolder.getRoot().getAbsolutePath());
+            when(commonProxyUtilities.getShortDateAndTime()).thenCallRealMethod();
+            Dashboard.setCommonProxyUtilities(commonProxyUtilities);
+
+            TestInformation testInformation = spyProxy.getTestInformation(mockSeleniumSessionId);
+            Dashboard.updateDashboard(testInformation);
+            File videosFolder = new File(temporaryFolder.getRoot().getAbsolutePath(), "videos");
+            Assert.assertTrue(videosFolder.isDirectory());
+            File amountOfRunTests = new File(videosFolder, "amount_of_run_tests.txt");
+            Assert.assertTrue(amountOfRunTests.exists());
+            File dashboard = new File(videosFolder, "dashboard.html");
+            Assert.assertTrue(dashboard.exists());
+            Assert.assertTrue(dashboard.isFile());
+            File testList = new File(videosFolder, "list.html");
+            Assert.assertTrue(testList.exists());
+            Assert.assertTrue(testList.isFile());
+            File cssFolder = new File(videosFolder, "css");
+            Assert.assertTrue(cssFolder.exists());
+            Assert.assertTrue(cssFolder.isDirectory());
+            File jsFolder = new File(videosFolder, "js");
+            Assert.assertTrue(jsFolder.exists());
+            Assert.assertTrue(jsFolder.isDirectory());
+        } finally {
+            Dashboard.restoreCommonProxyUtilities();
+        }
+    }
+
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    @Test
+    public void dashboardFilesGetRenewed() throws IOException {
+        try {
+            // Capability which should result in a created session
+            Map<String, Object> requestedCapability = new HashMap<>();
+            requestedCapability.put(CapabilityType.BROWSER_NAME, BrowserType.CHROME);
+            requestedCapability.put(CapabilityType.PLATFORM, Platform.WIN10);
+
+            // Getting a test session in the TestingBot node
+            TestingBotRemoteProxy spyProxy = spy(testingBotProxy);
+            TestSession testSession = spyProxy.getNewSession(requestedCapability);
+            Assert.assertNotNull(testSession);
+            String mockSeleniumSessionId = "2cf5d115-ca6f-4bc4-bc06-a4fca00836ce";
+            testSession.setExternalKey(new ExternalSessionKey(mockSeleniumSessionId));
+
+            // We release the session, the node should be free
+            WebDriverRequest request = mock(WebDriverRequest.class);
+            HttpServletResponse response = mock(HttpServletResponse.class);
+            when(request.getMethod()).thenReturn("DELETE");
+            when(request.getRequestType()).thenReturn(RequestType.STOP_SESSION);
+
+            testSession.getSlot().doFinishRelease();
+            spyProxy.afterCommand(testSession, request, response);
+
+            CommonProxyUtilities commonProxyUtilities = mock(CommonProxyUtilities.class);
+            when(commonProxyUtilities.currentLocalPath()).thenReturn(temporaryFolder.getRoot().getAbsolutePath());
+            when(commonProxyUtilities.getShortDateAndTime()).thenCallRealMethod();
+            Dashboard.setCommonProxyUtilities(commonProxyUtilities);
+
+            TestInformation testInformation = spyProxy.getTestInformation(mockSeleniumSessionId);
+            Dashboard.updateDashboard(testInformation);
+            File videosFolder = new File(temporaryFolder.getRoot().getAbsolutePath(), "videos");
+            File testList = new File(videosFolder, "list.html");
+            File amountOfRunTests = new File(videosFolder, "amount_of_run_tests.txt");
+            Assert.assertFalse(Dashboard.isFileOlderThanOneDay(amountOfRunTests.lastModified()));
+            Assert.assertFalse(Dashboard.isFileOlderThanOneDay(testList.lastModified()));
+            amountOfRunTests.setLastModified(25 * 60 * 60 * 1000);
+            testList.setLastModified(25 * 60 * 60 * 1000);
+            Assert.assertTrue(Dashboard.isFileOlderThanOneDay(amountOfRunTests.lastModified()));
+            Assert.assertTrue(Dashboard.isFileOlderThanOneDay(testList.lastModified()));
+            Dashboard.updateDashboard(testInformation);
+            Assert.assertFalse(Dashboard.isFileOlderThanOneDay(amountOfRunTests.lastModified()));
+            Assert.assertFalse(Dashboard.isFileOlderThanOneDay(testList.lastModified()));
+        } finally {
+            Dashboard.restoreCommonProxyUtilities();
+        }
     }
 
     @Test
