@@ -18,19 +18,16 @@ import static java.nio.charset.StandardCharsets.*;
 @SuppressWarnings("ResultOfMethodCallIgnored")
 public class Dashboard {
 
-    private static final Logger LOGGER = Logger.getLogger(Dashboard.class.getName());
-
     @SuppressWarnings("WeakerAccess")
     public static final String VIDEOS_FOLDER_NAME = "videos";
-
+    private static final Logger LOGGER = Logger.getLogger(Dashboard.class.getName());
     private static CommonProxyUtilities commonProxyUtilities = new CommonProxyUtilities();
+    private static int executedTests = 0;
 
     @VisibleForTesting
     public static int getExecutedTests() {
         return executedTests;
     }
-
-    private static int executedTests = 0;
 
     public static synchronized void updateDashboard(TestInformation testInformation) throws IOException {
         String currentLocalPath = commonProxyUtilities.currentLocalPath();

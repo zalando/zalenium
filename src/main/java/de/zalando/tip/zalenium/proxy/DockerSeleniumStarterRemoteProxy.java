@@ -391,12 +391,13 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
         return 98;
     }
 
-    boolean startDockerSeleniumContainer(String browser) {
+    @VisibleForTesting
+    public boolean startDockerSeleniumContainer(String browser) {
         return startDockerSeleniumContainer(browser, false);
     }
 
     @VisibleForTesting
-    boolean startDockerSeleniumContainer(String browser, boolean forceCreation) {
+    public boolean startDockerSeleniumContainer(String browser, boolean forceCreation) {
 
         if (validateAmountOfDockerSeleniumContainers() || forceCreation) {
 

@@ -125,6 +125,33 @@ WaitTestingBotProxy()
 }
 export -f WaitTestingBotProxy
 
+WaitForVideosTransferred() {
+    local __amount_of_run_tests=$(</home/seluser/videos/amount_of_run_tests.txt)
+    local __amount_of_mp4_files=$(ls -1q /home/seluser/videos/*.mp4 | wc -l)
+
+    if [ "${__amount_of_run_tests}" -gt 0 ]; then
+        while [ "${__amount_of_mp4_files}" -lt "${__amount_of_run_tests}" ]; do
+            log "Waiting for ${__amount_of_mp4_files} mp4 files to be a total of ${__amount_of_run_tests}..."
+            sleep 0.5
+
+            # Also check if there are mkv, this would mean that
+            # docker-selenium failed to convert them to mp4
+            local __amount_of_mkv_files=$(ls -1q /home/seluser/videos/*.mkv | wc -l)
+            if [ "${__amount_of_mkv_files}" -gt 0 ]; then
+                for __filename in /home/seluser/videos/*.mkv; do
+                    local __new_file_name="$(basename ${__filename} .mkv).mp4"
+                    log "Renaming ${__filename} into ${__new_file_name} ..."
+                    mv "${__filename}" "${__new_file_name}"
+                    log "You may consider re-encoding the file to fix the video lenght later on..."
+                done
+            fi
+
+            __amount_of_mp4_files=$(ls -1q /home/seluser/videos/*.mp4 | wc -l)
+        done
+    fi
+}
+export -f WaitForVideosTransferred
+
 EnsureCleanEnv()
 {
     log "Ensuring no stale Zalenium related containers are still around..."
@@ -206,7 +233,7 @@ trap DockerTerminate SIGTERM SIGINT SIGKILL
 StartUp()
 {
     EnsureDockerWorks
-    CONTAINER_ID=$(cat /proc/self/cgroup | grep -Po '(?<=docker/)([a-z0-9]+)' | head -1)
+    CONTAINER_ID=$(grep -Po '(?<=docker/)([a-z0-9]+)' /proc/self/cgroup | head -1)
     CONTAINER_NAME=$(docker inspect ${CONTAINER_ID} | jq -r '.[0].Name' | sed 's/\///g')
     CONTAINER_LIVE_PREVIEW_PORT=$(docker inspect ${CONTAINER_ID} | jq -r '.[0].NetworkSettings.Ports."5555/tcp"' | jq -r '.[0].HostPort')
     EnsureCleanEnv
@@ -572,6 +599,17 @@ ShutDown()
             echo "Failed to send kill signal to the TestingBot tunnel!"
         else
             rm ${PID_PATH_TESTINGBOT_TUNNEL}
+        fi
+    fi
+
+    if [ "${VIDEO_RECORDING_ENABLED}" = true ] && \
+       [ -f /home/seluser/videos/amount_of_run_tests.txt ]; then
+        # Wait for the dashboard and the videos, if applies
+        if timeout --foreground "2m" bash -c WaitForVideosTransferred; then
+            local __total="$(</home/seluser/videos/amount_of_run_tests.txt)"
+            log "WaitForVideosTransferred succeeded for a total of ${__total}"
+        else
+            log "WaitForVideosTransferred failed after 2 minutes!"
         fi
     fi
 
