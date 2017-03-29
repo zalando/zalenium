@@ -44,6 +44,7 @@ StartUp()
     if [ "${IN_TRAVIS}" = "true" ]; then
         VIDEOS_FOLDER=/tmp/videos
     fi
+    mkdir -p "${VIDEOS_FOLDER}"
 
     if [ "$INTEGRATION_TO_TEST" = sauceLabs ]; then
         echo "Starting Zalenium in docker with Sauce Labs..."
