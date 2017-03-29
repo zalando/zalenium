@@ -423,7 +423,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
 
             try {
                 String containerId = dockerSeleniumRemoteProxy.getContainerId();
-                dockerClient.stopContainer(containerId, 60);
+                dockerClient.stopContainer(containerId, 5);
             } catch (Exception e) {
                 LOGGER.log(Level.SEVERE, dockerSeleniumRemoteProxy.getId() + " " + e.getMessage(), e);
                 dockerSeleniumRemoteProxy.ga.trackException(e);
