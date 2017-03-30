@@ -28,27 +28,52 @@ else
     fi
 fi
 
+__run_with_gosu="false"
+
 # If this was docker run with: -e HOST_GID="$(id -g)" -e HOST_UID="$(id -u)"
 if [ "${HOST_UID}" != "" ] && [ "${HOST_GID}" != "" ]; then
     # Then we can create a user with the same group and user id (*nix)
-    # so it can run docker without sudo
-    sudo usermod -u ${HOST_UID} -g ${HOST_GID} seluser
-
-    export HOME="/home/seluser"
-    export USER="seluser"
-
-    DOCKER_HOST_GID="$(stat --format="%g" /var/run/docker.sock)"
-    if [ ${DOCKER_HOST_GID} != "0" ]; then
-        # We create a docker group to which we can add our seluser
-        sudo groupadd --gid ${DOCKER_HOST_GID} docker || true
-        DOCKER_GROUP_NAME=$(getent group ${DOCKER_HOST_GID} | cut -d: -f1)
-        if [ "${DOCKER_GROUP_NAME}" != "" ]; then
-            sudo gpasswd -a seluser ${DOCKER_GROUP_NAME}
+    # so it can run docker without sudo.
+    # But guard against errors
+    if sudo usermod -u ${HOST_UID} -g ${HOST_GID} seluser; then
+        export HOME="/home/seluser"
+        export USER="seluser"
+        echo -n "stat: /var/run/docker.sock:: "
+        if stat --format="%g" /var/run/docker.sock; then
+            DOCKER_HOST_GID="$(stat --format="%g" /var/run/docker.sock)"
+            if [ ${DOCKER_HOST_GID} != "0" ]; then
+                # We create a docker group to which we can add our seluser
+                echo -n "sudo groupadd --gid ${DOCKER_HOST_GID} docker:: "
+                if sudo groupadd --gid ${DOCKER_HOST_GID} docker; then
+                    if getent group ${DOCKER_HOST_GID} | cut -d: -f1; then
+                        DOCKER_GROUP_NAME=$(getent group ${DOCKER_HOST_GID} | cut -d: -f1)
+                        if [ "${DOCKER_GROUP_NAME}" != "" ]; then
+                            if sudo gpasswd -a seluser ${DOCKER_GROUP_NAME}; then
+                                __run_with_gosu="true"
+                            else
+                                log "Error while gpasswd -a seluser"
+                            fi
+                        else
+                            log "Var DOCKER_GROUP_NAME is ${DOCKER_GROUP_NAME}"
+                        fi
+                    else
+                        log "Error while getent group ${DOCKER_HOST_GID}"
+                    fi
+                else
+                    log "Error while sudo groupadd --gid ${DOCKER_HOST_GID} docker"
+                fi
+            else
+                __run_with_gosu="true"
+            fi
         else
-            error "Var DOCKER_GROUP_NAME is ${DOCKER_GROUP_NAME}"
+            log "Error while stat /var/run/docker.sock"
         fi
+    else
+        log "Error while sudo usermod -u ${HOST_UID} -g ${HOST_GID} seluser"
     fi
+fi
 
+if [ "${__run_with_gosu}" == "true" ]; then
     exec gosu seluser ./zalenium.sh "$@"
 else
     # We will need sudo to run docker alongside docker
