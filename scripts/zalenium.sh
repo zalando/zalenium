@@ -138,11 +138,11 @@ WaitForVideosTransferred() {
             # docker-selenium failed to convert them to mp4
             local __amount_of_mkv_files=$(ls -1q /home/seluser/videos/**/*.mkv | wc -l)
             if [ "${__amount_of_mkv_files}" -gt 0 ]; then
-                for __filename in /home/seluser/videos/*.mkv; do
+                for __filename in /home/seluser/videos/**/*.mkv; do
                     local __new_file_name="$(basename ${__filename} .mkv).mp4"
                     log "Renaming ${__filename} into ${__new_file_name} ..."
                     mv "${__filename}" "${__new_file_name}"
-                    log "You may consider re-encoding the file to fix the video lenght later on..."
+                    log "You may consider re-encoding the file to fix the video length later on..."
                 done
             fi
 
