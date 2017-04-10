@@ -127,7 +127,7 @@ export -f WaitTestingBotProxy
 
 WaitForVideosTransferred() {
     local __amount_of_run_tests=$(</home/seluser/videos/amount_of_run_tests.txt)
-    local __amount_of_mp4_files=$(ls -1q /home/seluser/videos/*.mp4 | wc -l)
+    local __amount_of_mp4_files=$(ls -1q /home/seluser/videos/**/*.mp4 | wc -l)
 
     if [ "${__amount_of_run_tests}" -gt 0 ]; then
         while [ "${__amount_of_mp4_files}" -lt "${__amount_of_run_tests}" ]; do
@@ -136,7 +136,7 @@ WaitForVideosTransferred() {
 
             # Also check if there are mkv, this would mean that
             # docker-selenium failed to convert them to mp4
-            local __amount_of_mkv_files=$(ls -1q /home/seluser/videos/*.mkv | wc -l)
+            local __amount_of_mkv_files=$(ls -1q /home/seluser/videos/**/*.mkv | wc -l)
             if [ "${__amount_of_mkv_files}" -gt 0 ]; then
                 for __filename in /home/seluser/videos/*.mkv; do
                     local __new_file_name="$(basename ${__filename} .mkv).mp4"
@@ -146,7 +146,7 @@ WaitForVideosTransferred() {
                 done
             fi
 
-            __amount_of_mp4_files=$(ls -1q /home/seluser/videos/*.mp4 | wc -l)
+            __amount_of_mp4_files=$(ls -1q /home/seluser/videos/**/*.mp4 | wc -l)
         done
     fi
 }
