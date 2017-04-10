@@ -20,7 +20,6 @@ public class TestInformation {
     private String videoUrl;
     private String videoFolderPath;
     private String testFolderName;
-    private String testFolderPath;
 
     public String getVideoFolderPath() {
         return videoFolderPath;
@@ -80,7 +79,6 @@ public class TestInformation {
         this.videoUrl = videoUrl;
         this.fileExtension = fileExtension;
         buildVideoFileName();
-        this.testFolderPath = commonProxyUtilities.currentLocalPath() + "/" + this.testFolderName;
         this.videoFolderPath = commonProxyUtilities.currentLocalPath() + "/" + Dashboard.VIDEOS_FOLDER_NAME + "/" +
                 this.testFolderName;
     }
