@@ -34,7 +34,8 @@ public class Dashboard {
         String localVideosPath = currentLocalPath + "/" + VIDEOS_FOLDER_NAME;
 
         String testEntry = FileUtils.readFileToString(new File(currentLocalPath, "list_template.html"), UTF_8);
-        testEntry = testEntry.replace("{fileName}", testInformation.getFileName()).
+        String fileName = testInformation.getTestFolderName() + "/" + testInformation.getFileName();
+        testEntry = testEntry.replace("{fileName}", fileName).
                 replace("{testName}", testInformation.getTestName()).
                 replace("{dateAndTime}", commonProxyUtilities.getShortDateAndTime()).
                 replace("{browserAndPlatform}", testInformation.getBrowserAndPlatform()).

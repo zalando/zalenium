@@ -32,6 +32,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -60,6 +61,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     private long maxTestIdleTimeSecs;
     private String testGroup;
     private String testName;
+    private String containerId;
     private TestInformation testInformation;
     private boolean afterSessionEventReceived = false;
     private DockerSeleniumNodePoller dockerSeleniumNodePollerThread = null;
@@ -70,6 +72,11 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         super(request, registry);
         this.amountOfExecutedTests = 0;
         readEnvVarForVideoRecording();
+        try {
+            containerId = getContainerId();
+        } catch (Exception e) {
+            LOGGER.log(Level.FINE, "{0} Problems getting the container ID", getId());
+        }
     }
 
     @VisibleForTesting
@@ -260,7 +267,6 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     protected void videoRecording(final VideoRecordingAction action) {
         if (isVideoRecordingEnabled()) {
             try {
-                String containerId = getContainerId();
                 processVideoAction(action, containerId);
             } catch (Exception e) {
                 LOGGER.log(Level.SEVERE, getId() + e.toString(), e);
@@ -345,6 +351,36 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         }
     }
 
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    @VisibleForTesting
+    void copyLogs(final String containerId) throws IOException, DockerException, InterruptedException, URISyntaxException {
+        try (TarArchiveInputStream tarStream = new TarArchiveInputStream(dockerClient.archiveContainer(containerId,
+                "/var/log/cont/"))) {
+            TarArchiveEntry entry;
+            List<String> logFileNames = new ArrayList<>();
+            while ((entry = tarStream.getNextTarEntry()) != null) {
+                if (entry.isDirectory()) {
+                    continue;
+                }
+                String fileName = entry.getName().replace("cont/", "");
+                logFileNames.add(fileName);
+                File logFile = new File(testInformation.getVideoFolderPath(), fileName);
+                File parent = logFile.getParentFile();
+                if (!parent.exists()) {
+                    parent.mkdirs();
+                }
+                OutputStream outputStream = new FileOutputStream(logFile);
+                IOUtils.copy(tarStream, outputStream);
+                outputStream.close();
+            }
+            testInformation.setLogFiles(logFileNames);
+            LOGGER.log(Level.INFO, "{0} Logs copied to: {1}", new Object[]{getId(), testInformation.getVideoFolderPath()});
+        } catch (Exception e) {
+            LOGGER.log(Level.FINE, getId() + " Something happened while copying the video file, " +
+                    "most of the time it is an issue while closing the input/output stream, which is usually OK.", e);
+        }
+    }
+
     public enum VideoRecordingAction {
         START_RECORDING("start-video"), STOP_RECORDING("stop-video");
 
@@ -392,7 +428,11 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
 
                 if (isTestCompleted || isTestIdle) {
                     dockerSeleniumRemoteProxy.videoRecording(VideoRecordingAction.STOP_RECORDING);
-                    // COPY LOGS HERE
+                    try {
+                        dockerSeleniumRemoteProxy.copyLogs(dockerSeleniumRemoteProxy.containerId);
+                    } catch (Exception e) {
+                        LOGGER.log(Level.FINE, dockerSeleniumRemoteProxy.getId() + " Error copying the logs.", e);
+                    }
                     try {
                         Dashboard.updateDashboard(dockerSeleniumRemoteProxy.testInformation);
                     } catch (IOException e) {
@@ -428,8 +468,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
             }
 
             try {
-                String containerId = dockerSeleniumRemoteProxy.getContainerId();
-                dockerClient.stopContainer(containerId, 5);
+                dockerClient.stopContainer(dockerSeleniumRemoteProxy.containerId, 5);
             } catch (Exception e) {
                 LOGGER.log(Level.SEVERE, dockerSeleniumRemoteProxy.getId() + " " + e.getMessage(), e);
                 dockerSeleniumRemoteProxy.ga.trackException(e);
