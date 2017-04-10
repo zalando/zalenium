@@ -5,7 +5,8 @@ package de.zalando.tip.zalenium.util;
  */
 @SuppressWarnings("WeakerAccess")
 public class TestInformation {
-    private static final String FILE_NAME_TEMPLATE = "{proxyName}_{testName}_{browser}_{platform}_{timestamp}{fileExtension}";
+    private static final String FOLDER_NAME_TEMPLATE = "{proxyName}_{testName}_{browser}_{platform}_{timestamp}";
+    private static final String FILE_NAME_TEMPLATE = "{fileName}{fileExtension}";
     private static final CommonProxyUtilities commonProxyUtilities = new CommonProxyUtilities();
     private String seleniumSessionId;
     private String testName;
@@ -18,6 +19,8 @@ public class TestInformation {
     private String fileExtension;
     private String videoUrl;
     private String videoFolderPath;
+    private String testFolderName;
+    private String testFolderPath;
 
     public String getVideoFolderPath() {
         return videoFolderPath;
@@ -39,16 +42,20 @@ public class TestInformation {
         return videoUrl;
     }
 
+    @SuppressWarnings("SameParameterValue")
     public void setFileExtension(String fileExtension) {
         this.fileExtension = fileExtension;
+        buildVideoFileName();
     }
 
     public void buildVideoFileName() {
-        this.fileName = FILE_NAME_TEMPLATE.replace("{proxyName}", this.proxyName.toLowerCase()).
+        this.testFolderName = FOLDER_NAME_TEMPLATE.replace("{proxyName}", this.proxyName.toLowerCase()).
                 replace("{testName}", getTestName()).
                 replace("{browser}", this.browser).
                 replace("{platform}", this.platform).
                 replace("{timestamp}", commonProxyUtilities.getCurrentDateAndTimeFormatted()).
+                replace(" ", "_");
+        this.fileName = FILE_NAME_TEMPLATE.replace("{fileName}", this.testFolderName).
                 replace("{fileExtension}", fileExtension).
                 replace(" ", "_");
     }
@@ -71,8 +78,10 @@ public class TestInformation {
         this.platform = platform;
         this.platformVersion = platformVersion;
         this.videoUrl = videoUrl;
-        this.videoFolderPath = commonProxyUtilities.currentLocalPath() + "/" + Dashboard.VIDEOS_FOLDER_NAME;
         this.fileExtension = fileExtension;
         buildVideoFileName();
+        this.testFolderPath = commonProxyUtilities.currentLocalPath() + "/" + this.testFolderName;
+        this.videoFolderPath = commonProxyUtilities.currentLocalPath() + "/" + Dashboard.VIDEOS_FOLDER_NAME + "/" +
+                this.testFolderName;
     }
 }

@@ -58,10 +58,9 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     private static Environment env = defaultEnvironment;
     private int amountOfExecutedTests;
     private long maxTestIdleTimeSecs;
-    private String testName;
     private String testGroup;
-    private String browserName;
-    private String browserVersion;
+    private String testName;
+    private TestInformation testInformation;
     private boolean afterSessionEventReceived = false;
     private DockerSeleniumNodePoller dockerSeleniumNodePollerThread = null;
     private GoogleAnalyticsApi ga = new GoogleAnalyticsApi();
@@ -122,7 +121,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         }
         if (increaseCounter()) {
             TestSession newSession = super.getNewSession(requestedCapability);
-            browserName = requestedCapability.getOrDefault(CapabilityType.BROWSER_NAME, "").toString();
+            String browserName = requestedCapability.getOrDefault(CapabilityType.BROWSER_NAME, "").toString();
             testName = requestedCapability.getOrDefault("name", "").toString();
             if (testName.isEmpty()) {
                 testName = newSession.getExternalKey() != null ?
@@ -130,7 +129,9 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                         newSession.getInternalKey();
             }
             testGroup = requestedCapability.getOrDefault("group", "").toString();
-            browserVersion = newSession.getSlot().getCapabilities().getOrDefault("version", "").toString();
+            String browserVersion = newSession.getSlot().getCapabilities().getOrDefault("version", "").toString();
+            testInformation = new TestInformation(testName, testName, "Zalenium", browserName, browserVersion,
+                    Platform.LINUX.name(), "", "", "");
             maxTestIdleTimeSecs = getConfiguredIdleTimeout(requestedCapability);
             return newSession;
         }
@@ -326,8 +327,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                     continue;
                 }
                 String fileExtension = entry.getName().substring(entry.getName().lastIndexOf('.'));
-                TestInformation testInformation = new TestInformation(testName, testName, "Zalenium",
-                        browserName, browserVersion, Platform.LINUX.name(), "", fileExtension, "");
+                testInformation.setFileExtension(fileExtension);
                 File videoFile = new File(testInformation.getVideoFolderPath(), testInformation.getFileName());
                 File parent = videoFile.getParentFile();
                 if (!parent.exists()) {
@@ -336,7 +336,6 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                 OutputStream outputStream = new FileOutputStream(videoFile);
                 IOUtils.copy(tarStream, outputStream);
                 outputStream.close();
-                Dashboard.updateDashboard(testInformation);
                 LOGGER.log(Level.INFO, "{0} Video file copied to: {1}/{2}", new Object[]{getId(),
                         testInformation.getVideoFolderPath(), testInformation.getFileName()});
             }
@@ -393,6 +392,13 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
 
                 if (isTestCompleted || isTestIdle) {
                     dockerSeleniumRemoteProxy.videoRecording(VideoRecordingAction.STOP_RECORDING);
+                    // COPY LOGS HERE
+                    try {
+                        Dashboard.updateDashboard(dockerSeleniumRemoteProxy.testInformation);
+                    } catch (IOException e) {
+                        LOGGER.log(Level.FINE, dockerSeleniumRemoteProxy.getId() + " Error while updating the " +
+                                "dashboard.", e);
+                    }
                     shutdownNode(isTestIdle);
                     return;
                 }
