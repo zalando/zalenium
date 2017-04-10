@@ -233,7 +233,7 @@ trap DockerTerminate SIGTERM SIGINT SIGKILL
 StartUp()
 {
     EnsureDockerWorks
-    CONTAINER_ID=$(grep -Po '(?<=docker/)([a-z0-9]+)' /proc/self/cgroup | head -1)
+    CONTAINER_ID=$(grep docker /proc/self/cgroup | grep -o -E '[0-9a-f]{64}' | head -n 1)
     CONTAINER_NAME=$(docker inspect ${CONTAINER_ID} | jq -r '.[0].Name' | sed 's/\///g')
     CONTAINER_LIVE_PREVIEW_PORT=$(docker inspect ${CONTAINER_ID} | jq -r '.[0].NetworkSettings.Ports."5555/tcp"' | jq -r '.[0].HostPort')
     EnsureCleanEnv
