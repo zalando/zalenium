@@ -7,7 +7,7 @@ import java.util.List;
  */
 @SuppressWarnings("WeakerAccess")
 public class TestInformation {
-    private static final String FOLDER_NAME_TEMPLATE = "{proxyName}_{testName}_{browser}_{platform}_{timestamp}";
+    private static final String TEST_FILE_NAME_TEMPLATE = "{proxyName}_{testName}_{browser}_{platform}_{timestamp}";
     private static final String FILE_NAME_TEMPLATE = "{fileName}{fileExtension}";
     private static final CommonProxyUtilities commonProxyUtilities = new CommonProxyUtilities();
     private List<String> logFiles;
@@ -22,7 +22,7 @@ public class TestInformation {
     private String fileExtension;
     private String videoUrl;
     private String videoFolderPath;
-    private String testFolderName;
+    private String logsFolderPath;
 
     public TestInformation(String seleniumSessionId, String testName, String proxyName, String browser,
                            String browserVersion, String platform, String platformVersion, String fileExtension,
@@ -67,8 +67,8 @@ public class TestInformation {
         this.logFiles = logFiles;
     }
 
-    public String getTestFolderName() {
-        return testFolderName;
+    public String getLogsFolderPath() {
+        return logsFolderPath;
     }
 
     @SuppressWarnings("SameParameterValue")
@@ -78,17 +78,18 @@ public class TestInformation {
     }
 
     public void buildVideoFileName() {
-        this.testFolderName = FOLDER_NAME_TEMPLATE.replace("{proxyName}", this.proxyName.toLowerCase()).
+        String testNameNoExtension = TEST_FILE_NAME_TEMPLATE.replace("{proxyName}", this.proxyName.toLowerCase()).
                 replace("{testName}", getTestName()).
                 replace("{browser}", this.browser).
                 replace("{platform}", this.platform).
                 replace("{timestamp}", commonProxyUtilities.getCurrentDateAndTimeFormatted()).
                 replace(" ", "_");
-        this.fileName = FILE_NAME_TEMPLATE.replace("{fileName}", this.testFolderName).
+        this.fileName = FILE_NAME_TEMPLATE.replace("{fileName}", testNameNoExtension).
                 replace("{fileExtension}", fileExtension).
                 replace(" ", "_");
-        this.videoFolderPath = commonProxyUtilities.currentLocalPath() + "/" + Dashboard.VIDEOS_FOLDER_NAME + "/" +
-                this.testFolderName;
+        this.videoFolderPath = commonProxyUtilities.currentLocalPath() + "/" + Dashboard.VIDEOS_FOLDER_NAME;
+        this.logsFolderPath = commonProxyUtilities.currentLocalPath() + "/" + Dashboard.VIDEOS_FOLDER_NAME + "/" +
+                Dashboard.LOGS_FOLDER_NAME + "/" + testNameNoExtension;
     }
 
     public String getBrowserAndPlatform() {

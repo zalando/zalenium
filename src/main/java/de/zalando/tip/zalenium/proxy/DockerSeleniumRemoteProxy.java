@@ -364,7 +364,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                 }
                 String fileName = entry.getName().replace("cont/", "");
                 logFileNames.add(fileName);
-                File logFile = new File(testInformation.getVideoFolderPath(), fileName);
+                File logFile = new File(testInformation.getLogsFolderPath(), fileName);
                 File parent = logFile.getParentFile();
                 if (!parent.exists()) {
                     parent.mkdirs();
@@ -374,7 +374,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                 outputStream.close();
             }
             testInformation.setLogFiles(logFileNames);
-            LOGGER.log(Level.INFO, "{0} Logs copied to: {1}", new Object[]{getId(), testInformation.getVideoFolderPath()});
+            LOGGER.log(Level.INFO, "{0} Logs copied to: {1}", new Object[]{getId(), testInformation.getLogsFolderPath()});
         } catch (Exception e) {
             LOGGER.log(Level.FINE, getId() + " Something happened while copying the video file, " +
                     "most of the time it is an issue while closing the input/output stream, which is usually OK.", e);

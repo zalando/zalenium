@@ -20,6 +20,7 @@ public class Dashboard {
 
     @SuppressWarnings("WeakerAccess")
     public static final String VIDEOS_FOLDER_NAME = "videos";
+    public static final String LOGS_FOLDER_NAME = "logs";
     private static final Logger LOGGER = Logger.getLogger(Dashboard.class.getName());
     private static CommonProxyUtilities commonProxyUtilities = new CommonProxyUtilities();
     private static int executedTests = 0;
@@ -34,8 +35,7 @@ public class Dashboard {
         String localVideosPath = currentLocalPath + "/" + VIDEOS_FOLDER_NAME;
 
         String testEntry = FileUtils.readFileToString(new File(currentLocalPath, "list_template.html"), UTF_8);
-        String fileName = testInformation.getTestFolderName() + "/" + testInformation.getFileName();
-        testEntry = testEntry.replace("{fileName}", fileName).
+        testEntry = testEntry.replace("{fileName}", testInformation.getFileName()).
                 replace("{testName}", testInformation.getTestName()).
                 replace("{dateAndTime}", commonProxyUtilities.getShortDateAndTime()).
                 replace("{browserAndPlatform}", testInformation.getBrowserAndPlatform()).
@@ -96,8 +96,8 @@ public class Dashboard {
     }
 
     @VisibleForTesting
-    public static CommonProxyUtilities restoreCommonProxyUtilities() {
-        return commonProxyUtilities = new CommonProxyUtilities();
+    public static void restoreCommonProxyUtilities() {
+        commonProxyUtilities = new CommonProxyUtilities();
     }
 
     public static void setCommonProxyUtilities(CommonProxyUtilities commonProxyUtilities) {
