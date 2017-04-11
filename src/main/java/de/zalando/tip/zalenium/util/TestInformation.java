@@ -10,7 +10,6 @@ public class TestInformation {
     private static final String TEST_FILE_NAME_TEMPLATE = "{proxyName}_{testName}_{browser}_{platform}_{timestamp}";
     private static final String FILE_NAME_TEMPLATE = "{fileName}{fileExtension}";
     private static final CommonProxyUtilities commonProxyUtilities = new CommonProxyUtilities();
-    private List<String> logFiles;
     private String seleniumSessionId;
     private String testName;
     private String proxyName;
@@ -23,6 +22,7 @@ public class TestInformation {
     private String videoUrl;
     private String videoFolderPath;
     private String logsFolderPath;
+    private String testNameNoExtension;
 
     public TestInformation(String seleniumSessionId, String testName, String proxyName, String browser,
                            String browserVersion, String platform, String platformVersion, String fileExtension,
@@ -59,16 +59,32 @@ public class TestInformation {
         return videoUrl;
     }
 
-    public List<String> getLogFiles() {
-        return logFiles;
-    }
-
-    public void setLogFiles(List<String> logFiles) {
-        this.logFiles = logFiles;
-    }
-
     public String getLogsFolderPath() {
         return logsFolderPath;
+    }
+
+    public String getSeleniumLogFileName() {
+        String seleniumLogFileName = Dashboard.LOGS_FOLDER_NAME + "/" + testNameNoExtension + "/";
+        if ("chrome".equalsIgnoreCase(browser)) {
+            return seleniumLogFileName.concat("selenium-node-chrome-stderr.log");
+        }
+        return seleniumLogFileName.concat("selenium-node-firefox-stderr.log");
+    }
+
+    public String getBrowserDriverLogFileName() {
+        String browserDriverLogFileName = Dashboard.LOGS_FOLDER_NAME + "/" + testNameNoExtension + "/";
+        if ("chrome".equalsIgnoreCase(browser)) {
+            return browserDriverLogFileName.concat("chromedriver.log");
+        }
+        return browserDriverLogFileName.concat("firefox_driver.log");
+    }
+
+    public String getBrowserConsoleLogFileName() {
+        String browserConsoleLogFileName = Dashboard.LOGS_FOLDER_NAME + "/" + testNameNoExtension + "/";
+        if ("chrome".equalsIgnoreCase(browser)) {
+            return browserConsoleLogFileName.concat("chrome_browser.log");
+        }
+        return browserConsoleLogFileName.concat("firefox_browser.log");
     }
 
     @SuppressWarnings("SameParameterValue")
@@ -78,7 +94,7 @@ public class TestInformation {
     }
 
     public void buildVideoFileName() {
-        String testNameNoExtension = TEST_FILE_NAME_TEMPLATE.replace("{proxyName}", this.proxyName.toLowerCase()).
+        this.testNameNoExtension = TEST_FILE_NAME_TEMPLATE.replace("{proxyName}", this.proxyName.toLowerCase()).
                 replace("{testName}", getTestName()).
                 replace("{browser}", this.browser).
                 replace("{platform}", this.platform).

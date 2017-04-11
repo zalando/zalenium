@@ -39,7 +39,10 @@ public class Dashboard {
                 replace("{testName}", testInformation.getTestName()).
                 replace("{dateAndTime}", commonProxyUtilities.getShortDateAndTime()).
                 replace("{browserAndPlatform}", testInformation.getBrowserAndPlatform()).
-                replace("{proxyName}", testInformation.getProxyName());
+                replace("{proxyName}", testInformation.getProxyName()).
+                replace("{seleniumLogFileName}", testInformation.getSeleniumLogFileName()).
+                replace("{browserDriverLogFileName}", testInformation.getBrowserDriverLogFileName()).
+                replace("{browserConsoleLogFileName}", testInformation.getBrowserConsoleLogFileName());
 
         File testList = new File(localVideosPath, "list.html");
         // Putting the new entry at the top

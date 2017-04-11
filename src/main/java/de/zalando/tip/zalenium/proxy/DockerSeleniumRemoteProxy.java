@@ -357,13 +357,11 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         try (TarArchiveInputStream tarStream = new TarArchiveInputStream(dockerClient.archiveContainer(containerId,
                 "/var/log/cont/"))) {
             TarArchiveEntry entry;
-            List<String> logFileNames = new ArrayList<>();
             while ((entry = tarStream.getNextTarEntry()) != null) {
                 if (entry.isDirectory()) {
                     continue;
                 }
                 String fileName = entry.getName().replace("cont/", "");
-                logFileNames.add(fileName);
                 File logFile = new File(testInformation.getLogsFolderPath(), fileName);
                 File parent = logFile.getParentFile();
                 if (!parent.exists()) {
@@ -373,7 +371,6 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                 IOUtils.copy(tarStream, outputStream);
                 outputStream.close();
             }
-            testInformation.setLogFiles(logFileNames);
             LOGGER.log(Level.INFO, "{0} Logs copied to: {1}", new Object[]{getId(), testInformation.getLogsFolderPath()});
         } catch (Exception e) {
             LOGGER.log(Level.FINE, getId() + " Something happened while copying the video file, " +
