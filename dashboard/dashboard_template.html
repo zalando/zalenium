@@ -72,7 +72,59 @@
                         </video>
                     </div>
                 </div>
-                <div class="tab-pane fade" id="logs" role="tabpanel">Logs here</div>
+                <div class="tab-pane fade" id="logs" role="tabpanel">
+                    <div id="accordion" role="tablist" aria-multiselectable="true">
+                        <div class="card">
+                            <div class="card-header" role="tab" id="headingOne">
+                                <h5 class="mb-0">
+                                    <a data-toggle="collapse" data-parent="#accordion" href="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
+                                        Selenium Log
+                                    </a>
+                                </h5>
+                            </div>
+
+                            <div id="collapseOne" class="collapse" role="tabpanel" aria-labelledby="headingOne">
+                                <div class="card-block">
+                                    <pre id="seleniumLog">
+                                        Selenium Log not loaded yet...
+                                    </pre>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-header" role="tab" id="headingTwo">
+                                <h5 class="mb-0">
+                                    <a class="collapsed" data-toggle="collapse" data-parent="#accordion" href="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                                        Browser Driver Log
+                                    </a>
+                                </h5>
+                            </div>
+                            <div id="collapseTwo" class="collapse" role="tabpanel" aria-labelledby="headingTwo">
+                                <div class="card-block">
+                                    <pre id="browserDriverLog">
+                                        Browser Driver Log not loaded yet...
+                                    </pre>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-header" role="tab" id="headingThree">
+                                <h5 class="mb-0">
+                                    <a class="collapsed" data-toggle="collapse" data-parent="#accordion" href="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                                        Browser Console Log
+                                    </a>
+                                </h5>
+                            </div>
+                            <div id="collapseThree" class="collapse" role="tabpanel" aria-labelledby="headingThree">
+                                <div class="card-block">
+                                    <pre id="browserConsoleLog">
+                                        Browser Console Log not loaded yet...
+                                    </pre>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
         </main>
@@ -97,6 +149,9 @@
         var $browserPlatform = $this.data("browser-platform");
         var $proxyName = $this.data("proxy-name");
         var $dateTime = $this.data("date-time");
+        var $seleniumLogFile = $this.data("selenium-log");
+        var $browserDriverLogFile = $this.data("browser-driver");
+        var $browserConsoleLogFile = $this.data("browser-console");
 
         $('.active').removeClass("active");
         $this.toggleClass("active");
@@ -106,6 +161,9 @@
 
         // Set test info to be displayed
         setTestInformation($testName, $browserPlatform, $proxyName, $dateTime);
+
+        // Load logs
+        loadLogs($seleniumLogFile, $browserDriverLogFile, $browserConsoleLogFile);
 
         // Select first tab
         $('#testTabs').find('a:first').tab('show')
@@ -126,6 +184,19 @@
         document.getElementById("browser-platform").innerHTML = $browserPlatform;
         document.getElementById("proxy-name").innerHTML = $proxyName;
         document.getElementById("date-time").innerHTML = $dateTime;
+    }
+
+    function loadLogs($seleniumLogFile, $browserDriverLogFile, $browserConsoleLogFile) {
+        $('#collapseOne').removeClass("show");
+        $('#collapseTwo').removeClass("show");
+        $('#collapseThree').removeClass("show");
+        $('#seleniumLog').html("Selenium Log not loaded yet...");
+        $('#browserDriverLog').html("Browser Driver Log not loaded yet...");
+        $('#browserConsoleLog').html("Browser Console Log not loaded yet...");
+
+        $('#seleniumLog').load($seleniumLogFile);
+        $('#browserDriverLog').load($browserDriverLogFile);
+        $('#browserConsoleLog').load($browserConsoleLogFile);
     }
 
     // This will only work when the page is accessed via a WebServer
