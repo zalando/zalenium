@@ -74,7 +74,7 @@ public class TestInformation {
     public String getBrowserDriverLogFileName() {
         String browserDriverLogFileName = Dashboard.LOGS_FOLDER_NAME + "/" + testNameNoExtension + "/";
         if ("chrome".equalsIgnoreCase(browser)) {
-            return browserDriverLogFileName.concat("chromedriver.log");
+            return browserDriverLogFileName.concat("chrome_driver.log");
         }
         return browserDriverLogFileName.concat("firefox_driver.log");
     }
