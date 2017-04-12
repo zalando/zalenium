@@ -13,6 +13,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -85,7 +86,6 @@ public class CommonProxyUtilities {
             try {
                 URL link = new URL(fileUrl);
                 URLConnection urlConnection = link.openConnection();
-
                 if (link.getUserInfo() != null) {
                     String basicAuth = "Basic " + new String(new Base64().encode(link.getUserInfo().getBytes()));
                     urlConnection.setRequestProperty("Authorization", basicAuth);
@@ -112,15 +112,15 @@ public class CommonProxyUtilities {
                 fos.write(response);
                 fos.close();
                 //End download code
-                LOG.log(Level.INFO, "File downloaded to " + fileNameWithFullPath);
                 currentAttempts = maxAttempts + 1;
+                LOG.log(Level.INFO, "File downloaded to " + fileNameWithFullPath);
             } catch (IOException e) {
                 // Catching this exception generally means that the file was not ready, so we try again.
                 currentAttempts++;
                 if (currentAttempts >= maxAttempts) {
                     LOG.log(Level.SEVERE, e.toString(), e);
                 } else {
-                    LOG.log(Level.INFO, "Trying download once again from " + fileUrl);
+                    LOG.log(Level.INFO, "Trying download once again from " + cleanUrlFromUserAndPassword(fileUrl));
                     Thread.sleep(currentAttempts * 5 * 1000);
                 }
             } catch (Exception e) {
@@ -128,6 +128,10 @@ public class CommonProxyUtilities {
                 LOG.log(Level.SEVERE, e.toString(), e);
             }
         }
+    }
+
+    private String cleanUrlFromUserAndPassword(String url) {
+        return url.replaceAll("\\/[a-zA-Z0-9]*:[a-zA-Z0-9]*", "XXXXX:XXXXX");
     }
 
     public void convertFlvFileToMP4(TestInformation testInformation) {

@@ -141,4 +141,10 @@ public class SauceLabsRemoteProxy extends CloudTestingRemoteProxy {
         return "SauceLabs";
     }
 
+    @Override
+    public String getProxyClassName() {
+        return SauceLabsRemoteProxy.class.getName();
+    }
+
+
 }

@@ -83,7 +83,7 @@ public class TestInformation {
         if ("SauceLabs".equalsIgnoreCase(proxyName)) {
             return seleniumLogFileName.concat("selenium-server.log");
         }
-        return null;
+        return seleniumLogFileName.concat("not_implemented.log");
     }
 
     public String getBrowserDriverLogFileName() {
@@ -94,15 +94,15 @@ public class TestInformation {
         if ("SauceLabs".equalsIgnoreCase(proxyName)) {
             return browserDriverLogFileName.concat("log.json");
         }
-        return null;
+        return browserDriverLogFileName.concat("not_implemented.log");
     }
 
     public String getBrowserConsoleLogFileName() {
         String browserConsoleLogFileName = Dashboard.LOGS_FOLDER_NAME + "/" + testNameNoExtension + "/";
-        if ("chrome".equalsIgnoreCase(browser)) {
-            return browserConsoleLogFileName.concat("chrome_browser.log");
+        if ("Zalenium".equalsIgnoreCase(proxyName)) {
+            return browserConsoleLogFileName.concat(String.format("%s_browser.log", browser.toLowerCase()));
         }
-        return browserConsoleLogFileName.concat("firefox_browser.log");
+        return browserConsoleLogFileName.concat("not_implemented.log");
     }
 
     @SuppressWarnings("SameParameterValue")
