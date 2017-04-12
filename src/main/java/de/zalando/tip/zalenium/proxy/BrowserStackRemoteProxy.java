@@ -10,6 +10,8 @@ import org.openqa.selenium.Platform;
 import org.openqa.selenium.remote.BrowserType;
 import org.openqa.selenium.remote.DesiredCapabilities;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -117,8 +119,9 @@ public class BrowserStackRemoteProxy extends CloudTestingRemoteProxy {
     @Override
     public TestInformation getTestInformation(String seleniumSessionId) {
         // https://BS_USER:BS_KEY@www.browserstack.com/automate/sessions/SELENIUM_SESSION_ID.json
-        String browserStackTestUrl = "https://%s:%s@www.browserstack.com/automate/sessions/%s.json";
-        browserStackTestUrl = String.format(browserStackTestUrl, getUserNameValue(), getAccessKeyValue(), seleniumSessionId);
+        String browserStackBaseTestUrl = "https://%s:%s@www.browserstack.com/automate/sessions/";
+        browserStackBaseTestUrl = String.format(browserStackBaseTestUrl, getUserNameValue(), getAccessKeyValue());
+        String browserStackTestUrl = browserStackBaseTestUrl + String.format("%s.json", seleniumSessionId);
         JsonObject testData = getCommonProxyUtilities().readJSONFromUrl(browserStackTestUrl).getAsJsonObject();
         String testName = testData.getAsJsonObject("automation_session").get("name").getAsString();
         String browser = testData.getAsJsonObject("automation_session").get("browser").getAsString();
@@ -126,8 +129,9 @@ public class BrowserStackRemoteProxy extends CloudTestingRemoteProxy {
         String platform = testData.getAsJsonObject("automation_session").get("os").getAsString();
         String platformVersion = testData.getAsJsonObject("automation_session").get("os_version").getAsString();
         String videoUrl = testData.getAsJsonObject("automation_session").get("video_url").getAsString();
+        List<String> logUrls = new ArrayList<>();
         return new TestInformation(seleniumSessionId, testName, getProxyName(), browser, browserVersion, platform,
-                platformVersion, getVideoFileExtension(), videoUrl);
+                platformVersion, getVideoFileExtension(), videoUrl, logUrls);
     }
 
     @Override
@@ -138,6 +142,11 @@ public class BrowserStackRemoteProxy extends CloudTestingRemoteProxy {
     @Override
     public String getProxyName() {
         return "BrowserStack";
+    }
+
+    @Override
+    public String getProxyClassName() {
+        return BrowserStackRemoteProxy.class.getName();
     }
 
 }
