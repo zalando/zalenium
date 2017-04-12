@@ -9,6 +9,8 @@ import org.openqa.grid.internal.Registry;
 import org.openqa.selenium.Platform;
 import org.openqa.selenium.remote.DesiredCapabilities;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -107,8 +109,9 @@ public class TestingBotRemoteProxy extends CloudTestingRemoteProxy {
             String browserVersion = testData.get("browser_version").getAsString();
             String platform = testData.get("os").getAsString();
             String videoUrl = testData.get("video").getAsString();
+            List<String> logUrls = new ArrayList<>();
             testInformation = new TestInformation(seleniumSessionId, testName, getProxyName(), browser, browserVersion,
-                    platform, "", getVideoFileExtension(), videoUrl);
+                    platform, "", getVideoFileExtension(), videoUrl, logUrls);
             // Sometimes the video URL is not ready right away, so we need to wait a bit and fetch again.
             if (videoUrl.startsWith("http")) {
                 return testInformation;
@@ -132,6 +135,11 @@ public class TestingBotRemoteProxy extends CloudTestingRemoteProxy {
     @Override
     public String getProxyName() {
         return "TestingBot";
+    }
+
+    @Override
+    public String getProxyClassName() {
+        return TestingBotRemoteProxy.class.getName();
     }
 
 }
