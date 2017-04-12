@@ -138,7 +138,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
             testGroup = requestedCapability.getOrDefault("group", "").toString();
             String browserVersion = newSession.getSlot().getCapabilities().getOrDefault("version", "").toString();
             testInformation = new TestInformation(testName, testName, "Zalenium", browserName, browserVersion,
-                    Platform.LINUX.name(), "", "", "");
+                    Platform.LINUX.name());
             maxTestIdleTimeSecs = getConfiguredIdleTimeout(requestedCapability);
             return newSession;
         }

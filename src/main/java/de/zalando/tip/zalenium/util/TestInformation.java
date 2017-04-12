@@ -1,5 +1,6 @@
 package de.zalando.tip.zalenium.util;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -20,13 +21,19 @@ public class TestInformation {
     private String fileName;
     private String fileExtension;
     private String videoUrl;
+    private List<String> logUrls;
     private String videoFolderPath;
     private String logsFolderPath;
     private String testNameNoExtension;
 
     public TestInformation(String seleniumSessionId, String testName, String proxyName, String browser,
+                           String browserVersion, String platform) {
+        this(seleniumSessionId, testName, proxyName, browser, browserVersion, platform, "", "", "", new ArrayList<>());
+    }
+
+    public TestInformation(String seleniumSessionId, String testName, String proxyName, String browser,
                            String browserVersion, String platform, String platformVersion, String fileExtension,
-                           String videoUrl) {
+                           String videoUrl, List<String> logUrls) {
         this.seleniumSessionId = seleniumSessionId;
         this.testName = testName;
         this.proxyName = proxyName;
@@ -36,6 +43,7 @@ public class TestInformation {
         this.platformVersion = platformVersion;
         this.videoUrl = videoUrl;
         this.fileExtension = fileExtension;
+        this.logUrls = logUrls;
         buildVideoFileName();
     }
 
@@ -55,6 +63,10 @@ public class TestInformation {
         return fileName;
     }
 
+    public List<String> getLogUrls() {
+        return logUrls;
+    }
+
     public String getVideoUrl() {
         return videoUrl;
     }
@@ -65,18 +77,24 @@ public class TestInformation {
 
     public String getSeleniumLogFileName() {
         String seleniumLogFileName = Dashboard.LOGS_FOLDER_NAME + "/" + testNameNoExtension + "/";
-        if ("chrome".equalsIgnoreCase(browser)) {
-            return seleniumLogFileName.concat("selenium-node-chrome-stderr.log");
+        if ("Zalenium".equalsIgnoreCase(proxyName)) {
+            return seleniumLogFileName.concat(String.format("selenium-node-%s-stderr.log", browser.toLowerCase()));
         }
-        return seleniumLogFileName.concat("selenium-node-firefox-stderr.log");
+        if ("SauceLabs".equalsIgnoreCase(proxyName)) {
+            return seleniumLogFileName.concat("selenium-server.log");
+        }
+        return null;
     }
 
     public String getBrowserDriverLogFileName() {
         String browserDriverLogFileName = Dashboard.LOGS_FOLDER_NAME + "/" + testNameNoExtension + "/";
-        if ("chrome".equalsIgnoreCase(browser)) {
-            return browserDriverLogFileName.concat("chrome_driver.log");
+        if ("Zalenium".equalsIgnoreCase(proxyName)) {
+            return browserDriverLogFileName.concat(String.format("%s_driver.log", browser.toLowerCase()));
         }
-        return browserDriverLogFileName.concat("firefox_driver.log");
+        if ("SauceLabs".equalsIgnoreCase(proxyName)) {
+            return browserDriverLogFileName.concat("log.json");
+        }
+        return null;
     }
 
     public String getBrowserConsoleLogFileName() {
