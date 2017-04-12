@@ -169,9 +169,15 @@ public class CloudTestingRemoteProxy extends DefaultRemoteProxy {
         new Thread(() -> {
             try {
                 TestInformation testInformation = getTestInformation(seleniumSessionId);
-                commonProxyUtilities.downloadFile(testInformation);
+                String fileNameWithFullPath = testInformation.getVideoFolderPath() + "/" + testInformation.getFileName();
+                commonProxyUtilities.downloadFile(testInformation.getVideoUrl(), fileNameWithFullPath);
                 if (convertVideoFileToMP4()) {
                     commonProxyUtilities.convertFlvFileToMP4(testInformation);
+                }
+                for (String logUrl : testInformation.getLogUrls()) {
+                    String fileName = logUrl.substring(logUrl.lastIndexOf('/'));
+                    fileNameWithFullPath = testInformation.getLogsFolderPath() + "/" + fileName;
+                    commonProxyUtilities.downloadFile(logUrl, fileNameWithFullPath);
                 }
                 Dashboard.updateDashboard(testInformation);
             } catch (Exception e) {
