@@ -75,14 +75,15 @@ public class CommonProxyUtilities {
         Downloading a file, method adapted from:
         http://code.runnable.com/Uu83dm5vSScIAACw/download-a-file-from-the-web-for-java-files-and-save
      */
-    public void downloadFile(TestInformation testInformation) throws InterruptedException {
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    public void downloadFile(String fileUrl, String fileNameWithFullPath) throws InterruptedException {
         int maxAttempts = 10;
         int currentAttempts = 0;
         // Videos are usually not ready right away, we put a little sleep to avoid falling into the catch/retry.
         Thread.sleep(1000 * 5);
         while (currentAttempts < maxAttempts) {
             try {
-                URL link = new URL(testInformation.getVideoUrl());
+                URL link = new URL(fileUrl);
                 URLConnection urlConnection = link.openConnection();
 
                 if (link.getUserInfo() != null) {
@@ -102,12 +103,16 @@ public class CommonProxyUtilities {
                 out.close();
                 in.close();
                 byte[] response = out.toByteArray();
-                String fileNameWithFullPath = testInformation.getVideoFolderPath() + "/" + testInformation.getFileName();
+                File fileToDownload = new File(fileNameWithFullPath);
+                File fileToDownloadFolder = fileToDownload.getParentFile();
+                if (!fileToDownloadFolder.exists()) {
+                    fileToDownloadFolder.mkdirs();
+                }
                 FileOutputStream fos = new FileOutputStream(fileNameWithFullPath);
                 fos.write(response);
                 fos.close();
                 //End download code
-                LOG.log(Level.INFO, "Video downloaded to " + fileNameWithFullPath);
+                LOG.log(Level.INFO, "File downloaded to " + fileNameWithFullPath);
                 currentAttempts = maxAttempts + 1;
             } catch (IOException e) {
                 // Catching this exception generally means that the file was not ready, so we try again.
@@ -115,7 +120,7 @@ public class CommonProxyUtilities {
                 if (currentAttempts >= maxAttempts) {
                     LOG.log(Level.SEVERE, e.toString(), e);
                 } else {
-                    LOG.log(Level.INFO, "Trying download once again from " + testInformation.getVideoUrl());
+                    LOG.log(Level.INFO, "Trying download once again from " + fileUrl);
                     Thread.sleep(currentAttempts * 5 * 1000);
                 }
             } catch (Exception e) {
