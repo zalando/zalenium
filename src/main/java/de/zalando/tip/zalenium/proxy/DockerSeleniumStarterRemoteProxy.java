@@ -412,6 +412,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
             final int vncPort = nodePort + 10000;
 
             List<String> envVariables = new ArrayList<>();
+            envVariables.add("ZALENIUM=true");
             envVariables.add("SELENIUM_HUB_HOST=" + hostIpAddress);
             envVariables.add("SELENIUM_HUB_PORT=4445");
             envVariables.add("SELENIUM_NODE_HOST=" + hostIpAddress);
