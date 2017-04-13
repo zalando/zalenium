@@ -110,25 +110,32 @@ docker run --rm -ti --name zalenium -p 4444:4444 -p 5555:5555 \
 Any feedback or contributions are welcome! Please check our [guidelines](CONTRIBUTING.md), they just follow the general 
 GitHub issue/PR flow.
 
-#### TODOs
-We would love some help with:
-* Testing the tool in your day to day scenarios, to spot bugs or use cases we have not considered.
-* Integrating it with CI tools.
-
-#### Testing
+#### Building and Testing
 
 If you want to verify your changes locally with the existing tests (please double check that the Docker daemon is 
 running and that you can do `docker ps`):
-* Only unit tests
+* Unit tests
 
     ```sh
-        mvn test
+        mvn clean test
     ```
-* Unit and integration tests. You can specify the number of threads used to run the integration tests. If you omit the 
-property, the default is one.
+* Building the image
 
     ```sh
-        mvn clean verify -Pintegration-test -DthreadCountProperty={numberOfThreads}
+        mvn clean package
+        cd target
+        docker build -t zalenium:YOUR_TAG .
+    ```
+* Running the image you just built
+    ```sh
+      docker run --rm -ti --name zalenium -p 4444:4444 -p 5555:5555 \
+        -v /var/run/docker.sock:/var/run/docker.sock \
+        -v /tmp/videos:/home/seluser/videos \
+        zalenium:YOUR_TAG start 
+    ```
+* Running the integration tests with Sauce Labs or BrowserStack or TestingBot. You will need an account on any of those providers to run them (they have free plans). Or you can just run some of our [tests](./src/test/java/de/zalando/tip/zalenium/it/ParallelIT.java)  individually from an IDE. 
+    ```sh
+        ./run_integration_tests.sh sauceLabs|browserStack|testingBot
     ```
 
 
