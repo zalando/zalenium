@@ -1,9 +1,9 @@
 #== Ubuntu xenial is 16.04, i.e. FROM ubuntu:16.04
 # Find latest images at https://hub.docker.com/r/library/ubuntu/
 # Layer size: big: ~130 MB
-FROM ubuntu:xenial-20170214
+FROM ubuntu:xenial-20170410
 ENV UBUNTU_FLAVOR="xenial" \
-    UBUNTU_DATE="20170214"
+    UBUNTU_DATE="20170410"
 
 #== Ubuntu flavors - common
 RUN  echo "deb http://archive.ubuntu.com/ubuntu ${UBUNTU_FLAVOR} main universe\n" > /etc/apt/sources.list \
@@ -155,13 +155,15 @@ ENV LANG_WHERE US
 ENV ENCODING UTF-8
 ENV LANGUAGE ${LANG_WHICH}_${LANG_WHERE}.${ENCODING}
 ENV LANG ${LANGUAGE}
-# Layer size: small: 8.956 MB
-# Layer size: small: 8.956 MB (with --no-install-recommends)
-RUN locale-gen ${LANGUAGE} \
-  && dpkg-reconfigure --frontend noninteractive locales \
-  && apt-get -qqy update \
+# Layer size: small: ~9 MB
+# Layer size: small: ~9 MB MB (with --no-install-recommends)
+RUN apt-get -qqy update \
   && apt-get -qqy --no-install-recommends install \
     language-pack-en \
+    tzdata \
+    locales \
+  && locale-gen ${LANGUAGE} \
+  && dpkg-reconfigure --frontend noninteractive locales \
   && apt-get -qyy autoremove \
   && rm -rf /var/lib/apt/lists/*
 
@@ -175,7 +177,7 @@ ENV TZ "Europe/Berlin"
 # Apply TimeZone
 # Layer size: tiny: 1.339 MB
 RUN echo "Setting time zone to '${TZ}'" \
-  && echo ${TZ} > /etc/timezone \
+  && echo "${TZ}" > /etc/timezone \
   && dpkg-reconfigure --frontend noninteractive tzdata
 
 #========================================
