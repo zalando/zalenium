@@ -312,9 +312,10 @@ public class DockerSeleniumRemoteProxyTest {
             spyProxy.beforeCommand(newSession, webDriverRequest, response);
 
             // Assert video recording started
-            verify(spyProxy, times(1)).videoRecording(DockerSeleniumRemoteProxy.VideoRecordingAction.START_RECORDING);
-            verify(spyProxy, times(1))
-                    .processVideoAction(DockerSeleniumRemoteProxy.VideoRecordingAction.START_RECORDING, containerId);
+            verify(spyProxy, times(1)).
+                    videoRecording(DockerSeleniumRemoteProxy.DockerSeleniumContainerAction.START_RECORDING);
+            verify(spyProxy, times(1)).
+                    processContainerAction(DockerSeleniumRemoteProxy.DockerSeleniumContainerAction.START_RECORDING, containerId);
 
             // We release the sessions, the node should be free
             webDriverRequest = mock(WebDriverRequest.class);
@@ -328,9 +329,9 @@ public class DockerSeleniumRemoteProxyTest {
 
             Assert.assertFalse(spyProxy.isBusy());
             verify(spyProxy, timeout(40000))
-                    .videoRecording(DockerSeleniumRemoteProxy.VideoRecordingAction.STOP_RECORDING);
+                    .videoRecording(DockerSeleniumRemoteProxy.DockerSeleniumContainerAction.STOP_RECORDING);
             verify(spyProxy, timeout(40000))
-                    .processVideoAction(DockerSeleniumRemoteProxy.VideoRecordingAction.STOP_RECORDING, containerId);
+                    .processContainerAction(DockerSeleniumRemoteProxy.DockerSeleniumContainerAction.STOP_RECORDING, containerId);
             verify(spyProxy, timeout(40000)).copyVideos(containerId);
         } finally {
             cleanUpAfterVideoRecordingTests(dockerClient, containerId, zaleniumContainerId);
@@ -387,11 +388,11 @@ public class DockerSeleniumRemoteProxyTest {
             when(webDriverRequest.getRequestType()).thenReturn(RequestType.START_SESSION);
             spyProxy.beforeCommand(newSession, webDriverRequest, response);
 
-            // Assert no video recording was started, videoRecording is invoked but processVideoAction should not
+            // Assert no video recording was started, videoRecording is invoked but processContainerAction should not
             verify(spyProxy, times(1))
-                    .videoRecording(DockerSeleniumRemoteProxy.VideoRecordingAction.START_RECORDING);
+                    .videoRecording(DockerSeleniumRemoteProxy.DockerSeleniumContainerAction.START_RECORDING);
             verify(spyProxy, never())
-                    .processVideoAction(DockerSeleniumRemoteProxy.VideoRecordingAction.START_RECORDING, containerId);
+                    .processContainerAction(DockerSeleniumRemoteProxy.DockerSeleniumContainerAction.START_RECORDING, containerId);
 
             // We release the sessions, the node should be free
             webDriverRequest = mock(WebDriverRequest.class);
@@ -404,11 +405,11 @@ public class DockerSeleniumRemoteProxyTest {
             spyProxy.afterSession(newSession);
 
             Assert.assertFalse(spyProxy.isBusy());
-            // Now we assert that videoRecording was invoked but processVideoAction not, neither copyVideos
+            // Now we assert that videoRecording was invoked but processContainerAction not, neither copyVideos
             verify(spyProxy, timeout(40000))
-                    .videoRecording(DockerSeleniumRemoteProxy.VideoRecordingAction.STOP_RECORDING);
+                    .videoRecording(DockerSeleniumRemoteProxy.DockerSeleniumContainerAction.STOP_RECORDING);
             verify(spyProxy, never())
-                    .processVideoAction(DockerSeleniumRemoteProxy.VideoRecordingAction.STOP_RECORDING, containerId);
+                    .processContainerAction(DockerSeleniumRemoteProxy.DockerSeleniumContainerAction.STOP_RECORDING, containerId);
             verify(spyProxy, never()).copyVideos(containerId);
         } finally {
             cleanUpAfterVideoRecordingTests(dockerClient, containerId, zaleniumContainerId);

@@ -32,7 +32,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -61,7 +60,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     private long maxTestIdleTimeSecs;
     private String testGroup;
     private String testName;
-    private String containerId;
+    private String containerId = null;
     private TestInformation testInformation;
     private boolean afterSessionEventReceived = false;
     private DockerSeleniumNodePoller dockerSeleniumNodePollerThread = null;
@@ -72,11 +71,6 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         super(request, registry);
         this.amountOfExecutedTests = 0;
         readEnvVarForVideoRecording();
-        try {
-            containerId = getContainerId();
-        } catch (Exception e) {
-            LOGGER.log(Level.FINE, "{0} Problems getting the container ID", getId());
-        }
     }
 
     @VisibleForTesting
@@ -173,7 +167,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         if (request instanceof WebDriverRequest && "POST".equalsIgnoreCase(request.getMethod())) {
             WebDriverRequest seleniumRequest = (WebDriverRequest) request;
             if (RequestType.START_SESSION.equals(seleniumRequest.getRequestType())) {
-                videoRecording(VideoRecordingAction.START_RECORDING);
+                videoRecording(DockerSeleniumContainerAction.START_RECORDING);
             }
         }
         super.beforeCommand(session, request, response);
@@ -264,16 +258,16 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     }
 
     @VisibleForTesting
-    protected void videoRecording(final VideoRecordingAction action) {
+    protected void videoRecording(final DockerSeleniumContainerAction action) {
         if (isVideoRecordingEnabled()) {
             try {
-                processVideoAction(action, containerId);
+                processContainerAction(action, getContainerId());
             } catch (Exception e) {
                 LOGGER.log(Level.SEVERE, getId() + e.toString(), e);
                 ga.trackException(e);
             }
         } else {
-            String message = String.format("%s %s: Video recording is disabled", getId(), action.getRecordingAction());
+            String message = String.format("%s %s: Video recording is disabled", getId(), action.getContainerAction());
             LOGGER.log(Level.INFO, message);
         }
     }
@@ -291,25 +285,27 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     }
 
     protected String getContainerId() throws DockerException, InterruptedException {
-        List<Container> containerList = dockerClient.listContainers(DockerClient.ListContainersParam.allContainers());
-        for (Container container : containerList) {
-            String containerName = String.format("/%s_%s", DockerSeleniumStarterRemoteProxy.getContainerName(),
-                    getRemoteHost().getPort());
-            if (containerName.equalsIgnoreCase(container.names().get(0))) {
-                return container.id();
+        if (containerId == null) {
+            List<Container> containerList = dockerClient.listContainers(DockerClient.ListContainersParam.allContainers());
+            for (Container container : containerList) {
+                String containerName = String.format("/%s_%s", DockerSeleniumStarterRemoteProxy.getContainerName(),
+                        getRemoteHost().getPort());
+                if (containerName.equalsIgnoreCase(container.names().get(0))) {
+                    containerId = container.id();
+                }
             }
         }
-        return null;
+        return containerId;
     }
 
     @VisibleForTesting
-    void processVideoAction(final VideoRecordingAction action, final String containerId) throws
+    void processContainerAction(final DockerSeleniumContainerAction action, final String containerId) throws
             DockerException, InterruptedException, IOException, URISyntaxException {
-        final String[] command = {"bash", "-c", action.getRecordingAction()};
+        final String[] command = {"bash", "-c", action.getContainerAction()};
         final ExecCreation execCreation = dockerClient.execCreate(containerId, command,
                 DockerClient.ExecCreateParam.attachStdout(), DockerClient.ExecCreateParam.attachStderr());
         final LogStream output = dockerClient.execStart(execCreation.id());
-        LOGGER.log(Level.INFO, () -> String.format("%s %s", getId(), action.getRecordingAction()));
+        LOGGER.log(Level.INFO, () -> String.format("%s %s", getId(), action.getContainerAction()));
         try {
             LOGGER.log(Level.INFO, () -> String.format("%s %s", getId(), output.readFully()));
         } catch (RuntimeException e) {
@@ -317,7 +313,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
             ga.trackException(e);
         }
 
-        if (VideoRecordingAction.STOP_RECORDING == action) {
+        if (DockerSeleniumContainerAction.STOP_RECORDING == action) {
             copyVideos(containerId);
         }
     }
@@ -373,22 +369,22 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
             }
             LOGGER.log(Level.INFO, "{0} Logs copied to: {1}", new Object[]{getId(), testInformation.getLogsFolderPath()});
         } catch (Exception e) {
-            LOGGER.log(Level.FINE, getId() + " Something happened while copying the video file, " +
+            LOGGER.log(Level.FINE, getId() + " Something happened while copying the log file, " +
                     "most of the time it is an issue while closing the input/output stream, which is usually OK.", e);
         }
     }
 
-    public enum VideoRecordingAction {
-        START_RECORDING("start-video"), STOP_RECORDING("stop-video");
+    public enum DockerSeleniumContainerAction {
+        START_RECORDING("start-video"), STOP_RECORDING("stop-video"), TRANSFER_LOGS("transfer-logs.sh");
 
-        private String recordingAction;
+        private String containerAction;
 
-        VideoRecordingAction(String action) {
-            recordingAction = action;
+        DockerSeleniumContainerAction(String action) {
+            containerAction = action;
         }
 
-        public String getRecordingAction() {
-            return recordingAction;
+        public String getContainerAction() {
+            return containerAction;
         }
     }
 
@@ -424,9 +420,11 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                 boolean isTestIdle = dockerSeleniumRemoteProxy.isTestIdle();
 
                 if (isTestCompleted || isTestIdle) {
-                    dockerSeleniumRemoteProxy.videoRecording(VideoRecordingAction.STOP_RECORDING);
+                    dockerSeleniumRemoteProxy.videoRecording(DockerSeleniumContainerAction.STOP_RECORDING);
                     try {
-                        dockerSeleniumRemoteProxy.copyLogs(dockerSeleniumRemoteProxy.containerId);
+                        dockerSeleniumRemoteProxy.processContainerAction(DockerSeleniumContainerAction.TRANSFER_LOGS,
+                                dockerSeleniumRemoteProxy.getContainerId());
+                        dockerSeleniumRemoteProxy.copyLogs(dockerSeleniumRemoteProxy.getContainerId());
                     } catch (Exception e) {
                         LOGGER.log(Level.FINE, dockerSeleniumRemoteProxy.getId() + " Error copying the logs.", e);
                     }
@@ -465,7 +463,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
             }
 
             try {
-                dockerClient.stopContainer(dockerSeleniumRemoteProxy.containerId, 5);
+                dockerClient.stopContainer(dockerSeleniumRemoteProxy.getContainerId(), 5);
             } catch (Exception e) {
                 LOGGER.log(Level.SEVERE, dockerSeleniumRemoteProxy.getId() + " " + e.getMessage(), e);
                 dockerSeleniumRemoteProxy.ga.trackException(e);
