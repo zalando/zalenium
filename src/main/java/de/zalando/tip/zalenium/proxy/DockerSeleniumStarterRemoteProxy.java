@@ -420,7 +420,6 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
             envVariables.add("RC_FIREFOX=false");
             envVariables.add("USE_SELENIUM=3");
             envVariables.add("WAIT_TIMEOUT=120s");
-            envVariables.add("PICK_ALL_RANDMON_PORTS=true");
             envVariables.add("PICK_ALL_RANDOM_PORTS=true");
             envVariables.add("VIDEO_STOP_SLEEP_SECS=1");
             envVariables.add("WAIT_TIME_OUT_VIDEO_STOP=20s");
