@@ -174,6 +174,9 @@ slight more usage of Selenium 3 than Selenium 2.)
 
 * Version `2.53.1u` is the last version/image supporting Selenium 2.53.1.
 
+## Zalenium in the Selenium Conf Austin 2017
+Get a better overview of what Zalenium is and how it works by checking the recorded talk [here](https://www.youtube.com/watch?v=W5qMsVrob6I)
+
 ## Integrated Cloud Testing solutions
 * Thanks to the open source accounts we got, we have integrated so far:
 
