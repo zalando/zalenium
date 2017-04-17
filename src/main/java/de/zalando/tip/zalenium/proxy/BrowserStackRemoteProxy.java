@@ -123,12 +123,13 @@ public class BrowserStackRemoteProxy extends CloudTestingRemoteProxy {
         browserStackBaseTestUrl = String.format(browserStackBaseTestUrl, getUserNameValue(), getAccessKeyValue());
         String browserStackTestUrl = browserStackBaseTestUrl + String.format("%s.json", seleniumSessionId);
         JsonObject testData = getCommonProxyUtilities().readJSONFromUrl(browserStackTestUrl).getAsJsonObject();
-        String testName = testData.getAsJsonObject("automation_session").get("name").getAsString();
-        String browser = testData.getAsJsonObject("automation_session").get("browser").getAsString();
-        String browserVersion = testData.getAsJsonObject("automation_session").get("browser_version").getAsString();
-        String platform = testData.getAsJsonObject("automation_session").get("os").getAsString();
-        String platformVersion = testData.getAsJsonObject("automation_session").get("os_version").getAsString();
-        String videoUrl = testData.getAsJsonObject("automation_session").get("video_url").getAsString();
+        JsonObject automation_session = testData.getAsJsonObject("automation_session");
+        String testName = automation_session.get("name").getAsString();
+        String browser = automation_session.get("browser").getAsString();
+        String browserVersion = automation_session.get("browser_version").getAsString();
+        String platform = automation_session.get("os").getAsString();
+        String platformVersion = automation_session.get("os_version").getAsString();
+        String videoUrl = automation_session.get("video_url").getAsString();
         List<String> logUrls = new ArrayList<>();
         return new TestInformation(seleniumSessionId, testName, getProxyName(), browser, browserVersion, platform,
                 platformVersion, getVideoFileExtension(), videoUrl, logUrls);
