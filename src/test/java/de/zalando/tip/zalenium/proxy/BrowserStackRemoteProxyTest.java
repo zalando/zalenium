@@ -173,25 +173,6 @@ public class BrowserStackRemoteProxyTest {
             BrowserStackRemoteProxy.restoreEnvironment();
         }
     }
-    /*
-    @Test
-    public void testInformationIsRetrievedWhenStoppingSession() throws IOException {
-        try {
-
-            verify(sauceLabsSpyProxy, timeout(1000 * 5)).getTestInformation(mockSeleniumSessionId);
-            TestInformation testInformation = sauceLabsSpyProxy.getTestInformation(mockSeleniumSessionId);
-            Assert.assertEquals(mockSeleniumSessionId, testInformation.getTestName());
-            Assert.assertThat(testInformation.getFileName(),
-                    CoreMatchers.containsString("saucelabs_72e4f8ecf04440fe965faf657864ed52_googlechrome_Windows_2008"));
-            Assert.assertEquals("googlechrome 56, Windows 2008", testInformation.getBrowserAndPlatform());
-            Assert.assertEquals("https://:@saucelabs.com/rest/v1//jobs/72e4f8ecf04440fe965faf657864ed52/assets/video.flv",
-                    testInformation.getVideoUrl());
-        } finally {
-            SauceLabsRemoteProxy.restoreCommonProxyUtilities();
-        }
-    }
-
-     */
 
     @Test
     public void requestIsNotModifiedInOtherRequestTypes() throws IOException {

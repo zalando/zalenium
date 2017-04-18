@@ -191,6 +191,8 @@ If the test name is not set via a capability, the Selenium session ID will be us
 
 You can see an example [here](./docker-compose.yaml)
 
+Beware that `docker-compose --abort-on-container-exit` renders the video unusable, the finalization of the file cannot happen. In this case, stopping Zalenium in case of the certain conditions must be automated in another way.
+
 ## Live preview
 
 ### Displaying the live preview

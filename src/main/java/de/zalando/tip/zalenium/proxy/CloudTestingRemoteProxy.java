@@ -9,6 +9,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import de.zalando.tip.zalenium.util.*;
+import org.apache.commons.io.FileUtils;
 import org.openqa.grid.common.RegistrationRequest;
 import org.openqa.grid.internal.Registry;
 import org.openqa.grid.internal.TestSession;
@@ -20,8 +21,11 @@ import org.openqa.selenium.remote.CapabilityType;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.File;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -117,12 +121,16 @@ public class CloudTestingRemoteProxy extends DefaultRemoteProxy {
             WebDriverRequest seleniumRequest = (WebDriverRequest) request;
             if (seleniumRequest.getRequestType().equals(RequestType.STOP_SESSION)) {
                 long executionTime = (System.currentTimeMillis() - session.getSlot().getLastSessionStart()) / 1000;
-                getGa().testEvent(CloudTestingRemoteProxy.class.getName(), session.getRequestedCapabilities().toString(),
+                getGa().testEvent(getProxyClassName(), session.getRequestedCapabilities().toString(),
                         executionTime);
                 addTestToDashboard(session.getExternalKey().getKey());
             }
         }
         super.afterCommand(session, request, response);
+    }
+
+    public String getProxyClassName() {
+        return null;
     }
 
     public String getUserNameProperty() {
@@ -169,10 +177,17 @@ public class CloudTestingRemoteProxy extends DefaultRemoteProxy {
         new Thread(() -> {
             try {
                 TestInformation testInformation = getTestInformation(seleniumSessionId);
-                commonProxyUtilities.downloadFile(testInformation);
+                String fileNameWithFullPath = testInformation.getVideoFolderPath() + "/" + testInformation.getFileName();
+                commonProxyUtilities.downloadFile(testInformation.getVideoUrl(), fileNameWithFullPath);
                 if (convertVideoFileToMP4()) {
                     commonProxyUtilities.convertFlvFileToMP4(testInformation);
                 }
+                for (String logUrl : testInformation.getLogUrls()) {
+                    String fileName = logUrl.substring(logUrl.lastIndexOf('/') + 1);
+                    fileNameWithFullPath = testInformation.getLogsFolderPath() + "/" + fileName;
+                    commonProxyUtilities.downloadFile(logUrl, fileNameWithFullPath);
+                }
+                createFeatureNotImplementedFile(testInformation.getLogsFolderPath());
                 Dashboard.updateDashboard(testInformation);
             } catch (Exception e) {
                 logger.log(Level.SEVERE, e.toString(), e);
@@ -208,4 +223,15 @@ public class CloudTestingRemoteProxy extends DefaultRemoteProxy {
         return null;
     }
 
+    private void createFeatureNotImplementedFile(String logsFolderPath) {
+        String fileNameWithFullPath = logsFolderPath + "/not_implemented.log";
+        File notImplemented = new File(fileNameWithFullPath);
+        try {
+            String textToWrite = String.format("Feature not implemented for %s, we are happy to receive PRs", getProxyName());
+            FileUtils.writeStringToFile(notImplemented, textToWrite, StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            logger.log(Level.INFO, e.toString(), e);
+        }
+
+    }
 }

@@ -9,6 +9,8 @@ import org.openqa.grid.internal.Registry;
 import org.openqa.selenium.Platform;
 import org.openqa.selenium.remote.DesiredCapabilities;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -111,19 +113,22 @@ public class SauceLabsRemoteProxy extends CloudTestingRemoteProxy {
     @Override
     public TestInformation getTestInformation(String seleniumSessionId) {
         // https://SL_USER:SL_KEY@saucelabs.com/rest/v1/SL_USER/jobs/SELENIUM_SESSION_ID
-        String sauceLabsVideoUrl = "https://%s:%s@saucelabs.com/rest/v1/%s/jobs/%s/assets/video.flv";
         String sauceLabsTestUrl = "https://%s:%s@saucelabs.com/rest/v1/%s/jobs/%s";
         sauceLabsTestUrl = String.format(sauceLabsTestUrl, getUserNameValue(), getAccessKeyValue(), getUserNameValue(),
                 seleniumSessionId);
+        String sauceLabsVideoUrl = sauceLabsTestUrl + "/assets/video.flv";
+        String sauceLabsBrowserLogUrl = sauceLabsTestUrl + "/assets/log.json";
+        String sauceLabsSeleniumLogUrl = sauceLabsTestUrl + "/assets/selenium-server.log";
         JsonObject testData = getCommonProxyUtilities().readJSONFromUrl(sauceLabsTestUrl).getAsJsonObject();
         String testName = testData.get("name").isJsonNull() ? null : testData.get("name").getAsString();
         String browser = testData.get("browser").getAsString();
         String browserVersion = testData.get("browser_short_version").getAsString();
         String platform = testData.get("os").getAsString();
-        String videoUrl = String.format(sauceLabsVideoUrl, getUserNameValue(), getAccessKeyValue(), getUserNameValue(),
-                seleniumSessionId);
+        List<String> logUrls = new ArrayList<>();
+        logUrls.add(sauceLabsBrowserLogUrl);
+        logUrls.add(sauceLabsSeleniumLogUrl);
         return new TestInformation(seleniumSessionId, testName, getProxyName(), browser, browserVersion, platform, "",
-                getVideoFileExtension(), videoUrl);
+                getVideoFileExtension(), sauceLabsVideoUrl, logUrls);
     }
 
     @Override
@@ -135,5 +140,11 @@ public class SauceLabsRemoteProxy extends CloudTestingRemoteProxy {
     public String getProxyName() {
         return "SauceLabs";
     }
+
+    @Override
+    public String getProxyClassName() {
+        return SauceLabsRemoteProxy.class.getName();
+    }
+
 
 }
