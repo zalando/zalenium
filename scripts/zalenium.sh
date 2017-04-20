@@ -65,6 +65,17 @@ WaitStarterProxy()
 }
 export -f WaitStarterProxy
 
+WaitStarterProxyToRegister()
+{
+    # Also wait for the Proxy to be registered into the hub
+    while ! curl -sSL "http://localhost:4444/grid/console" 2>&1 \
+            | grep "DockerSeleniumStarterRemoteProxy" 2>&1 >/dev/null; do
+        echo -n '.'
+        sleep 0.2
+    done
+}
+export -f WaitStarterProxyToRegister
+
 WaitSauceLabsProxy()
 {
     # Wait for the sauce node success
@@ -378,6 +389,11 @@ StartUp()
     if ! timeout --foreground "30s" bash -c WaitStarterProxy; then
         echo "StarterRemoteProxy failed to start after 30 seconds, failing..."
         exit 12
+    fi
+
+    if ! timeout --foreground "30s" bash -c WaitStarterProxyToRegister; then
+        echo "StarterRemoteProxy failed to register to the hub after 30 seconds, failing..."
+        exit 13
     fi
     echo "DockerSeleniumStarter node started!"
 
