@@ -130,6 +130,10 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                         newSession.getInternalKey();
             }
             testGroup = requestedCapability.getOrDefault("group", "").toString();
+            if (requestedCapability.containsKey("recordVideo")) {
+                boolean videoRecording = Boolean.parseBoolean(requestedCapability.get("recordVideo").toString());
+                setVideoRecordingEnabled(videoRecording);
+            }
             String browserVersion = newSession.getSlot().getCapabilities().getOrDefault("version", "").toString();
             testInformation = new TestInformation(testName, testName, "Zalenium", browserName, browserVersion,
                     Platform.LINUX.name());
