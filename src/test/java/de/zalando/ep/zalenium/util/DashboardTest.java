@@ -12,9 +12,36 @@ import org.junit.Test;
 public class DashboardTest {
 
     @Before
-    public void initDashboard() {
+    public void initDashboard() throws IOException {
         Dashboard.setExecutedTests(0, 0);
         removeTestingVideosFolder();
+        ensureRequiredInputFilesExist();
+    }
+
+    private void ensureRequiredInputFilesExist() throws IOException {
+        createEmptyFileIfMissing("list_template.html");
+        createEmptyFileIfMissing("dashboard_template.html");
+        createEmptyFileIfMissing("zalando.ico");
+        createEmptyDirIfMissing("css");
+        createEmptyDirIfMissing("js");
+    }
+
+    private void createEmptyDirIfMissing(String dirname) {
+        File toBeChecked = fileWithLocalPath(dirname);
+        if (!toBeChecked.exists()) {
+            toBeChecked.mkdir();
+        }
+    }
+
+    private File fileWithLocalPath(String name) {
+        return new File(new CommonProxyUtilities().currentLocalPath() + "/" + name);
+    }
+
+    private void createEmptyFileIfMissing(String filename) throws IOException {
+        File toBeChecked = fileWithLocalPath(filename);
+        if (!toBeChecked.exists()) {
+            toBeChecked.createNewFile();
+        }
     }
 
     @After
