@@ -32,6 +32,11 @@ public class Dashboard {
         return executedTests;
     }
 
+    @VisibleForTesting
+    static void setExecutedTests(int executedTests) {
+        Dashboard.executedTests = executedTests;
+    }
+
     public static synchronized void updateDashboard(TestInformation testInformation) throws IOException {
         String currentLocalPath = commonProxyUtilities.currentLocalPath();
         String localVideosPath = currentLocalPath + "/" + VIDEOS_FOLDER_NAME;
@@ -115,6 +120,26 @@ public class Dashboard {
         } else {
             executedTests = 0;
             executedTestsWithVideo = 0;
+        }
+    }
+
+    @VisibleForTesting
+    static void synchronizeTestsCountWithFile(File testCountFile) throws IOException {
+        if (testCountFile.exists()) {
+            if (isFileOlderThanOneDay(testCountFile.lastModified())) {
+                LOGGER.log(Level.FINE, "Deleting file older than one day: " + testCountFile.getAbsolutePath());
+                testCountFile.delete();
+            } else {
+                String executedTestsFromFile = FileUtils.readFileToString(testCountFile, UTF_8);
+                try {
+                    executedTests = executedTests == 1 ? Integer.parseInt(executedTestsFromFile) + 1 : executedTests;
+                } catch (Exception e) {
+                    LOGGER.log(Level.FINE, e.toString(), e);
+                }
+            }
+        } else {
+            // reset executedTests if testCountFile is missing
+            executedTests = 1;
         }
     }
 
