@@ -12,9 +12,13 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class DashboardTest {
+
     private static final List<String> REQUIRED_FILES_FOR_TESTING = Arrays
             .asList(("list_template.html,dashboard_template.html,zalando.ico").split(","));
     private static final List<String> REQUIRED_DIRECTORIES_FOR_TESTING = Arrays.asList(("css,js").split(","));
+
+    private TestInformation ti = new TestInformation("seleniumSessionId", "testName", "proxyName", "browser",
+            "browserVersion", "platform");
 
     @Before
     public void initDashboard() throws IOException {
@@ -41,40 +45,26 @@ public class DashboardTest {
 
     @Test
     public void testCountOne() throws IOException {
-        TestInformation ti = createDefaultTestInformation();
-
         Dashboard.updateDashboard(ti);
-
         Assert.assertEquals(1, Dashboard.getExecutedTests());
         Assert.assertEquals(1, Dashboard.getExecutedTestsWithVideo());
     }
 
     @Test
     public void testCountTwo() throws IOException {
-        TestInformation ti = createDefaultTestInformation();
         Dashboard.updateDashboard(ti);
-
         Dashboard.updateDashboard(ti);
-
         Assert.assertEquals(2, Dashboard.getExecutedTests());
         Assert.assertEquals(2, Dashboard.getExecutedTestsWithVideo());
     }
 
     @Test
     public void missingExecutedTestsFile() throws IOException {
-        TestInformation ti = createDefaultTestInformation();
         Dashboard.updateDashboard(ti);
         removeTestingVideosFolder();
-
         Dashboard.updateDashboard(ti);
-
         Assert.assertEquals(1, Dashboard.getExecutedTests());
         Assert.assertEquals(1, Dashboard.getExecutedTestsWithVideo());
-    }
-
-    private TestInformation createDefaultTestInformation() {
-        return new TestInformation("seleniumSessionId", "testName", "proxyName", "browser", "browserVersion",
-                "platform");
     }
 
     private void ensureRequiredInputFilesExist() throws IOException {
