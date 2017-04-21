@@ -3,6 +3,7 @@ package de.zalando.tip.zalenium.proxy;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import de.zalando.tip.zalenium.util.*;
 import org.apache.commons.io.FileUtils;
 import org.hamcrest.CoreMatchers;
@@ -248,7 +249,7 @@ public class TestingBotRemoteProxyTest {
             Dashboard.updateDashboard(testInformation);
             File videosFolder = new File(temporaryFolder.getRoot().getAbsolutePath(), "videos");
             Assert.assertTrue(videosFolder.isDirectory());
-            File amountOfRunTests = new File(videosFolder, "amount_of_run_tests.txt");
+            File amountOfRunTests = new File(videosFolder, "executedTestsInfo.json");
             Assert.assertTrue(amountOfRunTests.exists());
             File dashboard = new File(videosFolder, "dashboard.html");
             Assert.assertTrue(dashboard.exists());
@@ -301,7 +302,7 @@ public class TestingBotRemoteProxyTest {
             Dashboard.updateDashboard(testInformation);
             File videosFolder = new File(temporaryFolder.getRoot().getAbsolutePath(), "videos");
             File testList = new File(videosFolder, "list.html");
-            File amountOfRunTests = new File(videosFolder, "amount_of_run_tests.txt");
+            File amountOfRunTests = new File(videosFolder, "executedTestsInfo.json");
             Assert.assertFalse(Dashboard.isFileOlderThanOneDay(amountOfRunTests.lastModified()));
             Assert.assertFalse(Dashboard.isFileOlderThanOneDay(testList.lastModified()));
             amountOfRunTests.setLastModified(new Date().getTime() - (25 * 60 * 60 * 1000));
@@ -312,8 +313,9 @@ public class TestingBotRemoteProxyTest {
             Assert.assertFalse(Dashboard.isFileOlderThanOneDay(amountOfRunTests.lastModified()));
             Assert.assertFalse(Dashboard.isFileOlderThanOneDay(testList.lastModified()));
             Dashboard.updateDashboard(testInformation);
-            String executedTests = FileUtils.readFileToString(amountOfRunTests, UTF_8);
-            Assert.assertEquals(Dashboard.getExecutedTests(), Integer.valueOf(executedTests).intValue());
+            JsonObject executedTestData = new JsonParser().parse(FileUtils.readFileToString(amountOfRunTests, UTF_8)).getAsJsonObject();
+            String executedTestsInFile = executedTestData.get("executedTests").getAsString();
+            Assert.assertEquals(Dashboard.getExecutedTests(), Integer.valueOf(executedTestsInFile).intValue());
         } finally {
             Dashboard.restoreCommonProxyUtilities();
         }
