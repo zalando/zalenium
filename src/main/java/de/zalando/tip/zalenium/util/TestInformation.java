@@ -25,6 +25,7 @@ public class TestInformation {
     private String videoFolderPath;
     private String logsFolderPath;
     private String testNameNoExtension;
+    private boolean videoRecorded;
 
     public TestInformation(String seleniumSessionId, String testName, String proxyName, String browser,
                            String browserVersion, String platform) {
@@ -44,7 +45,16 @@ public class TestInformation {
         this.videoUrl = videoUrl;
         this.fileExtension = fileExtension;
         this.logUrls = logUrls;
+        this.videoRecorded = true;
         buildVideoFileName();
+    }
+
+    public boolean isVideoRecorded() {
+        return videoRecorded;
+    }
+
+    public void setVideoRecorded(boolean videoRecorded) {
+        this.videoRecorded = videoRecorded;
     }
 
     public String getVideoFolderPath() {
