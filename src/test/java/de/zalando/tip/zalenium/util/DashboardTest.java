@@ -16,12 +16,8 @@ public class DashboardTest {
             .asList(("list_template.html,dashboard_template.html,zalando.ico").split(","));
     private static final List<String> REQUIRED_DIRECTORIES_FOR_TESTING = Arrays.asList(("css,js").split(","));
 
-    @Before
-    public void initDashboard() throws IOException {
-        Dashboard.setExecutedTests(0);
-        removeTestingVideosFolder();
-        ensureRequiredInputFilesExist();
-    }
+    private TestInformation ti = new TestInformation("seleniumSessionId", "testName", "proxyName", "browser",
+            "browserVersion", "platform");
 
     @After
     public void cleanCreatedEmptyResources() throws IOException {
@@ -39,39 +35,31 @@ public class DashboardTest {
         FileUtils.deleteQuietly(videos);
     }
 
-    @Test
-    public void testCountOne() throws IOException {
-        TestInformation ti = createDefaultTestInformation();
+    @Before
+    public void initDashboard() throws IOException {
+        Dashboard.setExecutedTests(0);
+        removeTestingVideosFolder();
+        ensureRequiredInputFilesExist();
 
         Dashboard.updateDashboard(ti);
+    }
 
+    @Test
+    public void testCountOne() throws IOException {
         Assert.assertEquals(1, Dashboard.getExecutedTests());
     }
 
     @Test
     public void testCountTwo() throws IOException {
-        TestInformation ti = createDefaultTestInformation();
         Dashboard.updateDashboard(ti);
-
-        Dashboard.updateDashboard(ti);
-
         Assert.assertEquals(2, Dashboard.getExecutedTests());
     }
 
     @Test
     public void missingExecutedTestsFile() throws IOException {
-        TestInformation ti = createDefaultTestInformation();
-        Dashboard.updateDashboard(ti);
         removeTestingVideosFolder();
-
         Dashboard.updateDashboard(ti);
-
         Assert.assertEquals(1, Dashboard.getExecutedTests());
-    }
-
-    private TestInformation createDefaultTestInformation() {
-        return new TestInformation("seleniumSessionId", "testName", "proxyName", "browser", "browserVersion",
-                "platform");
     }
 
     private void ensureRequiredInputFilesExist() throws IOException {
