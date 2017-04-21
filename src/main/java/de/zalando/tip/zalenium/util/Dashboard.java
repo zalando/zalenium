@@ -1,6 +1,8 @@
 package de.zalando.tip.zalenium.util;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
@@ -15,15 +17,15 @@ import static java.nio.charset.StandardCharsets.*;
  * Class in charge of building the dashboard, using templates and coordinating video downloads.
  */
 
-@SuppressWarnings("ResultOfMethodCallIgnored")
+@SuppressWarnings({"ResultOfMethodCallIgnored", "WeakerAccess"})
 public class Dashboard {
 
-    @SuppressWarnings("WeakerAccess")
     public static final String VIDEOS_FOLDER_NAME = "videos";
     public static final String LOGS_FOLDER_NAME = "logs";
     private static final Logger LOGGER = Logger.getLogger(Dashboard.class.getName());
     private static CommonProxyUtilities commonProxyUtilities = new CommonProxyUtilities();
     private static int executedTests = 0;
+    private static int executedTestsWithVideo = 0;
 
     @VisibleForTesting
     public static int getExecutedTests() {
@@ -58,23 +60,33 @@ public class Dashboard {
         FileUtils.writeStringToFile(testList, testEntry, UTF_8);
 
         executedTests++;
+        if (testInformation.isVideoRecorded()) {
+            executedTestsWithVideo++;
+        }
 
-        File testCountFile = new File(localVideosPath, "amount_of_run_tests.txt");
+        JsonObject testQuantities = new JsonObject();
+        testQuantities.addProperty("executedTests", executedTests);
+        testQuantities.addProperty("executedTestsWithVideo", executedTestsWithVideo);
+        File testCountFile = new File(localVideosPath, "executedTestsInfo.json");
         if (testCountFile.exists()) {
             if (isFileOlderThanOneDay(testCountFile.lastModified())) {
                 LOGGER.log(Level.FINE, "Deleting file older than one day: " + testCountFile.getAbsolutePath());
                 testCountFile.delete();
             } else {
-                String executedTestsFromFile = FileUtils.readFileToString(testCountFile, UTF_8);
+                JsonObject executedTestData = new JsonParser().parse(FileUtils.readFileToString(testCountFile, UTF_8)).getAsJsonObject();
+                String executedTestsInFile = executedTestData.get("executedTests").getAsString();
+                String executedTestsWithVideoInFile = executedTestData.get("executedTestsWithVideo").getAsString();
                 try {
-                    executedTests = executedTests == 1 ? Integer.parseInt(executedTestsFromFile) + 1 : executedTests;
+                    executedTests = executedTests == 1 ? Integer.parseInt(executedTestsInFile) + 1 : executedTests;
+                    executedTestsWithVideo = executedTestsWithVideo <= 1 ?
+                            Integer.parseInt(executedTestsWithVideoInFile) + executedTestsWithVideo : executedTestsWithVideo;
                 } catch (Exception e) {
                     LOGGER.log(Level.FINE, e.toString(), e);
                 }
             }
         }
         LOGGER.log(Level.FINE, "Test count: " + executedTests);
-        FileUtils.writeStringToFile(testCountFile, String.valueOf(executedTests), UTF_8);
+        FileUtils.writeStringToFile(testCountFile, testQuantities.toString(), UTF_8);
 
         File dashboardHtml = new File(localVideosPath, "dashboard.html");
         String dashboard = FileUtils.readFileToString(new File(currentLocalPath, "dashboard_template.html"), UTF_8);
