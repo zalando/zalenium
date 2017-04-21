@@ -137,12 +137,12 @@ WaitTestingBotProxy()
 export -f WaitTestingBotProxy
 
 WaitForVideosTransferred() {
-    local __amount_of_run_tests=$(</home/seluser/videos/amount_of_run_tests.txt)
-    local __amount_of_mp4_files=$(ls -1q /home/seluser/videos/*.mp4 | wc -l)
+    local __amount_of_tests_with_video=$(</home/seluser/videos/executedTestsInfo.json | jq .executedTestsWithVideo)
 
-    if [ "${__amount_of_run_tests}" -gt 0 ]; then
-        while [ "${__amount_of_mp4_files}" -lt "${__amount_of_run_tests}" ]; do
-            log "Waiting for ${__amount_of_mp4_files} mp4 files to be a total of ${__amount_of_run_tests}..."
+    if [ "${__amount_of_tests_with_video}" -gt 0 ]; then
+        local __amount_of_mp4_files=$(ls -1q /home/seluser/videos/*.mp4 | wc -l)
+        while [ "${__amount_of_mp4_files}" -lt "${__amount_of_tests_with_video}" ]; do
+            log "Waiting for ${__amount_of_mp4_files} mp4 files to be a total of ${__amount_of_tests_with_video}..."
             sleep 0.5
 
             # Also check if there are mkv, this would mean that
@@ -618,11 +618,10 @@ ShutDown()
         fi
     fi
 
-    if [ "${VIDEO_RECORDING_ENABLED}" = true ] && \
-       [ -f /home/seluser/videos/amount_of_run_tests.txt ]; then
+    if [ -f /home/seluser/videos/executedTestsInfo.json ]; then
         # Wait for the dashboard and the videos, if applies
         if timeout --foreground "2m" bash -c WaitForVideosTransferred; then
-            local __total="$(</home/seluser/videos/amount_of_run_tests.txt)"
+            local __total="$(</home/seluser/videos/executedTestsInfo.json | jq .executedTestsWithVideo)"
             log "WaitForVideosTransferred succeeded for a total of ${__total}"
         else
             log "WaitForVideosTransferred failed after 2 minutes!"
