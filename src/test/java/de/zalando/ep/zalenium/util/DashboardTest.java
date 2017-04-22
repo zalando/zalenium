@@ -1,5 +1,7 @@
 package de.zalando.ep.zalenium.util;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import java.io.File;
 import java.io.IOException;
 
@@ -12,6 +14,8 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 public class DashboardTest {
+
+    public static final String TEST_COUNT_FILE_NAME = "amount_of_run_tests.txt";
 
     private TestInformation ti = new TestInformation("seleniumSessionId", "testName", "proxyName", "browser",
             "browserVersion", "platform");
@@ -54,6 +58,16 @@ public class DashboardTest {
         Dashboard.updateDashboard(ti);
         Assert.assertEquals(1, Dashboard.getExecutedTests());
         Assert.assertEquals(1, Dashboard.getExecutedTestsWithVideo());
+    }
+
+    @Test
+    public void nonNumberContentsIgnored() throws IOException {
+        File testCountFile = new File(temporaryFolder.getRoot().getAbsolutePath() + "/" + Dashboard.VIDEOS_FOLDER_NAME
+                + "/" + TEST_COUNT_FILE_NAME);
+        FileUtils.writeStringToFile(testCountFile, "Not-A-Number", UTF_8);
+        Dashboard.setExecutedTests(0);
+        Dashboard.updateDashboard(ti);
+        Assert.assertEquals("1", FileUtils.readFileToString(testCountFile, UTF_8));
     }
 
     private void cleanTempVideosFolder() throws IOException {
