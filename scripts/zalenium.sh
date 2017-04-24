@@ -382,8 +382,8 @@ StartUp()
     mkdir -p logs
 
     java -cp ${SELENIUM_ARTIFACT}:${ZALENIUM_ARTIFACT} org.openqa.grid.selenium.GridLauncherV3 \
-    -role hub -port 4445 -servlet de.zalando.tip.zalenium.servlet.LivePreviewServlet \
-    -servlet de.zalando.tip.zalenium.servlet.ZaleniumConsoleServlet \
+    -role hub -port 4445 -servlet de.zalando.ep.zalenium.servlet.LivePreviewServlet \
+    -servlet de.zalando.ep.zalenium.servlet.ZaleniumConsoleServlet \
     -debug ${DEBUG_ENABLED} > logs/stdout.zalenium.hub.log &
     echo $! > ${PID_PATH_SELENIUM}
 
@@ -397,7 +397,7 @@ StartUp()
     echo "Starting DockerSeleniumStarter node..."
 
     java -jar ${SELENIUM_ARTIFACT} -role node -hub http://localhost:4444/grid/register \
-     -proxy de.zalando.tip.zalenium.proxy.DockerSeleniumStarterRemoteProxy \
+     -proxy de.zalando.ep.zalenium.proxy.DockerSeleniumStarterRemoteProxy \
      -port 30000 -debug ${DEBUG_ENABLED} > logs/stdout.zalenium.docker.node.log &
     echo $! > ${PID_PATH_DOCKER_SELENIUM_NODE}
 
@@ -425,7 +425,7 @@ StartUp()
     if [ "$SAUCE_LABS_ENABLED" = true ]; then
         echo "Starting Sauce Labs node..."
         java -jar ${SELENIUM_ARTIFACT} -role node -hub http://localhost:4444/grid/register \
-         -proxy de.zalando.tip.zalenium.proxy.SauceLabsRemoteProxy \
+         -proxy de.zalando.ep.zalenium.proxy.SauceLabsRemoteProxy \
          -port 30001 -debug ${DEBUG_ENABLED} > logs/stdout.zalenium.sauce.node.log &
         echo $! > ${PID_PATH_SAUCE_LABS_NODE}
 
@@ -451,7 +451,7 @@ StartUp()
     if [ "$BROWSER_STACK_ENABLED" = true ]; then
         echo "Starting Browser Stack node..."
         java -jar ${SELENIUM_ARTIFACT} -role node -hub http://localhost:4444/grid/register \
-         -proxy de.zalando.tip.zalenium.proxy.BrowserStackRemoteProxy \
+         -proxy de.zalando.ep.zalenium.proxy.BrowserStackRemoteProxy \
          -port 30002 -debug ${DEBUG_ENABLED} > logs/stdout.zalenium.browserstack.node.log &
         echo $! > ${PID_PATH_BROWSER_STACK_NODE}
 
@@ -476,7 +476,7 @@ StartUp()
     if [ "$TESTINGBOT_ENABLED" = true ]; then
         echo "Starting TestingBot node..."
         java -jar ${SELENIUM_ARTIFACT} -role node -hub http://localhost:4444/grid/register \
-         -proxy de.zalando.tip.zalenium.proxy.TestingBotRemoteProxy \
+         -proxy de.zalando.ep.zalenium.proxy.TestingBotRemoteProxy \
          -port 30003 -debug ${DEBUG_ENABLED} > logs/stdout.zalenium.testingbot.node.log &
         echo $! > ${PID_PATH_TESTINGBOT_NODE}
 

@@ -1,4 +1,4 @@
-package de.zalando.tip.zalenium.servlet;
+package de.zalando.ep.zalenium.servlet;
 
 import com.google.gson.JsonObject;
 import org.openqa.grid.common.SeleniumProtocol;

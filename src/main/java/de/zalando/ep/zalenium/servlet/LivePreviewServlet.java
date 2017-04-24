@@ -1,4 +1,4 @@
-package de.zalando.tip.zalenium.servlet;
+package de.zalando.ep.zalenium.servlet;
 
 /*
     This class renders an HTML with a similar appearance to the Grid Console, it just adds an iFrame that
@@ -7,7 +7,7 @@ package de.zalando.tip.zalenium.servlet;
  */
 
 import com.google.common.io.ByteStreams;
-import de.zalando.tip.zalenium.proxy.DockerSeleniumRemoteProxy;
+import de.zalando.ep.zalenium.proxy.DockerSeleniumRemoteProxy;
 import org.openqa.grid.internal.Registry;
 import org.openqa.grid.internal.RemoteProxy;
 import org.openqa.grid.internal.utils.HtmlRenderer;

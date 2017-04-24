@@ -1,13 +1,13 @@
-package de.zalando.tip.zalenium.proxy;
+package de.zalando.ep.zalenium.proxy;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.spotify.docker.client.DefaultDockerClient;
 import com.spotify.docker.client.DockerClient;
 import com.spotify.docker.client.exceptions.DockerException;
 import com.spotify.docker.client.messages.*;
-import de.zalando.tip.zalenium.util.DockerSeleniumCapabilityMatcher;
-import de.zalando.tip.zalenium.util.Environment;
-import de.zalando.tip.zalenium.util.GoogleAnalyticsApi;
+import de.zalando.ep.zalenium.util.DockerSeleniumCapabilityMatcher;
+import de.zalando.ep.zalenium.util.Environment;
+import de.zalando.ep.zalenium.util.GoogleAnalyticsApi;
 import org.openqa.grid.common.RegistrationRequest;
 import org.openqa.grid.internal.Registry;
 import org.openqa.grid.internal.RemoteProxy;
@@ -440,7 +440,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
             envVariables.add("SCREEN_HEIGHT=" + getScreenHeight());
             envVariables.add("TZ=" + getTimeZone());
             envVariables.add("SELENIUM_NODE_REGISTER_CYCLE=0");
-            envVariables.add("SELENIUM_NODE_PROXY_PARAMS=de.zalando.tip.zalenium.proxy.DockerSeleniumRemoteProxy");
+            envVariables.add("SELENIUM_NODE_PROXY_PARAMS=DockerSeleniumRemoteProxy");
             if (BrowserType.CHROME.equalsIgnoreCase(browser)) {
                 envVariables.add("SELENIUM_NODE_CH_PORT=" + nodePort);
                 envVariables.add("CHROME=true");

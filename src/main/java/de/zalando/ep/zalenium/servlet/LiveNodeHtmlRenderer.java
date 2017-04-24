@@ -1,8 +1,8 @@
-package de.zalando.tip.zalenium.servlet;
+package de.zalando.ep.zalenium.servlet;
 
 import com.google.gson.JsonObject;
-import de.zalando.tip.zalenium.proxy.DockerSeleniumRemoteProxy;
-import de.zalando.tip.zalenium.util.Environment;
+import de.zalando.ep.zalenium.proxy.DockerSeleniumRemoteProxy;
+import de.zalando.ep.zalenium.util.Environment;
 import org.openqa.grid.internal.TestSession;
 import org.openqa.grid.internal.TestSlot;
 import org.openqa.grid.internal.utils.HtmlRenderer;

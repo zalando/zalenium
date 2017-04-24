@@ -1,4 +1,4 @@
-package de.zalando.tip.zalenium.it;
+package de.zalando.ep.zalenium.it;
 
 import org.openqa.selenium.Platform;
 import org.openqa.selenium.WebDriver;
