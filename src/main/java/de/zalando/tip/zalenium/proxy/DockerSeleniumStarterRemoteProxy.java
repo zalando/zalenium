@@ -14,7 +14,9 @@ import org.openqa.grid.internal.RemoteProxy;
 import org.openqa.grid.internal.TestSession;
 import org.openqa.grid.internal.listeners.RegistrationListener;
 import org.openqa.grid.internal.utils.CapabilityMatcher;
+import org.openqa.grid.internal.utils.HtmlRenderer;
 import org.openqa.grid.selenium.proxy.DefaultRemoteProxy;
+import org.openqa.grid.web.servlet.beta.WebProxyHtmlRendererBeta;
 import org.openqa.selenium.Platform;
 import org.openqa.selenium.remote.BrowserType;
 import org.openqa.selenium.remote.CapabilityType;
@@ -89,10 +91,15 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     private List<Integer> allocatedPorts = new ArrayList<>();
     private boolean setupCompleted;
     private CapabilityMatcher capabilityHelper;
+    private final HtmlRenderer renderer = new WebProxyHtmlRendererBeta(this);
 
     @SuppressWarnings("WeakerAccess")
     public DockerSeleniumStarterRemoteProxy(RegistrationRequest request, Registry registry) {
         super(updateDSCapabilities(request), registry);
+    }
+
+    public HtmlRenderer getHtmlRender() {
+        return this.renderer;
     }
 
     /*
