@@ -440,7 +440,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
             envVariables.add("SCREEN_HEIGHT=" + getScreenHeight());
             envVariables.add("TZ=" + getTimeZone());
             envVariables.add("SELENIUM_NODE_REGISTER_CYCLE=0");
-            envVariables.add("SELENIUM_NODE_PROXY_PARAMS=DockerSeleniumRemoteProxy");
+            envVariables.add("SELENIUM_NODE_PROXY_PARAMS=de.zalando.ep.zalenium.proxy.DockerSeleniumRemoteProxy");
             if (BrowserType.CHROME.equalsIgnoreCase(browser)) {
                 envVariables.add("SELENIUM_NODE_CH_PORT=" + nodePort);
                 envVariables.add("CHROME=true");
