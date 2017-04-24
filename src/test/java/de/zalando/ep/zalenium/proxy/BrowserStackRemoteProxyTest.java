@@ -12,7 +12,6 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mockito;
 import org.openqa.grid.common.RegistrationRequest;
 import org.openqa.grid.internal.ExternalSessionKey;
 import org.openqa.grid.internal.Registry;
@@ -137,7 +136,7 @@ public class BrowserStackRemoteProxyTest {
             BrowserStackRemoteProxy.setCommonProxyUtilities(commonProxyUtilities);
 
             // Getting a test session in the sauce labs node
-            BrowserStackRemoteProxy bsSpyProxy = Mockito.spy(browserStackProxy);
+            BrowserStackRemoteProxy bsSpyProxy = spy(browserStackProxy);
             TestSession testSession = bsSpyProxy.getNewSession(requestedCapability);
             Assert.assertNotNull(testSession);
             String mockSeleniumSessionId = "77e51cead8e6e37b0a0feb0dfa69325b2c4acf97";

@@ -9,7 +9,6 @@ import org.apache.commons.io.FileUtils;
 import org.hamcrest.CoreMatchers;
 import org.junit.*;
 import org.junit.rules.TemporaryFolder;
-import org.mockito.Mockito;
 import org.openqa.grid.common.RegistrationRequest;
 import org.openqa.grid.internal.ExternalSessionKey;
 import org.openqa.grid.internal.Registry;
