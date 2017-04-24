@@ -19,7 +19,9 @@ import org.openqa.grid.internal.SessionTerminationReason;
 import org.openqa.grid.internal.TestSession;
 import org.openqa.grid.internal.TestSlot;
 import org.openqa.grid.internal.utils.CapabilityMatcher;
+import org.openqa.grid.internal.utils.HtmlRenderer;
 import org.openqa.grid.selenium.proxy.DefaultRemoteProxy;
+import org.openqa.grid.web.servlet.beta.WebProxyHtmlRendererBeta;
 import org.openqa.grid.web.servlet.handler.RequestType;
 import org.openqa.grid.web.servlet.handler.WebDriverRequest;
 import org.openqa.selenium.Platform;
@@ -66,11 +68,16 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     private DockerSeleniumNodePoller dockerSeleniumNodePollerThread = null;
     private GoogleAnalyticsApi ga = new GoogleAnalyticsApi();
     private CapabilityMatcher capabilityHelper;
+    private final HtmlRenderer renderer = new WebProxyHtmlRendererBeta(this);
 
     public DockerSeleniumRemoteProxy(RegistrationRequest request, Registry registry) {
         super(request, registry);
         this.amountOfExecutedTests = 0;
         readEnvVarForVideoRecording();
+    }
+
+    public HtmlRenderer getHtmlRender() {
+        return this.renderer;
     }
 
     @VisibleForTesting
