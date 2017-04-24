@@ -1,4 +1,4 @@
-package de.zalando.ep.zalenium.servlet;
+package de.zalando.tip.zalenium.servlet;
 
 import com.google.common.io.ByteStreams;
 import org.openqa.grid.internal.Registry;
@@ -18,7 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /*
-    Taken from the original org.openqa.grid.web.servlet.beta.ConsoleServlet
+    Taken from the Original org.openqa.grid.web.servlet.beta.ConsoleServlet
  */
 public class ZaleniumConsoleServlet extends RegistryBasedServlet {
     private static String coreVersion;
@@ -47,6 +47,17 @@ public class ZaleniumConsoleServlet extends RegistryBasedServlet {
     protected void process(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
 
+        int refresh = -1;
+
+        if (request.getParameter("refresh") != null) {
+            try {
+                refresh = Integer.parseInt(request.getParameter("refresh"));
+            } catch (NumberFormatException e) {
+                // ignore wrong param
+            }
+
+        }
+
         response.setContentType("text/html");
         response.setCharacterEncoding("UTF-8");
         response.setStatus(200);
@@ -65,6 +76,10 @@ public class ZaleniumConsoleServlet extends RegistryBasedServlet {
         builder
                 .append("<link href='/grid/resources/org/openqa/grid/images/favicon.ico' rel='icon' type='image/x-icon' />");
 
+
+        if (refresh != -1) {
+            builder.append(String.format("<meta http-equiv='refresh' content='%d' />", refresh));
+        }
         builder.append("<title>Grid Console</title>");
 
         builder.append("<style>");

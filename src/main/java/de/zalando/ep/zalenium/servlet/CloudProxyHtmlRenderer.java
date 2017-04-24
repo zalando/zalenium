@@ -1,9 +1,7 @@
-package de.zalando.ep.zalenium.servlet;
+package de.zalando.tip.zalenium.servlet;
 
 import com.google.gson.JsonObject;
-import de.zalando.ep.zalenium.proxy.BrowserStackRemoteProxy;
-import de.zalando.ep.zalenium.proxy.SauceLabsRemoteProxy;
-import de.zalando.ep.zalenium.proxy.TestingBotRemoteProxy;
+import org.openqa.grid.common.SeleniumProtocol;
 import org.openqa.grid.common.exception.GridException;
 import org.openqa.grid.internal.RemoteProxy;
 import org.openqa.grid.internal.TestSession;
@@ -32,6 +30,8 @@ public class CloudProxyHtmlRenderer implements HtmlRenderer {
         builder.append("<div class='proxy'>");
         builder.append("<p class='proxyname'>");
         builder.append(proxy.getClass().getSimpleName());
+
+        // TODO freynaud
 
         builder.append(getHtmlNodeVersion());
 
@@ -100,13 +100,14 @@ public class CloudProxyHtmlRenderer implements HtmlRenderer {
     private String getLines(SlotsLines lines) {
         StringBuilder builder = new StringBuilder();
         for (MiniCapability cap : lines.getLinesType()) {
+            String icon = cap.getIcon();
             String version = cap.getVersion();
             builder.append("<p>");
             if (version != null) {
                 builder.append("v:" + version);
             }
             for (TestSlot s : lines.getLine(cap)) {
-                builder.append(getSingleSlotHtml(s));
+                builder.append(getSingleSlotHtml(s, icon));
             }
             builder.append("</p>");
         }
@@ -114,21 +115,15 @@ public class CloudProxyHtmlRenderer implements HtmlRenderer {
     }
 
     // icon ( or generic html if icon not available )
-    private String getSingleSlotHtml(TestSlot s) {
+    private String getSingleSlotHtml(TestSlot s, String icon) {
         StringBuilder builder = new StringBuilder();
         TestSession session = s.getSession();
-        String icon = "";
-        if (proxy instanceof TestingBotRemoteProxy) {
-            icon = "/grid/admin/ZaleniumResourceServlet/images/testingbot.png";
+        if (icon != null) {
+            builder.append("<img ");
+            builder.append("src='").append(icon).append("' width='16' height='16'");
+        } else {
+            builder.append("<a href='#' ");
         }
-        if (proxy instanceof BrowserStackRemoteProxy) {
-            icon = "/grid/admin/ZaleniumResourceServlet/images/browserstack.png";
-        }
-        if (proxy instanceof SauceLabsRemoteProxy) {
-            icon = "/grid/admin/ZaleniumResourceServlet/images/saucelabs.png";
-        }
-        builder.append("<img ");
-        builder.append("src='").append(icon).append("' width='16' height='16'");
 
         if (session != null) {
             builder.append(" class='busy' ");
@@ -136,7 +131,14 @@ public class CloudProxyHtmlRenderer implements HtmlRenderer {
         } else {
             builder.append(" title='").append(s.getCapabilities()).append("'");
         }
-        builder.append(" />\n");
+
+        if (icon != null) {
+            builder.append(" />\n");
+        } else {
+            builder.append(">");
+            builder.append(s.getCapabilities().get(CapabilityType.BROWSER_NAME));
+            builder.append("</a>");
+        }
         return builder.toString();
     }
 
