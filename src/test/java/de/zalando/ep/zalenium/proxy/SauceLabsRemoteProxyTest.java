@@ -6,15 +6,9 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
 import org.hamcrest.CoreMatchers;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.mockito.Mockito;
+import org.junit.*;
 import org.openqa.grid.common.RegistrationRequest;
-import org.openqa.grid.internal.ExternalSessionKey;
-import org.openqa.grid.internal.Registry;
-import org.openqa.grid.internal.RemoteProxy;
-import org.openqa.grid.internal.TestSession;
+import org.openqa.grid.internal.*;
 import org.openqa.grid.web.servlet.handler.RequestType;
 import org.openqa.grid.web.servlet.handler.WebDriverRequest;
 import org.openqa.selenium.Platform;
@@ -23,9 +17,7 @@ import org.openqa.selenium.remote.CapabilityType;
 
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
-import java.io.File;
 import java.io.IOException;
-import java.net.URL;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,12 +26,12 @@ import static org.mockito.Mockito.*;
 
 public class SauceLabsRemoteProxyTest {
 
-    private static SauceLabsRemoteProxy sauceLabsProxy;
-    private static Registry registry;
+    private SauceLabsRemoteProxy sauceLabsProxy;
+    private Registry registry;
 
 
-    @BeforeClass
-    public static void setUp() {
+    @Before
+    public void setUp() {
         registry = Registry.newInstance();
         // Creating the configuration and the registration request of the proxy (node)
         RegistrationRequest request = TestUtils.getRegistrationRequestForTesting(30001,
@@ -54,6 +46,13 @@ public class SauceLabsRemoteProxyTest {
         // We add both nodes to the registry
         registry.add(sauceLabsProxy);
         registry.add(dsStarterProxy);
+    }
+
+    @After
+    public void tearDown() {
+        SauceLabsRemoteProxy.restoreCommonProxyUtilities();
+        SauceLabsRemoteProxy.restoreGa();
+        SauceLabsRemoteProxy.restoreEnvironment();
     }
 
     @Test
@@ -109,6 +108,7 @@ public class SauceLabsRemoteProxyTest {
 
         // Getting a test session in the sauce labs node
         TestSession testSession = sauceLabsProxy.getNewSession(requestedCapability);
+        System.out.println(requestedCapability.toString());
         Assert.assertNotNull(testSession);
 
         // We need to mock all the needed objects to forward the session and see how in the beforeMethod
@@ -140,7 +140,7 @@ public class SauceLabsRemoteProxyTest {
             requestedCapability.put(CapabilityType.PLATFORM, Platform.MAC);
 
             // Getting a test session in the sauce labs node
-            SauceLabsRemoteProxy sauceLabsSpyProxy = Mockito.spy(sauceLabsProxy);
+            SauceLabsRemoteProxy sauceLabsSpyProxy = spy(sauceLabsProxy);
             JsonElement informationSample = TestUtils.getTestInformationSample("saucelabs_testinformation.json");
             CommonProxyUtilities commonProxyUtilities = mock(CommonProxyUtilities.class);
             Environment env = new Environment();
@@ -181,22 +181,17 @@ public class SauceLabsRemoteProxyTest {
 
     @SuppressWarnings("ConstantConditions")
     @Test
-    public void useSauceLabsFallbackCapabilitiesFileWhenTheOnesFromSauceLabsAreNotAvailable() {
+    public void nodeHasCapabilitiesEvenWhenUrlCallFails() {
         try {
-            // Mocking the utility class that fetches the json from a given url
-            URL resource = this.getClass().getClassLoader().getResource("saucelabs_capabilities.json");
-            File fileLocation = new File(resource.getPath());
             CommonProxyUtilities commonProxyUtilities = mock(CommonProxyUtilities.class);
             when(commonProxyUtilities.readJSONFromUrl(anyString())).thenReturn(null);
             when(commonProxyUtilities.readJSONFromFile(anyString())).thenCallRealMethod();
-            when(commonProxyUtilities.currentLocalPath()).thenReturn(fileLocation.getParent());
             SauceLabsRemoteProxy.setCommonProxyUtilities(commonProxyUtilities);
 
             RegistrationRequest request = TestUtils.getRegistrationRequestForTesting(30001,
                     SauceLabsRemoteProxy.class.getCanonicalName());
 
-            request = SauceLabsRemoteProxy.updateSLCapabilities(request,
-                    SauceLabsRemoteProxy.SAUCE_LABS_CAPABILITIES_URL);
+            request = SauceLabsRemoteProxy.updateSLCapabilities(request, "");
 
             // Now the capabilities should be filled even if the url was not fetched
             Assert.assertFalse(request.getConfiguration().capabilities.isEmpty());
