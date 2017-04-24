@@ -368,7 +368,8 @@ StartUp()
     mkdir -p logs
 
     java -cp ${SELENIUM_ARTIFACT}:${ZALENIUM_ARTIFACT} org.openqa.grid.selenium.GridLauncherV3 \
-    -role hub -port 4445 -servlets de.zalando.tip.zalenium.servlet.live \
+    -role hub -port 4445 -servlet de.zalando.tip.zalenium.servlet.LivePreviewServlet \
+    -servlet de.zalando.tip.zalenium.servlet.ZaleniumConsoleServlet \
     -debug ${DEBUG_ENABLED} > logs/stdout.zalenium.hub.log &
     echo $! > ${PID_PATH_SELENIUM}
 

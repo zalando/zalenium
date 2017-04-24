@@ -25,16 +25,16 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 // We use this class name to be able to go to the resource like this: http://localhost:4444/grid/admin/live
-public class live extends RegistryBasedServlet {
+public class LivePreviewServlet extends RegistryBasedServlet {
 
-    private static final Logger LOGGER = Logger.getLogger(live.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(LivePreviewServlet.class.getName());
 
     @SuppressWarnings("unused")
-    public live(){
+    public LivePreviewServlet(){
         this(null);
     }
 
-    public live(Registry registry) {
+    public LivePreviewServlet(Registry registry) {
         super(registry);
     }
 
@@ -142,7 +142,7 @@ public class live extends RegistryBasedServlet {
     private Object getHeader() {
         String header = "";
         header = header.concat("<div id='header'>");
-        header = header.concat("<h1><a href='/grid/live'>Zalenium Live Preview</a></h1>");
+        header = header.concat("<h1><a href='/grid/LivePreviewServlet'>Zalenium Live Preview</a></h1>");
         header = header.concat("<h2>Zalenium Live Preview");
         header = header.concat("</h2>");
         header = header.concat("<div><a id='helplink' target='_blank' ");
