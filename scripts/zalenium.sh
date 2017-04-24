@@ -166,10 +166,24 @@ export -f WaitForVideosTransferred
 EnsureCleanEnv()
 {
     log "Ensuring no stale Zalenium related containers are still around..."
-    CONTAINERS=$(docker ps -a -f name=${CONTAINER_NAME}_ -q | wc -l)
-    if [ ${CONTAINERS} -gt 0 ]; then
+    local __containers=$(docker ps -a -f name=${CONTAINER_NAME}_ -q | wc -l)
+
+    # If there are still containers around; stop gracefully
+    if [ ${__containers} -gt 0 ]; then
         echo "Removing exited docker-selenium containers..."
-        docker rm -f $(docker ps -a -f name=${CONTAINER_NAME}_ -q)
+        docker stop $(docker ps -a -f name=${CONTAINER_NAME}_ -q)
+
+        # If there are still containers around; remove them
+        __containers=$(docker ps -a -f name=${CONTAINER_NAME}_ -q | wc -l)
+        if [ ${__containers} -gt 0 ]; then
+            docker rm $(docker ps -a -f name=${CONTAINER_NAME}_ -q)
+        fi
+
+        # If there are still containers around; forcibly remove them
+        __containers=$(docker ps -a -f name=${CONTAINER_NAME}_ -q | wc -l)
+        if [ ${__containers} -gt 0 ]; then
+            docker rm -f $(docker ps -a -f name=${CONTAINER_NAME}_ -q)
+        fi
     fi
 }
 
