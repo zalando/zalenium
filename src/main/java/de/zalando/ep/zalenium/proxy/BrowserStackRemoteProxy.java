@@ -52,11 +52,10 @@ public class BrowserStackRemoteProxy extends CloudTestingRemoteProxy {
             logger.log(Level.INFO, logMessage);
             return addCapabilitiesToRegistrationRequest(registrationRequest, browserStackAccountConcurrency);
         } catch (Exception e) {
-            registrationRequest = addCapabilitiesToRegistrationRequest(registrationRequest, 1);
             logger.log(Level.SEVERE, e.toString(), e);
             getGa().trackException(e);
         }
-        return registrationRequest;
+        return addCapabilitiesToRegistrationRequest(registrationRequest, 1);
     }
 
     private static RegistrationRequest addCapabilitiesToRegistrationRequest(RegistrationRequest registrationRequest, int concurrency) {
