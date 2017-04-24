@@ -9,6 +9,7 @@ import org.apache.commons.io.FileUtils;
 import org.hamcrest.CoreMatchers;
 import org.junit.*;
 import org.junit.rules.TemporaryFolder;
+import org.mockito.Mockito;
 import org.openqa.grid.common.RegistrationRequest;
 import org.openqa.grid.internal.ExternalSessionKey;
 import org.openqa.grid.internal.Registry;
@@ -194,7 +195,7 @@ public class TestingBotRemoteProxyTest {
         requestedCapability.put(CapabilityType.PLATFORM, Platform.MAC);
 
         // Getting a test session in the TestingBot node
-        TestingBotRemoteProxy spyProxy = spy(testingBotProxy);
+        TestingBotRemoteProxy spyProxy = Mockito.spy(testingBotProxy);
         TestSession testSession = spyProxy.getNewSession(requestedCapability);
         Assert.assertNotNull(testSession);
         String mockSeleniumSessionId = "2cf5d115-ca6f-4bc4-bc06-a4fca00836ce";
@@ -227,7 +228,7 @@ public class TestingBotRemoteProxyTest {
             requestedCapability.put(CapabilityType.PLATFORM, Platform.MAC);
 
             // Getting a test session in the TestingBot node
-            TestingBotRemoteProxy spyProxy = spy(testingBotProxy);
+            TestingBotRemoteProxy spyProxy = Mockito.spy(testingBotProxy);
             TestSession testSession = spyProxy.getNewSession(requestedCapability);
             Assert.assertNotNull(testSession);
             String mockSeleniumSessionId = "2cf5d115-ca6f-4bc4-bc06-a4fca00836ce";
@@ -280,7 +281,7 @@ public class TestingBotRemoteProxyTest {
             requestedCapability.put(CapabilityType.PLATFORM, Platform.WIN10);
 
             // Getting a test session in the TestingBot node
-            TestingBotRemoteProxy spyProxy = spy(testingBotProxy);
+            TestingBotRemoteProxy spyProxy = Mockito.spy(testingBotProxy);
             TestSession testSession = spyProxy.getNewSession(requestedCapability);
             Assert.assertNotNull(testSession);
             String mockSeleniumSessionId = "2cf5d115-ca6f-4bc4-bc06-a4fca00836ce";
