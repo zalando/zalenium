@@ -46,18 +46,21 @@ public class TestingBotRemoteProxyTest {
         // Creating the configuration and the registration request of the proxy (node)
         RegistrationRequest request = TestUtils.getRegistrationRequestForTesting(30002,
                 TestingBotRemoteProxy.class.getCanonicalName());
-        URL resource = TestingBotRemoteProxyTest.class.getClassLoader().getResource("testingbot_capabilities.json");
-        File fileLocation = new File(resource.getPath());
+
         JsonElement informationSample = TestUtils.getTestInformationSample("testingbot_testinformation.json");
-        CommonProxyUtilities commonProxyUtilities = mock(CommonProxyUtilities.class);
-        when(commonProxyUtilities.readJSONFromUrl("https://api.testingbot.com/v1/browsers")).thenReturn(null);
+
+        String userInfoUrl = "https://%s:%s@api.testingbot.com/v1/user";
         Environment env = new Environment();
+        userInfoUrl = String.format(userInfoUrl, env.getStringEnvVariable("TESTINGBOT_KEY", ""),
+                env.getStringEnvVariable("TESTINGBOT_SECRET", ""));
+        CommonProxyUtilities commonProxyUtilities = mock(CommonProxyUtilities.class);
+        when(commonProxyUtilities.readJSONFromUrl(userInfoUrl)).thenReturn(null);
+
         String mockTestInfoUrl = "https://%s:%s@api.testingbot.com/v1/tests/2cf5d115-ca6f-4bc4-bc06-a4fca00836ce";
         mockTestInfoUrl = String.format(mockTestInfoUrl, env.getStringEnvVariable("TESTINGBOT_KEY", ""),
                 env.getStringEnvVariable("TESTINGBOT_SECRET", ""));
         when(commonProxyUtilities.readJSONFromUrl(mockTestInfoUrl)).thenReturn(informationSample);
         when(commonProxyUtilities.readJSONFromFile(anyString())).thenCallRealMethod();
-        when(commonProxyUtilities.currentLocalPath()).thenReturn(fileLocation.getParent());
         TestingBotRemoteProxy.setCommonProxyUtilities(commonProxyUtilities);
         testingBotProxy = TestingBotRemoteProxy.getNewInstance(request, registry);
 
@@ -193,7 +196,7 @@ public class TestingBotRemoteProxyTest {
         requestedCapability.put(CapabilityType.PLATFORM, Platform.MAC);
 
         // Getting a test session in the TestingBot node
-        TestingBotRemoteProxy spyProxy = Mockito.spy(testingBotProxy);
+        TestingBotRemoteProxy spyProxy = spy(testingBotProxy);
         TestSession testSession = spyProxy.getNewSession(requestedCapability);
         Assert.assertNotNull(testSession);
         String mockSeleniumSessionId = "2cf5d115-ca6f-4bc4-bc06-a4fca00836ce";
@@ -226,7 +229,7 @@ public class TestingBotRemoteProxyTest {
             requestedCapability.put(CapabilityType.PLATFORM, Platform.MAC);
 
             // Getting a test session in the TestingBot node
-            TestingBotRemoteProxy spyProxy = Mockito.spy(testingBotProxy);
+            TestingBotRemoteProxy spyProxy = spy(testingBotProxy);
             TestSession testSession = spyProxy.getNewSession(requestedCapability);
             Assert.assertNotNull(testSession);
             String mockSeleniumSessionId = "2cf5d115-ca6f-4bc4-bc06-a4fca00836ce";
@@ -279,7 +282,7 @@ public class TestingBotRemoteProxyTest {
             requestedCapability.put(CapabilityType.PLATFORM, Platform.WIN10);
 
             // Getting a test session in the TestingBot node
-            TestingBotRemoteProxy spyProxy = Mockito.spy(testingBotProxy);
+            TestingBotRemoteProxy spyProxy = spy(testingBotProxy);
             TestSession testSession = spyProxy.getNewSession(requestedCapability);
             Assert.assertNotNull(testSession);
             String mockSeleniumSessionId = "2cf5d115-ca6f-4bc4-bc06-a4fca00836ce";

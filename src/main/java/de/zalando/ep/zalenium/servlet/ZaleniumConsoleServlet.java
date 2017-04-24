@@ -18,7 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /*
-    Taken from the Original org.openqa.grid.web.servlet.beta.ConsoleServlet
+    Taken from the original org.openqa.grid.web.servlet.beta.ConsoleServlet
  */
 public class ZaleniumConsoleServlet extends RegistryBasedServlet {
     private static String coreVersion;
