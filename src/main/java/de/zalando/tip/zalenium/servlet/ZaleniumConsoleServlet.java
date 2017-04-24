@@ -16,13 +16,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Logger;
 
 /*
     Taken from the Original org.openqa.grid.web.servlet.beta.ConsoleServlet
  */
 public class ZaleniumConsoleServlet extends RegistryBasedServlet {
-    private static final Logger log = Logger.getLogger(ZaleniumConsoleServlet.class.getName());
     private static String coreVersion;
 
     public ZaleniumConsoleServlet() {
