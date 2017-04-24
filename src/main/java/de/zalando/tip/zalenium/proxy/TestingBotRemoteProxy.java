@@ -3,9 +3,11 @@ package de.zalando.tip.zalenium.proxy;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import de.zalando.tip.zalenium.servlet.CloudProxyHtmlRenderer;
 import de.zalando.tip.zalenium.util.TestInformation;
 import org.openqa.grid.common.RegistrationRequest;
 import org.openqa.grid.internal.Registry;
+import org.openqa.grid.internal.utils.HtmlRenderer;
 import org.openqa.selenium.Platform;
 import org.openqa.selenium.remote.DesiredCapabilities;
 
@@ -20,31 +22,34 @@ import java.util.logging.Logger;
 public class TestingBotRemoteProxy extends CloudTestingRemoteProxy {
 
     private static final String TESTINGBOT_URL = "http://hub.testingbot.com:80";
-    private static final String TESTINGBOT_CAPABILITIES_URL = "https://%s:%s@api.testingbot.com/v1/browsers";
-    private static final Logger logger = Logger.getLogger(TestingBotRemoteProxy.class.getName());
-    private static final String TESTINGBOT_CAPABILITIES_BK_FILE = "testingbot_capabilities.json";
+    private static final String TESTINGBOT_ACCOUNT_INFO = "https://%s:%s@api.testingbot.com/v1/user";
     private static final String TESTINGBOT_KEY = getEnv().getStringEnvVariable("TESTINGBOT_KEY", "");
     private static final String TESTINGBOT_SECRET = getEnv().getStringEnvVariable("TESTINGBOT_SECRET", "");
+    private static final Logger logger = Logger.getLogger(TestingBotRemoteProxy.class.getName());
+    private final HtmlRenderer renderer = new CloudProxyHtmlRenderer(this);
 
     public TestingBotRemoteProxy(RegistrationRequest request, Registry registry) {
-        super(updateTBCapabilities(request, String.format(TESTINGBOT_CAPABILITIES_URL, TESTINGBOT_KEY,
+        super(updateTBCapabilities(request, String.format(TESTINGBOT_ACCOUNT_INFO, TESTINGBOT_KEY,
                 TESTINGBOT_SECRET)), registry);
     }
 
     @VisibleForTesting
     private static RegistrationRequest updateTBCapabilities(RegistrationRequest registrationRequest, String url) {
-        JsonElement tbCapabilities = getCommonProxyUtilities().readJSONFromUrl(url);
+        JsonElement testingBotAccountInfo = getCommonProxyUtilities().readJSONFromUrl(url);
         try {
             registrationRequest.getConfiguration().capabilities.clear();
             String userPasswordSuppress = String.format("%s:%s@", TESTINGBOT_KEY, TESTINGBOT_SECRET);
-            String logMessage = String.format("[TB] Capabilities fetched from %s", url.replace(userPasswordSuppress, ""));
-            if (tbCapabilities == null) {
-                logMessage = String.format("[TB] Capabilities were NOT fetched from %s, loading from backup file",
+            String logMessage = String.format("[TB] Getting account max. concurrency from %s", url.replace(userPasswordSuppress, ""));
+            int testingBotAccountConcurrency;
+            if (testingBotAccountInfo == null) {
+                logMessage = String.format("[TB] Account max. concurrency was NOT fetched from %s, falling to ",
                         url.replace(userPasswordSuppress, ""));
-                tbCapabilities = getCommonProxyUtilities().readJSONFromFile(TESTINGBOT_CAPABILITIES_BK_FILE);
+                testingBotAccountConcurrency = 1;
+            } else {
+                testingBotAccountConcurrency = testingBotAccountInfo.getAsJsonObject().get("max_concurrent").getAsInt();
             }
             logger.log(Level.INFO, logMessage);
-            return addCapabilitiesToRegistrationRequest(registrationRequest, tbCapabilities);
+            return addCapabilitiesToRegistrationRequest(registrationRequest, testingBotAccountConcurrency);
         } catch (Exception e) {
             logger.log(Level.SEVERE, e.toString(), e);
             getGa().trackException(e);
@@ -52,18 +57,18 @@ public class TestingBotRemoteProxy extends CloudTestingRemoteProxy {
         return registrationRequest;
     }
 
-    private static RegistrationRequest addCapabilitiesToRegistrationRequest(RegistrationRequest registrationRequest, JsonElement tbCapabilities) {
-        for (JsonElement cap : tbCapabilities.getAsJsonArray()) {
-            JsonObject capAsJsonObject = cap.getAsJsonObject();
-            DesiredCapabilities desiredCapabilities = new DesiredCapabilities();
-            desiredCapabilities.setCapability(RegistrationRequest.MAX_INSTANCES, 5);
-            desiredCapabilities.setBrowserName(capAsJsonObject.get("name").getAsString());
-            desiredCapabilities.setPlatform(Platform.extractFromSysProperty(capAsJsonObject.get("platform").getAsString()));
-            if (!registrationRequest.getConfiguration().capabilities.contains(desiredCapabilities)) {
-                registrationRequest.getConfiguration().capabilities.add(desiredCapabilities);
-            }
-        }
+    private static RegistrationRequest addCapabilitiesToRegistrationRequest(RegistrationRequest registrationRequest, int concurrency) {
+        DesiredCapabilities desiredCapabilities = new DesiredCapabilities();
+        desiredCapabilities.setCapability(RegistrationRequest.MAX_INSTANCES, concurrency);
+        desiredCapabilities.setBrowserName("TestingBot");
+        desiredCapabilities.setPlatform(Platform.ANY);
+        registrationRequest.getConfiguration().capabilities.add(desiredCapabilities);
         return registrationRequest;
+    }
+
+    @Override
+    public HtmlRenderer getHtmlRender() {
+        return this.renderer;
     }
 
     @Override

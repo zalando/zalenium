@@ -90,9 +90,9 @@ public class LiveNodeServletTest {
     @Test
     public void addedNodesAreRenderedInServlet() throws ServletException, IOException {
 
-        live liveServlet = new live(registry);
+        LivePreviewServlet livePreviewServletServlet = new LivePreviewServlet(registry);
 
-        liveServlet.doPost(request, response);
+        livePreviewServletServlet.doPost(request, response);
 
         String responseContent = response.getOutputStream().toString();
         assertThat(responseContent, containsString("Zalenium Live Preview"));
@@ -107,12 +107,12 @@ public class LiveNodeServletTest {
     @Test
     public void postAndGetReturnSameContent() throws ServletException, IOException {
 
-        live liveServlet = new live(registry);
+        LivePreviewServlet livePreviewServletServlet = new LivePreviewServlet(registry);
 
-        liveServlet.doPost(request, response);
+        livePreviewServletServlet.doPost(request, response);
         String postResponseContent = response.getOutputStream().toString();
 
-        liveServlet.doGet(request, response);
+        livePreviewServletServlet.doGet(request, response);
         String getResponseContent = response.getOutputStream().toString();
         assertThat(getResponseContent, containsString(postResponseContent));
     }
@@ -121,9 +121,9 @@ public class LiveNodeServletTest {
     public void noRefreshInHtmlWhenParameterIsInvalid() throws ServletException, IOException {
         when(request.getParameter("refresh")).thenReturn("XYZ");
 
-        live liveServlet = new live(registry);
+        LivePreviewServlet livePreviewServletServlet = new LivePreviewServlet(registry);
 
-        liveServlet.doPost(request, response);
+        livePreviewServletServlet.doPost(request, response);
         String postResponseContent = response.getOutputStream().toString();
         assertThat(postResponseContent, not(containsString("<meta http-equiv='refresh'")));
     }
