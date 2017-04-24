@@ -373,11 +373,6 @@ RUN  export SELBASE="https://selenium-release.storage.googleapis.com" \
 RUN  export SAUCE_LABS_CAPABILITIES="https://saucelabs.com/rest/v1/info/platforms/webdriver" \
   && wget -nv "${SAUCE_LABS_CAPABILITIES}" -O saucelabs_capabilities.json
 
-#================================
-# BrowserStack capabilities backup
-#================================
-COPY browserstack_capabilities.json /home/seluser/
-
 #==========
 # Zalenium
 #==========

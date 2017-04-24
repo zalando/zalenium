@@ -45,12 +45,9 @@ public class BrowserStackRemoteProxyTest {
         // Creating the configuration and the registration request of the proxy (node)
         RegistrationRequest request = TestUtils.getRegistrationRequestForTesting(30002,
                 BrowserStackRemoteProxy.class.getCanonicalName());
-        URL resource = BrowserStackRemoteProxyTest.class.getClassLoader().getResource("browserstack_capabilities.json");
-        File fileLocation = new File(resource.getPath());
         CommonProxyUtilities commonProxyUtilities = mock(CommonProxyUtilities.class);
         when(commonProxyUtilities.readJSONFromUrl(anyString())).thenReturn(null);
         when(commonProxyUtilities.readJSONFromFile(anyString())).thenCallRealMethod();
-        when(commonProxyUtilities.currentLocalPath()).thenReturn(fileLocation.getParent());
         BrowserStackRemoteProxy.setCommonProxyUtilities(commonProxyUtilities);
         browserStackProxy = BrowserStackRemoteProxy.getNewInstance(request, registry);
 
