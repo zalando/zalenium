@@ -9,7 +9,6 @@ import org.openqa.grid.common.RegistrationRequest;
 import org.openqa.grid.internal.Registry;
 import org.openqa.grid.internal.utils.HtmlRenderer;
 import org.openqa.selenium.Platform;
-import org.openqa.selenium.remote.BrowserType;
 import org.openqa.selenium.remote.DesiredCapabilities;
 
 import java.util.ArrayList;
