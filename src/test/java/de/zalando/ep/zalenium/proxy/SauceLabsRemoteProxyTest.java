@@ -144,7 +144,7 @@ public class SauceLabsRemoteProxyTest {
             requestedCapability.put(CapabilityType.PLATFORM, Platform.MAC);
 
             // Getting a test session in the sauce labs node
-            SauceLabsRemoteProxy sauceLabsSpyProxy = Mockito.spy(sauceLabsProxy);
+            SauceLabsRemoteProxy sauceLabsSpyProxy = spy(sauceLabsProxy);
             JsonElement informationSample = TestUtils.getTestInformationSample("saucelabs_testinformation.json");
             CommonProxyUtilities commonProxyUtilities = mock(CommonProxyUtilities.class);
             Environment env = new Environment();
