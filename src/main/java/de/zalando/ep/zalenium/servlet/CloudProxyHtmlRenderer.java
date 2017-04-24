@@ -1,7 +1,6 @@
 package de.zalando.ep.zalenium.servlet;
 
 import com.google.gson.JsonObject;
-import org.openqa.grid.common.SeleniumProtocol;
 import org.openqa.grid.common.exception.GridException;
 import org.openqa.grid.internal.RemoteProxy;
 import org.openqa.grid.internal.TestSession;
