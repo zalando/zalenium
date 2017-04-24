@@ -46,7 +46,6 @@ public class BrowserStackRemoteProxy extends CloudTestingRemoteProxy {
             return addCapabilitiesToRegistrationRequest(registrationRequest, browserStackAccountConcurrency,
                     BROWSER_STACK_PROXY_NAME);
         } catch (Exception e) {
-            registrationRequest = addCapabilitiesToRegistrationRequest(registrationRequest, 1);
             logger.log(Level.SEVERE, e.toString(), e);
             getGa().trackException(e);
         }

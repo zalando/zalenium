@@ -50,7 +50,6 @@ public class SauceLabsRemoteProxy extends CloudTestingRemoteProxy {
             return addCapabilitiesToRegistrationRequest(registrationRequest, sauceLabsAccountConcurrency,
                     SAUCE_LABS_PROXY_NAME);
         } catch (Exception e) {
-            registrationRequest = addCapabilitiesToRegistrationRequest(registrationRequest, 1);
             LOGGER.log(Level.SEVERE, e.toString(), e);
             getGa().trackException(e);
         }
