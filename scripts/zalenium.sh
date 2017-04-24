@@ -174,14 +174,12 @@ EnsureCleanEnv()
         docker stop $(docker ps -a -f name=${CONTAINER_NAME}_ -q)
 
         # If there are still containers around; remove them
-        __containers=$(docker ps -a -f name=${CONTAINER_NAME}_ -q | wc -l)
-        if [ ${__containers} -gt 0 ]; then
+        if [ $(docker ps -a -f name=${CONTAINER_NAME}_ -q | wc -l) -gt 0 ]; then
             docker rm $(docker ps -a -f name=${CONTAINER_NAME}_ -q)
         fi
 
         # If there are still containers around; forcibly remove them
-        __containers=$(docker ps -a -f name=${CONTAINER_NAME}_ -q | wc -l)
-        if [ ${__containers} -gt 0 ]; then
+        if [ $(docker ps -a -f name=${CONTAINER_NAME}_ -q | wc -l) -gt 0 ]; then
             docker rm -f $(docker ps -a -f name=${CONTAINER_NAME}_ -q)
         fi
     fi
