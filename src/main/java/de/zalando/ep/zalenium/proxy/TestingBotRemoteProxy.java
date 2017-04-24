@@ -45,6 +45,7 @@ public class TestingBotRemoteProxy extends CloudTestingRemoteProxy {
             return addCapabilitiesToRegistrationRequest(registrationRequest, testingBotAccountConcurrency,
                     TESTINGBOT_PROXY_NAME);
         } catch (Exception e) {
+            registrationRequest = addCapabilitiesToRegistrationRequest(registrationRequest, 1);
             logger.log(Level.SEVERE, e.toString(), e);
             getGa().trackException(e);
         }

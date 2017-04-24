@@ -195,7 +195,7 @@ public class TestingBotRemoteProxyTest {
         requestedCapability.put(CapabilityType.PLATFORM, Platform.MAC);
 
         // Getting a test session in the TestingBot node
-        TestingBotRemoteProxy spyProxy = Mockito.spy(testingBotProxy);
+        TestingBotRemoteProxy spyProxy = spy(testingBotProxy);
         TestSession testSession = spyProxy.getNewSession(requestedCapability);
         Assert.assertNotNull(testSession);
         String mockSeleniumSessionId = "2cf5d115-ca6f-4bc4-bc06-a4fca00836ce";
@@ -228,7 +228,7 @@ public class TestingBotRemoteProxyTest {
             requestedCapability.put(CapabilityType.PLATFORM, Platform.MAC);
 
             // Getting a test session in the TestingBot node
-            TestingBotRemoteProxy spyProxy = Mockito.spy(testingBotProxy);
+            TestingBotRemoteProxy spyProxy = spy(testingBotProxy);
             TestSession testSession = spyProxy.getNewSession(requestedCapability);
             Assert.assertNotNull(testSession);
             String mockSeleniumSessionId = "2cf5d115-ca6f-4bc4-bc06-a4fca00836ce";
@@ -281,7 +281,7 @@ public class TestingBotRemoteProxyTest {
             requestedCapability.put(CapabilityType.PLATFORM, Platform.WIN10);
 
             // Getting a test session in the TestingBot node
-            TestingBotRemoteProxy spyProxy = Mockito.spy(testingBotProxy);
+            TestingBotRemoteProxy spyProxy = spy(testingBotProxy);
             TestSession testSession = spyProxy.getNewSession(requestedCapability);
             Assert.assertNotNull(testSession);
             String mockSeleniumSessionId = "2cf5d115-ca6f-4bc4-bc06-a4fca00836ce";
