@@ -54,11 +54,10 @@ public class SauceLabsRemoteProxy extends CloudTestingRemoteProxy {
             LOGGER.log(Level.INFO, logMessage);
             return addCapabilitiesToRegistrationRequest(registrationRequest, sauceLabsAccountConcurrency);
         } catch (Exception e) {
-            registrationRequest = addCapabilitiesToRegistrationRequest(registrationRequest, 1);
             LOGGER.log(Level.SEVERE, e.toString(), e);
             getGa().trackException(e);
         }
-        return registrationRequest;
+        return addCapabilitiesToRegistrationRequest(registrationRequest, 1);
     }
 
     private static RegistrationRequest addCapabilitiesToRegistrationRequest(RegistrationRequest registrationRequest, int concurrency) {
