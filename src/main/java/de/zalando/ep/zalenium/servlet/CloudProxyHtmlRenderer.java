@@ -82,21 +82,12 @@ public class CloudProxyHtmlRenderer implements HtmlRenderer {
         StringBuilder builder = new StringBuilder();
         builder.append("<div type='browsers' class='content_detail'>");
 
-        SlotsLines rcLines = new SlotsLines();
         SlotsLines wdLines = new SlotsLines();
 
         for (TestSlot slot : proxy.getTestSlots()) {
-            if (slot.getProtocol() == SeleniumProtocol.Selenium) {
-                rcLines.add(slot);
-            } else {
-                wdLines.add(slot);
-            }
+            wdLines.add(slot);
         }
 
-        if (rcLines.getLinesType().size() != 0) {
-            builder.append("<p class='protocol' >Remote Control (legacy)</p>");
-            builder.append(getLines(rcLines));
-        }
         if (wdLines.getLinesType().size() != 0) {
             builder.append("<p class='protocol' >WebDriver</p>");
             builder.append(getLines(wdLines));
