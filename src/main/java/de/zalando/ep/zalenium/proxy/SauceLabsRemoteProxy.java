@@ -3,9 +3,11 @@ package de.zalando.ep.zalenium.proxy;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import de.zalando.ep.zalenium.servlet.CloudProxyHtmlRenderer;
 import de.zalando.ep.zalenium.util.TestInformation;
 import org.openqa.grid.common.RegistrationRequest;
 import org.openqa.grid.internal.Registry;
+import org.openqa.grid.internal.utils.HtmlRenderer;
 import org.openqa.selenium.Platform;
 import org.openqa.selenium.remote.DesiredCapabilities;
 
@@ -21,57 +23,56 @@ import java.util.logging.Logger;
 
 public class SauceLabsRemoteProxy extends CloudTestingRemoteProxy {
 
-    @VisibleForTesting
-    static final String SAUCE_LABS_CAPABILITIES_URL = "http://saucelabs.com/rest/v1/info/platforms/webdriver";
+    private static final String SAUCE_LABS_ACCOUNT_INFO = "https://%s:%s@saucelabs.com/rest/v1/users/%s";
     private static final String SAUCE_LABS_USER_NAME = getEnv().getStringEnvVariable("SAUCE_USERNAME", "");
     private static final String SAUCE_LABS_ACCESS_KEY = getEnv().getStringEnvVariable("SAUCE_ACCESS_KEY", "");
     private static final String SAUCE_LABS_URL = "http://ondemand.saucelabs.com:80";
     private static final Logger LOGGER = Logger.getLogger(SauceLabsRemoteProxy.class.getName());
-    private static final String SAUCE_LABS_DEFAULT_CAPABILITIES_BK_FILE = "saucelabs_capabilities.json";
+    private final HtmlRenderer renderer = new CloudProxyHtmlRenderer(this);
 
     public SauceLabsRemoteProxy(RegistrationRequest request, Registry registry) {
-        super(updateSLCapabilities(request, SAUCE_LABS_CAPABILITIES_URL), registry);
+        super(updateSLCapabilities(request, String.format(SAUCE_LABS_ACCOUNT_INFO, SAUCE_LABS_USER_NAME,
+                SAUCE_LABS_ACCESS_KEY, SAUCE_LABS_USER_NAME)), registry);
     }
 
     @VisibleForTesting
     static RegistrationRequest updateSLCapabilities(RegistrationRequest registrationRequest, String url) {
-        JsonElement slCapabilities = getCommonProxyUtilities().readJSONFromUrl(url);
-
+        JsonElement slAccountInfo = getCommonProxyUtilities().readJSONFromUrl(url);
         try {
             registrationRequest.getConfiguration().capabilities.clear();
-            String logMessage = String.format("[SL] Capabilities fetched from %s", url);
-            if (slCapabilities == null) {
-                logMessage = String.format("[SL] Capabilities were NOT fetched from %s, loading from backup file", url);
-                slCapabilities = getCommonProxyUtilities().readJSONFromFile(SAUCE_LABS_DEFAULT_CAPABILITIES_BK_FILE);
+            String userPasswordSuppress = String.format("%s:%s@", SAUCE_LABS_USER_NAME, SAUCE_LABS_ACCESS_KEY);
+            String logMessage = String.format("[SL] Capabilities fetched from %s", url.replace(userPasswordSuppress, ""));
+            int sauceLabsAccountConcurrency;
+            if (slAccountInfo == null) {
+                logMessage = String.format("[SL] Account max. concurrency was NOT fetched from %s",
+                        url.replace(userPasswordSuppress, ""));
+                sauceLabsAccountConcurrency = 1;
+            } else {
+                sauceLabsAccountConcurrency = slAccountInfo.getAsJsonObject().getAsJsonObject("concurrency_limit").
+                        get("overall").getAsInt();
             }
             LOGGER.log(Level.INFO, logMessage);
-            return addCapabilitiesToRegistrationRequest(registrationRequest, slCapabilities);
+            return addCapabilitiesToRegistrationRequest(registrationRequest, sauceLabsAccountConcurrency);
         } catch (Exception e) {
+            registrationRequest = addCapabilitiesToRegistrationRequest(registrationRequest, 1);
             LOGGER.log(Level.SEVERE, e.toString(), e);
             getGa().trackException(e);
         }
         return registrationRequest;
     }
 
-    private static RegistrationRequest addCapabilitiesToRegistrationRequest(RegistrationRequest registrationRequest, JsonElement slCapabilities) {
-        for (JsonElement cap : slCapabilities.getAsJsonArray()) {
-            JsonObject capAsJsonObject = cap.getAsJsonObject();
-            DesiredCapabilities desiredCapabilities = new DesiredCapabilities();
-            desiredCapabilities.setCapability(RegistrationRequest.MAX_INSTANCES, 5);
-            desiredCapabilities.setBrowserName(capAsJsonObject.get("api_name").getAsString());
-            desiredCapabilities.setPlatform(getPlatform(capAsJsonObject.get("os").getAsString()));
-            if (!registrationRequest.getConfiguration().capabilities.contains(desiredCapabilities)) {
-                registrationRequest.getConfiguration().capabilities.add(desiredCapabilities);
-            }
-        }
+    private static RegistrationRequest addCapabilitiesToRegistrationRequest(RegistrationRequest registrationRequest, int concurrency) {
+        DesiredCapabilities desiredCapabilities = new DesiredCapabilities();
+        desiredCapabilities.setCapability(RegistrationRequest.MAX_INSTANCES, concurrency);
+        desiredCapabilities.setBrowserName("SauceLabs");
+        desiredCapabilities.setPlatform(Platform.ANY);
+        registrationRequest.getConfiguration().capabilities.add(desiredCapabilities);
         return registrationRequest;
     }
 
-    private static Platform getPlatform(String os) {
-        if ("windows 2012".equalsIgnoreCase(os)) {
-            return Platform.WIN8;
-        }
-        return Platform.extractFromSysProperty(os);
+    @Override
+    public HtmlRenderer getHtmlRender() {
+        return this.renderer;
     }
 
     @Override
