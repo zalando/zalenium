@@ -1,9 +1,9 @@
-package de.zalando.tip.zalenium.util;
+package de.zalando.ep.zalenium.util;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import de.zalando.tip.zalenium.proxy.DockerSeleniumStarterRemoteProxy;
+import de.zalando.ep.zalenium.proxy.DockerSeleniumStarterRemoteProxy;
 import org.apache.commons.io.FileUtils;
 import org.openqa.grid.common.RegistrationRequest;
 import org.openqa.grid.internal.utils.configuration.GridNodeConfiguration;

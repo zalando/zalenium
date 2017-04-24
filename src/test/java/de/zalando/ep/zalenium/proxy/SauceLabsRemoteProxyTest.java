@@ -1,7 +1,7 @@
-package de.zalando.tip.zalenium.proxy;
+package de.zalando.ep.zalenium.proxy;
 
 import com.google.gson.JsonElement;
-import de.zalando.tip.zalenium.util.*;
+import de.zalando.ep.zalenium.util.*;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
@@ -9,6 +9,7 @@ import org.hamcrest.CoreMatchers;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.mockito.Mockito;
 import org.openqa.grid.common.RegistrationRequest;
 import org.openqa.grid.internal.ExternalSessionKey;
 import org.openqa.grid.internal.Registry;
@@ -139,7 +140,7 @@ public class SauceLabsRemoteProxyTest {
             requestedCapability.put(CapabilityType.PLATFORM, Platform.MAC);
 
             // Getting a test session in the sauce labs node
-            SauceLabsRemoteProxy sauceLabsSpyProxy = spy(sauceLabsProxy);
+            SauceLabsRemoteProxy sauceLabsSpyProxy = Mockito.spy(sauceLabsProxy);
             JsonElement informationSample = TestUtils.getTestInformationSample("saucelabs_testinformation.json");
             CommonProxyUtilities commonProxyUtilities = mock(CommonProxyUtilities.class);
             Environment env = new Environment();

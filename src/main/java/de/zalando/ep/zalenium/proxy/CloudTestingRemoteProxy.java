@@ -1,4 +1,4 @@
-package de.zalando.tip.zalenium.proxy;
+package de.zalando.ep.zalenium.proxy;
 
 /*
     Many concepts and ideas are inspired from the open source project seen here:
@@ -8,7 +8,7 @@ package de.zalando.tip.zalenium.proxy;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import de.zalando.tip.zalenium.util.*;
+import de.zalando.ep.zalenium.util.*;
 import org.apache.commons.io.FileUtils;
 import org.openqa.grid.common.RegistrationRequest;
 import org.openqa.grid.internal.Registry;

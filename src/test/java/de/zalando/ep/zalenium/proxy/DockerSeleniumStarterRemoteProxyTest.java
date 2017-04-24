@@ -1,11 +1,11 @@
-package de.zalando.tip.zalenium.proxy;
+package de.zalando.ep.zalenium.proxy;
 
 import com.spotify.docker.client.DockerClient;
 import com.spotify.docker.client.exceptions.DockerException;
 import com.spotify.docker.client.messages.ContainerConfig;
 import com.spotify.docker.client.messages.ContainerCreation;
-import de.zalando.tip.zalenium.util.Environment;
-import de.zalando.tip.zalenium.util.TestUtils;
+import de.zalando.ep.zalenium.util.Environment;
+import de.zalando.ep.zalenium.util.TestUtils;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Assert;

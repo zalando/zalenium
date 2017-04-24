@@ -1,4 +1,4 @@
-package de.zalando.tip.zalenium.util;
+package de.zalando.ep.zalenium.util;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;

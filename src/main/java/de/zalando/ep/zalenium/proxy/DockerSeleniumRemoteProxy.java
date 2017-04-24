@@ -1,4 +1,4 @@
-package de.zalando.tip.zalenium.proxy;
+package de.zalando.ep.zalenium.proxy;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.spotify.docker.client.DefaultDockerClient;
@@ -7,7 +7,7 @@ import com.spotify.docker.client.LogStream;
 import com.spotify.docker.client.exceptions.DockerException;
 import com.spotify.docker.client.messages.Container;
 import com.spotify.docker.client.messages.ExecCreation;
-import de.zalando.tip.zalenium.util.*;
+import de.zalando.ep.zalenium.util.*;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.compress.utils.IOUtils;

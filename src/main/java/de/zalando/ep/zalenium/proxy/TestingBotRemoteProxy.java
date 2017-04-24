@@ -1,10 +1,10 @@
-package de.zalando.tip.zalenium.proxy;
+package de.zalando.ep.zalenium.proxy;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import de.zalando.tip.zalenium.servlet.CloudProxyHtmlRenderer;
-import de.zalando.tip.zalenium.util.TestInformation;
+import de.zalando.ep.zalenium.servlet.CloudProxyHtmlRenderer;
+import de.zalando.ep.zalenium.util.TestInformation;
 import org.openqa.grid.common.RegistrationRequest;
 import org.openqa.grid.internal.Registry;
 import org.openqa.grid.internal.utils.HtmlRenderer;

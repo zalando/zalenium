@@ -1,6 +1,6 @@
-package de.zalando.tip.zalenium.util;
+package de.zalando.ep.zalenium.util;
 
-import de.zalando.tip.zalenium.proxy.DockerSeleniumStarterRemoteProxy;
+import de.zalando.ep.zalenium.proxy.DockerSeleniumStarterRemoteProxy;
 import org.openqa.grid.internal.RemoteProxy;
 import org.openqa.grid.internal.utils.DefaultCapabilityMatcher;
 import org.openqa.grid.selenium.proxy.DefaultRemoteProxy;

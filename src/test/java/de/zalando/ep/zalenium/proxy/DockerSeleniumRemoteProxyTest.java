@@ -1,12 +1,12 @@
-package de.zalando.tip.zalenium.proxy;
+package de.zalando.ep.zalenium.proxy;
 
 import com.spotify.docker.client.DefaultDockerClient;
 import com.spotify.docker.client.DockerClient;
 import com.spotify.docker.client.LogStream;
 import com.spotify.docker.client.exceptions.DockerException;
 import com.spotify.docker.client.messages.*;
-import de.zalando.tip.zalenium.util.Environment;
-import de.zalando.tip.zalenium.util.TestUtils;
+import de.zalando.ep.zalenium.util.Environment;
+import de.zalando.ep.zalenium.util.TestUtils;
 import org.awaitility.Duration;
 import org.junit.After;
 import org.junit.Assert;

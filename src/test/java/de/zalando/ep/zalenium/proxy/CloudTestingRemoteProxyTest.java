@@ -1,6 +1,6 @@
-package de.zalando.tip.zalenium.proxy;
+package de.zalando.ep.zalenium.proxy;
 
-import de.zalando.tip.zalenium.util.TestUtils;
+import de.zalando.ep.zalenium.util.TestUtils;
 import org.junit.Test;
 import org.openqa.grid.common.RegistrationRequest;
 import org.openqa.grid.internal.Registry;
