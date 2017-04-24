@@ -98,7 +98,6 @@ public class ZaleniumConsoleServlet extends RegistryBasedServlet {
 
         builder.append(getHeader());
 
-        // TODO freynaud : registry to return a copy of proxies ?
         List<String> nodes = new ArrayList<>();
         for (RemoteProxy proxy : getRegistry().getAllProxies()) {
             nodes.add(proxy.getHtmlRender().renderSummary());

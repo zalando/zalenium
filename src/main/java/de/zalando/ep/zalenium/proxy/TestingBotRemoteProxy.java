@@ -52,6 +52,11 @@ public class TestingBotRemoteProxy extends CloudTestingRemoteProxy {
     }
 
     @Override
+    public HtmlRenderer getHtmlRender() {
+        return this.renderer;
+    }
+
+    @Override
     public String getUserNameProperty() {
         return "key";
     }
