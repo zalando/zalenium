@@ -42,7 +42,7 @@ public class TestingBotRemoteProxy extends CloudTestingRemoteProxy {
             String logMessage = String.format("[TB] Getting account max. concurrency from %s", url.replace(userPasswordSuppress, ""));
             int testingBotAccountConcurrency;
             if (testingBotAccountInfo == null) {
-                logMessage = String.format("[TB] Account max. concurrency was NOT fetched from %s, falling to ",
+                logMessage = String.format("[TB] Account max. concurrency was NOT fetched from %s",
                         url.replace(userPasswordSuppress, ""));
                 testingBotAccountConcurrency = 1;
             } else {
@@ -51,6 +51,7 @@ public class TestingBotRemoteProxy extends CloudTestingRemoteProxy {
             logger.log(Level.INFO, logMessage);
             return addCapabilitiesToRegistrationRequest(registrationRequest, testingBotAccountConcurrency);
         } catch (Exception e) {
+            registrationRequest = addCapabilitiesToRegistrationRequest(registrationRequest, 1);
             logger.log(Level.SEVERE, e.toString(), e);
             getGa().trackException(e);
         }

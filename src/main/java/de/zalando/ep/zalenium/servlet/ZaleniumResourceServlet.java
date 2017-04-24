@@ -11,6 +11,10 @@ import java.io.InputStream;
 import java.util.Calendar;
 import java.util.Date;
 
+/*
+    Taken from the original org.openqa.grid.web.servlet.ResourceServlet
+ */
+
 public class ZaleniumResourceServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
