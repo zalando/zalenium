@@ -17,7 +17,10 @@ import org.openqa.grid.internal.utils.CapabilityMatcher;
 import org.openqa.grid.selenium.proxy.DefaultRemoteProxy;
 import org.openqa.grid.web.servlet.handler.RequestType;
 import org.openqa.grid.web.servlet.handler.WebDriverRequest;
+import org.openqa.selenium.Platform;
+import org.openqa.selenium.remote.BrowserType;
 import org.openqa.selenium.remote.CapabilityType;
+import org.openqa.selenium.remote.DesiredCapabilities;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -88,7 +91,7 @@ public class CloudTestingRemoteProxy extends DefaultRemoteProxy {
     public TestSession getNewSession(Map<String, Object> requestedCapability) {
         /*
             Validate first if the capability is matched
-         */
+        */
         if (!hasCapability(requestedCapability)) {
             return null;
         }
@@ -127,6 +130,16 @@ public class CloudTestingRemoteProxy extends DefaultRemoteProxy {
             }
         }
         super.afterCommand(session, request, response);
+    }
+
+    public static RegistrationRequest addCapabilitiesToRegistrationRequest(RegistrationRequest registrationRequest,
+                                                                           int concurrency, String proxyName) {
+        DesiredCapabilities desiredCapabilities = new DesiredCapabilities();
+        desiredCapabilities.setCapability(RegistrationRequest.MAX_INSTANCES, concurrency);
+        desiredCapabilities.setBrowserName(proxyName);
+        desiredCapabilities.setPlatform(Platform.ANY);
+        registrationRequest.getConfiguration().capabilities.add(desiredCapabilities);
+        return registrationRequest;
     }
 
     public String getProxyClassName() {

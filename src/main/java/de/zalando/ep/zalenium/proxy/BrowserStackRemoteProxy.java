@@ -8,8 +8,6 @@ import de.zalando.ep.zalenium.util.TestInformation;
 import org.openqa.grid.common.RegistrationRequest;
 import org.openqa.grid.internal.Registry;
 import org.openqa.grid.internal.utils.HtmlRenderer;
-import org.openqa.selenium.Platform;
-import org.openqa.selenium.remote.DesiredCapabilities;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,6 +24,7 @@ public class BrowserStackRemoteProxy extends CloudTestingRemoteProxy {
     private static final Logger logger = Logger.getLogger(BrowserStackRemoteProxy.class.getName());
     private static final String BROWSER_STACK_USER = getEnv().getStringEnvVariable("BROWSER_STACK_USER", "");
     private static final String BROWSER_STACK_KEY = getEnv().getStringEnvVariable("BROWSER_STACK_KEY", "");
+    private static final String BROWSER_STACK_PROXY_NAME = "BrowserStack";
     private final HtmlRenderer renderer = new CloudProxyHtmlRenderer(this);
 
     public BrowserStackRemoteProxy(RegistrationRequest request, Registry registry) {
@@ -50,21 +49,13 @@ public class BrowserStackRemoteProxy extends CloudTestingRemoteProxy {
                 browserStackAccountConcurrency = bsAccountInfo.getAsJsonObject().get("parallel_sessions_max_allowed").getAsInt();
             }
             logger.log(Level.INFO, logMessage);
-            return addCapabilitiesToRegistrationRequest(registrationRequest, browserStackAccountConcurrency);
+            return addCapabilitiesToRegistrationRequest(registrationRequest, browserStackAccountConcurrency,
+                    BROWSER_STACK_PROXY_NAME);
         } catch (Exception e) {
             logger.log(Level.SEVERE, e.toString(), e);
             getGa().trackException(e);
         }
-        return addCapabilitiesToRegistrationRequest(registrationRequest, 1);
-    }
-
-    private static RegistrationRequest addCapabilitiesToRegistrationRequest(RegistrationRequest registrationRequest, int concurrency) {
-        DesiredCapabilities desiredCapabilities = new DesiredCapabilities();
-        desiredCapabilities.setCapability(RegistrationRequest.MAX_INSTANCES, concurrency);
-        desiredCapabilities.setBrowserName("BrowserStack");
-        desiredCapabilities.setPlatform(Platform.ANY);
-        registrationRequest.getConfiguration().capabilities.add(desiredCapabilities);
-        return registrationRequest;
+        return addCapabilitiesToRegistrationRequest(registrationRequest, 1, BROWSER_STACK_PROXY_NAME);
     }
 
     @Override
@@ -123,7 +114,7 @@ public class BrowserStackRemoteProxy extends CloudTestingRemoteProxy {
 
     @Override
     public String getProxyName() {
-        return "BrowserStack";
+        return BROWSER_STACK_PROXY_NAME;
     }
 
     @Override

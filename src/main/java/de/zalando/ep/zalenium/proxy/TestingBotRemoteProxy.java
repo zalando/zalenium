@@ -8,8 +8,6 @@ import de.zalando.ep.zalenium.util.TestInformation;
 import org.openqa.grid.common.RegistrationRequest;
 import org.openqa.grid.internal.Registry;
 import org.openqa.grid.internal.utils.HtmlRenderer;
-import org.openqa.selenium.Platform;
-import org.openqa.selenium.remote.DesiredCapabilities;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,6 +24,7 @@ public class TestingBotRemoteProxy extends CloudTestingRemoteProxy {
     private static final String TESTINGBOT_KEY = getEnv().getStringEnvVariable("TESTINGBOT_KEY", "");
     private static final String TESTINGBOT_SECRET = getEnv().getStringEnvVariable("TESTINGBOT_SECRET", "");
     private static final Logger logger = Logger.getLogger(TestingBotRemoteProxy.class.getName());
+    private static final String TESTINGBOT_PROXY_NAME = "TestingBot";
     private final HtmlRenderer renderer = new CloudProxyHtmlRenderer(this);
 
     public TestingBotRemoteProxy(RegistrationRequest request, Registry registry) {
@@ -49,21 +48,13 @@ public class TestingBotRemoteProxy extends CloudTestingRemoteProxy {
                 testingBotAccountConcurrency = testingBotAccountInfo.getAsJsonObject().get("max_concurrent").getAsInt();
             }
             logger.log(Level.INFO, logMessage);
-            return addCapabilitiesToRegistrationRequest(registrationRequest, testingBotAccountConcurrency);
+            return addCapabilitiesToRegistrationRequest(registrationRequest, testingBotAccountConcurrency,
+                    TESTINGBOT_PROXY_NAME);
         } catch (Exception e) {
             logger.log(Level.SEVERE, e.toString(), e);
             getGa().trackException(e);
         }
-        return addCapabilitiesToRegistrationRequest(registrationRequest, 1);
-    }
-
-    private static RegistrationRequest addCapabilitiesToRegistrationRequest(RegistrationRequest registrationRequest, int concurrency) {
-        DesiredCapabilities desiredCapabilities = new DesiredCapabilities();
-        desiredCapabilities.setCapability(RegistrationRequest.MAX_INSTANCES, concurrency);
-        desiredCapabilities.setBrowserName("TestingBot");
-        desiredCapabilities.setPlatform(Platform.ANY);
-        registrationRequest.getConfiguration().capabilities.add(desiredCapabilities);
-        return registrationRequest;
+        return addCapabilitiesToRegistrationRequest(registrationRequest, 1, TESTINGBOT_PROXY_NAME);
     }
 
     @Override
@@ -139,7 +130,7 @@ public class TestingBotRemoteProxy extends CloudTestingRemoteProxy {
 
     @Override
     public String getProxyName() {
-        return "TestingBot";
+        return TESTINGBOT_PROXY_NAME;
     }
 
     @Override
