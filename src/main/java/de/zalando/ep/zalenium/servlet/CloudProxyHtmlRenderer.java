@@ -33,8 +33,6 @@ public class CloudProxyHtmlRenderer implements HtmlRenderer {
         builder.append("<p class='proxyname'>");
         builder.append(proxy.getClass().getSimpleName());
 
-        // TODO freynaud
-
         builder.append(getHtmlNodeVersion());
 
         String platform = getPlatform(proxy);

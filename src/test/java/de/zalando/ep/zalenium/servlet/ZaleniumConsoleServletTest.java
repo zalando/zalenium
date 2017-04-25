@@ -1,8 +1,6 @@
 package de.zalando.ep.zalenium.servlet;
 
-import de.zalando.ep.zalenium.proxy.DockerSeleniumRemoteProxy;
-import de.zalando.ep.zalenium.proxy.DockerSeleniumStarterRemoteProxy;
-import de.zalando.ep.zalenium.proxy.SauceLabsRemoteProxy;
+import de.zalando.ep.zalenium.proxy.*;
 import de.zalando.ep.zalenium.util.CommonProxyUtilities;
 import de.zalando.ep.zalenium.util.TestUtils;
 import org.junit.Before;
@@ -44,6 +42,13 @@ public class ZaleniumConsoleServletTest {
         SauceLabsRemoteProxy.setCommonProxyUtilities(commonProxyUtilities);
         SauceLabsRemoteProxy sauceLabsProxy = SauceLabsRemoteProxy.getNewInstance(registrationRequest, registry);
 
+        registrationRequest = TestUtils.getRegistrationRequestForTesting(30002, BrowserStackRemoteProxy.class.getCanonicalName());
+        BrowserStackRemoteProxy.setCommonProxyUtilities(commonProxyUtilities);
+        BrowserStackRemoteProxy browserStackRemoteProxy = BrowserStackRemoteProxy.getNewInstance(registrationRequest, registry);
+
+        registrationRequest = TestUtils.getRegistrationRequestForTesting(30002, TestingBotRemoteProxy.class.getCanonicalName());
+        TestingBotRemoteProxy.setCommonProxyUtilities(commonProxyUtilities);
+        TestingBotRemoteProxy testingBotRemoteProxy = TestingBotRemoteProxy.getNewInstance(registrationRequest, registry);
 
         registrationRequest = TestUtils.getRegistrationRequestForTesting(40000,
                 DockerSeleniumRemoteProxy.class.getCanonicalName());
@@ -68,6 +73,8 @@ public class ZaleniumConsoleServletTest {
         registry.add(proxyOne);
         registry.add(proxyTwo);
         registry.add(sauceLabsProxy);
+        registry.add(browserStackRemoteProxy);
+        registry.add(testingBotRemoteProxy);
 
         request = mock(HttpServletRequest.class);
         response = mock(HttpServletResponse.class);
@@ -105,4 +112,21 @@ public class ZaleniumConsoleServletTest {
         assertThat(getResponseContent, containsString(postResponseContent));
     }
 
+    @Test
+    public void checkResourcesInConsoleServlet() throws ServletException, IOException {
+        HttpServletRequest httpServletRequest;
+        HttpServletResponse httpServletResponse;
+
+        ZaleniumResourceServlet zaleniumResourceServlet = new ZaleniumResourceServlet();
+
+        httpServletRequest = mock(HttpServletRequest.class);
+        httpServletResponse = mock(HttpServletResponse.class);
+        when(httpServletRequest.getServerName()).thenReturn("localhost");
+        when(httpServletRequest.getServletPath()).thenReturn("http://localhost:4444/grid/admin/ZaleniumResourceServlet");
+        when(httpServletRequest.getPathInfo()).thenReturn("http://localhost:4444/grid/admin/ZaleniumResourceServlet/images/saucelabs.png");
+        when(httpServletResponse.getOutputStream()).thenReturn(TestUtils.getMockedServletOutputStream());
+
+        zaleniumResourceServlet.doGet(httpServletRequest, httpServletResponse);
+        assertThat(httpServletResponse.getOutputStream().toString(), containsString("PNG"));
+    }
 }
