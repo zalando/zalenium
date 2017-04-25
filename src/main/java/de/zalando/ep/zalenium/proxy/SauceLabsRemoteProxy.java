@@ -8,8 +8,6 @@ import de.zalando.ep.zalenium.util.TestInformation;
 import org.openqa.grid.common.RegistrationRequest;
 import org.openqa.grid.internal.Registry;
 import org.openqa.grid.internal.utils.HtmlRenderer;
-import org.openqa.selenium.Platform;
-import org.openqa.selenium.remote.DesiredCapabilities;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,6 +26,7 @@ public class SauceLabsRemoteProxy extends CloudTestingRemoteProxy {
     private static final String SAUCE_LABS_ACCESS_KEY = getEnv().getStringEnvVariable("SAUCE_ACCESS_KEY", "");
     private static final String SAUCE_LABS_URL = "http://ondemand.saucelabs.com:80";
     private static final Logger LOGGER = Logger.getLogger(SauceLabsRemoteProxy.class.getName());
+    private static final String SAUCE_LABS_PROXY_NAME = "SauceLabs";
     private final HtmlRenderer renderer = new CloudProxyHtmlRenderer(this);
 
     public SauceLabsRemoteProxy(RegistrationRequest request, Registry registry) {
@@ -52,21 +51,13 @@ public class SauceLabsRemoteProxy extends CloudTestingRemoteProxy {
                         get("overall").getAsInt();
             }
             LOGGER.log(Level.INFO, logMessage);
-            return addCapabilitiesToRegistrationRequest(registrationRequest, sauceLabsAccountConcurrency);
+            return addCapabilitiesToRegistrationRequest(registrationRequest, sauceLabsAccountConcurrency,
+                    SAUCE_LABS_PROXY_NAME);
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, e.toString(), e);
             getGa().trackException(e);
         }
-        return addCapabilitiesToRegistrationRequest(registrationRequest, 1);
-    }
-
-    private static RegistrationRequest addCapabilitiesToRegistrationRequest(RegistrationRequest registrationRequest, int concurrency) {
-        DesiredCapabilities desiredCapabilities = new DesiredCapabilities();
-        desiredCapabilities.setCapability(RegistrationRequest.MAX_INSTANCES, concurrency);
-        desiredCapabilities.setBrowserName("SauceLabs");
-        desiredCapabilities.setPlatform(Platform.ANY);
-        registrationRequest.getConfiguration().capabilities.add(desiredCapabilities);
-        return registrationRequest;
+        return addCapabilitiesToRegistrationRequest(registrationRequest, 1, SAUCE_LABS_PROXY_NAME);
     }
 
     @Override
