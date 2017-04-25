@@ -3,11 +3,9 @@ package de.zalando.ep.zalenium.proxy;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import de.zalando.ep.zalenium.servlet.CloudProxyHtmlRenderer;
 import de.zalando.ep.zalenium.util.TestInformation;
 import org.openqa.grid.common.RegistrationRequest;
 import org.openqa.grid.internal.Registry;
-import org.openqa.grid.internal.utils.HtmlRenderer;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,7 +25,6 @@ public class SauceLabsRemoteProxy extends CloudTestingRemoteProxy {
     private static final String SAUCE_LABS_URL = "http://ondemand.saucelabs.com:80";
     private static final Logger LOGGER = Logger.getLogger(SauceLabsRemoteProxy.class.getName());
     private static final String SAUCE_LABS_PROXY_NAME = "SauceLabs";
-    private final HtmlRenderer renderer = new CloudProxyHtmlRenderer(this);
 
     public SauceLabsRemoteProxy(RegistrationRequest request, Registry registry) {
         super(updateSLCapabilities(request, String.format(SAUCE_LABS_ACCOUNT_INFO, SAUCE_LABS_USER_NAME,
@@ -58,11 +55,6 @@ public class SauceLabsRemoteProxy extends CloudTestingRemoteProxy {
             getGa().trackException(e);
         }
         return addCapabilitiesToRegistrationRequest(registrationRequest, 1, SAUCE_LABS_PROXY_NAME);
-    }
-
-    @Override
-    public HtmlRenderer getHtmlRender() {
-        return this.renderer;
     }
 
     @Override

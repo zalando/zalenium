@@ -15,6 +15,8 @@ import org.openqa.selenium.remote.BrowserType;
 import org.openqa.selenium.remote.CapabilityType;
 import org.openqa.selenium.remote.DesiredCapabilities;
 
+import javax.servlet.ServletOutputStream;
+import javax.servlet.WriteListener;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
@@ -84,6 +86,32 @@ public class TestUtils {
         File testInformationFile = new File(testInfoLocation.getPath());
         String testInformation = FileUtils.readFileToString(testInformationFile, StandardCharsets.UTF_8);
         return new JsonParser().parse(testInformation);
+    }
+
+    public static ServletOutputStream getMockedServletOutputStream() {
+        return new ServletOutputStream() {
+            private StringBuilder stringBuilder = new StringBuilder();
+
+            @Override
+            public boolean isReady() {
+                System.out.println("isReady");
+                return false;
+            }
+
+            @Override
+            public void setWriteListener(WriteListener writeListener) {
+                System.out.println("setWriteListener");
+            }
+
+            @Override
+            public void write(int b) throws IOException {
+                this.stringBuilder.append((char) b );
+            }
+
+            public String toString() {
+                return stringBuilder.toString();
+            }
+        };
     }
 
 }

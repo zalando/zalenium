@@ -416,6 +416,16 @@ public class DockerSeleniumRemoteProxyTest {
         }
     }
 
+    @Test
+    public void videoRecordingIsDisabledViaCapability() {
+        Map<String, Object> requestedCapability = getCapabilitySupportedByDockerSelenium();
+        requestedCapability.put("recordVideo", false);
+
+        TestSession newSession = proxy.getNewSession(requestedCapability);
+        Assert.assertNotNull(newSession);
+        Assert.assertEquals(DockerSeleniumRemoteProxy.isVideoRecordingEnabled(), false);
+    }
+
     private void cleanUpAfterVideoRecordingTests(DockerClient dockerClient, String containerId,
                                      String zaleniumContainerId) throws DockerException, InterruptedException {
         String busyboxLatestImage = "busybox:latest";

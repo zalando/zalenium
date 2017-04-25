@@ -3,11 +3,9 @@ package de.zalando.ep.zalenium.proxy;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import de.zalando.ep.zalenium.servlet.CloudProxyHtmlRenderer;
 import de.zalando.ep.zalenium.util.TestInformation;
 import org.openqa.grid.common.RegistrationRequest;
 import org.openqa.grid.internal.Registry;
-import org.openqa.grid.internal.utils.HtmlRenderer;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,7 +23,6 @@ public class TestingBotRemoteProxy extends CloudTestingRemoteProxy {
     private static final String TESTINGBOT_SECRET = getEnv().getStringEnvVariable("TESTINGBOT_SECRET", "");
     private static final Logger logger = Logger.getLogger(TestingBotRemoteProxy.class.getName());
     private static final String TESTINGBOT_PROXY_NAME = "TestingBot";
-    private final HtmlRenderer renderer = new CloudProxyHtmlRenderer(this);
 
     public TestingBotRemoteProxy(RegistrationRequest request, Registry registry) {
         super(updateTBCapabilities(request, String.format(TESTINGBOT_ACCOUNT_INFO, TESTINGBOT_KEY,
@@ -55,11 +52,6 @@ public class TestingBotRemoteProxy extends CloudTestingRemoteProxy {
             getGa().trackException(e);
         }
         return addCapabilitiesToRegistrationRequest(registrationRequest, 1, TESTINGBOT_PROXY_NAME);
-    }
-
-    @Override
-    public HtmlRenderer getHtmlRender() {
-        return this.renderer;
     }
 
     @Override
