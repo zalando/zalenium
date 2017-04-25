@@ -79,6 +79,7 @@ public class ZaleniumConsoleServletTest {
         request = mock(HttpServletRequest.class);
         response = mock(HttpServletResponse.class);
 
+        when(request.getParameter("config")).thenReturn("true");
         when(request.getServerName()).thenReturn("localhost");
         when(response.getOutputStream()).thenReturn(TestUtils.getMockedServletOutputStream());
     }
