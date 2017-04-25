@@ -364,20 +364,6 @@ RUN  export SELBASE="https://selenium-release.storage.googleapis.com" \
   && export SELPATH="${SEL_MAJOR_VER}/selenium-server-standalone-${SEL_VER}.jar" \
   && wget -nv ${SELBASE}/${SELPATH}
 
-#================================
-# Sauce Labs capabilities backup
-#================================
-# Make a backup of Sauce Labs capabilities, in case the online fetch does not work
-# TODO: Remove this backup and fetch the metadata from docker-selenium LABELs
-#       that needs to be done at run time, not in this Dockerfile
-RUN  export SAUCE_LABS_CAPABILITIES="https://saucelabs.com/rest/v1/info/platforms/webdriver" \
-  && wget -nv "${SAUCE_LABS_CAPABILITIES}" -O saucelabs_capabilities.json
-
-#================================
-# BrowserStack capabilities backup
-#================================
-COPY browserstack_capabilities.json /home/seluser/
-
 #==========
 # Zalenium
 #==========

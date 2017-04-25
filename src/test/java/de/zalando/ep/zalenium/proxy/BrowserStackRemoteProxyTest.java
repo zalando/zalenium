@@ -12,7 +12,6 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mockito;
 import org.openqa.grid.common.RegistrationRequest;
 import org.openqa.grid.internal.ExternalSessionKey;
 import org.openqa.grid.internal.Registry;
@@ -26,9 +25,7 @@ import org.openqa.selenium.remote.CapabilityType;
 
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
-import java.io.File;
 import java.io.IOException;
-import java.net.URL;
 import java.util.*;
 
 import static org.mockito.Mockito.*;
@@ -45,12 +42,9 @@ public class BrowserStackRemoteProxyTest {
         // Creating the configuration and the registration request of the proxy (node)
         RegistrationRequest request = TestUtils.getRegistrationRequestForTesting(30002,
                 BrowserStackRemoteProxy.class.getCanonicalName());
-        URL resource = BrowserStackRemoteProxyTest.class.getClassLoader().getResource("browserstack_capabilities.json");
-        File fileLocation = new File(resource.getPath());
         CommonProxyUtilities commonProxyUtilities = mock(CommonProxyUtilities.class);
         when(commonProxyUtilities.readJSONFromUrl(anyString())).thenReturn(null);
         when(commonProxyUtilities.readJSONFromFile(anyString())).thenCallRealMethod();
-        when(commonProxyUtilities.currentLocalPath()).thenReturn(fileLocation.getParent());
         BrowserStackRemoteProxy.setCommonProxyUtilities(commonProxyUtilities);
         browserStackProxy = BrowserStackRemoteProxy.getNewInstance(request, registry);
 
@@ -142,7 +136,7 @@ public class BrowserStackRemoteProxyTest {
             BrowserStackRemoteProxy.setCommonProxyUtilities(commonProxyUtilities);
 
             // Getting a test session in the sauce labs node
-            BrowserStackRemoteProxy bsSpyProxy = Mockito.spy(browserStackProxy);
+            BrowserStackRemoteProxy bsSpyProxy = spy(browserStackProxy);
             TestSession testSession = bsSpyProxy.getNewSession(requestedCapability);
             Assert.assertNotNull(testSession);
             String mockSeleniumSessionId = "77e51cead8e6e37b0a0feb0dfa69325b2c4acf97";

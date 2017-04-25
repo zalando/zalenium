@@ -3,11 +3,12 @@ package de.zalando.ep.zalenium.proxy;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import de.zalando.ep.zalenium.servlet.CloudProxyHtmlRenderer;
 import de.zalando.ep.zalenium.util.TestInformation;
 import org.openqa.grid.common.RegistrationRequest;
 import org.openqa.grid.internal.Registry;
+import org.openqa.grid.internal.utils.HtmlRenderer;
 import org.openqa.selenium.Platform;
-import org.openqa.selenium.remote.BrowserType;
 import org.openqa.selenium.remote.DesiredCapabilities;
 
 import java.util.ArrayList;
@@ -21,74 +22,54 @@ import java.util.logging.Logger;
 public class BrowserStackRemoteProxy extends CloudTestingRemoteProxy {
 
     private static final String BROWSER_STACK_URL = "http://hub-cloud.browserstack.com:80";
-    private static final String BROWSER_STACK_CAPABILITIES_URL = "https://%s:%s@www.browserstack.com/automate/browsers.json";
+    private static final String BROWSER_STACK_ACCOUNT_INFO = "https://%s:%s@www.browserstack.com/automate/plan.json";
     private static final Logger logger = Logger.getLogger(BrowserStackRemoteProxy.class.getName());
-    private static final String BROWSER_STACK_CAPABILITIES_BK_FILE = "browserstack_capabilities.json";
     private static final String BROWSER_STACK_USER = getEnv().getStringEnvVariable("BROWSER_STACK_USER", "");
     private static final String BROWSER_STACK_KEY = getEnv().getStringEnvVariable("BROWSER_STACK_KEY", "");
+    private final HtmlRenderer renderer = new CloudProxyHtmlRenderer(this);
 
     public BrowserStackRemoteProxy(RegistrationRequest request, Registry registry) {
-        super(updateBSCapabilities(request, String.format(BROWSER_STACK_CAPABILITIES_URL, BROWSER_STACK_USER,
+        super(updateBSCapabilities(request, String.format(BROWSER_STACK_ACCOUNT_INFO, BROWSER_STACK_USER,
                 BROWSER_STACK_KEY)), registry);
     }
 
     @VisibleForTesting
     private static RegistrationRequest updateBSCapabilities(RegistrationRequest registrationRequest, String url) {
-        JsonElement bsCapabilities = getCommonProxyUtilities().readJSONFromUrl(url);
+        JsonElement bsAccountInfo = getCommonProxyUtilities().readJSONFromUrl(url);
         try {
             registrationRequest.getConfiguration().capabilities.clear();
             String userPasswordSuppress = String.format("%s:%s@", BROWSER_STACK_USER, BROWSER_STACK_KEY);
-            String logMessage = String.format("[BS] Capabilities fetched from %s", url.replace(userPasswordSuppress, ""));
-            if (bsCapabilities == null) {
-                logMessage = String.format("[BS] Capabilities were NOT fetched from %s, loading from backup file",
+            String logMessage = String.format("[BS] Getting account max. concurrency from %s",
+                    url.replace(userPasswordSuppress, ""));
+            int browserStackAccountConcurrency;
+            if (bsAccountInfo == null) {
+                logMessage = String.format("[BS] Account max. concurrency was NOT fetched from %s",
                         url.replace(userPasswordSuppress, ""));
-                bsCapabilities = getCommonProxyUtilities().readJSONFromFile(BROWSER_STACK_CAPABILITIES_BK_FILE);
+                browserStackAccountConcurrency = 1;
+            } else {
+                browserStackAccountConcurrency = bsAccountInfo.getAsJsonObject().get("parallel_sessions_max_allowed").getAsInt();
             }
             logger.log(Level.INFO, logMessage);
-            return addCapabilitiesToRegistrationRequest(registrationRequest, bsCapabilities);
+            return addCapabilitiesToRegistrationRequest(registrationRequest, browserStackAccountConcurrency);
         } catch (Exception e) {
             logger.log(Level.SEVERE, e.toString(), e);
             getGa().trackException(e);
         }
+        return addCapabilitiesToRegistrationRequest(registrationRequest, 1);
+    }
+
+    private static RegistrationRequest addCapabilitiesToRegistrationRequest(RegistrationRequest registrationRequest, int concurrency) {
+        DesiredCapabilities desiredCapabilities = new DesiredCapabilities();
+        desiredCapabilities.setCapability(RegistrationRequest.MAX_INSTANCES, concurrency);
+        desiredCapabilities.setBrowserName("BrowserStack");
+        desiredCapabilities.setPlatform(Platform.ANY);
+        registrationRequest.getConfiguration().capabilities.add(desiredCapabilities);
         return registrationRequest;
     }
 
-    private static RegistrationRequest addCapabilitiesToRegistrationRequest(RegistrationRequest registrationRequest, JsonElement slCapabilities) {
-        for (JsonElement cap : slCapabilities.getAsJsonArray()) {
-            JsonObject capAsJsonObject = cap.getAsJsonObject();
-            DesiredCapabilities desiredCapabilities = new DesiredCapabilities();
-            desiredCapabilities.setCapability(RegistrationRequest.MAX_INSTANCES, 5);
-            String browser = capAsJsonObject.get("browser").getAsString();
-            desiredCapabilities.setBrowserName(getBrowser(browser));
-            String os = capAsJsonObject.get("os").getAsString();
-            String osVersion = capAsJsonObject.get("os_version").getAsString();
-            desiredCapabilities.setPlatform(getPlatform(os, osVersion));
-            if (!registrationRequest.getConfiguration().capabilities.contains(desiredCapabilities)) {
-                registrationRequest.getConfiguration().capabilities.add(desiredCapabilities);
-            }
-        }
-        return registrationRequest;
-    }
-
-    private static String getBrowser(String browserName) {
-        if ("ie".equalsIgnoreCase(browserName)) {
-            return BrowserType.IE;
-        }
-        return browserName;
-    }
-
-    private static Platform getPlatform(String os, String osVersion) {
-        if ("ios".equalsIgnoreCase(os)) {
-            return Platform.MAC;
-        }
-        if ("windows".equalsIgnoreCase(os)) {
-            if ("xp".equalsIgnoreCase(osVersion)) {
-                return Platform.extractFromSysProperty(os);
-            } else {
-                return Platform.extractFromSysProperty(os + " " + osVersion);
-            }
-        }
-        return Platform.extractFromSysProperty(osVersion);
+    @Override
+    public HtmlRenderer getHtmlRender() {
+        return this.renderer;
     }
 
     @Override
