@@ -29,22 +29,36 @@ public class CommonProxyUtilities {
         http://stackoverflow.com/questions/496651/connecting-to-remote-url-which-requires-authentication-using-java
      */
     public JsonElement readJSONFromUrl(String jsonUrl) {
-        try {
-            URL url = new URL(jsonUrl);
-            URLConnection urlConnection = url.openConnection();
+        int maxAttempts = 10;
+        int currentAttempts = 0;
+        while (currentAttempts < maxAttempts) {
+            try {
+                URL url = new URL(jsonUrl);
+                URLConnection urlConnection = url.openConnection();
 
-            if (url.getUserInfo() != null) {
-                String basicAuth = "Basic " + new String(new Base64().encode(url.getUserInfo().getBytes()));
-                urlConnection.setRequestProperty("Authorization", basicAuth);
+                if (url.getUserInfo() != null) {
+                    String basicAuth = "Basic " + new String(new Base64().encode(url.getUserInfo().getBytes()));
+                    urlConnection.setRequestProperty("Authorization", basicAuth);
+                }
+
+                InputStream is = urlConnection.getInputStream();
+                BufferedReader rd = new BufferedReader(new InputStreamReader(is, Charset.forName("UTF-8")));
+                String jsonText = readAll(rd);
+                is.close();
+                return new JsonParser().parse(jsonText);
+            } catch (Exception e) {
+                currentAttempts++;
+                if (currentAttempts >= maxAttempts) {
+                    LOG.log(Level.SEVERE, e.toString(), e);
+                } else {
+                    LOG.log(Level.INFO, "Trying download once again from " + cleanUrlFromUserAndPassword(jsonUrl));
+                    try {
+                        Thread.sleep(1000 * 5);
+                    } catch (InterruptedException iE) {
+                        LOG.log(Level.FINE, iE.toString(), iE);
+                    }
+                }
             }
-
-            InputStream is = urlConnection.getInputStream();
-            BufferedReader rd = new BufferedReader(new InputStreamReader(is, Charset.forName("UTF-8")));
-            String jsonText = readAll(rd);
-            is.close();
-            return new JsonParser().parse(jsonText);
-        } catch (Exception e) {
-            LOG.log(Level.FINE, e.toString(), e);
         }
         return null;
     }
