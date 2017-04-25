@@ -36,6 +36,10 @@ public class SauceLabsRemoteProxyTest {
         // Creating the configuration and the registration request of the proxy (node)
         RegistrationRequest request = TestUtils.getRegistrationRequestForTesting(30001,
                 SauceLabsRemoteProxy.class.getCanonicalName());
+        CommonProxyUtilities commonProxyUtilities = mock(CommonProxyUtilities.class);
+        when(commonProxyUtilities.readJSONFromUrl(anyString())).thenReturn(null);
+        when(commonProxyUtilities.readJSONFromFile(anyString())).thenCallRealMethod();
+        SauceLabsRemoteProxy.setCommonProxyUtilities(commonProxyUtilities);
         sauceLabsProxy = SauceLabsRemoteProxy.getNewInstance(request, registry);
 
         // we need to register a DockerSeleniumStarter proxy to have a proper functioning SauceLabsProxy
