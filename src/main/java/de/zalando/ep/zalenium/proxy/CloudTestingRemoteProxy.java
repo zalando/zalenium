@@ -8,12 +8,14 @@ package de.zalando.ep.zalenium.proxy;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import de.zalando.ep.zalenium.servlet.CloudProxyHtmlRenderer;
 import de.zalando.ep.zalenium.util.*;
 import org.apache.commons.io.FileUtils;
 import org.openqa.grid.common.RegistrationRequest;
 import org.openqa.grid.internal.Registry;
 import org.openqa.grid.internal.TestSession;
 import org.openqa.grid.internal.utils.CapabilityMatcher;
+import org.openqa.grid.internal.utils.HtmlRenderer;
 import org.openqa.grid.selenium.proxy.DefaultRemoteProxy;
 import org.openqa.grid.web.servlet.handler.RequestType;
 import org.openqa.grid.web.servlet.handler.WebDriverRequest;
@@ -42,6 +44,7 @@ public class CloudTestingRemoteProxy extends DefaultRemoteProxy {
     private static GoogleAnalyticsApi ga = defaultGA;
     private static CommonProxyUtilities commonProxyUtilities = defaultCommonProxyUtilities;
     private static Environment env = defaultEnvironment;
+    private final HtmlRenderer renderer = new CloudProxyHtmlRenderer(this);
     private CapabilityMatcher capabilityHelper;
 
     @SuppressWarnings("WeakerAccess")
@@ -68,7 +71,7 @@ public class CloudTestingRemoteProxy extends DefaultRemoteProxy {
     }
 
     @VisibleForTesting
-    static void setCommonProxyUtilities(final CommonProxyUtilities utilities) {
+    public static void setCommonProxyUtilities(final CommonProxyUtilities utilities) {
         commonProxyUtilities = utilities;
     }
 
@@ -139,6 +142,11 @@ public class CloudTestingRemoteProxy extends DefaultRemoteProxy {
             }
         }
         super.afterCommand(session, request, response);
+    }
+
+    @Override
+    public HtmlRenderer getHtmlRender() {
+        return this.renderer;
     }
 
     public String getProxyClassName() {

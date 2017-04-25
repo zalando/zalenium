@@ -3,11 +3,9 @@ package de.zalando.ep.zalenium.proxy;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import de.zalando.ep.zalenium.servlet.CloudProxyHtmlRenderer;
 import de.zalando.ep.zalenium.util.TestInformation;
 import org.openqa.grid.common.RegistrationRequest;
 import org.openqa.grid.internal.Registry;
-import org.openqa.grid.internal.utils.HtmlRenderer;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,7 +23,6 @@ public class BrowserStackRemoteProxy extends CloudTestingRemoteProxy {
     private static final String BROWSER_STACK_USER = getEnv().getStringEnvVariable("BROWSER_STACK_USER", "");
     private static final String BROWSER_STACK_KEY = getEnv().getStringEnvVariable("BROWSER_STACK_KEY", "");
     private static final String BROWSER_STACK_PROXY_NAME = "BrowserStack";
-    private final HtmlRenderer renderer = new CloudProxyHtmlRenderer(this);
 
     public BrowserStackRemoteProxy(RegistrationRequest request, Registry registry) {
         super(updateBSCapabilities(request, String.format(BROWSER_STACK_ACCOUNT_INFO, BROWSER_STACK_USER,
@@ -56,11 +53,6 @@ public class BrowserStackRemoteProxy extends CloudTestingRemoteProxy {
             getGa().trackException(e);
         }
         return addCapabilitiesToRegistrationRequest(registrationRequest, 1, BROWSER_STACK_PROXY_NAME);
-    }
-
-    @Override
-    public HtmlRenderer getHtmlRender() {
-        return this.renderer;
     }
 
     @Override

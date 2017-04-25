@@ -1,9 +1,10 @@
 package de.zalando.ep.zalenium.servlet;
 
-
-import de.zalando.ep.zalenium.util.TestUtils;
 import de.zalando.ep.zalenium.proxy.DockerSeleniumRemoteProxy;
 import de.zalando.ep.zalenium.proxy.DockerSeleniumStarterRemoteProxy;
+import de.zalando.ep.zalenium.proxy.SauceLabsRemoteProxy;
+import de.zalando.ep.zalenium.util.CommonProxyUtilities;
+import de.zalando.ep.zalenium.util.TestUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.openqa.grid.common.RegistrationRequest;
@@ -14,18 +15,16 @@ import org.openqa.selenium.remote.DesiredCapabilities;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
 import java.io.IOException;
 import java.util.List;
 
-import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.CoreMatchers.containsString;
 
-public class LiveNodeServletTest {
-
+public class ZaleniumConsoleServletTest {
     private Registry registry;
     private HttpServletRequest request;
     private HttpServletResponse response;
@@ -35,10 +34,22 @@ public class LiveNodeServletTest {
         registry = Registry.newInstance();
 
         // Creating the configuration and the registration request of the proxy (node)
-        RegistrationRequest registrationRequest = TestUtils.getRegistrationRequestForTesting(40000,
+        RegistrationRequest registrationRequest = TestUtils.getRegistrationRequestForTesting(30000,
+                DockerSeleniumStarterRemoteProxy.class.getCanonicalName());
+        DockerSeleniumStarterRemoteProxy proxyZero = DockerSeleniumStarterRemoteProxy.getNewInstance(registrationRequest, registry);
+
+        registrationRequest = TestUtils.getRegistrationRequestForTesting(30001, SauceLabsRemoteProxy.class.getCanonicalName());
+        CommonProxyUtilities commonProxyUtilities = mock(CommonProxyUtilities.class);
+        when(commonProxyUtilities.readJSONFromUrl(anyString())).thenReturn(null);
+        SauceLabsRemoteProxy.setCommonProxyUtilities(commonProxyUtilities);
+        SauceLabsRemoteProxy sauceLabsProxy = SauceLabsRemoteProxy.getNewInstance(registrationRequest, registry);
+
+
+        registrationRequest = TestUtils.getRegistrationRequestForTesting(40000,
                 DockerSeleniumRemoteProxy.class.getCanonicalName());
         registrationRequest.getConfiguration().capabilities.clear();
         registrationRequest.getConfiguration().capabilities.addAll(DockerSeleniumStarterRemoteProxy.getCapabilities());
+
         DockerSeleniumRemoteProxy proxyOne = DockerSeleniumRemoteProxy.getNewInstance(registrationRequest, registry);
         registrationRequest = TestUtils.getRegistrationRequestForTesting(40001,
                 DockerSeleniumRemoteProxy.class.getCanonicalName());
@@ -50,58 +61,48 @@ public class LiveNodeServletTest {
         desiredCapabilities.setCapability(RegistrationRequest.MAX_INSTANCES, 1);
         capabilities.add(desiredCapabilities);
         registrationRequest.getConfiguration().capabilities.addAll(capabilities);
+
         DockerSeleniumRemoteProxy proxyTwo = DockerSeleniumRemoteProxy.getNewInstance(registrationRequest, registry);
 
+        registry.add(proxyZero);
         registry.add(proxyOne);
         registry.add(proxyTwo);
+        registry.add(sauceLabsProxy);
 
         request = mock(HttpServletRequest.class);
         response = mock(HttpServletResponse.class);
 
-        when(request.getParameter("refresh")).thenReturn("1");
         when(request.getServerName()).thenReturn("localhost");
         when(response.getOutputStream()).thenReturn(TestUtils.getMockedServletOutputStream());
     }
 
+
     @Test
     public void addedNodesAreRenderedInServlet() throws ServletException, IOException {
 
-        LivePreviewServlet livePreviewServletServlet = new LivePreviewServlet(registry);
+        ZaleniumConsoleServlet zaleniumConsoleServlet = new ZaleniumConsoleServlet(registry);
 
-        livePreviewServletServlet.doPost(request, response);
+        zaleniumConsoleServlet.doPost(request, response);
 
         String responseContent = response.getOutputStream().toString();
-        assertThat(responseContent, containsString("Zalenium Live Preview"));
-        assertThat(responseContent, containsString("http://localhost:40000"));
-        assertThat(responseContent, containsString("http://localhost:40001"));
-        assertThat(responseContent, containsString("http://localhost:5555/proxy/50000/?nginx=50000&view_only=true'"));
-        assertThat(responseContent, containsString("http://localhost:5555/proxy/50000/?nginx=50000&view_only=false'"));
-        assertThat(responseContent, containsString("http://localhost:5555/proxy/50001/?nginx=50001&view_only=true'"));
-        assertThat(responseContent, containsString("http://localhost:5555/proxy/50001/?nginx=50001&view_only=false'"));
+        System.out.println(responseContent);
+        assertThat(responseContent, containsString("Grid Console"));
+        assertThat(responseContent, containsString("DockerSeleniumStarterRemoteProxy"));
+        assertThat(responseContent, containsString("DockerSeleniumRemoteProxy"));
+        assertThat(responseContent, containsString("SauceLabsRemoteProxy"));
     }
 
     @Test
     public void postAndGetReturnSameContent() throws ServletException, IOException {
 
-        LivePreviewServlet livePreviewServletServlet = new LivePreviewServlet(registry);
+        ZaleniumConsoleServlet zaleniumConsoleServlet = new ZaleniumConsoleServlet(registry);
 
-        livePreviewServletServlet.doPost(request, response);
+        zaleniumConsoleServlet.doPost(request, response);
         String postResponseContent = response.getOutputStream().toString();
 
-        livePreviewServletServlet.doGet(request, response);
+        zaleniumConsoleServlet.doGet(request, response);
         String getResponseContent = response.getOutputStream().toString();
         assertThat(getResponseContent, containsString(postResponseContent));
-    }
-
-    @Test
-    public void noRefreshInHtmlWhenParameterIsInvalid() throws ServletException, IOException {
-        when(request.getParameter("refresh")).thenReturn("XYZ");
-
-        LivePreviewServlet livePreviewServletServlet = new LivePreviewServlet(registry);
-
-        livePreviewServletServlet.doPost(request, response);
-        String postResponseContent = response.getOutputStream().toString();
-        assertThat(postResponseContent, not(containsString("<meta http-equiv='refresh'")));
     }
 
 }

@@ -37,24 +37,11 @@ public class LiveNodeHtmlRenderer implements HtmlRenderer {
      */
     @SuppressWarnings("WeakerAccess")
     public static String getPlatform(DockerSeleniumRemoteProxy proxy) {
-
-        Platform res = getPlatform(proxy.getTestSlots().get(0));
-        if (res == null) {
-            return "not specified";
-        } else {
-            return res.toString();
-        }
+        return getPlatform(proxy.getTestSlots().get(0)).toString();
     }
 
     private static Platform getPlatform(TestSlot slot) {
-        Object o = slot.getCapabilities().get(CapabilityType.PLATFORM);
-        if (o instanceof String) {
-            return Platform.valueOf((String) o);
-        } else if (o instanceof Platform) {
-            return (Platform) o;
-        } else {
-            return Platform.ANY;
-        }
+        return (Platform) slot.getCapabilities().get(CapabilityType.PLATFORM);
     }
 
     @Override
