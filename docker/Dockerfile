@@ -10,9 +10,9 @@ RUN  echo "deb http://archive.ubuntu.com/ubuntu ${UBUNTU_FLAVOR} main universe\n
   && echo "deb http://archive.ubuntu.com/ubuntu ${UBUNTU_FLAVOR}-updates main universe\n" >> /etc/apt/sources.list \
   && echo "deb http://archive.ubuntu.com/ubuntu ${UBUNTU_FLAVOR}-security main universe\n" >> /etc/apt/sources.list
 
-MAINTAINER Team TIP <diemol+team-tip@gmail.com>
+MAINTAINER Team EP <diemol+team-ep@gmail.com>
 # https://github.com/docker/docker/pull/25466#discussion-diff-74622923R677
-LABEL maintainer "Team TIP <diemol+team-tip@gmail.com>"
+LABEL maintainer "Team EP <diemol+team-ep@gmail.com>"
 
 # No interactive frontend during docker build
 ENV DEBIAN_FRONTEND=noninteractive \
@@ -311,7 +311,7 @@ RUN set -x \
 # ------------------------#
 # https://docs.saucelabs.com/reference/sauce-connect/
 # Layer size: medium: ~13 MB
-ENV SAUCE_CONN_VER="sc-4.4.5-linux" \
+ENV SAUCE_CONN_VER="sc-4.4.6-linux" \
     SAUCE_CONN_DOWN_URL="https://saucelabs.com/downloads"
 RUN cd /tmp \
   && wget -nv "${SAUCE_CONN_DOWN_URL}/${SAUCE_CONN_VER}.tar.gz" \
@@ -363,25 +363,6 @@ ENV SEL_VER="${SEL_MAJOR_VER}.${SEL_PATCH_LEVEL_VER}"
 RUN  export SELBASE="https://selenium-release.storage.googleapis.com" \
   && export SELPATH="${SEL_MAJOR_VER}/selenium-server-standalone-${SEL_VER}.jar" \
   && wget -nv ${SELBASE}/${SELPATH}
-
-#================================
-# Sauce Labs capabilities backup
-#================================
-# Make a backup of Sauce Labs capabilities, in case the online fetch does not work
-# TODO: Remove this backup and fetch the metadata from docker-selenium LABELs
-#       that needs to be done at run time, not in this Dockerfile
-RUN  export SAUCE_LABS_CAPABILITIES="https://saucelabs.com/rest/v1/info/platforms/webdriver" \
-  && wget -nv "${SAUCE_LABS_CAPABILITIES}" -O saucelabs_capabilities.json
-
-#================================
-# BrowserStack capabilities backup
-#================================
-COPY browserstack_capabilities.json /home/seluser/
-
-#================================
-# TestingBot capabilities backup
-#================================
-COPY testingbot_capabilities.json /home/seluser/
 
 #==========
 # Zalenium
