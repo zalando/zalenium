@@ -82,24 +82,21 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     private static int chromeContainersOnStartup;
     private static int firefoxContainersOnStartup;
     private static int maxDockerSeleniumContainers;
+    private static String configuredTimeZone;
     private static String timeZone;
     private static int configuredScreenWidth;
     private static int screenWidth;
     private static int configuredScreenHeight;
     private static int screenHeight;
     private static String containerName;
+    private final HtmlRenderer renderer = new WebProxyHtmlRendererBeta(this);
     private List<Integer> allocatedPorts = new ArrayList<>();
     private boolean setupCompleted;
     private CapabilityMatcher capabilityHelper;
-    private final HtmlRenderer renderer = new WebProxyHtmlRendererBeta(this);
 
     @SuppressWarnings("WeakerAccess")
     public DockerSeleniumStarterRemoteProxy(RegistrationRequest request, Registry registry) {
         super(updateDSCapabilities(request), registry);
-    }
-
-    public HtmlRenderer getHtmlRender() {
-        return this.renderer;
     }
 
     /*
@@ -127,6 +124,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
 
         String tz = env.getStringEnvVariable(ZALENIUM_TZ, DEFAULT_TZ);
         setTimeZone(tz);
+        setConfiguredTimeZone(getTimeZone());
 
         String containerN = env.getStringEnvVariable(ZALENIUM_CONTAINER_NAME, DEFAULT_ZALENIUM_CONTAINER_NAME);
         setContainerName(containerN);
@@ -290,6 +288,14 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
         DockerSeleniumStarterRemoteProxy.configuredScreenHeight = configuredScreenHeight;
     }
 
+    public static String getConfiguredTimeZone() {
+        return configuredTimeZone;
+    }
+
+    public static void setConfiguredTimeZone(String configuredTimeZone) {
+        DockerSeleniumStarterRemoteProxy.configuredTimeZone = configuredTimeZone;
+    }
+
     @VisibleForTesting
     protected static void setEnv(final Environment env) {
         DockerSeleniumStarterRemoteProxy.env = env;
@@ -316,6 +322,10 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
         return images.get(0).repoTags().get(0);
     }
 
+    public HtmlRenderer getHtmlRender() {
+        return this.renderer;
+    }
+
     /**
      * Receives a request to create a new session, but instead of accepting it, it will create a
      * docker-selenium container which will register to the hub, then reject the request and the hub
@@ -337,6 +347,9 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
 
         // Check and configure specific screen resolution capabilities when they have been passed in the test config.
         configureScreenResolutionFromCapabilities(requestedCapability);
+
+        // Check and configure time zone capabilities when they have been passed in the test config.
+        configureTimeZoneFromCapabilities(requestedCapability);
 
         String browserName = requestedCapability.get(CapabilityType.BROWSER_NAME).toString();
 
@@ -547,6 +560,24 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
             setScreenHeight(getConfiguredScreenHeight());
             String screenResolution = String.format("%sx%s", getScreenWidth(), getScreenHeight());
             requestedCapability.put("screenResolution", screenResolution);
+        }
+    }
+
+    /*
+    This method will search for a tz capability to be passed when creating a docker-selenium node.
+    */
+    private void configureTimeZoneFromCapabilities(Map<String, Object> requestedCapability) {
+        boolean wasConfiguredTimeZoneChanged = false;
+        String timeZoneName = "tz";
+        if (requestedCapability.containsKey(timeZoneName)) {
+            String timeZone = requestedCapability.get(timeZoneName).toString();
+            setTimeZone(timeZone);
+            wasConfiguredTimeZoneChanged = true;
+        }
+        // If the time zone parameters was not changed, we just set the defaults again.
+        if (!wasConfiguredTimeZoneChanged) {
+            setTimeZone(getConfiguredTimeZone());
+            requestedCapability.put(timeZoneName, getConfiguredTimeZone());
         }
     }
 

@@ -77,6 +77,7 @@ public class ParallelIT  {
         desiredCapabilities.setCapability(CapabilityType.BROWSER_NAME, browserType);
         desiredCapabilities.setCapability(CapabilityType.PLATFORM, platform);
         desiredCapabilities.setCapability("name", method.getName());
+        desiredCapabilities.setCapability("tz", "America/Montreal");
         if (localTesting) {
             desiredCapabilities.setCapability("tunnel", "true");
             desiredCapabilities.setCapability("browserstack.local", "true");

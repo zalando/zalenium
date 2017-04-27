@@ -36,7 +36,7 @@ public class SauceLabsRemoteProxy extends CloudTestingRemoteProxy {
                 SAUCE_LABS_ACCESS_KEY);
         try {
             registrationRequest.getConfiguration().capabilities.clear();
-            String logMessage = String.format("[SL] Capabilities fetched from %s", url);
+            String logMessage = String.format("[SL] Account max. concurrency fetched from %s", url);
             int sauceLabsAccountConcurrency;
             if (slAccountInfo == null) {
                 logMessage = String.format("[SL] Account max. concurrency was NOT fetched from %s", url);
