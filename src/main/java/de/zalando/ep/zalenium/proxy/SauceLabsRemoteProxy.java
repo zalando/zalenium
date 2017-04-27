@@ -19,7 +19,7 @@ import java.util.logging.Logger;
 
 public class SauceLabsRemoteProxy extends CloudTestingRemoteProxy {
 
-    private static final String SAUCE_LABS_ACCOUNT_INFO = "https://%s:%s@saucelabs.com/rest/v1/users/%s";
+    private static final String SAUCE_LABS_ACCOUNT_INFO = "https://saucelabs.com/rest/v1/users/%s";
     private static final String SAUCE_LABS_USER_NAME = getEnv().getStringEnvVariable("SAUCE_USERNAME", "");
     private static final String SAUCE_LABS_ACCESS_KEY = getEnv().getStringEnvVariable("SAUCE_ACCESS_KEY", "");
     private static final String SAUCE_LABS_URL = "http://ondemand.saucelabs.com:80";
@@ -27,21 +27,19 @@ public class SauceLabsRemoteProxy extends CloudTestingRemoteProxy {
     private static final String SAUCE_LABS_PROXY_NAME = "SauceLabs";
 
     public SauceLabsRemoteProxy(RegistrationRequest request, Registry registry) {
-        super(updateSLCapabilities(request, String.format(SAUCE_LABS_ACCOUNT_INFO, SAUCE_LABS_USER_NAME,
-                SAUCE_LABS_ACCESS_KEY, SAUCE_LABS_USER_NAME)), registry);
+        super(updateSLCapabilities(request, String.format(SAUCE_LABS_ACCOUNT_INFO, SAUCE_LABS_USER_NAME)), registry);
     }
 
     @VisibleForTesting
     static RegistrationRequest updateSLCapabilities(RegistrationRequest registrationRequest, String url) {
-        JsonElement slAccountInfo = getCommonProxyUtilities().readJSONFromUrl(url);
+        JsonElement slAccountInfo = getCommonProxyUtilities().readJSONFromUrl(url, SAUCE_LABS_USER_NAME,
+                SAUCE_LABS_ACCESS_KEY);
         try {
             registrationRequest.getConfiguration().capabilities.clear();
-            String userPasswordSuppress = String.format("%s:%s@", SAUCE_LABS_USER_NAME, SAUCE_LABS_ACCESS_KEY);
-            String logMessage = String.format("[SL] Capabilities fetched from %s", url.replace(userPasswordSuppress, ""));
+            String logMessage = String.format("[SL] Capabilities fetched from %s", url);
             int sauceLabsAccountConcurrency;
             if (slAccountInfo == null) {
-                logMessage = String.format("[SL] Account max. concurrency was NOT fetched from %s",
-                        url.replace(userPasswordSuppress, ""));
+                logMessage = String.format("[SL] Account max. concurrency was NOT fetched from %s", url);
                 sauceLabsAccountConcurrency = 1;
             } else {
                 sauceLabsAccountConcurrency = slAccountInfo.getAsJsonObject().getAsJsonObject("concurrency_limit").
@@ -95,14 +93,14 @@ public class SauceLabsRemoteProxy extends CloudTestingRemoteProxy {
 
     @Override
     public TestInformation getTestInformation(String seleniumSessionId) {
-        // https://SL_USER:SL_KEY@saucelabs.com/rest/v1/SL_USER/jobs/SELENIUM_SESSION_ID
-        String sauceLabsTestUrl = "https://%s:%s@saucelabs.com/rest/v1/%s/jobs/%s";
-        sauceLabsTestUrl = String.format(sauceLabsTestUrl, getUserNameValue(), getAccessKeyValue(), getUserNameValue(),
-                seleniumSessionId);
+        // https://saucelabs.com/rest/v1/SL_USER/jobs/SELENIUM_SESSION_ID
+        String sauceLabsTestUrl = "https://saucelabs.com/rest/v1/%s/jobs/%s";
+        sauceLabsTestUrl = String.format(sauceLabsTestUrl, SAUCE_LABS_USER_NAME, seleniumSessionId);
         String sauceLabsVideoUrl = sauceLabsTestUrl + "/assets/video.flv";
         String sauceLabsBrowserLogUrl = sauceLabsTestUrl + "/assets/log.json";
         String sauceLabsSeleniumLogUrl = sauceLabsTestUrl + "/assets/selenium-server.log";
-        JsonObject testData = getCommonProxyUtilities().readJSONFromUrl(sauceLabsTestUrl).getAsJsonObject();
+        JsonObject testData = getCommonProxyUtilities().readJSONFromUrl(sauceLabsTestUrl, SAUCE_LABS_USER_NAME,
+                SAUCE_LABS_ACCESS_KEY).getAsJsonObject();
         String testName = testData.get("name").isJsonNull() ? null : testData.get("name").getAsString();
         String browser = testData.get("browser").getAsString();
         String browserVersion = testData.get("browser_short_version").getAsString();

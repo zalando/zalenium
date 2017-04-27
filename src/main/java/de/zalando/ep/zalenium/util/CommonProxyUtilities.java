@@ -28,18 +28,16 @@ public class CommonProxyUtilities {
         http://stackoverflow.com/questions/4308554/simplest-way-to-read-json-from-a-url-in-java
         http://stackoverflow.com/questions/496651/connecting-to-remote-url-which-requires-authentication-using-java
      */
-    public JsonElement readJSONFromUrl(String jsonUrl) {
+    public JsonElement readJSONFromUrl(String jsonUrl, String user, String password) {
         int maxAttempts = 10;
         int currentAttempts = 0;
         while (currentAttempts < maxAttempts) {
             try {
                 URL url = new URL(jsonUrl);
                 URLConnection urlConnection = url.openConnection();
-
-                if (url.getUserInfo() != null) {
-                    String basicAuth = "Basic " + new String(new Base64().encode(url.getUserInfo().getBytes()));
-                    urlConnection.setRequestProperty("Authorization", basicAuth);
-                }
+                String userPass = user + ":" + password;
+                String basicAuth = "Basic " + new String(new Base64().encode(userPass.getBytes()));
+                urlConnection.setRequestProperty("Authorization", basicAuth);
 
                 InputStream is = urlConnection.getInputStream();
                 BufferedReader rd = new BufferedReader(new InputStreamReader(is, Charset.forName("UTF-8")));
@@ -48,10 +46,11 @@ public class CommonProxyUtilities {
                 return new JsonParser().parse(jsonText);
             } catch (Exception e) {
                 currentAttempts++;
+                LOG.log(Level.SEVERE, e.toString(), e);
                 if (currentAttempts >= maxAttempts) {
                     LOG.log(Level.SEVERE, e.toString(), e);
                 } else {
-                    LOG.log(Level.INFO, "Trying download once again from " + cleanUrlFromUserAndPassword(jsonUrl));
+                    LOG.log(Level.INFO, "Trying download once again from " + jsonUrl);
                     try {
                         Thread.sleep(1000 * 5);
                     } catch (InterruptedException iE) {
@@ -90,7 +89,8 @@ public class CommonProxyUtilities {
         http://code.runnable.com/Uu83dm5vSScIAACw/download-a-file-from-the-web-for-java-files-and-save
      */
     @SuppressWarnings("ResultOfMethodCallIgnored")
-    public void downloadFile(String fileUrl, String fileNameWithFullPath) throws InterruptedException {
+    public void downloadFile(String fileUrl, String fileNameWithFullPath, String user, String password)
+            throws InterruptedException {
         int maxAttempts = 10;
         int currentAttempts = 0;
         // Videos are usually not ready right away, we put a little sleep to avoid falling into the catch/retry.
@@ -98,11 +98,10 @@ public class CommonProxyUtilities {
         while (currentAttempts < maxAttempts) {
             try {
                 URL link = new URL(fileUrl);
+                String userPass = user + ":" + password;
                 URLConnection urlConnection = link.openConnection();
-                if (link.getUserInfo() != null) {
-                    String basicAuth = "Basic " + new String(new Base64().encode(link.getUserInfo().getBytes()));
-                    urlConnection.setRequestProperty("Authorization", basicAuth);
-                }
+                String basicAuth = "Basic " + new String(new Base64().encode(userPass.getBytes()));
+                urlConnection.setRequestProperty("Authorization", basicAuth);
 
                 //Code to download
                 InputStream in = new BufferedInputStream(urlConnection.getInputStream());
@@ -133,7 +132,7 @@ public class CommonProxyUtilities {
                 if (currentAttempts >= maxAttempts) {
                     LOG.log(Level.SEVERE, e.toString(), e);
                 } else {
-                    LOG.log(Level.INFO, "Trying download once again from " + cleanUrlFromUserAndPassword(fileUrl));
+                    LOG.log(Level.INFO, "Trying download once again from " + fileUrl);
                     Thread.sleep(currentAttempts * 5 * 1000);
                 }
             } catch (Exception e) {
@@ -141,10 +140,6 @@ public class CommonProxyUtilities {
                 LOG.log(Level.SEVERE, e.toString(), e);
             }
         }
-    }
-
-    private String cleanUrlFromUserAndPassword(String url) {
-        return url.replaceAll("\\/[a-zA-Z0-9]*:[a-zA-Z0-9]*", "XXXXX:XXXXX");
     }
 
     public void convertFlvFileToMP4(TestInformation testInformation) {

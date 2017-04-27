@@ -38,7 +38,7 @@ public class ZaleniumConsoleServletTest {
 
         registrationRequest = TestUtils.getRegistrationRequestForTesting(30001, SauceLabsRemoteProxy.class.getCanonicalName());
         CommonProxyUtilities commonProxyUtilities = mock(CommonProxyUtilities.class);
-        when(commonProxyUtilities.readJSONFromUrl(anyString())).thenReturn(null);
+        when(commonProxyUtilities.readJSONFromUrl(anyString(), anyString(), anyString())).thenReturn(null);
         SauceLabsRemoteProxy.setCommonProxyUtilities(commonProxyUtilities);
         SauceLabsRemoteProxy sauceLabsProxy = SauceLabsRemoteProxy.getNewInstance(registrationRequest, registry);
 
