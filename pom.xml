@@ -4,9 +4,9 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>de.zalando.tip</groupId>
+    <groupId>de.zalando.ep</groupId>
     <artifactId>zalenium</artifactId>
-    <version>3.3.1d-SNAPSHOT</version>
+    <version>3.3.1e-SNAPSHOT</version>
     <name>Zalenium</name>
     <description>An on-demand, dynamic local Selenium Grid with an extension to a cloud testing platform.</description>
 
@@ -50,18 +50,19 @@
     <properties>
         <selenium-server.major-minor.version>3.3</selenium-server.major-minor.version>
         <selenium-server.patch-level.version>1</selenium-server.patch-level.version>
-        <docker-client.version>8.3.1</docker-client.version>
+        <docker-client.version>8.3.2</docker-client.version>
         <junit.version>4.12</junit.version>
         <mockito.version>2.7.22</mockito.version>
         <awaitility.version>2.0.0</awaitility.version>
         <testng.version>6.11</testng.version>
         <slf4j.version>1.7.25</slf4j.version>
-        <surefire.version>2.19.1</surefire.version>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
         <maven.compiler.plugin>3.6.1</maven.compiler.plugin>
         <maven-resources-plugin.version>3.0.2</maven-resources-plugin.version>
         <maven-shade-plugin.version>3.0.0</maven-shade-plugin.version>
+        <maven-surefire-plugin.version>2.20</maven-surefire-plugin.version>
+        <maven-failsafe-plugin.version>2.20</maven-failsafe-plugin.version>
         <exec-maven-plugin.version>1.6.0</exec-maven-plugin.version>
         <jacoco-maven-plugin.version>0.7.9</jacoco-maven-plugin.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -234,7 +235,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>${surefire.version}</version>
+                <version>${maven-surefire-plugin.version}</version>
                 <configuration>
                     <systemPropertyVariables>
                         <java.util.logging.SimpleFormatter.format>%1$tY-%1$tm-%1$td %1$tH:%1$tM:%1$tS %4$-6s %5$s %6$s%n</java.util.logging.SimpleFormatter.format>
@@ -246,7 +247,7 @@
                     <dependency>
                         <groupId>org.apache.maven.surefire</groupId>
                         <artifactId>surefire-junit47</artifactId>
-                        <version>${surefire.version}</version>
+                        <version>${maven-surefire-plugin.version}</version>
                     </dependency>
                 </dependencies>
             </plugin>
@@ -325,7 +326,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-failsafe-plugin</artifactId>
-                        <version>2.19.1</version>
+                        <version>${maven-failsafe-plugin.version}</version>
                         <configuration>
                             <parallel>methods</parallel>
                             <threadCount>${threadCountProperty}</threadCount>

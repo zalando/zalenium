@@ -12,7 +12,7 @@ Below are a few guidelines we would like you to follow.
 If you need help, please open a github Issue in this project. If you work at Zalando reach out to us at team-tip
 
 ## Report a bug
-Reporting bugs is one of the best ways to contribute. Before creating a bug report, please check that an [issue] (https://github.bus.zalan.do/TIP/zalenium/issues) reporting the same problem does not already exist. If there is an such an issue, you may add your information as a comment.
+Reporting bugs is one of the best ways to contribute. Before creating a bug report, please check that an [issue] (https://github.com/zalando/zalenium/issues) reporting the same problem does not already exist. If there is an such an issue, you may add your information as a comment.
 
 To report a new bug, open an issue that summarizes the bug and set the label to "bug".
 
@@ -23,14 +23,14 @@ To request a new feature, open an [issue] (https://github.bus.zalan.do/TIP/zalen
 
 ## Contribute code
 This is a rough outline of what the workflow for code contributions looks like:
-- Check the list of open [issues] (https://github.bus.zalan.do/TIP/zalenium/issues). Either assign an existing issue to yourself, or create a new one that you would like work on and discuss your ideas and use cases.
+- Check the list of open [issues] (https://github.com/zalando/zalenium/issues). Either assign an existing issue to yourself, or create a new one that you would like work on and discuss your ideas and use cases.
 - Fork the repository on GHE
 - Create a topic branch from where you want to base your work. This is usually master.
 - Make commits of logical units.
 - Write good commit messages (see below).
 - Push your changes to a topic branch in your fork of the repository.
 - Submit a pull request
-- Your pull request must receive a :thumbsup: from two [maintainers](https://github.bus.zalan.do/TIP/zalenium/blob/master/MAINTAINERS).
+- Your pull request must receive a :thumbsup: from two [maintainers](https://github.com/zalando/zalenium/blob/master/MAINTAINERS).
 
 Thanks for your contributions!
 

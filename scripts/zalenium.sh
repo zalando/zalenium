@@ -65,6 +65,17 @@ WaitStarterProxy()
 }
 export -f WaitStarterProxy
 
+WaitStarterProxyToRegister()
+{
+    # Also wait for the Proxy to be registered into the hub
+    while ! curl -sSL "http://localhost:4444/grid/console" 2>&1 \
+            | grep "DockerSeleniumStarterRemoteProxy" 2>&1 >/dev/null; do
+        echo -n '.'
+        sleep 0.2
+    done
+}
+export -f WaitStarterProxyToRegister
+
 WaitSauceLabsProxy()
 {
     # Wait for the sauce node success
@@ -126,18 +137,18 @@ WaitTestingBotProxy()
 export -f WaitTestingBotProxy
 
 WaitForVideosTransferred() {
-    local __amount_of_run_tests=$(</home/seluser/videos/amount_of_run_tests.txt)
-    local __amount_of_mp4_files=$(ls -1q /home/seluser/videos/*.mp4 | wc -l)
+    local __amount_of_tests_with_video=$(jq .executedTestsWithVideo /home/seluser/videos/executedTestsInfo.json)
 
-    if [ "${__amount_of_run_tests}" -gt 0 ]; then
-        while [ "${__amount_of_mp4_files}" -lt "${__amount_of_run_tests}" ]; do
-            log "Waiting for ${__amount_of_mp4_files} mp4 files to be a total of ${__amount_of_run_tests}..."
+    if [ ${__amount_of_tests_with_video} -gt 0 ]; then
+        local __amount_of_mp4_files=$(ls -1q /home/seluser/videos/*.mp4 | wc -l)
+        while [ "${__amount_of_mp4_files}" -lt "${__amount_of_tests_with_video}" ]; do
+            log "Waiting for ${__amount_of_mp4_files} mp4 files to be a total of ${__amount_of_tests_with_video}..."
             sleep 0.5
 
             # Also check if there are mkv, this would mean that
             # docker-selenium failed to convert them to mp4
             local __amount_of_mkv_files=$(ls -1q /home/seluser/videos/*.mkv | wc -l)
-            if [ "${__amount_of_mkv_files}" -gt 0 ]; then
+            if [ ${__amount_of_mkv_files} -gt 0 ]; then
                 for __filename in /home/seluser/videos/*.mkv; do
                     local __new_file_name="$(basename ${__filename} .mkv).mp4"
                     log "Renaming ${__filename} into ${__new_file_name} ..."
@@ -155,10 +166,22 @@ export -f WaitForVideosTransferred
 EnsureCleanEnv()
 {
     log "Ensuring no stale Zalenium related containers are still around..."
-    CONTAINERS=$(docker ps -a -f name=${CONTAINER_NAME}_ -q | wc -l)
-    if [ ${CONTAINERS} -gt 0 ]; then
+    local __containers=$(docker ps -a -f name=${CONTAINER_NAME}_ -q | wc -l)
+
+    # If there are still containers around; stop gracefully
+    if [ ${__containers} -gt 0 ]; then
         echo "Removing exited docker-selenium containers..."
-        docker rm -f $(docker ps -a -f name=${CONTAINER_NAME}_ -q)
+        docker stop $(docker ps -a -f name=${CONTAINER_NAME}_ -q)
+
+        # If there are still containers around; remove them
+        if [ $(docker ps -a -f name=${CONTAINER_NAME}_ -q | wc -l) -gt 0 ]; then
+            docker rm $(docker ps -a -f name=${CONTAINER_NAME}_ -q)
+        fi
+
+        # If there are still containers around; forcibly remove them
+        if [ $(docker ps -a -f name=${CONTAINER_NAME}_ -q | wc -l) -gt 0 ]; then
+            docker rm -f $(docker ps -a -f name=${CONTAINER_NAME}_ -q)
+        fi
     fi
 }
 
@@ -357,7 +380,9 @@ StartUp()
     mkdir -p logs
 
     java -cp ${SELENIUM_ARTIFACT}:${ZALENIUM_ARTIFACT} org.openqa.grid.selenium.GridLauncherV3 \
-    -role hub -port 4445 -servlets de.zalando.tip.zalenium.servlet.live \
+    -role hub -port 4445 -servlet de.zalando.ep.zalenium.servlet.LivePreviewServlet \
+    -servlet de.zalando.ep.zalenium.servlet.ZaleniumConsoleServlet \
+    -servlet de.zalando.ep.zalenium.servlet.ZaleniumResourceServlet \
     -debug ${DEBUG_ENABLED} > logs/stdout.zalenium.hub.log &
     echo $! > ${PID_PATH_SELENIUM}
 
@@ -371,13 +396,18 @@ StartUp()
     echo "Starting DockerSeleniumStarter node..."
 
     java -jar ${SELENIUM_ARTIFACT} -role node -hub http://localhost:4444/grid/register \
-     -proxy de.zalando.tip.zalenium.proxy.DockerSeleniumStarterRemoteProxy \
+     -proxy de.zalando.ep.zalenium.proxy.DockerSeleniumStarterRemoteProxy \
      -port 30000 -debug ${DEBUG_ENABLED} > logs/stdout.zalenium.docker.node.log &
     echo $! > ${PID_PATH_DOCKER_SELENIUM_NODE}
 
     if ! timeout --foreground "30s" bash -c WaitStarterProxy; then
         echo "StarterRemoteProxy failed to start after 30 seconds, failing..."
         exit 12
+    fi
+
+    if ! timeout --foreground "30s" bash -c WaitStarterProxyToRegister; then
+        echo "StarterRemoteProxy failed to register to the hub after 30 seconds, failing..."
+        exit 13
     fi
     echo "DockerSeleniumStarter node started!"
 
@@ -394,7 +424,7 @@ StartUp()
     if [ "$SAUCE_LABS_ENABLED" = true ]; then
         echo "Starting Sauce Labs node..."
         java -jar ${SELENIUM_ARTIFACT} -role node -hub http://localhost:4444/grid/register \
-         -proxy de.zalando.tip.zalenium.proxy.SauceLabsRemoteProxy \
+         -proxy de.zalando.ep.zalenium.proxy.SauceLabsRemoteProxy \
          -port 30001 -debug ${DEBUG_ENABLED} > logs/stdout.zalenium.sauce.node.log &
         echo $! > ${PID_PATH_SAUCE_LABS_NODE}
 
@@ -420,7 +450,7 @@ StartUp()
     if [ "$BROWSER_STACK_ENABLED" = true ]; then
         echo "Starting Browser Stack node..."
         java -jar ${SELENIUM_ARTIFACT} -role node -hub http://localhost:4444/grid/register \
-         -proxy de.zalando.tip.zalenium.proxy.BrowserStackRemoteProxy \
+         -proxy de.zalando.ep.zalenium.proxy.BrowserStackRemoteProxy \
          -port 30002 -debug ${DEBUG_ENABLED} > logs/stdout.zalenium.browserstack.node.log &
         echo $! > ${PID_PATH_BROWSER_STACK_NODE}
 
@@ -445,7 +475,7 @@ StartUp()
     if [ "$TESTINGBOT_ENABLED" = true ]; then
         echo "Starting TestingBot node..."
         java -jar ${SELENIUM_ARTIFACT} -role node -hub http://localhost:4444/grid/register \
-         -proxy de.zalando.tip.zalenium.proxy.TestingBotRemoteProxy \
+         -proxy de.zalando.ep.zalenium.proxy.TestingBotRemoteProxy \
          -port 30003 -debug ${DEBUG_ENABLED} > logs/stdout.zalenium.testingbot.node.log &
         echo $! > ${PID_PATH_TESTINGBOT_NODE}
 
@@ -602,11 +632,10 @@ ShutDown()
         fi
     fi
 
-    if [ "${VIDEO_RECORDING_ENABLED}" = true ] && \
-       [ -f /home/seluser/videos/amount_of_run_tests.txt ]; then
+    if [ -f /home/seluser/videos/executedTestsInfo.json ]; then
         # Wait for the dashboard and the videos, if applies
         if timeout --foreground "2m" bash -c WaitForVideosTransferred; then
-            local __total="$(</home/seluser/videos/amount_of_run_tests.txt)"
+            local __total="$(</home/seluser/videos/executedTestsInfo.json | jq .executedTestsWithVideo)"
             log "WaitForVideosTransferred succeeded for a total of ${__total}"
         else
             log "WaitForVideosTransferred failed after 2 minutes!"
