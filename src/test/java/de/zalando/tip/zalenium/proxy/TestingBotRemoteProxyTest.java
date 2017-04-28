@@ -64,7 +64,12 @@ public class TestingBotRemoteProxyTest {
                 DockerSeleniumStarterRemoteProxy.class.getCanonicalName());
         DockerSeleniumStarterRemoteProxy dsStarterProxy = DockerSeleniumStarterRemoteProxy.getNewInstance(request, registry);
 
-        DashboardTestingSupport.ensureRequiredInputFilesExist(temporaryFolder);
+        // Temporal folder for dashboard files
+        temporaryFolder.newFile("list_template.html");
+        temporaryFolder.newFile("dashboard_template.html");
+        temporaryFolder.newFile("zalando.ico");
+        temporaryFolder.newFolder("css");
+        temporaryFolder.newFolder("js");
 
         // We add both nodes to the registry
         registry.add(testingBotProxy);
@@ -234,7 +239,10 @@ public class TestingBotRemoteProxyTest {
             testSession.getSlot().doFinishRelease();
             spyProxy.afterCommand(testSession, request, response);
 
-            DashboardTestingSupport.mockCommonProxyUtilitiesForDashboardTesting(temporaryFolder);
+            CommonProxyUtilities commonProxyUtilities = mock(CommonProxyUtilities.class);
+            when(commonProxyUtilities.currentLocalPath()).thenReturn(temporaryFolder.getRoot().getAbsolutePath());
+            when(commonProxyUtilities.getShortDateAndTime()).thenCallRealMethod();
+            Dashboard.setCommonProxyUtilities(commonProxyUtilities);
 
             TestInformation testInformation = spyProxy.getTestInformation(mockSeleniumSessionId);
             Dashboard.updateDashboard(testInformation);
@@ -284,7 +292,10 @@ public class TestingBotRemoteProxyTest {
             testSession.getSlot().doFinishRelease();
             spyProxy.afterCommand(testSession, request, response);
 
-            DashboardTestingSupport.mockCommonProxyUtilitiesForDashboardTesting(temporaryFolder);
+            CommonProxyUtilities commonProxyUtilities = mock(CommonProxyUtilities.class);
+            when(commonProxyUtilities.currentLocalPath()).thenReturn(temporaryFolder.getRoot().getAbsolutePath());
+            when(commonProxyUtilities.getShortDateAndTime()).thenCallRealMethod();
+            Dashboard.setCommonProxyUtilities(commonProxyUtilities);
 
             TestInformation testInformation = spyProxy.getTestInformation(mockSeleniumSessionId);
             Dashboard.updateDashboard(testInformation);
