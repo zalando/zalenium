@@ -441,7 +441,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                         LOGGER.log(Level.FINE, dockerSeleniumRemoteProxy.getId() + " Error copying the logs.", e);
                     }
                     try {
-                        Dashboard.updateDashboard(dockerSeleniumRemoteProxy.testInformation);
+                        DashboardDataHandler.addNewTest(dockerSeleniumRemoteProxy.testInformation);
                     } catch (IOException e) {
                         LOGGER.log(Level.FINE, dockerSeleniumRemoteProxy.getId() + " Error while updating the " +
                                 "dashboard.", e);
