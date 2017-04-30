@@ -135,7 +135,7 @@
                 <executions>
                     <execution>
                         <id>start-stop-script</id>
-                        <phase>package</phase>
+                        <phase>validate</phase>
                         <goals>
                             <goal>copy-resources</goal>
                         </goals>

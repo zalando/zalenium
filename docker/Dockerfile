@@ -395,8 +395,7 @@ COPY start-saucelabs.sh /home/seluser/
 COPY wait-saucelabs.sh /home/seluser/
 COPY start-testingbot.sh /home/seluser/
 COPY wait-testingbot.sh /home/seluser/
-COPY list_template.html /home/seluser/
-COPY dashboard_template.html /home/seluser/
+COPY dashboard.html /home/seluser/
 COPY zalando.ico /home/seluser/
 COPY css/ /home/seluser/css/
 COPY js/ /home/seluser/js/

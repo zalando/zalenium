@@ -1,5 +1,9 @@
 package de.zalando.ep.zalenium.util;
 
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -8,9 +12,11 @@ import java.util.List;
  */
 @SuppressWarnings("WeakerAccess")
 public class TestInformation {
+    public static final String VIDEOS_FOLDER_NAME = "videos";
+    public static final String LOGS_FOLDER_NAME = "logs";
     private static final String TEST_FILE_NAME_TEMPLATE = "{proxyName}_{testName}_{browser}_{platform}_{timestamp}";
     private static final String FILE_NAME_TEMPLATE = "{fileName}{fileExtension}";
-    private static final CommonProxyUtilities commonProxyUtilities = new CommonProxyUtilities();
+    private static CommonProxyUtilities commonProxyUtilities = new CommonProxyUtilities();
     private String seleniumSessionId;
     private String testName;
     private String proxyName;
@@ -26,15 +32,18 @@ public class TestInformation {
     private String logsFolderPath;
     private String testNameNoExtension;
     private boolean videoRecorded;
+    private long recordingTimeMillis;
+    private String displayDateAndTime;
+    private String browserAndPlatform;
 
     public TestInformation(String seleniumSessionId, String testName, String proxyName, String browser,
-                           String browserVersion, String platform) {
+            String browserVersion, String platform) {
         this(seleniumSessionId, testName, proxyName, browser, browserVersion, platform, "", "", "", new ArrayList<>());
     }
 
     public TestInformation(String seleniumSessionId, String testName, String proxyName, String browser,
-                           String browserVersion, String platform, String platformVersion, String fileExtension,
-                           String videoUrl, List<String> logUrls) {
+            String browserVersion, String platform, String platformVersion, String fileExtension, String videoUrl,
+            List<String> logUrls) {
         this.seleniumSessionId = seleniumSessionId;
         this.testName = testName;
         this.proxyName = proxyName;
@@ -46,7 +55,9 @@ public class TestInformation {
         this.fileExtension = fileExtension;
         this.logUrls = logUrls;
         this.videoRecorded = true;
+        setRecordingTimeMillis(System.currentTimeMillis());
         buildVideoFileName();
+        this.browserAndPlatform = buildBrowserAndPlatform();
     }
 
     public boolean isVideoRecorded() {
@@ -86,7 +97,7 @@ public class TestInformation {
     }
 
     public String getSeleniumLogFileName() {
-        String seleniumLogFileName = Dashboard.LOGS_FOLDER_NAME + "/" + testNameNoExtension + "/";
+        String seleniumLogFileName = LOGS_FOLDER_NAME + "/" + testNameNoExtension + "/";
         if ("Zalenium".equalsIgnoreCase(proxyName)) {
             return seleniumLogFileName.concat(String.format("selenium-node-%s-stderr.log", browser.toLowerCase()));
         }
@@ -97,7 +108,7 @@ public class TestInformation {
     }
 
     public String getBrowserDriverLogFileName() {
-        String browserDriverLogFileName = Dashboard.LOGS_FOLDER_NAME + "/" + testNameNoExtension + "/";
+        String browserDriverLogFileName = LOGS_FOLDER_NAME + "/" + testNameNoExtension + "/";
         if ("Zalenium".equalsIgnoreCase(proxyName)) {
             return browserDriverLogFileName.concat(String.format("%s_driver.log", browser.toLowerCase()));
         }
@@ -108,7 +119,7 @@ public class TestInformation {
     }
 
     public String getBrowserConsoleLogFileName() {
-        String browserConsoleLogFileName = Dashboard.LOGS_FOLDER_NAME + "/" + testNameNoExtension + "/";
+        String browserConsoleLogFileName = LOGS_FOLDER_NAME + "/" + testNameNoExtension + "/";
         if ("Zalenium".equalsIgnoreCase(proxyName)) {
             return browserConsoleLogFileName.concat(String.format("%s_browser.log", browser.toLowerCase()));
         }
@@ -122,24 +133,56 @@ public class TestInformation {
     }
 
     public void buildVideoFileName() {
-        this.testNameNoExtension = TEST_FILE_NAME_TEMPLATE.replace("{proxyName}", this.proxyName.toLowerCase()).
-                replace("{testName}", getTestName()).
-                replace("{browser}", this.browser).
-                replace("{platform}", this.platform).
-                replace("{timestamp}", commonProxyUtilities.getCurrentDateAndTimeFormatted()).
-                replace(" ", "_");
-        this.fileName = FILE_NAME_TEMPLATE.replace("{fileName}", testNameNoExtension).
-                replace("{fileExtension}", fileExtension).
-                replace(" ", "_");
-        this.videoFolderPath = commonProxyUtilities.currentLocalPath() + "/" + Dashboard.VIDEOS_FOLDER_NAME;
-        this.logsFolderPath = commonProxyUtilities.currentLocalPath() + "/" + Dashboard.VIDEOS_FOLDER_NAME + "/" +
-                Dashboard.LOGS_FOLDER_NAME + "/" + testNameNoExtension;
+        this.testNameNoExtension = TEST_FILE_NAME_TEMPLATE.replace("{proxyName}", this.proxyName.toLowerCase())
+                .replace("{testName}", getTestName()).replace("{browser}", this.browser)
+                .replace("{platform}", this.platform)
+                .replace("{timestamp}", commonProxyUtilities.getCurrentDateAndTimeFormatted()).replace(" ", "_");
+        this.fileName = FILE_NAME_TEMPLATE.replace("{fileName}", testNameNoExtension)
+                .replace("{fileExtension}", fileExtension).replace(" ", "_");
+        this.videoFolderPath = commonProxyUtilities.currentLocalPath() + "/" + VIDEOS_FOLDER_NAME;
+        this.logsFolderPath = commonProxyUtilities.currentLocalPath() + "/" + VIDEOS_FOLDER_NAME + "/"
+                + LOGS_FOLDER_NAME + "/" + testNameNoExtension;
     }
 
-    public String getBrowserAndPlatform() {
+    private String buildBrowserAndPlatform() {
         if ("BrowserStack".equalsIgnoreCase(proxyName)) {
             return String.format("%s %s, %s %s", browser, browserVersion, platform, platformVersion);
         }
         return String.format("%s %s, %s", browser, browserVersion, platform);
+    }
+
+    public String getBrowserAndPlatform() {
+        return browserAndPlatform;
+    }
+
+    public String getTestNameNoExtension() {
+        return testNameNoExtension;
+    }
+
+    public static void setCommonProxyUtilities(CommonProxyUtilities differentCommonProxyUtilities) {
+        TestInformation.commonProxyUtilities = differentCommonProxyUtilities;
+    }
+
+    public long getRecordingTimeMillis() {
+        return recordingTimeMillis;
+    }
+
+    public void setRecordingTimeMillis(long recordingTimeMillis) {
+        this.recordingTimeMillis = recordingTimeMillis;
+        setDisplayDateAndTime(generateDisplayDateAndTime(recordingTimeMillis));
+    }
+
+    public static String generateDisplayDateAndTime(long timeMillis) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MMM HH:mm:ss");
+        LocalDateTime localDateTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(timeMillis), ZoneId.systemDefault());
+        return localDateTime.format(formatter);
+    }
+
+    public String getDisplayDateAndTime() {
+        return displayDateAndTime;
+    }
+
+    public void setDisplayDateAndTime(String displayDateAndTime) {
+        this.displayDateAndTime = displayDateAndTime;
     }
 }

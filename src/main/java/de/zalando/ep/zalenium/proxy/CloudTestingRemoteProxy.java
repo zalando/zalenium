@@ -208,7 +208,7 @@ public class CloudTestingRemoteProxy extends DefaultRemoteProxy {
                     commonProxyUtilities.downloadFile(logUrl, fileNameWithFullPath);
                 }
                 createFeatureNotImplementedFile(testInformation.getLogsFolderPath());
-                Dashboard.updateDashboard(testInformation);
+                DashboardDataHandler.addNewTest(testInformation);
             } catch (Exception e) {
                 logger.log(Level.SEVERE, e.toString(), e);
             }
