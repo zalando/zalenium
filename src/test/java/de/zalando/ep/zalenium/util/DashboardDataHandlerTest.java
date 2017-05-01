@@ -1,38 +1,13 @@
 package de.zalando.ep.zalenium.util;
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 
-import org.junit.After;
 import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
 
-public class DashboardDataHandlerTest {
-    String tempDashboardPath;
-    CommonProxyUtilities mockCommonProxyUtilities;
-
-    @Rule
-    public TemporaryFolder temporaryFolder = new TemporaryFolder();
-
-    @Before
-    public void initTempPath() {
-        tempDashboardPath = temporaryFolder.getRoot().getAbsolutePath();
-        mockCommonProxyUtilities = mock(CommonProxyUtilities.class);
-        when(mockCommonProxyUtilities.currentLocalPath()).thenReturn(tempDashboardPath);
-        when(mockCommonProxyUtilities.getCurrentDateAndTimeFormatted()).thenCallRealMethod();
-        TestInformation.setCommonProxyUtilities(mockCommonProxyUtilities);
-    }
-
-    @After
-    public void resetCommonProxyUtilities() {
-        TestInformation.setCommonProxyUtilities(new CommonProxyUtilities());
-    }
+public class DashboardDataHandlerTest extends DashboardTempFileBase {
 
     @Test
     public void addNewTest() throws IOException {
@@ -63,13 +38,45 @@ public class DashboardDataHandlerTest {
         Assert.assertTrue(zalandoIco.exists());
     }
 
-    TestInformation createTestInformation(int testNum) {
-        return new TestInformation("seleniumSessionId-" + testNum, "testName-" + testNum, "proxyName", "browser",
-                "browserVersion", "platform");
+    @Test
+    public void clearRecordedVideosAndLogs() throws IOException {
+        TestInformation ti1 = createTestInformation(1);
+        DashboardDataHandler.addNewTest(ti1);
+        File testDirectory = new File(ti1.getVideoFolderPath(), "testdirectory");
+        File testFile = new File(ti1.getVideoFolderPath(), "testfile");
+        Assert.assertTrue("Expected directory creation to succeed", testDirectory.mkdir());
+        Assert.assertTrue("Expected file creation to succeed", testFile.createNewFile());
+
+        DashboardDataHandler.clearRecordedVideosAndLogs(ti1.getVideoFolderPath());
+        Assert.assertFalse(testDirectory.exists());
+        Assert.assertFalse(testFile.exists());
     }
 
-    void assertFileInTargetExists(TestInformationRepository tiRepo, String expectedFile) {
-        File toBeTested = new File(tiRepo.getVideoFolderPath(), expectedFile);
-        Assert.assertTrue(toBeTested.exists());
+    @Test(expected = IOException.class)
+    public void clearRecordedVideosAndLogsNonDirectoryPathGiven() throws IOException {
+        File someFile = new File(temporaryFolder.getRoot().getAbsolutePath(), "file");
+        Assert.assertTrue("Expected file creation to succeed", someFile.createNewFile());
+
+        DashboardDataHandler.clearRecordedVideosAndLogs(someFile.getAbsolutePath());
+    }
+
+    @Test
+    public void clearRecordedVideosAndLogsDirectoryNotExists() throws IOException {
+        TestInformation ti1 = createTestInformation(1);
+        File notYetExists = new File(ti1.getVideoFolderPath());
+        Assert.assertFalse("Expected path to not exist yet", notYetExists.exists());
+
+        DashboardDataHandler.clearRecordedVideosAndLogs(ti1.getVideoFolderPath());
+        Assert.assertTrue("Folder should have been created", notYetExists.exists());
+    }
+
+    @Test
+    public void clearRecordedVideosAndLogsInvalidArgument() throws IOException {
+        DashboardDataHandler.clearRecordedVideosAndLogs(null);
+    }
+
+    @Test
+    public void clearRecordedVideosAndLogsEmptyArgument() throws IOException {
+        DashboardDataHandler.clearRecordedVideosAndLogs("");
     }
 }

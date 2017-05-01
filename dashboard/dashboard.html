@@ -29,8 +29,13 @@
         <nav class="col-sm-4 col-md-3 hidden-xs-down bg-faded sidebar">
             <ul id="tests" class="nav nav-pills flex-column">
                 <li class="nav-item">
-                    <h6 class="nav-link bg-success text-white text-center font-weight-bold">
-                    Tests (<span id="executedTests">0</span>)</h6>
+                    <form action="/">
+                        <h6 class="nav-link bg-success text-white text-center font-weight-bold">
+                            Tests (<span id="executedTests">0</span>)
+                            <input type="submit" id="cleanupButton" class="btn btn-outline-danger btn-sm"
+                                   title="Important: this will remove all video files and logs!!" value="Remove all history" />
+                        </h6>
+                    </form>
                 </li>
                 <div id="testListTarget">Waiting for dashboard data...</div>
 <script id="testList" type="x-tmpl-mustache">
@@ -218,6 +223,8 @@
 
 </script>
 <!-- new json data based dashboard -->
+<!-- using mustache template engine -->
+<!-- https://github.com/janl/mustache.js -->
 <script src="js/mustache.min.js"></script>
 <script>
     function updateDashboard() {
@@ -239,8 +246,13 @@
     // This will only work when the page is accessed via a WebServer
     // Loads new tests in the list as the file gets modified
     setInterval(function() {
-    	updateDashboard();
+        updateDashboard();
     }, 10000);
+</script>
+<script>
+    $('#cleanupButton').on('click', function () {
+        $.post('/cleanup?action=doCleanupAll', '');
+    })
 </script>
 </body>
 </html>
