@@ -29,7 +29,11 @@
         <nav class="col-sm-4 col-md-3 hidden-xs-down bg-faded sidebar">
             <ul id="tests" class="nav nav-pills flex-column">
                 <li class="nav-item">
-                    <h6 class="nav-link bg-success text-white text-center font-weight-bold">Tests ({executedTests})</h6>
+                    <form action="/">
+                        <h6 class="nav-link bg-success text-white text-center font-weight-bold">Tests ({executedTests})</h6>
+                        <input type="submit" id="cleanupButton" class="btn btn-outline-danger btn-sm"
+                               title="Important: this will remove all video files and logs!!" value="Remove all history" />
+                    </form>
                 </li>
 
                 {testList}
@@ -204,6 +208,10 @@
     setInterval(function() {
         $('#tests').load(document.URL +  ' #tests');
     }, 10000);
+
+    $('#cleanupButton').on('click', function () {
+        $.post('/cleanup?action=doCleanupAll', '');
+    });
 
 </script>
 </body>
