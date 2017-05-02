@@ -189,6 +189,10 @@ public class CloudTestingRemoteProxy extends DefaultRemoteProxy {
         return false;
     }
 
+    public boolean useAuthenticationToDownloadFile() {
+        return false;
+    }
+
     public boolean convertVideoFileToMP4() {
         return false;
     }
@@ -199,7 +203,7 @@ public class CloudTestingRemoteProxy extends DefaultRemoteProxy {
                 TestInformation testInformation = getTestInformation(seleniumSessionId);
                 String fileNameWithFullPath = testInformation.getVideoFolderPath() + "/" + testInformation.getFileName();
                 commonProxyUtilities.downloadFile(testInformation.getVideoUrl(), fileNameWithFullPath,
-                        getUserNameValue(), getAccessKeyValue());
+                        getUserNameValue(), getAccessKeyValue(), useAuthenticationToDownloadFile());
                 if (convertVideoFileToMP4()) {
                     commonProxyUtilities.convertFlvFileToMP4(testInformation);
                 }
@@ -207,7 +211,7 @@ public class CloudTestingRemoteProxy extends DefaultRemoteProxy {
                     String fileName = logUrl.substring(logUrl.lastIndexOf('/') + 1);
                     fileNameWithFullPath = testInformation.getLogsFolderPath() + "/" + fileName;
                     commonProxyUtilities.downloadFile(logUrl, fileNameWithFullPath,
-                            getUserNameValue(), getAccessKeyValue());
+                            getUserNameValue(), getAccessKeyValue(), useAuthenticationToDownloadFile());
                 }
                 createFeatureNotImplementedFile(testInformation.getLogsFolderPath());
                 Dashboard.updateDashboard(testInformation);

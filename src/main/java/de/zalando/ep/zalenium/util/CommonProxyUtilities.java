@@ -89,7 +89,8 @@ public class CommonProxyUtilities {
         http://code.runnable.com/Uu83dm5vSScIAACw/download-a-file-from-the-web-for-java-files-and-save
      */
     @SuppressWarnings("ResultOfMethodCallIgnored")
-    public void downloadFile(String fileUrl, String fileNameWithFullPath, String user, String password)
+    public void downloadFile(String fileUrl, String fileNameWithFullPath, String user, String password,
+                             boolean authenticate)
             throws InterruptedException {
         int maxAttempts = 10;
         int currentAttempts = 0;
@@ -100,8 +101,10 @@ public class CommonProxyUtilities {
                 URL link = new URL(fileUrl);
                 String userPass = user + ":" + password;
                 URLConnection urlConnection = link.openConnection();
-                String basicAuth = "Basic " + new String(new Base64().encode(userPass.getBytes()));
-                urlConnection.setRequestProperty("Authorization", basicAuth);
+                if (authenticate) {
+                    String basicAuth = "Basic " + new String(new Base64().encode(userPass.getBytes()));
+                    urlConnection.setRequestProperty("Authorization", basicAuth);
+                }
 
                 //Code to download
                 InputStream in = new BufferedInputStream(urlConnection.getInputStream());
