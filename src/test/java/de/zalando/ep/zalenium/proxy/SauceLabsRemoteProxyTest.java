@@ -147,9 +147,6 @@ public class SauceLabsRemoteProxyTest {
             SauceLabsRemoteProxy sauceLabsSpyProxy = spy(sauceLabsProxy);
             JsonElement informationSample = TestUtils.getTestInformationSample("saucelabs_testinformation.json");
             CommonProxyUtilities commonProxyUtilities = mock(CommonProxyUtilities.class);
-            Environment env = new Environment();
-            String mockTestInformationUrl = "https://saucelabs.com/rest/v1/%s/jobs/72e4f8ecf04440fe965faf657864ed52";
-            mockTestInformationUrl = String.format(mockTestInformationUrl, env.getStringEnvVariable("SAUCE_USERNAME", ""));
             when(commonProxyUtilities.readJSONFromUrl(anyString(), anyString(), anyString())).thenReturn(informationSample);
             when(commonProxyUtilities.readJSONFromFile(anyString())).thenCallRealMethod();
             doCallRealMethod().when(commonProxyUtilities).convertFlvFileToMP4(any(TestInformation.class));
