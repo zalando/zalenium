@@ -26,6 +26,8 @@
   * [Group name](#group-name)
   * [Idle Timeout](#idle-timeout)
   * [Screen resolution](#screen-resolution)
+  * [Disable video recording](#disable-video-recording)
+  * [Time zone](#time-zone)
 
 
 ## Initial setup
@@ -261,4 +263,25 @@ in Java for the capability `screenResolution`
     desiredCapabilities.setCapability("screenResolution", "1280x720");
   ```
 
+### Disable video recording
+It is possible to disable video recording (enabled by default) via test capabilities. Add a `recordVideo=false` 
+capability and no video will be recorded. Example code in Java for the capability `recordVideo`
+
+  ```java
+    DesiredCapabilities desiredCapabilities = new DesiredCapabilities();
+    desiredCapabilities.setCapability(CapabilityType.BROWSER_NAME, BrowserType.FIREFOX);
+    desiredCapabilities.setCapability(CapabilityType.PLATFORM, Platform.LINUX);
+    desiredCapabilities.setCapability("recordVideo", false);
+  ```
+
+### Time zone
+Run your test in a different time zone from the default one `Europe/Berlin`, just pass a capability `tz` with the 
+desired value. E.g. `tz=America/Montreal`.Example code in Java for the capability `tz`
+
+  ```java
+    DesiredCapabilities desiredCapabilities = new DesiredCapabilities();
+    desiredCapabilities.setCapability(CapabilityType.BROWSER_NAME, BrowserType.FIREFOX);
+    desiredCapabilities.setCapability(CapabilityType.PLATFORM, Platform.LINUX);
+    desiredCapabilities.setCapability("tz", "America/Montreal");
+  ```
 
