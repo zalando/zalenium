@@ -124,7 +124,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
 
         String tz = env.getStringEnvVariable(ZALENIUM_TZ, DEFAULT_TZ);
         setTimeZone(tz);
-        setConfiguredTimeZone(getTimeZone());
+        setConfiguredTimeZone(tz);
 
         String containerN = env.getStringEnvVariable(ZALENIUM_CONTAINER_NAME, DEFAULT_ZALENIUM_CONTAINER_NAME);
         setContainerName(containerN);
@@ -289,7 +289,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     }
 
     public static String getConfiguredTimeZone() {
-        return configuredTimeZone;
+        return configuredTimeZone == null ? DEFAULT_TZ : configuredTimeZone;
     }
 
     public static void setConfiguredTimeZone(String configuredTimeZone) {
@@ -574,7 +574,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
             setTimeZone(timeZone);
             wasConfiguredTimeZoneChanged = true;
         }
-        // If the time zone parameters was not changed, we just set the defaults again.
+        // If the time zone parameter was not changed, we just set the defaults again.
         if (!wasConfiguredTimeZoneChanged) {
             setTimeZone(getConfiguredTimeZone());
             requestedCapability.put(timeZoneName, getConfiguredTimeZone());
