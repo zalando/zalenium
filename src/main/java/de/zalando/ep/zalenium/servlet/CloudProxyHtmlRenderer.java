@@ -4,6 +4,7 @@ import com.google.gson.JsonObject;
 import de.zalando.ep.zalenium.proxy.BrowserStackRemoteProxy;
 import de.zalando.ep.zalenium.proxy.SauceLabsRemoteProxy;
 import de.zalando.ep.zalenium.proxy.TestingBotRemoteProxy;
+import org.apache.commons.io.IOUtils;
 import org.openqa.grid.common.exception.GridException;
 import org.openqa.grid.internal.RemoteProxy;
 import org.openqa.grid.internal.TestSession;
@@ -13,6 +14,10 @@ import org.openqa.grid.web.servlet.beta.MiniCapability;
 import org.openqa.grid.web.servlet.beta.SlotsLines;
 import org.openqa.selenium.Platform;
 import org.openqa.selenium.remote.CapabilityType;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 
 public class CloudProxyHtmlRenderer implements HtmlRenderer {
 
@@ -69,11 +74,14 @@ public class CloudProxyHtmlRenderer implements HtmlRenderer {
 
     // content of the config tab.
     private String tabConfig() {
-        StringBuilder builder = new StringBuilder();
-        builder.append("<div type='config' class='content_detail'>");
-        builder.append(proxy.getConfig().toString("<p>%1$s: %2$s</p>"));
-        builder.append("</div>");
-        return builder.toString();
+        InputStream resourceAsStream = Thread.currentThread().getContextClassLoader().getResourceAsStream("html_templates/proxy_tab_config_renderer.html");
+        try {
+            String tabConfigRenderer = IOUtils.toString(resourceAsStream, StandardCharsets.UTF_8);
+            return tabConfigRenderer.replace("{{proxyConfig}}", proxy.getConfig().toString("<p>%1$s: %2$s</p>"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
 
