@@ -90,6 +90,10 @@ public class SauceLabsRemoteProxy extends CloudTestingRemoteProxy {
         return true;
     }
 
+    @Override
+    public boolean useAuthenticationToDownloadFile() {
+        return true;
+    }
 
     @Override
     public TestInformation getTestInformation(String seleniumSessionId) {
