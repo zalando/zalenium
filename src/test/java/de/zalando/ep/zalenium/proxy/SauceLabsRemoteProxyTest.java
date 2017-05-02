@@ -37,7 +37,7 @@ public class SauceLabsRemoteProxyTest {
         RegistrationRequest request = TestUtils.getRegistrationRequestForTesting(30001,
                 SauceLabsRemoteProxy.class.getCanonicalName());
         CommonProxyUtilities commonProxyUtilities = mock(CommonProxyUtilities.class);
-        when(commonProxyUtilities.readJSONFromUrl(anyString())).thenReturn(null);
+        when(commonProxyUtilities.readJSONFromUrl(anyString(), anyString(), anyString())).thenReturn(null);
         when(commonProxyUtilities.readJSONFromFile(anyString())).thenCallRealMethod();
         SauceLabsRemoteProxy.setCommonProxyUtilities(commonProxyUtilities);
         sauceLabsProxy = SauceLabsRemoteProxy.getNewInstance(request, registry);
@@ -148,11 +148,9 @@ public class SauceLabsRemoteProxyTest {
             JsonElement informationSample = TestUtils.getTestInformationSample("saucelabs_testinformation.json");
             CommonProxyUtilities commonProxyUtilities = mock(CommonProxyUtilities.class);
             Environment env = new Environment();
-            String mockTestInformationUrl = "https://%s:%s@saucelabs.com/rest/v1/%s/jobs/72e4f8ecf04440fe965faf657864ed52";
-            mockTestInformationUrl = String.format(mockTestInformationUrl, env.getStringEnvVariable("SAUCE_USERNAME", ""),
-                    env.getStringEnvVariable("SAUCE_ACCESS_KEY", ""),
-                    env.getStringEnvVariable("SAUCE_USERNAME", ""));
-            when(commonProxyUtilities.readJSONFromUrl(mockTestInformationUrl)).thenReturn(informationSample);
+            String mockTestInformationUrl = "https://saucelabs.com/rest/v1/%s/jobs/72e4f8ecf04440fe965faf657864ed52";
+            mockTestInformationUrl = String.format(mockTestInformationUrl, env.getStringEnvVariable("SAUCE_USERNAME", ""));
+            when(commonProxyUtilities.readJSONFromUrl(anyString(), anyString(), anyString())).thenReturn(informationSample);
             when(commonProxyUtilities.readJSONFromFile(anyString())).thenCallRealMethod();
             doCallRealMethod().when(commonProxyUtilities).convertFlvFileToMP4(any(TestInformation.class));
             SauceLabsRemoteProxy.setCommonProxyUtilities(commonProxyUtilities);
@@ -188,7 +186,7 @@ public class SauceLabsRemoteProxyTest {
     public void nodeHasCapabilitiesEvenWhenUrlCallFails() {
         try {
             CommonProxyUtilities commonProxyUtilities = mock(CommonProxyUtilities.class);
-            when(commonProxyUtilities.readJSONFromUrl(anyString())).thenReturn(null);
+            when(commonProxyUtilities.readJSONFromUrl(anyString(), anyString(), anyString())).thenReturn(null);
             when(commonProxyUtilities.readJSONFromFile(anyString())).thenCallRealMethod();
             SauceLabsRemoteProxy.setCommonProxyUtilities(commonProxyUtilities);
 

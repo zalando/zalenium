@@ -562,6 +562,7 @@ ShutDown()
         echo "Stopping Sauce Labs node..."
         PID=$(cat ${PID_PATH_SAUCE_LABS_NODE});
         kill ${PID};
+        _returnedValue=$?
         if [ "${_returnedValue}" != "0" ] ; then
             echo "Failed to send kill signal to Sauce Labs node!"
         else
@@ -574,6 +575,7 @@ ShutDown()
         echo "Stopping Browser Stack node..."
         PID=$(cat ${PID_PATH_BROWSER_STACK_NODE});
         kill ${PID};
+        _returnedValue=$?
         if [ "${_returnedValue}" != "0" ] ; then
             echo "Failed to send kill signal to Browser Stack node!"
         else
@@ -586,6 +588,7 @@ ShutDown()
         echo "Stopping TestingBot node..."
         PID=$(cat ${PID_PATH_TESTINGBOT_NODE});
         kill ${PID};
+        _returnedValue=$?
         if [ "${_returnedValue}" != "0" ] ; then
             echo "Failed to send kill signal to TestingBot node!"
         else
@@ -599,6 +602,7 @@ ShutDown()
         PID=$(cat ${PID_PATH_SAUCE_LABS_TUNNEL});
         kill -SIGTERM ${PID};
         wait ${PID};
+        _returnedValue=$?
         if [ "${_returnedValue}" != "0" ] ; then
             echo "Failed to send kill signal to Sauce Connect!"
         else
@@ -612,6 +616,7 @@ ShutDown()
         PID=$(cat ${PID_PATH_BROWSER_STACK_TUNNEL});
         kill -SIGTERM ${PID};
         wait ${PID};
+        _returnedValue=$?
         if [ "${_returnedValue}" != "0" ] ; then
             echo "Failed to send kill signal to BrowserStackLocal!"
         else
@@ -625,6 +630,7 @@ ShutDown()
         PID=$(cat ${PID_PATH_TESTINGBOT_TUNNEL});
         kill -SIGTERM ${PID};
         wait ${PID};
+        _returnedValue=$?
         if [ "${_returnedValue}" != "0" ] ; then
             echo "Failed to send kill signal to the TestingBot tunnel!"
         else
@@ -660,6 +666,7 @@ ShutDown()
         echo "Stopping DockerSeleniumStarter node..."
         PID=$(cat ${PID_PATH_DOCKER_SELENIUM_NODE});
         kill ${PID};
+        _returnedValue=$?
         if [ "${_returnedValue}" != "0" ] ; then
             echo "Failed to send kill signal to DockerSeleniumStarter node!"
         else

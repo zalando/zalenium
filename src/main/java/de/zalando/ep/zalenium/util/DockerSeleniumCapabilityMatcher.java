@@ -62,16 +62,35 @@ public class DockerSeleniumCapabilityMatcher extends DefaultCapabilityMatcher {
             if (!containsScreenResolutionCapability && super.matches(nodeCapability, requestedCapability)) {
                 String screenResolution = String.format("%sx%s", DockerSeleniumStarterRemoteProxy.getConfiguredScreenWidth(),
                         DockerSeleniumStarterRemoteProxy.getConfiguredScreenHeight());
-                requestedCapability.put("screenResolution", screenResolution);
+                requestedCapability.put(screenResolutionNames[0], screenResolution);
             }
         }
 
-        // If the browser version has been matched, then implicitly the matcher from the super class has also been
+        boolean timeZoneCapabilityMatches = true;
+        boolean containsTimeZoneCapability = false;
+        // This validation is only done for docker-selenium nodes
+        if (proxy instanceof DockerSeleniumRemoteProxy) {
+            String timeZoneName = "tz";
+            if (requestedCapability.containsKey(timeZoneName)) {
+                timeZoneCapabilityMatches = nodeCapability.containsKey(timeZoneName) &&
+                        requestedCapability.get(timeZoneName).equals(nodeCapability.get(timeZoneName));
+                containsTimeZoneCapability = true;
+            }
+            // This is done to avoid having the test run on a node with a configured time zone different from
+            // the global configured one. But not putting it to tests that should go to a cloud provider.
+            if (!containsTimeZoneCapability && super.matches(nodeCapability, requestedCapability)) {
+                requestedCapability.put(timeZoneName, DockerSeleniumStarterRemoteProxy.getConfiguredTimeZone());
+            }
+        }
+
+
+            // If the browser version has been matched, then implicitly the matcher from the super class has also been
         // invoked.
         if (browserVersionCapabilityMatches) {
-            return screenResolutionCapabilityMatches;
+            return screenResolutionCapabilityMatches && timeZoneCapabilityMatches;
         } else {
-            return super.matches(nodeCapability, requestedCapability) && screenResolutionCapabilityMatches;
+            return super.matches(nodeCapability, requestedCapability) && screenResolutionCapabilityMatches &&
+                    timeZoneCapabilityMatches;
         }
     }
 }
