@@ -47,17 +47,17 @@ public class TestingBotRemoteProxyTest {
 
         JsonElement informationSample = TestUtils.getTestInformationSample("testingbot_testinformation.json");
 
-        String userInfoUrl = "https://%s:%s@api.testingbot.com/v1/user";
+        String userInfoUrl = "https://api.testingbot.com/v1/user";
         Environment env = new Environment();
-        userInfoUrl = String.format(userInfoUrl, env.getStringEnvVariable("TESTINGBOT_KEY", ""),
-                env.getStringEnvVariable("TESTINGBOT_SECRET", ""));
         CommonProxyUtilities commonProxyUtilities = mock(CommonProxyUtilities.class);
-        when(commonProxyUtilities.readJSONFromUrl(userInfoUrl)).thenReturn(null);
+        when(commonProxyUtilities.readJSONFromUrl(userInfoUrl,
+                env.getStringEnvVariable("TESTINGBOT_KEY", ""),
+                env.getStringEnvVariable("TESTINGBOT_SECRET", ""))).thenReturn(null);
 
-        String mockTestInfoUrl = "https://%s:%s@api.testingbot.com/v1/tests/2cf5d115-ca6f-4bc4-bc06-a4fca00836ce";
-        mockTestInfoUrl = String.format(mockTestInfoUrl, env.getStringEnvVariable("TESTINGBOT_KEY", ""),
-                env.getStringEnvVariable("TESTINGBOT_SECRET", ""));
-        when(commonProxyUtilities.readJSONFromUrl(mockTestInfoUrl)).thenReturn(informationSample);
+        String mockTestInfoUrl = "https://api.testingbot.com/v1/tests/2cf5d115-ca6f-4bc4-bc06-a4fca00836ce";
+        when(commonProxyUtilities.readJSONFromUrl(mockTestInfoUrl,
+                env.getStringEnvVariable("TESTINGBOT_KEY", ""),
+                env.getStringEnvVariable("TESTINGBOT_SECRET", ""))).thenReturn(informationSample);
         when(commonProxyUtilities.readJSONFromFile(anyString())).thenCallRealMethod();
         TestingBotRemoteProxy.setCommonProxyUtilities(commonProxyUtilities);
         testingBotProxy = TestingBotRemoteProxy.getNewInstance(request, registry);

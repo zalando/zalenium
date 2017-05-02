@@ -43,7 +43,7 @@ public class BrowserStackRemoteProxyTest {
         RegistrationRequest request = TestUtils.getRegistrationRequestForTesting(30002,
                 BrowserStackRemoteProxy.class.getCanonicalName());
         CommonProxyUtilities commonProxyUtilities = mock(CommonProxyUtilities.class);
-        when(commonProxyUtilities.readJSONFromUrl(anyString())).thenReturn(null);
+        when(commonProxyUtilities.readJSONFromUrl(anyString(), anyString(), anyString())).thenReturn(null);
         when(commonProxyUtilities.readJSONFromFile(anyString())).thenCallRealMethod();
         BrowserStackRemoteProxy.setCommonProxyUtilities(commonProxyUtilities);
         browserStackProxy = BrowserStackRemoteProxy.getNewInstance(request, registry);
@@ -128,10 +128,10 @@ public class BrowserStackRemoteProxyTest {
             JsonElement informationSample = TestUtils.getTestInformationSample("browserstack_testinformation.json");
             CommonProxyUtilities commonProxyUtilities = mock(CommonProxyUtilities.class);
             Environment env = new Environment();
-            String mockTestInformationUrl = "https://%s:%s@www.browserstack.com/automate/sessions/77e51cead8e6e37b0a0feb0dfa69325b2c4acf97.json";
-            mockTestInformationUrl = String.format(mockTestInformationUrl, env.getStringEnvVariable("BROWSER_STACK_USER", ""),
-                    env.getStringEnvVariable("BROWSER_STACK_KEY", ""));
-            when(commonProxyUtilities.readJSONFromUrl(mockTestInformationUrl)).thenReturn(informationSample);
+            String mockTestInformationUrl = "https://www.browserstack.com/automate/sessions/77e51cead8e6e37b0a0feb0dfa69325b2c4acf97.json";
+            when(commonProxyUtilities.readJSONFromUrl(mockTestInformationUrl,
+                    env.getStringEnvVariable("BROWSER_STACK_USER", ""),
+                    env.getStringEnvVariable("BROWSER_STACK_KEY", ""))).thenReturn(informationSample);
             when(commonProxyUtilities.readJSONFromFile(anyString())).thenCallRealMethod();
             BrowserStackRemoteProxy.setCommonProxyUtilities(commonProxyUtilities);
 

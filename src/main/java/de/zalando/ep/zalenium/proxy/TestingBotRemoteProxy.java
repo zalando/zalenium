@@ -18,28 +18,25 @@ import java.util.logging.Logger;
 public class TestingBotRemoteProxy extends CloudTestingRemoteProxy {
 
     private static final String TESTINGBOT_URL = "http://hub.testingbot.com:80";
-    private static final String TESTINGBOT_ACCOUNT_INFO = "https://%s:%s@api.testingbot.com/v1/user";
+    private static final String TESTINGBOT_ACCOUNT_INFO = "https://api.testingbot.com/v1/user";
     private static final String TESTINGBOT_KEY = getEnv().getStringEnvVariable("TESTINGBOT_KEY", "");
     private static final String TESTINGBOT_SECRET = getEnv().getStringEnvVariable("TESTINGBOT_SECRET", "");
     private static final Logger logger = Logger.getLogger(TestingBotRemoteProxy.class.getName());
     private static final String TESTINGBOT_PROXY_NAME = "TestingBot";
 
     public TestingBotRemoteProxy(RegistrationRequest request, Registry registry) {
-        super(updateTBCapabilities(request, String.format(TESTINGBOT_ACCOUNT_INFO, TESTINGBOT_KEY,
-                TESTINGBOT_SECRET)), registry);
+        super(updateTBCapabilities(request, TESTINGBOT_ACCOUNT_INFO), registry);
     }
 
     @VisibleForTesting
     private static RegistrationRequest updateTBCapabilities(RegistrationRequest registrationRequest, String url) {
-        JsonElement testingBotAccountInfo = getCommonProxyUtilities().readJSONFromUrl(url);
+        JsonElement testingBotAccountInfo = getCommonProxyUtilities().readJSONFromUrl(url, TESTINGBOT_KEY, TESTINGBOT_SECRET);
         try {
             registrationRequest.getConfiguration().capabilities.clear();
-            String userPasswordSuppress = String.format("%s:%s@", TESTINGBOT_KEY, TESTINGBOT_SECRET);
-            String logMessage = String.format("[TB] Getting account max. concurrency from %s", url.replace(userPasswordSuppress, ""));
+            String logMessage = String.format("[TB] Getting account max. concurrency from %s", url);
             int testingBotAccountConcurrency;
             if (testingBotAccountInfo == null) {
-                logMessage = String.format("[TB] Account max. concurrency was NOT fetched from %s",
-                        url.replace(userPasswordSuppress, ""));
+                logMessage = String.format("[TB] Account max. concurrency was NOT fetched from %s", url);
                 testingBotAccountConcurrency = 1;
             } else {
                 testingBotAccountConcurrency = testingBotAccountInfo.getAsJsonObject().get("max_concurrent").getAsInt();
@@ -88,10 +85,11 @@ public class TestingBotRemoteProxy extends CloudTestingRemoteProxy {
     public TestInformation getTestInformation(String seleniumSessionId) {
         // https://TB_KEY:TB_SECRET@api.testingbot.com/v1/tests/SELENIUM_SESSION_ID
         TestInformation testInformation = null;
-        String testingBotTestUrl = "https://%s:%s@api.testingbot.com/v1/tests/%s";
-        testingBotTestUrl = String.format(testingBotTestUrl, getUserNameValue(), getAccessKeyValue(), seleniumSessionId);
+        String testingBotTestUrl = "https://api.testingbot.com/v1/tests/%s";
+        testingBotTestUrl = String.format(testingBotTestUrl, seleniumSessionId);
         for (int i = 0; i < 5; i++) {
-            JsonObject testData = getCommonProxyUtilities().readJSONFromUrl(testingBotTestUrl).getAsJsonObject();
+            JsonObject testData = getCommonProxyUtilities().readJSONFromUrl(testingBotTestUrl, TESTINGBOT_KEY,
+                    TESTINGBOT_SECRET).getAsJsonObject();
             String testName = testData.get("name").getAsString();
             String browser = testData.get("browser").getAsString();
             String browserVersion = testData.get("browser_version").getAsString();

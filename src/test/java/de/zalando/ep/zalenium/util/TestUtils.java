@@ -70,12 +70,14 @@ public class TestUtils {
         firefoxCapabilities.setPlatform(Platform.LINUX);
         firefoxCapabilities.setCapability(RegistrationRequest.MAX_INSTANCES, 1);
         firefoxCapabilities.setCapability("screenResolution", screenResolution);
+        firefoxCapabilities.setCapability("tz", DockerSeleniumStarterRemoteProxy.getConfiguredTimeZone());
         dsCapabilities.add(firefoxCapabilities);
         DesiredCapabilities chromeCapabilities = new DesiredCapabilities();
         chromeCapabilities.setBrowserName(BrowserType.CHROME);
         chromeCapabilities.setPlatform(Platform.LINUX);
         chromeCapabilities.setCapability(RegistrationRequest.MAX_INSTANCES, 1);
         chromeCapabilities.setCapability("screenResolution", screenResolution);
+        chromeCapabilities.setCapability("tz", DockerSeleniumStarterRemoteProxy.getConfiguredTimeZone());
         dsCapabilities.add(chromeCapabilities);
         return dsCapabilities;
     }

@@ -36,6 +36,9 @@ public class Dashboard {
         String currentLocalPath = commonProxyUtilities.currentLocalPath();
         String localVideosPath = currentLocalPath + "/" + VIDEOS_FOLDER_NAME;
 
+        File testCountFile = new File(localVideosPath, "executedTestsInfo.json");
+        synchronizeExecutedTestsValues(testCountFile);
+
         String testEntry = FileUtils.readFileToString(new File(currentLocalPath, "list_template.html"), UTF_8);
         testEntry = testEntry.replace("{fileName}", testInformation.getFileName()).
                 replace("{testName}", testInformation.getTestName()).
@@ -64,28 +67,11 @@ public class Dashboard {
             executedTestsWithVideo++;
         }
 
+        LOGGER.log(Level.FINE, "Test count: " + executedTests);
+        LOGGER.log(Level.FINE, "Test count with video: " + executedTestsWithVideo);
         JsonObject testQuantities = new JsonObject();
         testQuantities.addProperty("executedTests", executedTests);
         testQuantities.addProperty("executedTestsWithVideo", executedTestsWithVideo);
-        File testCountFile = new File(localVideosPath, "executedTestsInfo.json");
-        if (testCountFile.exists()) {
-            if (isFileOlderThanOneDay(testCountFile.lastModified())) {
-                LOGGER.log(Level.FINE, "Deleting file older than one day: " + testCountFile.getAbsolutePath());
-                testCountFile.delete();
-            } else {
-                JsonObject executedTestData = new JsonParser().parse(FileUtils.readFileToString(testCountFile, UTF_8)).getAsJsonObject();
-                String executedTestsInFile = executedTestData.get("executedTests").getAsString();
-                String executedTestsWithVideoInFile = executedTestData.get("executedTestsWithVideo").getAsString();
-                try {
-                    executedTests = executedTests == 1 ? Integer.parseInt(executedTestsInFile) + 1 : executedTests;
-                    executedTestsWithVideo = executedTestsWithVideo <= 1 ?
-                            Integer.parseInt(executedTestsWithVideoInFile) + executedTestsWithVideo : executedTestsWithVideo;
-                } catch (Exception e) {
-                    LOGGER.log(Level.FINE, e.toString(), e);
-                }
-            }
-        }
-        LOGGER.log(Level.FINE, "Test count: " + executedTests);
         FileUtils.writeStringToFile(testCountFile, testQuantities.toString(), UTF_8);
 
         File dashboardHtml = new File(localVideosPath, "dashboard.html");
@@ -107,6 +93,28 @@ public class Dashboard {
         }
         if (!jsFolder.exists()) {
             FileUtils.copyDirectory(new File(currentLocalPath + "/js"), jsFolder);
+        }
+    }
+
+    private static void synchronizeExecutedTestsValues(File testCountFile) throws IOException {
+        if (testCountFile.exists()) {
+            if (isFileOlderThanOneDay(testCountFile.lastModified())) {
+                LOGGER.log(Level.FINE, "Deleting file older than one day: " + testCountFile.getAbsolutePath());
+                testCountFile.delete();
+            } else {
+                JsonObject executedTestData = new JsonParser().parse(FileUtils.readFileToString(testCountFile, UTF_8)).getAsJsonObject();
+                String executedTestsInFile = executedTestData.get("executedTests").getAsString();
+                String executedTestsWithVideoInFile = executedTestData.get("executedTestsWithVideo").getAsString();
+                try {
+                    executedTests = Integer.parseInt(executedTestsInFile);
+                    executedTestsWithVideo = Integer.parseInt(executedTestsWithVideoInFile);
+                } catch (Exception e) {
+                    LOGGER.log(Level.FINE, e.toString(), e);
+                }
+            }
+        } else {
+            executedTests = 0;
+            executedTestsWithVideo = 0;
         }
     }
 
