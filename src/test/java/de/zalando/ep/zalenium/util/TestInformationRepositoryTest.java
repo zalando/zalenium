@@ -87,7 +87,7 @@ public class TestInformationRepositoryTest {
         String tiRepoJson = tiRepo.toJson();
 
         Assert.assertThat(tiRepoJson, CoreMatchers.containsString("displayDateAndTime"));
-        Assert.assertThat(tiRepoJson, CoreMatchers.containsString("09:39:16"));
+        Assert.assertThat(tiRepoJson, CoreMatchers.containsString(":39:16"));
     }
 
     @Test
