@@ -15,7 +15,6 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import de.zalando.ep.zalenium.util.DashboardDataHandler;
 import de.zalando.ep.zalenium.util.DashboardTempFileBase;
 
 public class CleanupServiceTest extends DashboardTempFileBase {

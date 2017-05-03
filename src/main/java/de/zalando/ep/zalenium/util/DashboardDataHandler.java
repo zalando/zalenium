@@ -96,7 +96,7 @@ public final class DashboardDataHandler {
         }
     }
 
-    static File localResourceAsFile(String resourceName) {
+    private File localResourceAsFile(String resourceName) {
         return new File(LOCAL_RESOURCES_PATH, resourceName);
     }
 

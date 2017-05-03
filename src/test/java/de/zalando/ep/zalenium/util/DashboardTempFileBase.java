@@ -12,8 +12,8 @@ import org.junit.Rule;
 import org.junit.rules.TemporaryFolder;
 
 public class DashboardTempFileBase {
-    String tempDashboardPath;
-    CommonProxyUtilities mockCommonProxyUtilities;
+    protected String tempDashboardPath;
+    protected CommonProxyUtilities mockCommonProxyUtilities;
 
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
@@ -32,12 +32,12 @@ public class DashboardTempFileBase {
         TestInformation.setCommonProxyUtilities(new CommonProxyUtilities());
     }
 
-    TestInformation createTestInformation(int testNum) {
+    protected TestInformation createTestInformation(int testNum) {
         return new TestInformation("seleniumSessionId-" + testNum, "testName-" + testNum, "proxyName", "browser",
                 "browserVersion", "platform");
     }
 
-    void assertFileInTargetExists(TestInformationRepository tiRepo, String expectedFile) {
+    protected void assertFileInTargetExists(TestInformationRepository tiRepo, String expectedFile) {
         File toBeTested = new File(tiRepo.getVideoFolderPath(), expectedFile);
         Assert.assertTrue(toBeTested.exists());
     }

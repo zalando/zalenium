@@ -2,7 +2,6 @@ package de.zalando.ep.zalenium.util;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -73,10 +72,12 @@ public class DashboardDataHandlerTest extends DashboardTempFileBase {
     @Test
     public void clearRecordedVideosAndLogsInvalidArgument() throws IOException {
         DashboardDataHandler.clearRecordedVideosAndLogs(null);
+        Assert.assertTrue("This test is fine if no excpetion has been thrown", true);
     }
 
     @Test
     public void clearRecordedVideosAndLogsEmptyArgument() throws IOException {
         DashboardDataHandler.clearRecordedVideosAndLogs("");
+        Assert.assertTrue("This test is fine if no excpetion has been thrown", true);
     }
 }
