@@ -137,7 +137,7 @@ WaitTestingBotProxy()
 export -f WaitTestingBotProxy
 
 WaitForVideosTransferred() {
-    local __amount_of_tests_with_video=$(jq .executedTestsWithVideo /home/seluser/videos/executedTestsInfo.json)
+    local __amount_of_tests_with_video=$(grep -o '"videoRecorded":true' dashboardData.json | wc -l)
 
     if [ ${__amount_of_tests_with_video} -gt 0 ]; then
         local __amount_of_mp4_files=$(ls -1q /home/seluser/videos/*.mp4 | wc -l)
