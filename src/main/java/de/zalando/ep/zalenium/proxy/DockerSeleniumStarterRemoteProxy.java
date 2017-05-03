@@ -93,15 +93,10 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     private List<Integer> allocatedPorts = new ArrayList<>();
     private boolean setupCompleted;
     private CapabilityMatcher capabilityHelper;
-    private final HtmlRenderer renderer = new WebProxyHtmlRendererBeta(this);
 
     @SuppressWarnings("WeakerAccess")
     public DockerSeleniumStarterRemoteProxy(RegistrationRequest request, Registry registry) {
         super(updateDSCapabilities(request), registry);
-    }
-
-    public HtmlRenderer getHtmlRender() {
-        return this.renderer;
     }
 
     /*
