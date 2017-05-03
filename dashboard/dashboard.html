@@ -29,13 +29,13 @@
         <nav class="col-sm-4 col-md-3 hidden-xs-down bg-faded sidebar">
             <ul id="tests" class="nav nav-pills flex-column">
                 <li class="nav-item">
-                    <form action="/">
-                        <h6 class="nav-link bg-success text-white text-center font-weight-bold">
-                            Tests (<span id="executedTests">0</span>)
-                            <input type="submit" id="cleanupButton" class="btn btn-outline-danger btn-sm"
-                                   title="Important: this will remove all video files and logs!!" value="Remove all history" />
-                        </h6>
-                    </form>
+                    <h6 class="nav-link bg-success text-white text-center font-weight-bold">
+                        Tests (<span id="executedTests">0</span>)
+                        <button type="button" id="cleanupButton" class="btn btn-outline-danger btn-sm"
+                                title="Important: this will remove all video files and logs!!">
+                            Remove all history
+                        </button>
+                    </h6>
                 </li>
                 <div id="testListTarget">Waiting for dashboard data...</div>
 <script id="testList" type="x-tmpl-mustache">
@@ -228,12 +228,14 @@
 <script src="js/mustache.min.js"></script>
 <script>
     function updateDashboard() {
+    	$('#cleanupButton').hide();
         if (document.URL.startsWith('http')) {
             $.get('dashboardData.json', function(dashboardData) {
                 $('#executedTests').html(dashboardData.length);
                 var template = $('#testList').html();
                 var rendered = Mustache.render(template, dashboardData.reverse());
                 $('#testListTarget').html(rendered);
+                $('#cleanupButton').show();
             });
         } else {
             $('#executedTests').html(0);
@@ -251,7 +253,18 @@
 </script>
 <script>
     $('#cleanupButton').on('click', function () {
-        $.post('/cleanup?action=doCleanupAll', '');
+    	$.ajax({
+    		  url  : '/cleanup?action=doCleanupAll',
+    		  type : 'POST',
+    		}).done(function(data, statusText, xhr) {
+    		  var status = xhr.status;
+    		  if (status != 200) {
+    		    alert('Removing data failed with status=' + status + ' and message=' + xhr.responseText);
+    		  }
+    		});
+    	$('#testListTarget').html("All Data Removed!<br> Waiting for new Tests...");
+    	$('#executedTests').html(0);
+    	$('#cleanupButton').hide();
     })
 </script>
 </body>
