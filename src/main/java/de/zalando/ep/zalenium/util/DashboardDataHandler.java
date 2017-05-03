@@ -19,6 +19,7 @@ public final class DashboardDataHandler {
     public static final String RESOURCE_FOLDER_JS = "js";
     public static final String RESOURCE_FOLDER_CSS = "css";
     public static final String RESOURCE_ZALANDO_ICO = "zalando.ico";
+    public static final String RESOURCE_INDEX_HTML = "index.html";
     public static final String DASHBOARD_HTML_FILENAME = "dashboard.html";
     public static final String DASHBOARD_DATA_FILENAME = "dashboardData.json";
     public static final String LOCAL_RESOURCES_PATH = new CommonProxyUtilities().currentLocalPath();
@@ -72,6 +73,7 @@ public final class DashboardDataHandler {
     private void ensureStaticDashboardResourcesExist() throws IOException {
         // dashboard.html should be always copied as otherwise existing old versions would not be updated automatically
         copyFileAlways(DASHBOARD_HTML_FILENAME);
+        copyFileIfMissing(RESOURCE_INDEX_HTML);
         copyFileIfMissing(RESOURCE_ZALANDO_ICO);
         copyDirectoryIfMissing(RESOURCE_FOLDER_CSS);
         copyDirectoryIfMissing(RESOURCE_FOLDER_JS);
