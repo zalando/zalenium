@@ -87,38 +87,48 @@ public class CloudProxyHtmlRenderer implements HtmlRenderer {
 
     // content of the browsers tab
     private String tabBrowsers() {
-        StringBuilder builder = new StringBuilder();
-        builder.append("<div type='browsers' class='content_detail'>");
-
         SlotsLines wdLines = new SlotsLines();
-
         for (TestSlot slot : proxy.getTestSlots()) {
             wdLines.add(slot);
         }
-
+        String webDriverLines = "";
         if (wdLines.getLinesType().size() != 0) {
-            builder.append("<p class='protocol' >WebDriver</p>");
-            builder.append(getLines(wdLines));
+            webDriverLines = webDriverLines.concat(getLines(wdLines));
         }
-        builder.append("</div>");
-        return builder.toString();
+        InputStream resourceAsStream = Thread.currentThread().getContextClassLoader().getResourceAsStream("html_templates/proxy_tab_browser_renderer.html");
+        try {
+            String tabConfigRenderer = IOUtils.toString(resourceAsStream, StandardCharsets.UTF_8);
+            return tabConfigRenderer.replace("{{webDriverLines}}", webDriverLines);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return webDriverLines;
     }
 
     // the lines of icon representing the possible slots
     private String getLines(SlotsLines lines) {
-        StringBuilder builder = new StringBuilder();
+        String slotLines = "";
         for (MiniCapability cap : lines.getLinesType()) {
             String version = cap.getVersion();
-            builder.append("<p>");
             if (version != null) {
-                builder.append("v:" + version);
+                version = "v:" + version;
+            } else {
+                version = "";
             }
+            String testSlotsHtml = "";
             for (TestSlot s : lines.getLine(cap)) {
-                builder.append(getSingleSlotHtml(s));
+                testSlotsHtml = testSlotsHtml.concat(getSingleSlotHtml(s));
             }
-            builder.append("</p>");
+            InputStream resourceAsStream = Thread.currentThread().getContextClassLoader().getResourceAsStream("html_templates/proxy_tab_browser_line_renderer.html");
+            try {
+                String tabConfigRenderer = IOUtils.toString(resourceAsStream, StandardCharsets.UTF_8);
+                slotLines = slotLines.concat(tabConfigRenderer.replace("{{browserVersion}}", version)
+                        .replace("{{slotsHtml}}", testSlotsHtml));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
-        return builder.toString();
+        return slotLines;
     }
 
     // icon ( or generic html if icon not available )
@@ -151,7 +161,7 @@ public class CloudProxyHtmlRenderer implements HtmlRenderer {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return null;
+        return "";
     }
 
     // the tabs header.
