@@ -33,31 +33,20 @@ public class CloudProxyHtmlRenderer implements HtmlRenderer {
 
 
     public String renderSummary() {
-        StringBuilder builder = new StringBuilder();
-        builder.append("<div class='proxy'>");
-        builder.append("<p class='proxyname'>");
-        builder.append(proxy.getClass().getSimpleName());
-
-        builder.append(getHtmlNodeVersion());
-
-        String platform = getPlatform(proxy);
-
-        builder.append("<p class='proxyid'>id : ");
-        builder.append(proxy.getId());
-        builder.append(", OS : " + platform + "</p>");
-
-        builder.append(nodeTabs());
-
-        builder.append("<div class='content'>");
-
-        builder.append(tabBrowsers());
-        builder.append(tabConfig());
-
-        builder.append("</div>");
-        builder.append("</div>");
-
-        return builder.toString();
-
+        InputStream resourceAsStream = Thread.currentThread().getContextClassLoader().getResourceAsStream("html_templates/proxy_tab_renderer.html");
+        try {
+            String tabConfigRenderer = IOUtils.toString(resourceAsStream, StandardCharsets.UTF_8);
+            return tabConfigRenderer.replace("{{proxyName}}", proxy.getClass().getSimpleName())
+                    .replace("{{proxyVersion}}", getHtmlNodeVersion())
+                    .replace("{{proxyId}}", proxy.getId())
+                    .replace("{{proxyPlatform}}", getPlatform(proxy))
+                    .replace("{{nodeTabs}}", nodeTabs())
+                    .replace("{{tabBrowsers}}", tabBrowsers())
+                    .replace("{{tabConfig}}", tabConfig());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return "";
     }
 
     private String getHtmlNodeVersion() {
@@ -81,7 +70,7 @@ public class CloudProxyHtmlRenderer implements HtmlRenderer {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return null;
+        return "";
     }
 
 
@@ -145,7 +134,7 @@ public class CloudProxyHtmlRenderer implements HtmlRenderer {
             icon = "/grid/admin/ZaleniumResourceServlet/images/saucelabs.png";
         }
         String slotClass = "";
-        String slotTitle = "";
+        String slotTitle;
         if (session != null) {
             slotClass = "busy";
             slotTitle = session.get("lastCommand").toString();
@@ -166,16 +155,13 @@ public class CloudProxyHtmlRenderer implements HtmlRenderer {
 
     // the tabs header.
     private String nodeTabs() {
-        StringBuilder builder = new StringBuilder();
-        builder.append("<div class='tabs'>");
-        builder.append("<ul>");
-        builder
-                .append("<li class='tab' type='browsers'><a title='test slots' href='#'>Browsers</a></li>");
-        builder
-                .append("<li class='tab' type='config'><a title='node configuration' href='#'>Configuration</a></li>");
-        builder.append("</ul>");
-        builder.append("</div>");
-        return builder.toString();
+        InputStream resourceAsStream = Thread.currentThread().getContextClassLoader().getResourceAsStream("html_templates/proxy_tab_header_renderer.html");
+        try {
+            return IOUtils.toString(resourceAsStream, StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return "";
     }
 
 
@@ -184,8 +170,8 @@ public class CloudProxyHtmlRenderer implements HtmlRenderer {
      * @param proxy remote proxy
      * @return Either the platform name, "Unknown", "mixed OS", or "not specified".
      */
-    public static String getPlatform(RemoteProxy proxy) {
-        Platform res = null;
+    private static String getPlatform(RemoteProxy proxy) {
+        Platform res;
         if (proxy.getTestSlots().size() == 0) {
             return "Unknown";
         }
