@@ -123,7 +123,6 @@ public class CloudProxyHtmlRenderer implements HtmlRenderer {
 
     // icon ( or generic html if icon not available )
     private String getSingleSlotHtml(TestSlot s) {
-        StringBuilder builder = new StringBuilder();
         TestSession session = s.getSession();
         String icon = "";
         if (proxy instanceof TestingBotRemoteProxy) {
@@ -135,17 +134,24 @@ public class CloudProxyHtmlRenderer implements HtmlRenderer {
         if (proxy instanceof SauceLabsRemoteProxy) {
             icon = "/grid/admin/ZaleniumResourceServlet/images/saucelabs.png";
         }
-        builder.append("<img ");
-        builder.append("src='").append(icon).append("' width='16' height='16'");
-
+        String slotClass = "";
+        String slotTitle = "";
         if (session != null) {
-            builder.append(" class='busy' ");
-            builder.append(" title='").append(session.get("lastCommand")).append("' ");
+            slotClass = "busy";
+            slotTitle = session.get("lastCommand").toString();
         } else {
-            builder.append(" title='").append(s.getCapabilities()).append("'");
+            slotTitle = s.getCapabilities().toString();
         }
-        builder.append(" />\n");
-        return builder.toString();
+        InputStream resourceAsStream = Thread.currentThread().getContextClassLoader().getResourceAsStream("html_templates/proxy_tab_browser_slot_renderer.html");
+        try {
+            String tabConfigRenderer = IOUtils.toString(resourceAsStream, StandardCharsets.UTF_8);
+            return tabConfigRenderer.replace("{{slotIcon}}", icon)
+                    .replace("{{slotClass}}", slotClass)
+                    .replace("{{slotTitle}}", slotTitle);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     // the tabs header.
