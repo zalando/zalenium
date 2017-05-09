@@ -40,7 +40,6 @@ public class CloudProxyHtmlRenderer implements HtmlRenderer {
                     .replace("{{proxyVersion}}", getHtmlNodeVersion())
                     .replace("{{proxyId}}", proxy.getId())
                     .replace("{{proxyPlatform}}", getPlatform(proxy))
-                    .replace("{{nodeTabs}}", nodeTabs())
                     .replace("{{tabBrowsers}}", tabBrowsers())
                     .replace("{{tabConfig}}", tabConfig());
         } catch (IOException e) {
@@ -152,18 +151,6 @@ public class CloudProxyHtmlRenderer implements HtmlRenderer {
         }
         return "";
     }
-
-    // the tabs header.
-    private String nodeTabs() {
-        InputStream resourceAsStream = Thread.currentThread().getContextClassLoader().getResourceAsStream("html_templates/proxy_tab_header_renderer.html");
-        try {
-            return IOUtils.toString(resourceAsStream, StandardCharsets.UTF_8);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return "";
-    }
-
 
     /**
      * return the platform for the proxy. It should be the same for all slots of the proxy, so checking that.
