@@ -11,6 +11,8 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.rules.TemporaryFolder;
 
+import com.spotify.docker.client.messages.mount.TmpfsOptions;
+
 public class DashboardTempFileBase {
     protected String tempDashboardPath;
     protected CommonProxyUtilities mockCommonProxyUtilities;
@@ -21,6 +23,10 @@ public class DashboardTempFileBase {
     @Before
     public void initTempPath() {
         tempDashboardPath = temporaryFolder.getRoot().getAbsolutePath();
+        changeDashboardPathTo(tempDashboardPath);
+    }
+
+    protected void changeDashboardPathTo(String newPathToDashboard) {
         mockCommonProxyUtilities = mock(CommonProxyUtilities.class);
         when(mockCommonProxyUtilities.currentLocalPath()).thenReturn(tempDashboardPath);
         when(mockCommonProxyUtilities.getCurrentDateAndTimeFormatted()).thenCallRealMethod();
@@ -34,6 +40,11 @@ public class DashboardTempFileBase {
 
     protected TestInformation createTestInformation(int testNum) {
         return new TestInformation("seleniumSessionId-" + testNum, "testName-" + testNum, "proxyName", "browser",
+                "browserVersion", "platform");
+    }
+
+    protected TestInformation createTestInformation(int testNum, String browserName) {
+        return new TestInformation("seleniumSessionId-" + testNum, "testName-" + testNum, "proxyName", browserName,
                 "browserVersion", "platform");
     }
 

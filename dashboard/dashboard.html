@@ -32,11 +32,20 @@
                     <h6 class="nav-link bg-success text-white text-center font-weight-bold">
                         Tests (<span id="executedTests">0</span>)
                         <button type="button" id="cleanupButton" class="btn btn-outline-danger btn-sm"
+                                style="display: none" data-toggle="tooltip" data-placement="bottom"
                                 title="Important: this will remove all video files and logs!!">
                             Remove all history
                         </button>
                     </h6>
                 </li>
+
+                <li class="nav-item">
+                    <div class="form-group form-group-sm">
+                        <input name="filterInput" id="filterInput" type="text"
+                            class="form-control input-sm" placeholder="Filter Tests">
+                    </div>
+                </li>
+
                 <div id="testListTarget">Waiting for dashboard data...</div>
 <script id="testList" type="x-tmpl-mustache">
 {{#.}}
@@ -227,44 +236,91 @@
 <!-- https://github.com/janl/mustache.js -->
 <script src="js/mustache.min.js"></script>
 <script>
-    function updateDashboard() {
-    	$('#cleanupButton').hide();
-        if (document.URL.startsWith('http')) {
-            $.get('dashboardData.json', function(dashboardData) {
-                $('#executedTests').html(dashboardData.length);
+    function Dashboard() {
+        var dashboardData;
+        var filteredData;
+        var filterString = "";
+
+        function renderDashboardData() {
+            var usedData = filteredData || dashboardData;
+            if (usedData) {
+            	var testCount = usedData.length;
+            	if (dashboardData && usedData.length < dashboardData.length) {
+            		testCount = usedData.length + "/" + dashboardData.length;
+            	}
+                $('#executedTests').html(testCount);
                 var template = $('#testList').html();
-                var rendered = Mustache.render(template, dashboardData.reverse());
+                var rendered = Mustache.render(template, usedData);
                 $('#testListTarget').html(rendered);
-                $('#cleanupButton').show();
-            });
-        } else {
-            $('#executedTests').html(0);
-            $('#testListTarget').html('Offline dashboard not supported.');
-        }
+                if (usedData.length > 0) {
+                    $('#cleanupButton').show();
+                }
+            }
+        };
+        
+        function dashboardDataElemContainsString(dashboardDataElem) {
+            return (dashboardDataElem.fileName.toLowerCase().indexOf(filterString) != -1 ||
+                    dashboardDataElem.browserVersion.toLowerCase().indexOf(filterString) != -1
+                    );
+        };
+
+        function filterData(filterInput) {
+        	// TODO what happens when we clear a previous filter?
+            if (dashboardData && filterInput && filterInput.length > 0) {
+                filterString = filterInput.toLowerCase();
+                filteredData = dashboardData.filter(dashboardDataElemContainsString);
+            }
+        };
+
+        this.updateFilter = function() {
+            filterData($('#filterInput').val());
+            renderDashboardData();
+        };
+
+        this.updateDashboard = function() {
+            $('#cleanupButton').hide();
+            if (document.URL.startsWith('http')) {
+                $.get('dashboardData.json', function(jsonData) {
+                    dashboardData = jsonData.slice().reverse();
+                    filterData($('#filterInput').val());
+                    renderDashboardData();
+                });
+            } else {
+                $('#executedTests').html(0);
+                $('#testListTarget').html('Offline dashboard not supported.');
+            }
+        };
     }
-    // run once on page load
-    updateDashboard();
+
+    var dashboard = new Dashboard();
+    dashboard.updateDashboard();
 
     // This will only work when the page is accessed via a WebServer
     // Loads new tests in the list as the file gets modified
     setInterval(function() {
-        updateDashboard();
+        dashboard.updateDashboard();
     }, 10000);
-</script>
-<script>
+    
+    // filter input
+    $('#filterInput').on('keypress', function () {
+    	dashboard.updateFilter();
+    });
+
+    // cleanup button
+    $('[data-toggle="tooltip"]').tooltip();
     $('#cleanupButton').on('click', function () {
-    	$.ajax({
-    		  url  : '/cleanup?action=doCleanupAll',
-    		  type : 'POST',
-    		}).done(function(data, statusText, xhr) {
-    		  var status = xhr.status;
-    		  if (status != 200) {
-    		    alert('Removing data failed with status=' + status + ' and message=' + xhr.responseText);
-    		  }
-    		});
-    	$('#testListTarget').html("All Data Removed!<br> Waiting for new Tests...");
-    	$('#executedTests').html(0);
-    	$('#cleanupButton').hide();
+        $.ajax({
+              url  : '/cleanup?action=doCleanupAll',
+              type : 'POST',
+            }).done(function(data, statusText, xhr) {
+              var status = xhr.status;
+              if (status != 200) {
+                alert('Removing data failed with status=' + status + ' and message=' + xhr.responseText);
+              }
+            });
+        $('#testListTarget').html("All Data Removed!<br> Waiting for new Tests...");
+        $('#executedTests').html(0);
+        $('#cleanupButton').hide();
     })
 </script>
 </body>
