@@ -69,33 +69,31 @@ public class CloudProxyHtmlRenderer implements HtmlRenderer {
         for (TestSlot slot : proxy.getTestSlots()) {
             wdLines.add(slot);
         }
-        String webDriverLines = "";
+        StringBuilder webDriverLines = new StringBuilder();
         if (wdLines.getLinesType().size() != 0) {
-            webDriverLines = webDriverLines.concat(getLines(wdLines));
+            webDriverLines.append(getLines(wdLines));
         }
-        return webDriverLines;
+        return webDriverLines.toString();
     }
 
     // the lines of icon representing the possible slots
     private String getLines(SlotsLines lines) {
-        String slotLines = "";
+        StringBuilder slotLines = new StringBuilder();
         for (MiniCapability cap : lines.getLinesType()) {
             String version = cap.getVersion();
             if (version != null) {
                 version = "v:" + version;
-            } else {
-                version = "";
             }
-            String singleSlotsHtml = "";
+            StringBuilder singleSlotsHtml = new StringBuilder();
             for (TestSlot s : lines.getLine(cap)) {
-                singleSlotsHtml = singleSlotsHtml.concat(getSingleSlotHtml(s));
+                singleSlotsHtml.append(getSingleSlotHtml(s));
             }
             Map<String, String> linesValues = new HashMap<>();
             linesValues.put("{{browserVersion}}", version);
-            linesValues.put("{{singleSlots}}", singleSlotsHtml);
-            slotLines = slotLines.concat(templateRenderer.renderSection("{{tabBrowsers}}", linesValues));
+            linesValues.put("{{singleSlots}}", singleSlotsHtml.toString());
+            slotLines.append(templateRenderer.renderSection("{{tabBrowsers}}", linesValues));
         }
-        return slotLines;
+        return slotLines.toString();
     }
 
     private String getSingleSlotHtml(TestSlot s) {

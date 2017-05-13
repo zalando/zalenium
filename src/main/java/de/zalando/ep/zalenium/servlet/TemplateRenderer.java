@@ -41,9 +41,9 @@ public class TemplateRenderer {
 
     private String getTemplateSection(String section, boolean complete) {
         loadTemplate();
-        section = section.replace("{", "").replace("}", "");
-        String sectionBeginning = String.format("{{#%s}}", section);
-        String sectionEnding = String.format("{{/%s}}", section);
+        String sectionCopy = section.replace("{", "").replace("}", "");
+        String sectionBeginning = String.format("{{#%s}}", sectionCopy);
+        String sectionEnding = String.format("{{/%s}}", sectionCopy);
         String templateSection = getTemplateContents();
         if (complete) {
             return templateSection.substring(templateSection.indexOf(sectionBeginning),
@@ -55,26 +55,26 @@ public class TemplateRenderer {
     }
 
     private String filterSectionName(String section, String content) {
-        section = section.replace("{", "").replace("}", "");
-        String sectionBeginning = String.format("{{#%s}}", section);
-        String sectionEnding = String.format("{{/%s}}", section);
+        String sectionCopy = section.replace("{", "").replace("}", "");
+        String sectionBeginning = String.format("{{#%s}}", sectionCopy);
+        String sectionEnding = String.format("{{/%s}}", sectionCopy);
         return content.replace(sectionBeginning, "").replace(sectionEnding, "");
     }
 
     private String renderValue(String renderedTemplate, String key, String value) {
-        if (renderedTemplate.contains(key)) {
-            renderedTemplate = renderedTemplate.replace(key, value);
+        String renderedTemplateCopy = renderedTemplate;
+        if (renderedTemplateCopy.contains(key)) {
+            renderedTemplateCopy = renderedTemplateCopy.replace(key, value);
         } else {
-            renderedTemplate = renderedTemplate.replace(getTemplateSection(key, true), key);
+            renderedTemplateCopy = renderedTemplateCopy.replace(getTemplateSection(key, true), key);
             String sectionContent = filterSectionName(key, value);
-            renderedTemplate = renderedTemplate.replace(key, sectionContent);
+            renderedTemplateCopy = renderedTemplateCopy.replace(key, sectionContent);
         }
-        return renderedTemplate;
+        return renderedTemplateCopy;
     }
 
     public String renderSection(String section, Map<String, String> renderValues) {
         String templateSection = getTemplateSection(section, false);
-        logger.info("Section: " + section + ", value: " + templateSection);
         for (Map.Entry<String, String> mapEntry : renderValues.entrySet()) {
             templateSection = renderValue(templateSection, mapEntry.getKey(), mapEntry.getValue());
         }

@@ -24,7 +24,6 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-// We use this class name to be able to go to the resource like this: http://localhost:4444/grid/admin/live
 public class LivePreviewServlet extends RegistryBasedServlet {
 
     private static final Logger LOGGER = Logger.getLogger(LivePreviewServlet.class.getName());
