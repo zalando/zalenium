@@ -4,7 +4,6 @@ import com.google.gson.JsonObject;
 import de.zalando.ep.zalenium.proxy.BrowserStackRemoteProxy;
 import de.zalando.ep.zalenium.proxy.SauceLabsRemoteProxy;
 import de.zalando.ep.zalenium.proxy.TestingBotRemoteProxy;
-import org.apache.commons.io.IOUtils;
 import org.openqa.grid.common.exception.GridException;
 import org.openqa.grid.internal.RemoteProxy;
 import org.openqa.grid.internal.TestSession;
@@ -15,15 +14,11 @@ import org.openqa.grid.web.servlet.beta.SlotsLines;
 import org.openqa.selenium.Platform;
 import org.openqa.selenium.remote.CapabilityType;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
 public class CloudProxyHtmlRenderer implements HtmlRenderer {
 
-    private final String templateName = "html_templates/proxy_tab_browser_renderer.html";
     private RemoteProxy proxy;
     private TemplateRenderer templateRenderer;
 
@@ -32,23 +27,22 @@ public class CloudProxyHtmlRenderer implements HtmlRenderer {
 
     public CloudProxyHtmlRenderer(RemoteProxy proxy) {
         this.proxy = proxy;
-        templateRenderer = new TemplateRenderer(templateName);
+        templateRenderer = new TemplateRenderer(getTemplateName());
+    }
+
+    private String getTemplateName() {
+        return "html_templates/proxy_tab_renderer.html";
     }
 
     public String renderSummary() {
-        InputStream resourceAsStream = Thread.currentThread().getContextClassLoader().getResourceAsStream("html_templates/proxy_tab_renderer.html");
-        try {
-            String tabConfigRenderer = IOUtils.toString(resourceAsStream, StandardCharsets.UTF_8);
-            return tabConfigRenderer.replace("{{proxyName}}", proxy.getClass().getSimpleName())
-                    .replace("{{proxyVersion}}", getHtmlNodeVersion())
-                    .replace("{{proxyId}}", proxy.getId())
-                    .replace("{{proxyPlatform}}", getPlatform(proxy))
-                    .replace("{{tabBrowsers}}", tabBrowsers())
-                    .replace("{{tabConfig}}", tabConfig());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return "";
+        Map<String, String> renderSummaryValues = new HashMap<>();
+        renderSummaryValues.put("{{proxyName}}", proxy.getClass().getSimpleName());
+        renderSummaryValues.put("{{proxyVersion}}", getHtmlNodeVersion());
+        renderSummaryValues.put("{{proxyId}}", proxy.getId());
+        renderSummaryValues.put("{{proxyPlatform}}", getPlatform(proxy));
+        renderSummaryValues.put("{{tabBrowsers}}", tabBrowsers());
+        renderSummaryValues.put("{{tabConfig}}", tabConfig());
+        return templateRenderer.renderTemplate(renderSummaryValues);
     }
 
     private String getHtmlNodeVersion() {
@@ -79,9 +73,7 @@ public class CloudProxyHtmlRenderer implements HtmlRenderer {
         if (wdLines.getLinesType().size() != 0) {
             webDriverLines = webDriverLines.concat(getLines(wdLines));
         }
-        Map<String, String> tabBrowsers = new HashMap<>();
-        tabBrowsers.put("{{webDriverLines}}", webDriverLines);
-        return templateRenderer.renderTemplate(tabBrowsers);
+        return webDriverLines;
     }
 
     // the lines of icon representing the possible slots
@@ -101,7 +93,7 @@ public class CloudProxyHtmlRenderer implements HtmlRenderer {
             Map<String, String> linesValues = new HashMap<>();
             linesValues.put("{{browserVersion}}", version);
             linesValues.put("{{singleSlots}}", singleSlotsHtml);
-            slotLines = slotLines.concat(templateRenderer.renderTemplate(linesValues));
+            slotLines = slotLines.concat(templateRenderer.renderSection("{{tabBrowsers}}", linesValues));
         }
         return slotLines;
     }

@@ -16,9 +16,22 @@
         </ul>
     </div>
     <div class='content'>
-        {{tabBrowsers}}
+        <div type='browsers' class='content_detail'>
+            <p class='protocol'>
+                WebDriver
+            </p>
+            {{#tabBrowsers}}
+            <p>
+                {{browserVersion}}
+                {{#singleSlots}}
+                <img src='{{slotIcon}}' width='16' height='16' class='{{slotClass}}' title='{{slotTitle}}'/>
+                {{/singleSlots}}
+            </p>
+            {{/tabBrowsers}}
+        </div>
         <div type='config' class='content_detail'>
             <p>{{tabConfig}}</p>
         </div>
     </div>
 </div>
+

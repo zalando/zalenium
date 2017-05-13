@@ -61,11 +61,22 @@ public class TemplateRenderer {
         return content.replace(sectionBeginning, "").replace(sectionEnding, "");
     }
 
+    private String renderValue(String renderedTemplate, String key, String value) {
+        if (renderedTemplate.contains(key)) {
+            renderedTemplate = renderedTemplate.replace(key, value);
+        } else {
+            renderedTemplate = renderedTemplate.replace(getTemplateSection(key, true), key);
+            String sectionContent = filterSectionName(key, value);
+            renderedTemplate = renderedTemplate.replace(key, sectionContent);
+        }
+        return renderedTemplate;
+    }
+
     public String renderSection(String section, Map<String, String> renderValues) {
         String templateSection = getTemplateSection(section, false);
         logger.info("Section: " + section + ", value: " + templateSection);
         for (Map.Entry<String, String> mapEntry : renderValues.entrySet()) {
-            templateSection = templateSection.replace(mapEntry.getKey(), mapEntry.getValue());
+            templateSection = renderValue(templateSection, mapEntry.getKey(), mapEntry.getValue());
         }
         return templateSection;
     }
@@ -73,17 +84,7 @@ public class TemplateRenderer {
     public String renderTemplate(Map<String, String> renderValues) {
         String renderedTemplate = getTemplateContents();
         for (Map.Entry<String, String> mapEntry : renderValues.entrySet()) {
-            if (renderedTemplate.contains(mapEntry.getKey())) {
-                renderedTemplate = renderedTemplate.replace(mapEntry.getKey(), mapEntry.getValue());
-            } else {
-                logger.info("Replacing section: " + mapEntry.getKey());
-                logger.info("Section contents: " + getTemplateSection(mapEntry.getKey(), true));
-                renderedTemplate = renderedTemplate.replace(getTemplateSection(mapEntry.getKey(), true), mapEntry.getKey());
-                logger.info("Template replacing... (1): " + renderedTemplate);
-                String sectionContent = filterSectionName(mapEntry.getKey(), mapEntry.getValue());
-                renderedTemplate = renderedTemplate.replace(mapEntry.getKey(), sectionContent);
-                logger.info("Template replacing... (2): " + renderedTemplate);
-            }
+            renderedTemplate = renderValue(renderedTemplate, mapEntry.getKey(), mapEntry.getValue());
         }
         return renderedTemplate;
     }
