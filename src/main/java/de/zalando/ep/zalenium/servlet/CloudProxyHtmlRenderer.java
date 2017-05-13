@@ -23,7 +23,7 @@ import java.util.Map;
 
 public class CloudProxyHtmlRenderer implements HtmlRenderer {
 
-    private final String templateName = "html_templates/proxy_tab_browser_line_renderer.html";
+    private final String templateName = "html_templates/proxy_tab_browser_renderer.html";
     private RemoteProxy proxy;
     private TemplateRenderer templateRenderer;
 
@@ -65,14 +65,7 @@ public class CloudProxyHtmlRenderer implements HtmlRenderer {
 
     // content of the config tab.
     private String tabConfig() {
-        InputStream resourceAsStream = Thread.currentThread().getContextClassLoader().getResourceAsStream("html_templates/proxy_tab_config_renderer.html");
-        try {
-            String tabConfigRenderer = IOUtils.toString(resourceAsStream, StandardCharsets.UTF_8);
-            return tabConfigRenderer.replace("{{proxyConfig}}", proxy.getConfig().toString("<p>%1$s: %2$s</p>"));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return "";
+        return proxy.getConfig().toString("<p>%1$s: %2$s</p>");
     }
 
 
@@ -86,14 +79,9 @@ public class CloudProxyHtmlRenderer implements HtmlRenderer {
         if (wdLines.getLinesType().size() != 0) {
             webDriverLines = webDriverLines.concat(getLines(wdLines));
         }
-        InputStream resourceAsStream = Thread.currentThread().getContextClassLoader().getResourceAsStream("html_templates/proxy_tab_browser_renderer.html");
-        try {
-            String tabConfigRenderer = IOUtils.toString(resourceAsStream, StandardCharsets.UTF_8);
-            return tabConfigRenderer.replace("{{webDriverLines}}", webDriverLines);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return webDriverLines;
+        Map<String, String> tabBrowsers = new HashMap<>();
+        tabBrowsers.put("{{webDriverLines}}", webDriverLines);
+        return templateRenderer.renderTemplate(tabBrowsers);
     }
 
     // the lines of icon representing the possible slots

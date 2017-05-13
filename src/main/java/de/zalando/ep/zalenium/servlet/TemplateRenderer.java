@@ -45,7 +45,6 @@ public class TemplateRenderer {
         String sectionBeginning = String.format("{{#%s}}", section);
         String sectionEnding = String.format("{{/%s}}", section);
         String templateSection = getTemplateContents();
-        logger.info("Template contents: " + templateSection);
         if (complete) {
             return templateSection.substring(templateSection.indexOf(sectionBeginning),
                     templateSection.indexOf(sectionEnding) + sectionEnding.length());
@@ -53,6 +52,13 @@ public class TemplateRenderer {
             return templateSection.substring(templateSection.indexOf(sectionBeginning),
                     templateSection.indexOf(sectionEnding)).replace(sectionBeginning, "");
         }
+    }
+
+    private String filterSectionName(String section, String content) {
+        section = section.replace("{", "").replace("}", "");
+        String sectionBeginning = String.format("{{#%s}}", section);
+        String sectionEnding = String.format("{{/%s}}", section);
+        return content.replace(sectionBeginning, "").replace(sectionEnding, "");
     }
 
     public String renderSection(String section, Map<String, String> renderValues) {
@@ -73,7 +79,10 @@ public class TemplateRenderer {
                 logger.info("Replacing section: " + mapEntry.getKey());
                 logger.info("Section contents: " + getTemplateSection(mapEntry.getKey(), true));
                 renderedTemplate = renderedTemplate.replace(getTemplateSection(mapEntry.getKey(), true), mapEntry.getKey());
-                renderedTemplate = renderedTemplate.replace(mapEntry.getKey(), mapEntry.getValue());
+                logger.info("Template replacing... (1): " + renderedTemplate);
+                String sectionContent = filterSectionName(mapEntry.getKey(), mapEntry.getValue());
+                renderedTemplate = renderedTemplate.replace(mapEntry.getKey(), sectionContent);
+                logger.info("Template replacing... (2): " + renderedTemplate);
             }
         }
         return renderedTemplate;
