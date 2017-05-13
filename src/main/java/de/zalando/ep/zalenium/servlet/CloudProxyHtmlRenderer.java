@@ -18,19 +18,22 @@ import org.openqa.selenium.remote.CapabilityType;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.Map;
 
 public class CloudProxyHtmlRenderer implements HtmlRenderer {
 
+    private final String templateName = "html_templates/proxy_tab_browser_line_renderer.html";
     private RemoteProxy proxy;
+    private TemplateRenderer templateRenderer;
 
     @SuppressWarnings("unused")
     private CloudProxyHtmlRenderer() {}
 
     public CloudProxyHtmlRenderer(RemoteProxy proxy) {
         this.proxy = proxy;
+        templateRenderer = new TemplateRenderer(templateName);
     }
-
-
 
     public String renderSummary() {
         InputStream resourceAsStream = Thread.currentThread().getContextClassLoader().getResourceAsStream("html_templates/proxy_tab_renderer.html");
@@ -103,23 +106,18 @@ public class CloudProxyHtmlRenderer implements HtmlRenderer {
             } else {
                 version = "";
             }
-            String testSlotsHtml = "";
+            String singleSlotsHtml = "";
             for (TestSlot s : lines.getLine(cap)) {
-                testSlotsHtml = testSlotsHtml.concat(getSingleSlotHtml(s));
+                singleSlotsHtml = singleSlotsHtml.concat(getSingleSlotHtml(s));
             }
-            InputStream resourceAsStream = Thread.currentThread().getContextClassLoader().getResourceAsStream("html_templates/proxy_tab_browser_line_renderer.html");
-            try {
-                String tabConfigRenderer = IOUtils.toString(resourceAsStream, StandardCharsets.UTF_8);
-                slotLines = slotLines.concat(tabConfigRenderer.replace("{{browserVersion}}", version)
-                        .replace("{{slotsHtml}}", testSlotsHtml));
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            Map<String, String> linesValues = new HashMap<>();
+            linesValues.put("{{browserVersion}}", version);
+            linesValues.put("{{singleSlots}}", singleSlotsHtml);
+            slotLines = slotLines.concat(templateRenderer.renderTemplate(linesValues));
         }
         return slotLines;
     }
 
-    // icon ( or generic html if icon not available )
     private String getSingleSlotHtml(TestSlot s) {
         TestSession session = s.getSession();
         String icon = "";
@@ -140,16 +138,11 @@ public class CloudProxyHtmlRenderer implements HtmlRenderer {
         } else {
             slotTitle = s.getCapabilities().toString();
         }
-        InputStream resourceAsStream = Thread.currentThread().getContextClassLoader().getResourceAsStream("html_templates/proxy_tab_browser_slot_renderer.html");
-        try {
-            String tabConfigRenderer = IOUtils.toString(resourceAsStream, StandardCharsets.UTF_8);
-            return tabConfigRenderer.replace("{{slotIcon}}", icon)
-                    .replace("{{slotClass}}", slotClass)
-                    .replace("{{slotTitle}}", slotTitle);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return "";
+        Map<String, String> singleSlotValues = new HashMap<>();
+        singleSlotValues.put("{{slotIcon}}", icon);
+        singleSlotValues.put("{{slotClass}}", slotClass);
+        singleSlotValues.put("{{slotTitle}}", slotTitle);
+        return templateRenderer.renderSection("{{singleSlots}}", singleSlotValues);
     }
 
     /**
