@@ -15,7 +15,9 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /*
     Taken from the original org.openqa.grid.web.servlet.beta.ConsoleServlet
@@ -47,39 +49,10 @@ public class ZaleniumConsoleServlet extends RegistryBasedServlet {
     protected void process(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
 
-        response.setContentType("text/html");
-        response.setCharacterEncoding("UTF-8");
-        response.setStatus(200);
-
-        StringBuilder builder = new StringBuilder();
-
-        builder.append("<html>");
-        builder.append("<head>");
-        builder
-                .append("<script src='/grid/resources/org/openqa/grid/images/jquery-3.1.1.min.js'></script>");
-
-        builder.append("<script src='/grid/resources/org/openqa/grid/images/consoleservlet.js'></script>");
-
-        builder
-                .append("<link href='/grid/resources/org/openqa/grid/images/consoleservlet.css' rel='stylesheet' type='text/css' />");
-        builder
-                .append("<link href='/grid/resources/org/openqa/grid/images/favicon.ico' rel='icon' type='image/x-icon' />");
-
-        builder.append("<title>Grid Console</title>");
-
-        builder.append("<style>");
-        builder.append(".busy {");
-        builder.append(" opacity : 0.4;");
-        builder.append("filter: alpha(opacity=40);");
-        builder.append("}");
-        builder.append("</style>");
-        builder.append("</head>");
-
-        builder.append("<body>");
-
-        builder.append("<div id='main-content'>");
-
-        builder.append(getHeader());
+        int refresh = -1;
+        if (request.getParameter("refresh") != null) {
+            refresh = Integer.parseInt(request.getParameter("refresh"));
+        }
 
         List<String> nodes = new ArrayList<>();
         for (RemoteProxy proxy : getRegistry().getAllProxies()) {
@@ -90,41 +63,37 @@ public class ZaleniumConsoleServlet extends RegistryBasedServlet {
         int rightColumnSize = size / 2;
         int leftColumnSize = size - rightColumnSize;
 
-
-
-        builder.append("<div id='left-column'>");
+        StringBuilder leftColumnNodes = new StringBuilder();
         for (int i = 0; i < leftColumnSize; i++) {
-            builder.append(nodes.get(i));
+            leftColumnNodes.append(nodes.get(i));
         }
-
-
-        builder.append("</div>");
-
-        builder.append("<div id='right-column'>");
+        StringBuilder rightColumnNodes = new StringBuilder();
         for (int i = leftColumnSize; i < nodes.size(); i++) {
-            builder.append(nodes.get(i));
+            rightColumnNodes.append(nodes.get(i));
         }
 
 
-        builder.append("</div>");
-
-        builder.append("<div class='clearfix'></div>");
-
-        builder.append(getRequestQueue());
-
-
+        Map<String, String> consoleValues = new HashMap<>();
+        consoleValues.put("{{refreshInterval}}", String.valueOf(refresh));
+        consoleValues.put("{{coreVersion}}", coreVersion);
+        consoleValues.put("{{leftColumnNodes}}", leftColumnNodes.toString());
+        consoleValues.put("{{rightColumnNodes}}", rightColumnNodes.toString());
+        consoleValues.put("{{requestQueue}}", getRequestQueue().toString());
         if (request.getParameter("config") != null) {
-            builder.append(getConfigInfo(request.getParameter("configDebug") != null));
+            consoleValues.put("{{hubConfig}}", getConfigInfo(request.getParameter("configDebug") != null));
         } else {
-            builder.append("<a href='?config=true&configDebug=true'>view config</a>");
+            consoleValues.put("{{hubConfig}}", "<a href='?config=true&configDebug=true'>view config</a>");
         }
 
+        String templateFile = "html_templates/zalenium_console_servlet.html";
+        TemplateRenderer templateRenderer = new TemplateRenderer(templateFile);
+        String renderTemplate = templateRenderer.renderTemplate(consoleValues);
 
-        builder.append("</div>");
-        builder.append("</body>");
-        builder.append("</html>");
 
-        try (InputStream in = new ByteArrayInputStream(builder.toString().getBytes("UTF-8"))) {
+        response.setContentType("text/html");
+        response.setCharacterEncoding("UTF-8");
+        response.setStatus(200);
+        try (InputStream in = new ByteArrayInputStream(renderTemplate.getBytes("UTF-8"))) {
             ByteStreams.copy(in, response.getOutputStream());
         } finally {
             response.getOutputStream().close();
@@ -149,20 +118,6 @@ public class ZaleniumConsoleServlet extends RegistryBasedServlet {
         builder.append("</div>");
         return builder.toString();
     }
-
-    private Object getHeader() {
-        StringBuilder builder = new StringBuilder();
-        builder.append("<div id='header'>");
-        builder.append("<h1><a href='/grid/console'>Selenium</a></h1>");
-        builder.append("<h2>Grid Console v.");
-        builder.append(coreVersion);
-        builder.append("</h2>");
-        builder.append("<div><a id='helplink' target='_blank' href='https://github.com/SeleniumHQ/selenium/wiki/Grid2'>Help</a></div>");
-        builder.append("</div>");
-        builder.append("");
-        return builder.toString();
-    }
-
 
     /**
      * retracing how the hub config was built to help debugging.

@@ -5,7 +5,7 @@
         <link href='/grid/resources/org/openqa/grid/images/consoleservlet.css' rel='stylesheet' type='text/css' />
         <link href='/grid/resources/org/openqa/grid/images/favicon.ico' rel='icon' type='image/x-icon' />
         <meta http-equiv='refresh' content='{{refreshInterval}}' />
-        <title>Live Preview</title>
+        <title>Grid Console</title>
         <style>
             .busy {opacity : 0.4; filter: alpha(opacity=40);}
         </style>
@@ -14,11 +14,11 @@
         <div id='main-content'>
             <div id='header'>
                 <h1>
-                    <a href='/grid/LivePreviewServlet'>Zalenium Live Preview</a>
+                    <a href='/grid/console'>Selenium</a>
                 </h1>
-                <h2>Zalenium Live Preview</h2>
+                <h2>Grid Console v. {{coreVersion}}</h2>
                 <div>
-                    <a id='helplink' target='_blank' href='https://github.com/zalando/zalenium'>Help</a>
+                    <a id='helplink' target='_blank' href='https://github.com/SeleniumHQ/selenium/wiki/Grid2'>Help</a>
                 </div>
             </div>
             <div id='left-column'>
@@ -27,7 +27,9 @@
             <div id='right-column'>
                 {{rightColumnNodes}}
             </div>
+            <div class='clearfix'></div>
+            {{requestQueue}}
+            {{hubConfig}}
         </div>
     </body>
 </html>
-
