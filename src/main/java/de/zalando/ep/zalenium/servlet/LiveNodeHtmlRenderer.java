@@ -34,7 +34,7 @@ public class LiveNodeHtmlRenderer implements HtmlRenderer {
     }
 
     private String getTemplateName() {
-        return "html_templates/live_node_tab_renderer.html";
+        return "html_templates/live_node_tab.html";
     }
 
 

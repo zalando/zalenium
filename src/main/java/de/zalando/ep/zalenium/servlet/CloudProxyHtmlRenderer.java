@@ -31,7 +31,7 @@ public class CloudProxyHtmlRenderer implements HtmlRenderer {
     }
 
     private String getTemplateName() {
-        return "html_templates/proxy_tab_renderer.html";
+        return "html_templates/proxy_tab.html";
     }
 
     public String renderSummary() {

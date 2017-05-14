@@ -20,7 +20,9 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -61,45 +63,15 @@ public class LivePreviewServlet extends RegistryBasedServlet {
     protected void process(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
 
+
         int refresh = -1;
         String testGroup = "";
-
         try {
             refresh = Integer.parseInt(request.getParameter("refresh"));
             testGroup = request.getParameter("group") == null ? "" : request.getParameter("group");
         } catch (Exception e) {
             LOGGER.log(Level.FINE, e.toString(), e);
         }
-
-        response.setContentType("text/html");
-        response.setCharacterEncoding("UTF-8");
-        response.setStatus(200);
-
-        StringBuilder builder = new StringBuilder();
-
-        builder.append("<html>");
-        builder.append("<head>");
-        builder.append("<script src='/grid/resources/org/openqa/grid/images/jquery-3.1.1.min.js'></script>");
-        builder.append("<script src='/grid/resources/org/openqa/grid/images/consoleservlet.js'></script>");
-        builder.append("<link href='/grid/resources/org/openqa/grid/images/consoleservlet.css' rel='stylesheet' type='text/css' />");
-        builder.append("<link href='/grid/resources/org/openqa/grid/images/favicon.ico' rel='icon' type='image/x-icon' />");
-
-        if (refresh != -1) {
-            builder.append(String.format("<meta http-equiv='refresh' content='%d' />", refresh));
-        }
-
-        builder.append("<title>Live Preview</title>");
-
-        builder.append("<style>");
-        builder.append(".busy {opacity : 0.4; filter: alpha(opacity=40);}");
-        builder.append("</style>");
-        builder.append("</head>");
-
-        builder.append("<body>");
-
-        builder.append("<div id='main_content'>");
-
-        builder.append(getHeader());
 
         List<String> nodes = new ArrayList<>();
         for (RemoteProxy proxy : getRegistry().getAllProxies()) {
@@ -117,36 +89,32 @@ public class LivePreviewServlet extends RegistryBasedServlet {
         int rightColumnSize = size / 2;
         int leftColumnSize = size - rightColumnSize;
 
-        builder.append("<div id='left-column'>");
+        StringBuilder leftColumnNodes = new StringBuilder();
         for (int i = 0; i < leftColumnSize; i++) {
-            builder.append(nodes.get(i));
+            leftColumnNodes.append(nodes.get(i));
         }
-        builder.append("</div>");
 
-        builder.append("<div id='right-column'>");
+        StringBuilder rightColumnNodes = new StringBuilder();
         for (int i = leftColumnSize; i < nodes.size(); i++) {
-            builder.append(nodes.get(i));
+            rightColumnNodes.append(nodes.get(i));
         }
-        builder.append("</div></div>");
-        builder.append("</body>");
-        builder.append("</html>");
 
-        try (InputStream in = new ByteArrayInputStream(builder.toString().getBytes("UTF-8"))) {
+        Map<String, String> livePreviewValues = new HashMap<>();
+        livePreviewValues.put("{{refreshInterval}}", String.valueOf(refresh));
+        livePreviewValues.put("{{leftColumnNodes}}", leftColumnNodes.toString());
+        livePreviewValues.put("{{rightColumnNodes}}", rightColumnNodes.toString());
+        String templateFile = "html_templates/live_preview_servlet.html";
+        TemplateRenderer templateRenderer = new TemplateRenderer(templateFile);
+        String renderTemplate = templateRenderer.renderTemplate(livePreviewValues);
+
+        response.setContentType("text/html");
+        response.setCharacterEncoding("UTF-8");
+        response.setStatus(200);
+
+        try (InputStream in = new ByteArrayInputStream(renderTemplate.getBytes("UTF-8"))) {
             ByteStreams.copy(in, response.getOutputStream());
         } finally {
             response.getOutputStream().close();
         }
     }
-
-    private Object getHeader() {
-        String header = "";
-        header = header.concat("<div id='header'>");
-        header = header.concat("<h1><a href='/grid/LivePreviewServlet'>Zalenium Live Preview</a></h1>");
-        header = header.concat("<h2>Zalenium Live Preview");
-        header = header.concat("</h2>");
-        header = header.concat("<div><a id='helplink' target='_blank' ");
-        header = header.concat("href='https://github.com/zalando/zalenium'>Help</a></div></div>");
-        return header;
-    }
-
 }
