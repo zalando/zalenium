@@ -18,7 +18,6 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.List;
 
-import static org.hamcrest.CoreMatchers.not;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -101,7 +100,8 @@ public class LiveNodeServletTest {
 
         livePreviewServletServlet.doPost(request, response);
         String postResponseContent = response.getOutputStream().toString();
-        assertThat(postResponseContent, not(containsString("<meta http-equiv='refresh'")));
+        // content='-1' means that the page won't refresh
+        assertThat(postResponseContent, containsString("<meta http-equiv='refresh' content='-1' />"));
     }
 
 }
