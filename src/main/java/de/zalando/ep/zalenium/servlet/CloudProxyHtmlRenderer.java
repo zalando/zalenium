@@ -134,10 +134,9 @@ public class CloudProxyHtmlRenderer implements HtmlRenderer {
             return "Unknown";
         }
         res = getPlatform(proxy.getTestSlots().get(0));
-
         for (TestSlot slot : proxy.getTestSlots()) {
             Platform tmp = getPlatform(slot);
-            if (tmp != res) {
+            if (!tmp.is(res)) {
                 return "mixed OS";
             }
             res = tmp;
