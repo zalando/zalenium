@@ -36,7 +36,23 @@
                     {{/requestQueue}}
                 </ul>
             </div>
-            {{hubConfig}}
+            <a {{hubConfigLinkVisible}} href='?config=true&configDebug=true'>view config</a>
+            <div {{hubConfigVisible}} id='hub-config'>
+                {{#hubConfig}}
+                <b>Config for the hub :</b><br/>
+                {{hubCurrentConfig}}
+                <div {{hubConfigVerboseVisible}} id='hub-config-verbose'>
+                    <b>Config details :</b><br/>
+                    <b>hub launched with :</b>
+                    {{hubCurrentConfig}}
+                    <br/><b>the final configuration comes from :</b><br/>
+                    <b>the default :</b><br/>
+                    {{hubDefaultConfig}}
+                    <br/><b>updated with params :</b><br/>
+                    {{hubMergedConfig}}
+                </div>
+                {{/hubConfig}}
+            </div>
         </div>
     </body>
 </html>

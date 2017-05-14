@@ -75,6 +75,12 @@ public class ZaleniumConsoleServlet extends RegistryBasedServlet {
             rightColumnNodes.append(nodes.get(i));
         }
 
+        String hubConfigLinkVisible = "";
+        String hubConfigVisible = "hidden";
+        if (request.getParameter("config") != null) {
+            hubConfigLinkVisible = "hidden";
+            hubConfigVisible = "";
+        }
 
         Map<String, String> consoleValues = new HashMap<>();
         consoleValues.put("{{refreshInterval}}", String.valueOf(refresh));
@@ -83,13 +89,9 @@ public class ZaleniumConsoleServlet extends RegistryBasedServlet {
         consoleValues.put("{{rightColumnNodes}}", rightColumnNodes.toString());
         consoleValues.put("{{unprocessedRequests}}", getUnprocessedRequests());
         consoleValues.put("{{requestQueue}}", getRequestQueue());
-
-
-        if (request.getParameter("config") != null) {
-            consoleValues.put("{{hubConfig}}", getConfigInfo(request.getParameter("configDebug") != null));
-        } else {
-            consoleValues.put("{{hubConfig}}", "<a href='?config=true&configDebug=true'>view config</a>");
-        }
+        consoleValues.put("{{hubConfigLinkVisible}}", hubConfigLinkVisible);
+        consoleValues.put("{{hubConfigVisible}}", hubConfigVisible);
+        consoleValues.put("{{hubConfig}}", getConfigInfo(request.getParameter("configDebug") != null));
 
         String renderTemplate = templateRenderer.renderTemplate(consoleValues);
 
@@ -129,31 +131,21 @@ public class ZaleniumConsoleServlet extends RegistryBasedServlet {
      */
     private String getConfigInfo(boolean verbose) {
 
-        StringBuilder builder = new StringBuilder();
-
         GridHubConfiguration config = getRegistry().getConfiguration();
-        builder.append("<div  id='hub-config'>");
-        builder.append("<b>Config for the hub :</b><br/>");
-        builder.append(prettyHtmlPrint(config));
+        Map<String, String> configInfoValues = new HashMap<>();
+        configInfoValues.put("{{hubCurrentConfig}}", prettyHtmlPrint(config));
 
+        String hubConfigVerboseVisible = "hidden";
         if (verbose) {
-
+            hubConfigVerboseVisible = "";
             GridHubConfiguration tmp = new GridHubConfiguration();
-
-            builder.append("<b>Config details :</b><br/>");
-            builder.append("<b>hub launched with :</b>");
-            builder.append(config.toString());
-
-            builder.append("<br/><b>the final configuration comes from :</b><br/>");
-            builder.append("<b>the default :</b><br/>");
-            builder.append(prettyHtmlPrint(tmp));
-
-            builder.append("<br/><b>updated with params :</b></br>");
+            configInfoValues.put("{{hubDefaultConfig}}", prettyHtmlPrint(tmp));
             tmp.merge(config);
-            builder.append(prettyHtmlPrint(tmp));
+            configInfoValues.put("{{hubMergedConfig}}", prettyHtmlPrint(tmp));
         }
-        builder.append("</div>");
-        return builder.toString();
+        configInfoValues.put("{{hubConfigVerboseVisible}}", hubConfigVerboseVisible);
+
+        return templateRenderer.renderSection("{{hubConfig}}", configInfoValues);
     }
 
     private String prettyHtmlPrint(GridHubConfiguration config) {
