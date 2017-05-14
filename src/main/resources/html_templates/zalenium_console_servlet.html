@@ -28,7 +28,14 @@
                 {{rightColumnNodes}}
             </div>
             <div class='clearfix'></div>
-            {{requestQueue}}
+            <div>
+                {{unprocessedRequests}}
+                <ul>
+                    {{#requestQueue}}
+                    <li>{{pendingRequest}}</li>
+                    {{/requestQueue}}
+                </ul>
+            </div>
             {{hubConfig}}
         </div>
     </body>

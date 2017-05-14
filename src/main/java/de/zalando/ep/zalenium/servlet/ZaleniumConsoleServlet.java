@@ -24,6 +24,7 @@ import java.util.Map;
  */
 public class ZaleniumConsoleServlet extends RegistryBasedServlet {
     private static String coreVersion;
+    private TemplateRenderer templateRenderer;
 
     public ZaleniumConsoleServlet() {
         this(null);
@@ -32,6 +33,8 @@ public class ZaleniumConsoleServlet extends RegistryBasedServlet {
     public ZaleniumConsoleServlet(Registry registry) {
         super(registry);
         coreVersion = new BuildInfo().getReleaseLabel();
+        String templateFile = "html_templates/zalenium_console_servlet.html";
+        templateRenderer = new TemplateRenderer(templateFile);
     }
 
     @Override
@@ -78,17 +81,17 @@ public class ZaleniumConsoleServlet extends RegistryBasedServlet {
         consoleValues.put("{{coreVersion}}", coreVersion);
         consoleValues.put("{{leftColumnNodes}}", leftColumnNodes.toString());
         consoleValues.put("{{rightColumnNodes}}", rightColumnNodes.toString());
-        consoleValues.put("{{requestQueue}}", getRequestQueue().toString());
+        consoleValues.put("{{unprocessedRequests}}", getUnprocessedRequests());
+        consoleValues.put("{{requestQueue}}", getRequestQueue());
+
+
         if (request.getParameter("config") != null) {
             consoleValues.put("{{hubConfig}}", getConfigInfo(request.getParameter("configDebug") != null));
         } else {
             consoleValues.put("{{hubConfig}}", "<a href='?config=true&configDebug=true'>view config</a>");
         }
 
-        String templateFile = "html_templates/zalenium_console_servlet.html";
-        TemplateRenderer templateRenderer = new TemplateRenderer(templateFile);
         String renderTemplate = templateRenderer.renderTemplate(consoleValues);
-
 
         response.setContentType("text/html");
         response.setCharacterEncoding("UTF-8");
@@ -100,23 +103,23 @@ public class ZaleniumConsoleServlet extends RegistryBasedServlet {
         }
     }
 
-    private Object getRequestQueue() {
-        StringBuilder builder = new StringBuilder();
-        builder.append("<div>");
+    private String getUnprocessedRequests() {
         int numUnprocessedRequests = getRegistry().getNewSessionRequestCount();
-
+        String unprocessedRequests = "";
         if (numUnprocessedRequests > 0) {
-            builder.append(String.format("%d requests waiting for a slot to be free.",
-                    numUnprocessedRequests));
+            unprocessedRequests = String.format("%d requests waiting for a slot to be free.", numUnprocessedRequests);
         }
+        return unprocessedRequests;
+    }
 
-        builder.append("<ul>");
+    private String getRequestQueue() {
+        StringBuilder requestQueue = new StringBuilder();
         for (DesiredCapabilities req : getRegistry().getDesiredCapabilities()) {
-            builder.append("<li>").append(req).append("</li>");
+            Map<String, String> pendingRequest = new HashMap<>();
+            pendingRequest.put("{{pendingRequest}}", req.toString());
+            requestQueue.append(templateRenderer.renderSection("{{requestQueue}}", pendingRequest));
         }
-        builder.append("</ul>");
-        builder.append("</div>");
-        return builder.toString();
+        return requestQueue.toString();
     }
 
     /**
