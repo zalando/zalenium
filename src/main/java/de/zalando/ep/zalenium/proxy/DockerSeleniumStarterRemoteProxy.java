@@ -469,8 +469,8 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
 
             String networkMode = String.format("container:%s", getContainerName());
             HostConfig hostConfig = HostConfig.builder()
-                    .shmSize(1073741824L) // 1GB
                     .networkMode(networkMode)
+                    .appendBinds("/dev/shm:/dev/shm")
                     .appendBinds("/tmp/mounted:/tmp/mounted")
                     .autoRemove(true)
                     .build();
