@@ -470,6 +470,8 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
             String networkMode = String.format("container:%s", getContainerName());
             HostConfig hostConfig = HostConfig.builder()
                     .networkMode(networkMode)
+                    .privileged(true)
+                    .capAdd("SYS_ADMIN")
                     .appendBinds("/dev/shm:/dev/shm")
                     .appendBinds("/tmp/mounted:/tmp/mounted")
                     .autoRemove(true)
