@@ -143,7 +143,7 @@ WaitForVideosTransferred() {
         local __amount_of_mp4_files=$(ls -1q /home/seluser/videos/*.mp4 | wc -l)
         while [ "${__amount_of_mp4_files}" -lt "${__amount_of_tests_with_video}" ]; do
             log "Waiting for ${__amount_of_mp4_files} mp4 files to be a total of ${__amount_of_tests_with_video}..."
-            sleep 0.5
+            sleep 4
 
             # Also check if there are mkv, this would mean that
             # docker-selenium failed to convert them to mp4
@@ -640,11 +640,11 @@ ShutDown()
 
     if [ -f /home/seluser/videos/executedTestsInfo.json ]; then
         # Wait for the dashboard and the videos, if applies
-        if timeout --foreground "2m" bash -c WaitForVideosTransferred; then
+        if timeout --foreground "40s" bash -c WaitForVideosTransferred; then
             local __total="$(</home/seluser/videos/executedTestsInfo.json | jq .executedTestsWithVideo)"
             log "WaitForVideosTransferred succeeded for a total of ${__total}"
         else
-            log "WaitForVideosTransferred failed after 2 minutes!"
+            log "WaitForVideosTransferred failed after 50 seconds!"
         fi
     fi
 
