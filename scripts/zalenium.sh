@@ -367,6 +367,13 @@ StartUp()
         export ZALENIUM_SEND_ANONYMOUS_USAGE_INFO=${SEND_ANONYMOUS_USAGE_INFO}
     fi
 
+    #==============================================
+    # Java blocks until kernel have enough entropy
+    # to generate the /dev/random seed
+    #==============================================
+    # See: SeleniumHQ/docker-selenium/issues/14
+    sudo haveged
+
     echo "Copying files for Dashboard..."
     cp /home/seluser/index.html /home/seluser/videos/index.html
     cp -r /home/seluser/css /home/seluser/videos
