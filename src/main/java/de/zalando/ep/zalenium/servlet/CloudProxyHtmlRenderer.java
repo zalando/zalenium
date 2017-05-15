@@ -14,45 +14,35 @@ import org.openqa.grid.web.servlet.beta.SlotsLines;
 import org.openqa.selenium.Platform;
 import org.openqa.selenium.remote.CapabilityType;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class CloudProxyHtmlRenderer implements HtmlRenderer {
 
     private RemoteProxy proxy;
+    private TemplateRenderer templateRenderer;
 
     @SuppressWarnings("unused")
     private CloudProxyHtmlRenderer() {}
 
     public CloudProxyHtmlRenderer(RemoteProxy proxy) {
         this.proxy = proxy;
+        templateRenderer = new TemplateRenderer(getTemplateName());
     }
 
-
+    private String getTemplateName() {
+        return "html_templates/proxy_tab.html";
+    }
 
     public String renderSummary() {
-        StringBuilder builder = new StringBuilder();
-        builder.append("<div class='proxy'>");
-        builder.append("<p class='proxyname'>");
-        builder.append(proxy.getClass().getSimpleName());
-
-        builder.append(getHtmlNodeVersion());
-
-        String platform = getPlatform(proxy);
-
-        builder.append("<p class='proxyid'>id : ");
-        builder.append(proxy.getId());
-        builder.append(", OS : " + platform + "</p>");
-
-        builder.append(nodeTabs());
-
-        builder.append("<div class='content'>");
-
-        builder.append(tabBrowsers());
-        builder.append(tabConfig());
-
-        builder.append("</div>");
-        builder.append("</div>");
-
-        return builder.toString();
-
+        Map<String, String> renderSummaryValues = new HashMap<>();
+        renderSummaryValues.put("{{proxyName}}", proxy.getClass().getSimpleName());
+        renderSummaryValues.put("{{proxyVersion}}", getHtmlNodeVersion());
+        renderSummaryValues.put("{{proxyId}}", proxy.getId());
+        renderSummaryValues.put("{{proxyPlatform}}", getPlatform(proxy));
+        renderSummaryValues.put("{{tabBrowsers}}", tabBrowsers());
+        renderSummaryValues.put("{{tabConfig}}", tabConfig());
+        return templateRenderer.renderTemplate(renderSummaryValues);
     }
 
     private String getHtmlNodeVersion() {
@@ -69,53 +59,44 @@ public class CloudProxyHtmlRenderer implements HtmlRenderer {
 
     // content of the config tab.
     private String tabConfig() {
-        StringBuilder builder = new StringBuilder();
-        builder.append("<div type='config' class='content_detail'>");
-        builder.append(proxy.getConfig().toString("<p>%1$s: %2$s</p>"));
-        builder.append("</div>");
-        return builder.toString();
+        return proxy.getConfig().toString("<p>%1$s: %2$s</p>");
     }
 
 
     // content of the browsers tab
     private String tabBrowsers() {
-        StringBuilder builder = new StringBuilder();
-        builder.append("<div type='browsers' class='content_detail'>");
-
         SlotsLines wdLines = new SlotsLines();
-
         for (TestSlot slot : proxy.getTestSlots()) {
             wdLines.add(slot);
         }
-
+        StringBuilder webDriverLines = new StringBuilder();
         if (wdLines.getLinesType().size() != 0) {
-            builder.append("<p class='protocol' >WebDriver</p>");
-            builder.append(getLines(wdLines));
+            webDriverLines.append(getLines(wdLines));
         }
-        builder.append("</div>");
-        return builder.toString();
+        return webDriverLines.toString();
     }
 
     // the lines of icon representing the possible slots
     private String getLines(SlotsLines lines) {
-        StringBuilder builder = new StringBuilder();
+        StringBuilder slotLines = new StringBuilder();
         for (MiniCapability cap : lines.getLinesType()) {
             String version = cap.getVersion();
-            builder.append("<p>");
             if (version != null) {
-                builder.append("v:" + version);
+                version = "v:" + version;
             }
+            StringBuilder singleSlotsHtml = new StringBuilder();
             for (TestSlot s : lines.getLine(cap)) {
-                builder.append(getSingleSlotHtml(s));
+                singleSlotsHtml.append(getSingleSlotHtml(s));
             }
-            builder.append("</p>");
+            Map<String, String> linesValues = new HashMap<>();
+            linesValues.put("{{browserVersion}}", version);
+            linesValues.put("{{singleSlots}}", singleSlotsHtml.toString());
+            slotLines.append(templateRenderer.renderSection("{{tabBrowsers}}", linesValues));
         }
-        return builder.toString();
+        return slotLines.toString();
     }
 
-    // icon ( or generic html if icon not available )
     private String getSingleSlotHtml(TestSlot s) {
-        StringBuilder builder = new StringBuilder();
         TestSession session = s.getSession();
         String icon = "";
         if (proxy instanceof TestingBotRemoteProxy) {
@@ -127,49 +108,35 @@ public class CloudProxyHtmlRenderer implements HtmlRenderer {
         if (proxy instanceof SauceLabsRemoteProxy) {
             icon = "/grid/admin/ZaleniumResourceServlet/images/saucelabs.png";
         }
-        builder.append("<img ");
-        builder.append("src='").append(icon).append("' width='16' height='16'");
-
+        String slotClass = "";
+        String slotTitle;
         if (session != null) {
-            builder.append(" class='busy' ");
-            builder.append(" title='").append(session.get("lastCommand")).append("' ");
+            slotClass = "busy";
+            slotTitle = session.get("lastCommand").toString();
         } else {
-            builder.append(" title='").append(s.getCapabilities()).append("'");
+            slotTitle = s.getCapabilities().toString();
         }
-        builder.append(" />\n");
-        return builder.toString();
+        Map<String, String> singleSlotValues = new HashMap<>();
+        singleSlotValues.put("{{slotIcon}}", icon);
+        singleSlotValues.put("{{slotClass}}", slotClass);
+        singleSlotValues.put("{{slotTitle}}", slotTitle);
+        return templateRenderer.renderSection("{{singleSlots}}", singleSlotValues);
     }
-
-    // the tabs header.
-    private String nodeTabs() {
-        StringBuilder builder = new StringBuilder();
-        builder.append("<div class='tabs'>");
-        builder.append("<ul>");
-        builder
-                .append("<li class='tab' type='browsers'><a title='test slots' href='#'>Browsers</a></li>");
-        builder
-                .append("<li class='tab' type='config'><a title='node configuration' href='#'>Configuration</a></li>");
-        builder.append("</ul>");
-        builder.append("</div>");
-        return builder.toString();
-    }
-
 
     /**
      * return the platform for the proxy. It should be the same for all slots of the proxy, so checking that.
      * @param proxy remote proxy
      * @return Either the platform name, "Unknown", "mixed OS", or "not specified".
      */
-    public static String getPlatform(RemoteProxy proxy) {
-        Platform res = null;
+    private static String getPlatform(RemoteProxy proxy) {
+        Platform res;
         if (proxy.getTestSlots().size() == 0) {
             return "Unknown";
         }
         res = getPlatform(proxy.getTestSlots().get(0));
-
         for (TestSlot slot : proxy.getTestSlots()) {
             Platform tmp = getPlatform(slot);
-            if (tmp != res) {
+            if (!tmp.is(res)) {
                 return "mixed OS";
             }
             res = tmp;

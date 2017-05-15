@@ -15,13 +15,16 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /*
     Taken from the original org.openqa.grid.web.servlet.beta.ConsoleServlet
  */
 public class ZaleniumConsoleServlet extends RegistryBasedServlet {
     private static String coreVersion;
+    private TemplateRenderer templateRenderer;
 
     public ZaleniumConsoleServlet() {
         this(null);
@@ -30,6 +33,8 @@ public class ZaleniumConsoleServlet extends RegistryBasedServlet {
     public ZaleniumConsoleServlet(Registry registry) {
         super(registry);
         coreVersion = new BuildInfo().getReleaseLabel();
+        String templateFile = "html_templates/zalenium_console_servlet.html";
+        templateRenderer = new TemplateRenderer(templateFile);
     }
 
     @Override
@@ -47,39 +52,10 @@ public class ZaleniumConsoleServlet extends RegistryBasedServlet {
     protected void process(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
 
-        response.setContentType("text/html");
-        response.setCharacterEncoding("UTF-8");
-        response.setStatus(200);
-
-        StringBuilder builder = new StringBuilder();
-
-        builder.append("<html>");
-        builder.append("<head>");
-        builder
-                .append("<script src='/grid/resources/org/openqa/grid/images/jquery-3.1.1.min.js'></script>");
-
-        builder.append("<script src='/grid/resources/org/openqa/grid/images/consoleservlet.js'></script>");
-
-        builder
-                .append("<link href='/grid/resources/org/openqa/grid/images/consoleservlet.css' rel='stylesheet' type='text/css' />");
-        builder
-                .append("<link href='/grid/resources/org/openqa/grid/images/favicon.ico' rel='icon' type='image/x-icon' />");
-
-        builder.append("<title>Grid Console</title>");
-
-        builder.append("<style>");
-        builder.append(".busy {");
-        builder.append(" opacity : 0.4;");
-        builder.append("filter: alpha(opacity=40);");
-        builder.append("}");
-        builder.append("</style>");
-        builder.append("</head>");
-
-        builder.append("<body>");
-
-        builder.append("<div id='main-content'>");
-
-        builder.append(getHeader());
+        int refresh = -1;
+        if (request.getParameter("refresh") != null) {
+            refresh = Integer.parseInt(request.getParameter("refresh"));
+        }
 
         List<String> nodes = new ArrayList<>();
         for (RemoteProxy proxy : getRegistry().getAllProxies()) {
@@ -90,79 +66,63 @@ public class ZaleniumConsoleServlet extends RegistryBasedServlet {
         int rightColumnSize = size / 2;
         int leftColumnSize = size - rightColumnSize;
 
-
-
-        builder.append("<div id='left-column'>");
+        StringBuilder leftColumnNodes = new StringBuilder();
         for (int i = 0; i < leftColumnSize; i++) {
-            builder.append(nodes.get(i));
+            leftColumnNodes.append(nodes.get(i));
         }
-
-
-        builder.append("</div>");
-
-        builder.append("<div id='right-column'>");
+        StringBuilder rightColumnNodes = new StringBuilder();
         for (int i = leftColumnSize; i < nodes.size(); i++) {
-            builder.append(nodes.get(i));
+            rightColumnNodes.append(nodes.get(i));
         }
 
-
-        builder.append("</div>");
-
-        builder.append("<div class='clearfix'></div>");
-
-        builder.append(getRequestQueue());
-
-
+        String hubConfigLinkVisible = "";
+        String hubConfigVisible = "hidden";
         if (request.getParameter("config") != null) {
-            builder.append(getConfigInfo(request.getParameter("configDebug") != null));
-        } else {
-            builder.append("<a href='?config=true&configDebug=true'>view config</a>");
+            hubConfigLinkVisible = "hidden";
+            hubConfigVisible = "";
         }
 
+        Map<String, String> consoleValues = new HashMap<>();
+        consoleValues.put("{{refreshInterval}}", String.valueOf(refresh));
+        consoleValues.put("{{coreVersion}}", coreVersion);
+        consoleValues.put("{{leftColumnNodes}}", leftColumnNodes.toString());
+        consoleValues.put("{{rightColumnNodes}}", rightColumnNodes.toString());
+        consoleValues.put("{{unprocessedRequests}}", getUnprocessedRequests());
+        consoleValues.put("{{requestQueue}}", getRequestQueue());
+        consoleValues.put("{{hubConfigLinkVisible}}", hubConfigLinkVisible);
+        consoleValues.put("{{hubConfigVisible}}", hubConfigVisible);
+        consoleValues.put("{{hubConfig}}", getConfigInfo(request.getParameter("configDebug") != null));
 
-        builder.append("</div>");
-        builder.append("</body>");
-        builder.append("</html>");
+        String renderTemplate = templateRenderer.renderTemplate(consoleValues);
 
-        try (InputStream in = new ByteArrayInputStream(builder.toString().getBytes("UTF-8"))) {
+        response.setContentType("text/html");
+        response.setCharacterEncoding("UTF-8");
+        response.setStatus(200);
+        try (InputStream in = new ByteArrayInputStream(renderTemplate.getBytes("UTF-8"))) {
             ByteStreams.copy(in, response.getOutputStream());
         } finally {
             response.getOutputStream().close();
         }
     }
 
-    private Object getRequestQueue() {
-        StringBuilder builder = new StringBuilder();
-        builder.append("<div>");
+    private String getUnprocessedRequests() {
         int numUnprocessedRequests = getRegistry().getNewSessionRequestCount();
-
+        String unprocessedRequests = "";
         if (numUnprocessedRequests > 0) {
-            builder.append(String.format("%d requests waiting for a slot to be free.",
-                    numUnprocessedRequests));
+            unprocessedRequests = String.format("%d requests waiting for a slot to be free.", numUnprocessedRequests);
         }
+        return unprocessedRequests;
+    }
 
-        builder.append("<ul>");
+    private String getRequestQueue() {
+        StringBuilder requestQueue = new StringBuilder();
         for (DesiredCapabilities req : getRegistry().getDesiredCapabilities()) {
-            builder.append("<li>").append(req).append("</li>");
+            Map<String, String> pendingRequest = new HashMap<>();
+            pendingRequest.put("{{pendingRequest}}", req.toString());
+            requestQueue.append(templateRenderer.renderSection("{{requestQueue}}", pendingRequest));
         }
-        builder.append("</ul>");
-        builder.append("</div>");
-        return builder.toString();
+        return requestQueue.toString();
     }
-
-    private Object getHeader() {
-        StringBuilder builder = new StringBuilder();
-        builder.append("<div id='header'>");
-        builder.append("<h1><a href='/grid/console'>Selenium</a></h1>");
-        builder.append("<h2>Grid Console v.");
-        builder.append(coreVersion);
-        builder.append("</h2>");
-        builder.append("<div><a id='helplink' target='_blank' href='https://github.com/SeleniumHQ/selenium/wiki/Grid2'>Help</a></div>");
-        builder.append("</div>");
-        builder.append("");
-        return builder.toString();
-    }
-
 
     /**
      * retracing how the hub config was built to help debugging.
@@ -171,31 +131,21 @@ public class ZaleniumConsoleServlet extends RegistryBasedServlet {
      */
     private String getConfigInfo(boolean verbose) {
 
-        StringBuilder builder = new StringBuilder();
-
         GridHubConfiguration config = getRegistry().getConfiguration();
-        builder.append("<div  id='hub-config'>");
-        builder.append("<b>Config for the hub :</b><br/>");
-        builder.append(prettyHtmlPrint(config));
+        Map<String, String> configInfoValues = new HashMap<>();
+        configInfoValues.put("{{hubCurrentConfig}}", prettyHtmlPrint(config));
 
+        String hubConfigVerboseVisible = "hidden";
         if (verbose) {
-
+            hubConfigVerboseVisible = "";
             GridHubConfiguration tmp = new GridHubConfiguration();
-
-            builder.append("<b>Config details :</b><br/>");
-            builder.append("<b>hub launched with :</b>");
-            builder.append(config.toString());
-
-            builder.append("<br/><b>the final configuration comes from :</b><br/>");
-            builder.append("<b>the default :</b><br/>");
-            builder.append(prettyHtmlPrint(tmp));
-
-            builder.append("<br/><b>updated with params :</b></br>");
+            configInfoValues.put("{{hubDefaultConfig}}", prettyHtmlPrint(tmp));
             tmp.merge(config);
-            builder.append(prettyHtmlPrint(tmp));
+            configInfoValues.put("{{hubMergedConfig}}", prettyHtmlPrint(tmp));
         }
-        builder.append("</div>");
-        return builder.toString();
+        configInfoValues.put("{{hubConfigVerboseVisible}}", hubConfigVerboseVisible);
+
+        return templateRenderer.renderSection("{{hubConfig}}", configInfoValues);
     }
 
     private String prettyHtmlPrint(GridHubConfiguration config) {
