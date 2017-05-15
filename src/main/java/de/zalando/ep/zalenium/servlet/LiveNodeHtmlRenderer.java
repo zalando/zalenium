@@ -11,6 +11,8 @@ import org.openqa.grid.web.servlet.beta.SlotsLines;
 import org.openqa.selenium.Platform;
 import org.openqa.selenium.remote.CapabilityType;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -22,12 +24,19 @@ public class LiveNodeHtmlRenderer implements HtmlRenderer {
     private Environment env = defaultEnvironment;
     private DockerSeleniumRemoteProxy proxy;
     private String serverName;
+    private TemplateRenderer templateRenderer;
 
     @SuppressWarnings("WeakerAccess")
     public LiveNodeHtmlRenderer(DockerSeleniumRemoteProxy proxy, String serverName) {
         this.proxy = proxy;
         this.serverName = serverName;
+        this.templateRenderer = new TemplateRenderer(getTemplateName());
     }
+
+    private String getTemplateName() {
+        return "html_templates/live_node_tab.html";
+    }
+
 
     /**
      * Platform for docker-selenium will be always Linux.
@@ -46,29 +55,53 @@ public class LiveNodeHtmlRenderer implements HtmlRenderer {
 
     @Override
     public String renderSummary() {
-        StringBuilder builder = new StringBuilder();
-        builder.append("<div class='proxy'>");
-        builder.append("<p class='proxyname'>");
-        builder.append(proxy.getClass().getSimpleName());
+        StringBuilder testName = new StringBuilder();
+        if (!proxy.getTestName().isEmpty()) {
+            testName.append("<p>Test name: ").append(proxy.getTestName()).append("</p>");
+        }
+        StringBuilder testGroup = new StringBuilder();
+        if (!proxy.getTestGroup().isEmpty()) {
+            testGroup.append("<p>Test group: ").append(proxy.getTestGroup()).append("</p>");
+        }
 
-        builder.append(getHtmlNodeVersion());
+        SlotsLines wdLines = new SlotsLines();
+        TestSlot testSlot = proxy.getTestSlots().get(0);
+        wdLines.add(testSlot);
+        MiniCapability miniCapability = wdLines.getLinesType().iterator().next();
+        String icon = miniCapability.getIcon();
+        String version = miniCapability.getVersion();
+        TestSession session = testSlot.getSession();
+        String slotClass = "";
+        String slotTitle;
+        if (session != null) {
+            slotClass = "busy";
+            slotTitle = session.get("lastCommand").toString();
+        } else {
+            slotTitle = testSlot.getCapabilities().toString();
+        }
 
-        String platform = getPlatform(proxy);
+        // Adding live preview
+        int vncPort = proxy.getRemoteHost().getPort() + 10000;
+        int mainVncPort = env.getIntEnvVariable("ZALENIUM_CONTAINER_LIVE_PREVIEW_PORT", 5555);
+        String vncViewBaseUrl = "http://%s:%s/proxy/%s/?nginx=%s&view_only=%s";
+        String vncReadOnlyUrl = String.format(vncViewBaseUrl, serverName, mainVncPort, vncPort, vncPort, "true");
+        String vncInteractUrl = String.format(vncViewBaseUrl, serverName, mainVncPort, vncPort, vncPort, "false");
 
-        builder.append("<p class='proxyid'>id : ");
-        builder.append(proxy.getId());
-        builder.append(", OS : ").append(platform).append("</p>");
-
-        builder.append(nodeTabs());
-
-        builder.append("<div class='content'>");
-
-        builder.append(tabBrowsers());
-        builder.append(tabConfig());
-
-        builder.append("</div></div>");
-
-        return builder.toString();
+        Map<String, String> renderSummaryValues = new HashMap<>();
+        renderSummaryValues.put("{{proxyName}}", proxy.getClass().getSimpleName());
+        renderSummaryValues.put("{{proxyVersion}}", getHtmlNodeVersion());
+        renderSummaryValues.put("{{proxyId}}", proxy.getId());
+        renderSummaryValues.put("{{proxyPlatform}}", getPlatform(proxy));
+        renderSummaryValues.put("{{testName}}", testName.toString());
+        renderSummaryValues.put("{{testGroup}}", testGroup.toString());
+        renderSummaryValues.put("{{browserVersion}}", version);
+        renderSummaryValues.put("{{slotIcon}}", icon);
+        renderSummaryValues.put("{{slotClass}}", slotClass);
+        renderSummaryValues.put("{{slotTitle}}", slotTitle);
+        renderSummaryValues.put("{{vncReadOnlyUrl}}", vncReadOnlyUrl);
+        renderSummaryValues.put("{{vncInteractUrl}}", vncInteractUrl);
+        renderSummaryValues.put("{{tabConfig}}", proxy.getConfig().toString("<p>%1$s: %2$s</p>"));
+        return templateRenderer.renderTemplate(renderSummaryValues);
     }
 
     private String getHtmlNodeVersion() {
@@ -83,111 +116,4 @@ public class LiveNodeHtmlRenderer implements HtmlRenderer {
             return " unknown version, " + e.getMessage();
         }
     }
-
-    // content of the config tab.
-    @SuppressWarnings("StringBufferReplaceableByString")
-    private String tabConfig() {
-        StringBuilder builder = new StringBuilder();
-        builder.append("<div type='config' class='content_detail'>");
-        builder.append(proxy.getConfig().toString("<p>%1$s: %2$s</p>"));
-        builder.append("</div>");
-        return builder.toString();
-    }
-
-    // content of the browsers tab
-    private String tabBrowsers() {
-        StringBuilder builder = new StringBuilder();
-        builder.append("<div type='browsers' class='content_detail'>");
-
-        SlotsLines wdLines = new SlotsLines();
-
-        for (TestSlot slot : proxy.getTestSlots()) {
-            wdLines.add(slot);
-            // Display test name when it exists in the capabilities
-            if (!proxy.getTestName().isEmpty()) {
-                builder.append("<p>Test name: ").append(proxy.getTestName()).append("</p>");
-            }
-            if (!proxy.getTestGroup().isEmpty()) {
-                builder.append("<p>Test group: ").append(proxy.getTestGroup()).append("</p>");
-            }
-        }
-
-        if (!wdLines.getLinesType().isEmpty()) {
-            builder.append("<p class='protocol' >WebDriver</p>");
-            builder.append(getLines(wdLines));
-        }
-
-        // Adding live preview
-        int vncPort = proxy.getRemoteHost().getPort() + 10000;
-        int mainVncPort = env.getIntEnvVariable("ZALENIUM_CONTAINER_LIVE_PREVIEW_PORT", 5555);
-        String vncViewBaseUrl = "http://%s:%s/proxy/%s/?nginx=%s&view_only=%s";
-        String vncReadOnlyUrl = String.format(vncViewBaseUrl, serverName, mainVncPort, vncPort, vncPort, "true");
-        String vncInteractUrl = String.format(vncViewBaseUrl, serverName, mainVncPort, vncPort, vncPort, "false");
-
-        builder.append("<p class='vnc'>");
-        builder.append("<a href='").append(vncReadOnlyUrl).append("' target='_blank'>Read-only VNC</a>||");
-        builder.append("<a href='").append(vncInteractUrl).append("' target='_blank'>Interact via VNC</a>");
-        builder.append("</p>");
-
-        builder.append("<iframe src='").append(vncReadOnlyUrl).append("' class='vnc' ");
-        builder.append("style='display: inline-flex; width: 100%; height: 300px; border:none; margin:0; padding:0;'>");
-        builder.append("Your browser does not support iframes. </iframe></div>");
-        return builder.toString();
-    }
-
-    // the lines of icon representing the possible slots
-    private String getLines(SlotsLines lines) {
-        StringBuilder builder = new StringBuilder();
-        for (MiniCapability cap : lines.getLinesType()) {
-            String icon = cap.getIcon();
-            String version = cap.getVersion();
-            builder.append("<p>");
-            if (version != null) {
-                builder.append("v:").append(version);
-            }
-            for (TestSlot s : lines.getLine(cap)) {
-                builder.append(getSingleSlotHtml(s, icon));
-            }
-            builder.append("</p>");
-        }
-        return builder.toString();
-    }
-
-    // icon ( or generic html if icon not available )
-    private String getSingleSlotHtml(TestSlot s, String icon) {
-        StringBuilder builder = new StringBuilder();
-        TestSession session = s.getSession();
-        if (icon != null) {
-            builder.append("<img src='").append(icon).append("' width='16' height='16'");
-        } else {
-            builder.append("<a href='#' ");
-        }
-
-        if (session != null) {
-            builder.append(" class='busy' title='").append(session.get("lastCommand")).append("' ");
-        } else {
-            builder.append(" title='").append(s.getCapabilities()).append("'");
-        }
-
-        if (icon != null) {
-            builder.append(" />\n");
-        } else {
-            builder.append(">");
-            builder.append(s.getCapabilities().get(CapabilityType.BROWSER_NAME));
-            builder.append("</a>");
-        }
-        return builder.toString();
-    }
-
-    // the tabs header.
-    private String nodeTabs() {
-        String nodeTabs = "";
-        nodeTabs = nodeTabs.concat("<div class='tabs'>");
-        nodeTabs = nodeTabs.concat("<ul>");
-        nodeTabs = nodeTabs.concat("<li class='tab' type='browsers'><a title='test slots' href='#'>Browsers</a></li>");
-        nodeTabs = nodeTabs.concat("<li class='tab' type='config'><a title='node configuration' href='#'>Configuration</a></li>");
-        nodeTabs = nodeTabs.concat("</ul></div>");
-        return nodeTabs;
-    }
-
 }

@@ -1,0 +1,58 @@
+<html>
+    <head>
+        <script src='/grid/resources/org/openqa/grid/images/jquery-3.1.1.min.js'></script>
+        <script src='/grid/resources/org/openqa/grid/images/consoleservlet.js'></script>
+        <link href='/grid/resources/org/openqa/grid/images/consoleservlet.css' rel='stylesheet' type='text/css' />
+        <link href='/grid/resources/org/openqa/grid/images/favicon.ico' rel='icon' type='image/x-icon' />
+        <meta http-equiv='refresh' content='{{refreshInterval}}' />
+        <title>Grid Console</title>
+        <style>
+            .busy {opacity : 0.4; filter: alpha(opacity=40);}
+        </style>
+    </head>
+    <body>
+        <div id='main-content'>
+            <div id='header'>
+                <h1>
+                    <a href='/grid/console'>Selenium</a>
+                </h1>
+                <h2>Grid Console v. {{coreVersion}}</h2>
+                <div>
+                    <a id='helplink' target='_blank' href='https://github.com/SeleniumHQ/selenium/wiki/Grid2'>Help</a>
+                </div>
+            </div>
+            <div id='left-column'>
+                {{leftColumnNodes}}
+            </div>
+            <div id='right-column'>
+                {{rightColumnNodes}}
+            </div>
+            <div class='clearfix'></div>
+            <div>
+                {{unprocessedRequests}}
+                <ul>
+                    {{#requestQueue}}
+                    <li>{{pendingRequest}}</li>
+                    {{/requestQueue}}
+                </ul>
+            </div>
+            <a {{hubConfigLinkVisible}} href='?config=true&configDebug=true'>view config</a>
+            <div {{hubConfigVisible}} id='hub-config'>
+                {{#hubConfig}}
+                <b>Config for the hub :</b><br/>
+                {{hubCurrentConfig}}
+                <div {{hubConfigVerboseVisible}} id='hub-config-verbose'>
+                    <b>Config details :</b><br/>
+                    <b>hub launched with :</b>
+                    {{hubCurrentConfig}}
+                    <br/><b>the final configuration comes from :</b><br/>
+                    <b>the default :</b><br/>
+                    {{hubDefaultConfig}}
+                    <br/><b>updated with params :</b><br/>
+                    {{hubMergedConfig}}
+                </div>
+                {{/hubConfig}}
+            </div>
+        </div>
+    </body>
+</html>

@@ -1,0 +1,37 @@
+<div class='proxy'>
+    <p class='proxyname'>
+    {{proxyName}} {{proxyVersion}}
+    <p class='proxyid'>
+        id : {{proxyId}}, OS : {{proxyPlatform}}
+    </p>
+    <!-- Node Tabs -->
+    <div class='tabs'>
+        <ul>
+            <li class='tab' type='browsers'>
+                <a title='test slots' href='#'>Browsers</a>
+            </li>
+            <li class='tab' type='config'>
+                <a title='node configuration' href='#'>Configuration</a>
+            </li>
+        </ul>
+    </div>
+    <div class='content'>
+        <div type='browsers' class='content_detail'>
+            <p class='protocol'>
+                WebDriver
+            </p>
+            {{#tabBrowsers}}
+            <p>
+                {{browserVersion}}
+                {{#singleSlots}}
+                <img src='{{slotIcon}}' width='16' height='16' class='{{slotClass}}' title='{{slotTitle}}'/>
+                {{/singleSlots}}
+            </p>
+            {{/tabBrowsers}}
+        </div>
+        <div type='config' class='content_detail'>
+            <p>{{tabConfig}}</p>
+        </div>
+    </div>
+</div>
+
