@@ -74,6 +74,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     private static final String DOCKER_SELENIUM_IMAGE = "elgalu/selenium";
     private static final int LOWER_PORT_BOUNDARY = 40000;
     private static final int UPPER_PORT_BOUNDARY = 49999;
+    private static final int NO_VNC_PORT_GAP = 10000;
     private static final DockerClient defaultDockerClient = new DefaultDockerClient("unix:///var/run/docker.sock");
     private static final Environment defaultEnvironment = new Environment();
     private static final String LOGGING_PREFIX = "[DS] ";
@@ -431,7 +432,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
              */
 
             final int nodePort = findFreePortInRange(LOWER_PORT_BOUNDARY, UPPER_PORT_BOUNDARY);
-            final int vncPort = nodePort + 10000;
+            final int vncPort = nodePort + NO_VNC_PORT_GAP;
 
             List<String> envVariables = new ArrayList<>();
             envVariables.add("ZALENIUM=true");
@@ -488,10 +489,19 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
                 final ContainerCreation dockerSeleniumContainer = dockerClient.createContainer(containerConfig,
                         dockerSeleniumContainerName);
                 dockerClient.startContainer(dockerSeleniumContainer.id());
+                for (int i = 0; i < 3; i++) {
+                    if (validateContainerCreation(dockerSeleniumContainer.id(), dockerSeleniumContainerName)) {
+                        return true;
+                    } else {
+                        Thread.sleep(1000 * 10);
+                    }
+                }
+                /*
                 if (!validateContainerCreation(dockerSeleniumContainer.id(), dockerSeleniumContainerName)) {
                     dockerClient.stopContainer(dockerSeleniumContainer.id(), 5);
                     return false;
                 }
+                */
                 return true;
             } catch (Exception e) {
                 LOGGER.log(Level.SEVERE, LOGGING_PREFIX + e.toString(), e);
@@ -692,8 +702,17 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
                     LOGGER.log(Level.FINE, LOGGING_PREFIX + e.toString(), e);
                 }
 
-                if (freePort != -1) {
+                int noVncFreePort = -1;
+                int noVncPortNumber = portNumber + NO_VNC_PORT_GAP;
+                try (ServerSocket serverSocket = new ServerSocket(noVncPortNumber)) {
+                    noVncFreePort = serverSocket.getLocalPort();
+                } catch (IOException e) {
+                    LOGGER.log(Level.FINE, LOGGING_PREFIX + e.toString(), e);
+                }
+
+                if (freePort != -1 && noVncFreePort != -1) {
                     allocatedPorts.add(freePort);
+                    allocatedPorts.add(noVncFreePort);
                     return freePort;
                 }
             }
