@@ -489,19 +489,10 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
                 final ContainerCreation dockerSeleniumContainer = dockerClient.createContainer(containerConfig,
                         dockerSeleniumContainerName);
                 dockerClient.startContainer(dockerSeleniumContainer.id());
-                for (int i = 0; i < 3; i++) {
-                    if (validateContainerCreation(dockerSeleniumContainer.id(), dockerSeleniumContainerName)) {
-                        return true;
-                    } else {
-                        Thread.sleep(1000 * 10);
-                    }
-                }
-                /*
                 if (!validateContainerCreation(dockerSeleniumContainer.id(), dockerSeleniumContainerName)) {
                     dockerClient.stopContainer(dockerSeleniumContainer.id(), 5);
                     return false;
                 }
-                */
                 return true;
             } catch (Exception e) {
                 LOGGER.log(Level.SEVERE, LOGGING_PREFIX + e.toString(), e);
