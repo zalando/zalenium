@@ -75,6 +75,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     private static final int LOWER_PORT_BOUNDARY = 40000;
     private static final int UPPER_PORT_BOUNDARY = 49999;
     private static final int NO_VNC_PORT_GAP = 10000;
+    private static final int VNC_PORT_GAP = 20000;
     private static final DockerClient defaultDockerClient = new DefaultDockerClient("unix:///var/run/docker.sock");
     private static final Environment defaultEnvironment = new Environment();
     private static final String LOGGING_PREFIX = "[DS] ";
@@ -432,7 +433,8 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
              */
 
             final int nodePort = findFreePortInRange(LOWER_PORT_BOUNDARY, UPPER_PORT_BOUNDARY);
-            final int vncPort = nodePort + NO_VNC_PORT_GAP;
+            final int noVncPort = nodePort + NO_VNC_PORT_GAP;
+            final int vncPort = nodePort + VNC_PORT_GAP;
 
             List<String> envVariables = new ArrayList<>();
             envVariables.add("ZALENIUM=true");
@@ -451,7 +453,8 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
             envVariables.add("SEND_ANONYMOUS_USAGE_INFO=" + sendAnonymousUsageInfo);
             envVariables.add("BUILD_URL=" + env.getStringEnvVariable("BUILD_URL", ""));
             envVariables.add("NOVNC=true");
-            envVariables.add("NOVNC_PORT=" + vncPort);
+            envVariables.add("NOVNC_PORT=" + noVncPort);
+            envVariables.add("VNC_PORT=" + vncPort);
             envVariables.add("SCREEN_WIDTH=" + getScreenWidth());
             envVariables.add("SCREEN_HEIGHT=" + getScreenHeight());
             envVariables.add("TZ=" + getTimeZone());
@@ -701,7 +704,15 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
                     LOGGER.log(Level.FINE, LOGGING_PREFIX + e.toString(), e);
                 }
 
-                if (freePort != -1 && noVncFreePort != -1) {
+                int vncFreePort = -1;
+                int vncPortNumber = portNumber + VNC_PORT_GAP;
+                try (ServerSocket serverSocket = new ServerSocket(vncPortNumber)) {
+                    vncFreePort = serverSocket.getLocalPort();
+                } catch (IOException e) {
+                    LOGGER.log(Level.FINE, LOGGING_PREFIX + e.toString(), e);
+                }
+
+                if (freePort != -1 && noVncFreePort != -1 && vncFreePort != -1) {
                     allocatedPorts.add(freePort);
                     allocatedPorts.add(noVncFreePort);
                     return freePort;
