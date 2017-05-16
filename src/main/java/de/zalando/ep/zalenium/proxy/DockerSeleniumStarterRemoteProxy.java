@@ -3,6 +3,7 @@ package de.zalando.ep.zalenium.proxy;
 import com.google.common.annotations.VisibleForTesting;
 import com.spotify.docker.client.DefaultDockerClient;
 import com.spotify.docker.client.DockerClient;
+import com.spotify.docker.client.LogStream;
 import com.spotify.docker.client.exceptions.DockerException;
 import com.spotify.docker.client.messages.*;
 import de.zalando.ep.zalenium.util.DockerSeleniumCapabilityMatcher;
@@ -24,6 +25,7 @@ import org.openqa.selenium.remote.DesiredCapabilities;
 
 import java.io.IOException;
 import java.net.ServerSocket;
+import java.net.URISyntaxException;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -486,7 +488,10 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
                 final ContainerCreation dockerSeleniumContainer = dockerClient.createContainer(containerConfig,
                         dockerSeleniumContainerName);
                 dockerClient.startContainer(dockerSeleniumContainer.id());
-                // TODO: docker exec dockerSeleniumContainer.id() wait_all_done 30s
+                if (!validateContainerCreation(dockerSeleniumContainer.id(), dockerSeleniumContainerName)) {
+                    dockerClient.stopContainer(dockerSeleniumContainer.id(), 5);
+                    return false;
+                }
                 return true;
             } catch (Exception e) {
                 LOGGER.log(Level.SEVERE, LOGGING_PREFIX + e.toString(), e);
@@ -494,6 +499,27 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
             }
         }
         return false;
+    }
+
+    @SuppressWarnings("ConstantConditions")
+    @VisibleForTesting
+    public boolean validateContainerCreation(final String containerId, final String containerName) throws
+            DockerException, InterruptedException, IOException, URISyntaxException {
+        final String[] command = {"bash", "-c", "wait_all_done", "30s"};
+        final ExecCreation execCreation = dockerClient.execCreate(containerId, command,
+                DockerClient.ExecCreateParam.attachStdout(), DockerClient.ExecCreateParam.attachStderr());
+        final LogStream output = dockerClient.execStart(execCreation.id());
+        LOGGER.log(Level.INFO, () -> String.format("%s waiting for container %s", LOGGING_PREFIX, containerName));
+        try {
+            LOGGER.log(Level.INFO, () -> String.format("%s %s", LOGGING_PREFIX, output.readFully()));
+        } catch (RuntimeException e) {
+            LOGGER.log(Level.FINE, LOGGING_PREFIX + " " + e.toString(), e);
+            ga.trackException(e);
+        }
+
+        final ExecState state = dockerClient.execInspect(execCreation.id());
+        LOGGER.log(Level.INFO, "Exit code: " + state.exitCode());
+        return state.exitCode() != null && state.exitCode() == 0;
     }
 
     @VisibleForTesting
