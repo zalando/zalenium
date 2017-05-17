@@ -509,7 +509,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     @VisibleForTesting
     public boolean validateContainerCreation(final String containerId, final String containerName) throws
             DockerException, InterruptedException, IOException, URISyntaxException {
-        final String[] command = {"bash", "-c", "wait_all_done", "30s"};
+        final String[] command = {"bash", "-c", "wait_all_done 30s"};
         final ExecCreation execCreation = dockerClient.execCreate(containerId, command,
                 DockerClient.ExecCreateParam.attachStdout(), DockerClient.ExecCreateParam.attachStderr());
         final LogStream output = dockerClient.execStart(execCreation.id());
