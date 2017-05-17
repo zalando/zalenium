@@ -67,7 +67,7 @@ public class TestingBotRemoteProxyTest {
                 DockerSeleniumStarterRemoteProxy.class.getCanonicalName());
         DockerSeleniumStarterRemoteProxy dsStarterProxy = DockerSeleniumStarterRemoteProxy.getNewInstance(request, registry);
 
-        DashboardTestingSupport.ensureRequiredInputFilesExist(temporaryFolder);
+        TestUtils.ensureRequiredInputFilesExist(temporaryFolder);
 
         // We add both nodes to the registry
         registry.add(testingBotProxy);
@@ -237,7 +237,7 @@ public class TestingBotRemoteProxyTest {
             testSession.getSlot().doFinishRelease();
             spyProxy.afterCommand(testSession, request, response);
 
-            DashboardTestingSupport.mockCommonProxyUtilitiesForDashboardTesting(temporaryFolder);
+            TestUtils.mockCommonProxyUtilitiesForDashboardTesting(temporaryFolder);
 
             TestInformation testInformation = spyProxy.getTestInformation(mockSeleniumSessionId);
             Dashboard.updateDashboard(testInformation);
@@ -287,7 +287,7 @@ public class TestingBotRemoteProxyTest {
             testSession.getSlot().doFinishRelease();
             spyProxy.afterCommand(testSession, request, response);
 
-            DashboardTestingSupport.mockCommonProxyUtilitiesForDashboardTesting(temporaryFolder);
+            TestUtils.mockCommonProxyUtilitiesForDashboardTesting(temporaryFolder);
 
             TestInformation testInformation = spyProxy.getTestInformation(mockSeleniumSessionId);
             Dashboard.updateDashboard(testInformation);

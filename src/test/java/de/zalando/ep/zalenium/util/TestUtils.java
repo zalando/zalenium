@@ -5,6 +5,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import de.zalando.ep.zalenium.proxy.DockerSeleniumStarterRemoteProxy;
 import org.apache.commons.io.FileUtils;
+import org.junit.rules.TemporaryFolder;
 import org.openqa.grid.common.RegistrationRequest;
 import org.openqa.grid.internal.utils.configuration.GridNodeConfiguration;
 import com.beust.jcommander.JCommander;
@@ -115,5 +116,21 @@ public class TestUtils {
             }
         };
     }
+
+    public static void mockCommonProxyUtilitiesForDashboardTesting(TemporaryFolder temporaryFolder) {
+        CommonProxyUtilities commonProxyUtilities = mock(CommonProxyUtilities.class);
+        when(commonProxyUtilities.currentLocalPath()).thenReturn(temporaryFolder.getRoot().getAbsolutePath());
+        when(commonProxyUtilities.getShortDateAndTime()).thenCallRealMethod();
+        Dashboard.setCommonProxyUtilities(commonProxyUtilities);
+    }
+
+    public static void ensureRequiredInputFilesExist(TemporaryFolder temporaryFolder) throws IOException {
+        temporaryFolder.newFile("list_template.html");
+        temporaryFolder.newFile("dashboard_template.html");
+        temporaryFolder.newFile("zalando.ico");
+        temporaryFolder.newFolder("css");
+        temporaryFolder.newFolder("js");
+    }
+
 
 }
