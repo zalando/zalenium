@@ -1,4 +1,4 @@
-package de.zalando.tip.zalenium.util;
+package de.zalando.ep.zalenium.util;
 
 import java.io.File;
 import java.io.IOException;
@@ -13,7 +13,7 @@ public class DashboardTest {
 
     @Before
     public void initDashboard() {
-        Dashboard.setExecutedTests(0);
+        Dashboard.setExecutedTests(0, 0);
         removeTestingVideosFolder();
     }
 
@@ -31,6 +31,7 @@ public class DashboardTest {
         Dashboard.updateDashboard(ti);
 
         Assert.assertEquals(1, Dashboard.getExecutedTests());
+        Assert.assertEquals(1, Dashboard.getExecutedTestsWithVideo());
     }
 
     @Test
@@ -41,6 +42,7 @@ public class DashboardTest {
         Dashboard.updateDashboard(ti);
 
         Assert.assertEquals(2, Dashboard.getExecutedTests());
+        Assert.assertEquals(2, Dashboard.getExecutedTestsWithVideo());
     }
 
     @Test
@@ -52,6 +54,7 @@ public class DashboardTest {
         Dashboard.updateDashboard(ti);
 
         Assert.assertEquals(1, Dashboard.getExecutedTests());
+        Assert.assertEquals(1, Dashboard.getExecutedTestsWithVideo());
     }
 
     private TestInformation createDefaultTestInformation() {

@@ -33,8 +33,14 @@ public class Dashboard {
     }
 
     @VisibleForTesting
-    static void setExecutedTests(int executedTests) {
+    public static int getExecutedTestsWithVideo() {
+        return executedTestsWithVideo;
+    }
+
+    @VisibleForTesting
+    static void setExecutedTests(int executedTests, int executedTestsWithVideo) {
         Dashboard.executedTests = executedTests;
+        Dashboard.executedTestsWithVideo = executedTestsWithVideo;
     }
 
     public static synchronized void updateDashboard(TestInformation testInformation) throws IOException {
@@ -101,7 +107,8 @@ public class Dashboard {
         }
     }
 
-    private static void synchronizeExecutedTestsValues(File testCountFile) throws IOException {
+    @VisibleForTesting
+    public static void synchronizeExecutedTestsValues(File testCountFile) throws IOException {
         if (testCountFile.exists()) {
             if (isFileOlderThanOneDay(testCountFile.lastModified())) {
                 LOGGER.log(Level.FINE, "Deleting file older than one day: " + testCountFile.getAbsolutePath());
@@ -120,26 +127,6 @@ public class Dashboard {
         } else {
             executedTests = 0;
             executedTestsWithVideo = 0;
-        }
-    }
-
-    @VisibleForTesting
-    static void synchronizeTestsCountWithFile(File testCountFile) throws IOException {
-        if (testCountFile.exists()) {
-            if (isFileOlderThanOneDay(testCountFile.lastModified())) {
-                LOGGER.log(Level.FINE, "Deleting file older than one day: " + testCountFile.getAbsolutePath());
-                testCountFile.delete();
-            } else {
-                String executedTestsFromFile = FileUtils.readFileToString(testCountFile, UTF_8);
-                try {
-                    executedTests = executedTests == 1 ? Integer.parseInt(executedTestsFromFile) + 1 : executedTests;
-                } catch (Exception e) {
-                    LOGGER.log(Level.FINE, e.toString(), e);
-                }
-            }
-        } else {
-            // reset executedTests if testCountFile is missing
-            executedTests = 1;
         }
     }
 
