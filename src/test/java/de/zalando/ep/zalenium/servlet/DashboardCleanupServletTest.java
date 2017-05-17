@@ -15,11 +15,11 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-public class CleanupServiceTest {
+public class DashboardCleanupServletTest {
 
     private HttpServletRequest request;
     private HttpServletResponse response;
-    private CleanupService cleanupService;
+    private DashboardCleanupServlet dashboardCleanupServlet;
 
     @Before
     public void initMocksAndService() throws IOException {
@@ -48,25 +48,25 @@ public class CleanupServiceTest {
                 return stringBuilder.toString();
             }
         });
-        cleanupService = new CleanupService();
+        dashboardCleanupServlet = new DashboardCleanupServlet();
     }
 
     @Test
     public void getRequestsNotAllowed() throws ServletException, IOException {
-        cleanupService.doGet(request, response);
+        dashboardCleanupServlet.doGet(request, response);
         Assert.assertEquals("ERROR GET request not implemented", response.getOutputStream().toString());
     }
 
     @Test
     public void postMissingParameter() throws ServletException, IOException {
-        cleanupService.doPost(request, response);
+        dashboardCleanupServlet.doPost(request, response);
         Assert.assertEquals("ERROR action not implemented. Given action=null", response.getOutputStream().toString());
     }
 
     @Test
     public void postUnsupportedParameter() throws ServletException, IOException {
         when(request.getParameter("action")).thenReturn("anyValue");
-        cleanupService.doPost(request, response);
+        dashboardCleanupServlet.doPost(request, response);
         Assert.assertEquals("ERROR action not implemented. Given action=anyValue",
                 response.getOutputStream().toString());
     }
@@ -74,7 +74,7 @@ public class CleanupServiceTest {
     @Test
     public void postDoCleanupAll() throws ServletException, IOException {
         when(request.getParameter("action")).thenReturn("doCleanupAll");
-        cleanupService.doPost(request, response);
+        dashboardCleanupServlet.doPost(request, response);
         Assert.assertEquals("SUCCESS", response.getOutputStream().toString());
     }
 }

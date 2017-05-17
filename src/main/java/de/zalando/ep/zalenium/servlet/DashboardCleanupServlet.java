@@ -17,23 +17,23 @@ import com.google.common.io.ByteStreams;
 // import de.zalando.ep.zalenium.util.DashboardDataHandler;
 import de.zalando.ep.zalenium.util.TestInformation;
 
-public class CleanupService extends RegistryBasedServlet {
+public class DashboardCleanupServlet extends RegistryBasedServlet {
 
     public static final String DO_CLEANUP_ALL = "doCleanupAll";
 
     private static final long serialVersionUID = 1L;
-    private static final Logger LOGGER = Logger.getLogger(CleanupService.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(DashboardCleanupServlet.class.getName());
 
     private static final String NOT_IMPORTANT = "notImportant";
     private static TestInformation dashboardPathAccess = new TestInformation(NOT_IMPORTANT, NOT_IMPORTANT,
             NOT_IMPORTANT, NOT_IMPORTANT, NOT_IMPORTANT, NOT_IMPORTANT);
 
     @SuppressWarnings("unused")
-    public CleanupService() {
+    public DashboardCleanupServlet() {
         this(null);
     }
 
-    public CleanupService(Registry registry) {
+    public DashboardCleanupServlet(Registry registry) {
         super(registry);
     }
 
