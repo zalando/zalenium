@@ -111,22 +111,6 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="card">
-                            <div class="card-header" role="tab" id="headingThree">
-                                <h5 class="mb-0">
-                                    <a class="collapsed" data-toggle="collapse" data-parent="#accordion" href="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
-                                        Browser Console Log
-                                    </a>
-                                </h5>
-                            </div>
-                            <div id="collapseThree" class="collapse" role="tabpanel" aria-labelledby="headingThree">
-                                <div class="card-block">
-                                    <pre id="browserConsoleLog">
-                                        Browser Console Log not loaded yet...
-                                    </pre>
-                                </div>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -155,7 +139,6 @@
         var $dateTime = $this.data("date-time");
         var $seleniumLogFile = $this.data("selenium-log");
         var $browserDriverLogFile = $this.data("browser-driver");
-        var $browserConsoleLogFile = $this.data("browser-console");
 
         $('.active').removeClass("active");
         $this.toggleClass("active");
@@ -167,7 +150,7 @@
         setTestInformation($testName, $browserPlatform, $proxyName, $dateTime);
 
         // Load logs
-        loadLogs($seleniumLogFile, $browserDriverLogFile, $browserConsoleLogFile);
+        loadLogs($seleniumLogFile, $browserDriverLogFile);
 
         // Select first tab
         $('#testTabs').find('a:first').tab('show')
@@ -190,17 +173,14 @@
         document.getElementById("date-time").innerHTML = $dateTime;
     }
 
-    function loadLogs($seleniumLogFile, $browserDriverLogFile, $browserConsoleLogFile) {
+    function loadLogs($seleniumLogFile, $browserDriverLogFile) {
         $('#collapseOne').removeClass("show");
         $('#collapseTwo').removeClass("show");
-        $('#collapseThree').removeClass("show");
         $('#seleniumLog').html("Selenium Log not loaded yet...");
         $('#browserDriverLog').html("Browser Driver Log not loaded yet...");
-        $('#browserConsoleLog').html("Browser Console Log not loaded yet...");
 
         $('#seleniumLog').load($seleniumLogFile);
         $('#browserDriverLog').load($browserDriverLogFile);
-        $('#browserConsoleLog').load($browserConsoleLogFile);
     }
 
     // This will only work when the page is accessed via a WebServer

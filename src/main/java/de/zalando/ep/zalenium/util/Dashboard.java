@@ -22,10 +22,34 @@ public class Dashboard {
 
     public static final String VIDEOS_FOLDER_NAME = "videos";
     public static final String LOGS_FOLDER_NAME = "logs";
+    private static final String TEST_COUNT_FILE = "executedTestsInfo.json";
+    private static final String TEST_LIST_FILE = "list.html";
+    private static final String DASHBOARD_FILE = "dashboard.html";
+    private static final String EXECUTED_TESTS_FIELD = "executedTests";
+    private static final String EXECUTED_TESTS_WITH_VIDEO_FIELD = "executedTestsWithVideo";
+    private static final String ZALANDO_ICO = "zalando.ico";
+    private static final String CSS_FOLDER = "/css";
+    private static final String JS_FOLDER = "/js";
     private static final Logger LOGGER = Logger.getLogger(Dashboard.class.getName());
     private static CommonProxyUtilities commonProxyUtilities = new CommonProxyUtilities();
     private static int executedTests = 0;
     private static int executedTestsWithVideo = 0;
+    private static String currentLocalPath = null;
+    private static String localVideosPath = null;
+
+    public static String getCurrentLocalPath() {
+        if (currentLocalPath == null ||currentLocalPath.isEmpty()) {
+            currentLocalPath = commonProxyUtilities.currentLocalPath();
+        }
+        return currentLocalPath;
+    }
+
+    public static String getLocalVideosPath() {
+        if (localVideosPath == null ||localVideosPath.isEmpty()) {
+            localVideosPath = getCurrentLocalPath() + "/" + VIDEOS_FOLDER_NAME;
+        }
+        return localVideosPath;
+    }
 
     @VisibleForTesting
     public static int getExecutedTests() {
@@ -38,29 +62,25 @@ public class Dashboard {
     }
 
     @VisibleForTesting
-    static void setExecutedTests(int executedTests, int executedTestsWithVideo) {
+    public static void setExecutedTests(int executedTests, int executedTestsWithVideo) {
         Dashboard.executedTests = executedTests;
         Dashboard.executedTestsWithVideo = executedTestsWithVideo;
     }
 
     public static synchronized void updateDashboard(TestInformation testInformation) throws IOException {
-        String currentLocalPath = commonProxyUtilities.currentLocalPath();
-        String localVideosPath = currentLocalPath + "/" + VIDEOS_FOLDER_NAME;
-
-        File testCountFile = new File(localVideosPath, "executedTestsInfo.json");
+        File testCountFile = new File(getLocalVideosPath(), TEST_COUNT_FILE);
         synchronizeExecutedTestsValues(testCountFile);
 
-        String testEntry = FileUtils.readFileToString(new File(currentLocalPath, "list_template.html"), UTF_8);
+        String testEntry = FileUtils.readFileToString(new File(getCurrentLocalPath(), "list_template.html"), UTF_8);
         testEntry = testEntry.replace("{fileName}", testInformation.getFileName()).
                 replace("{testName}", testInformation.getTestName()).
                 replace("{dateAndTime}", commonProxyUtilities.getShortDateAndTime()).
                 replace("{browserAndPlatform}", testInformation.getBrowserAndPlatform()).
                 replace("{proxyName}", testInformation.getProxyName()).
                 replace("{seleniumLogFileName}", testInformation.getSeleniumLogFileName()).
-                replace("{browserDriverLogFileName}", testInformation.getBrowserDriverLogFileName()).
-                replace("{browserConsoleLogFileName}", testInformation.getBrowserConsoleLogFileName());
+                replace("{browserDriverLogFileName}", testInformation.getBrowserDriverLogFileName());
 
-        File testList = new File(localVideosPath, "list.html");
+        File testList = new File(getLocalVideosPath(), TEST_LIST_FILE);
         // Putting the new entry at the top
         if (testList.exists()) {
             if (isFileOlderThanOneDay(testList.lastModified())) {
@@ -81,29 +101,29 @@ public class Dashboard {
         LOGGER.log(Level.FINE, "Test count: " + executedTests);
         LOGGER.log(Level.FINE, "Test count with video: " + executedTestsWithVideo);
         JsonObject testQuantities = new JsonObject();
-        testQuantities.addProperty("executedTests", executedTests);
-        testQuantities.addProperty("executedTestsWithVideo", executedTestsWithVideo);
+        testQuantities.addProperty(EXECUTED_TESTS_FIELD, executedTests);
+        testQuantities.addProperty(EXECUTED_TESTS_WITH_VIDEO_FIELD, executedTestsWithVideo);
         FileUtils.writeStringToFile(testCountFile, testQuantities.toString(), UTF_8);
 
-        File dashboardHtml = new File(localVideosPath, "dashboard.html");
-        String dashboard = FileUtils.readFileToString(new File(currentLocalPath, "dashboard_template.html"), UTF_8);
+        File dashboardHtml = new File(getLocalVideosPath(), DASHBOARD_FILE);
+        String dashboard = FileUtils.readFileToString(new File(getCurrentLocalPath(), "dashboard_template.html"), UTF_8);
         dashboard = dashboard.replace("{testList}", testEntry).
                 replace("{executedTests}", String.valueOf(executedTests));
         FileUtils.writeStringToFile(dashboardHtml, dashboard, UTF_8);
 
-        File zalandoIco = new File(localVideosPath, "zalando.ico");
+        File zalandoIco = new File(getLocalVideosPath(), ZALANDO_ICO);
         if (!zalandoIco.exists()) {
-            FileUtils.copyFile(new File(currentLocalPath, "zalando.ico"), zalandoIco);
+            FileUtils.copyFile(new File(getCurrentLocalPath(), ZALANDO_ICO), zalandoIco);
         }
 
-        File cssFolder = new File(localVideosPath + "/css");
-        File jsFolder = new File(localVideosPath + "/js");
+        File cssFolder = new File(getLocalVideosPath() + CSS_FOLDER);
+        File jsFolder = new File(getLocalVideosPath() + JS_FOLDER);
 
         if (!cssFolder.exists()) {
-            FileUtils.copyDirectory(new File(currentLocalPath + "/css"), cssFolder);
+            FileUtils.copyDirectory(new File(getCurrentLocalPath() + CSS_FOLDER), cssFolder);
         }
         if (!jsFolder.exists()) {
-            FileUtils.copyDirectory(new File(currentLocalPath + "/js"), jsFolder);
+            FileUtils.copyDirectory(new File(getCurrentLocalPath() + JS_FOLDER), jsFolder);
         }
     }
 
@@ -114,9 +134,11 @@ public class Dashboard {
                 LOGGER.log(Level.FINE, "Deleting file older than one day: " + testCountFile.getAbsolutePath());
                 testCountFile.delete();
             } else {
-                JsonObject executedTestData = new JsonParser().parse(FileUtils.readFileToString(testCountFile, UTF_8)).getAsJsonObject();
-                String executedTestsInFile = executedTestData.get("executedTests").getAsString();
-                String executedTestsWithVideoInFile = executedTestData.get("executedTestsWithVideo").getAsString();
+                JsonObject executedTestData = new JsonParser()
+                        .parse(FileUtils.readFileToString(testCountFile, UTF_8))
+                        .getAsJsonObject();
+                String executedTestsInFile = executedTestData.get(EXECUTED_TESTS_FIELD).getAsString();
+                String executedTestsWithVideoInFile = executedTestData.get(EXECUTED_TESTS_WITH_VIDEO_FIELD).getAsString();
                 try {
                     executedTests = Integer.parseInt(executedTestsInFile);
                     executedTestsWithVideo = Integer.parseInt(executedTestsWithVideoInFile);
