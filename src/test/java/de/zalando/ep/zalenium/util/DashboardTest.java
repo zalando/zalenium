@@ -31,7 +31,6 @@ public class DashboardTest {
         TestUtils.mockCommonProxyUtilitiesForDashboardTesting(temporaryFolder);
     }
 
-
     @After
     public void restoreCommonProxyUtilities() {
         Dashboard.restoreCommonProxyUtilities();
