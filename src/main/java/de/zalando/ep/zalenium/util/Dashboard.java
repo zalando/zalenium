@@ -25,6 +25,7 @@ public class Dashboard {
     private static final String TEST_COUNT_FILE = "executedTestsInfo.json";
     private static final String TEST_LIST_FILE = "list.html";
     private static final String DASHBOARD_FILE = "dashboard.html";
+    private static final String DASHBOARD_TEMPLATE_FILE = "dashboard_template.html";
     private static final String EXECUTED_TESTS_FIELD = "executedTests";
     private static final String EXECUTED_TESTS_WITH_VIDEO_FIELD = "executedTestsWithVideo";
     private static final String ZALANDO_ICO = "zalando.ico";
@@ -106,7 +107,7 @@ public class Dashboard {
         FileUtils.writeStringToFile(testCountFile, testQuantities.toString(), UTF_8);
 
         File dashboardHtml = new File(getLocalVideosPath(), DASHBOARD_FILE);
-        String dashboard = FileUtils.readFileToString(new File(getCurrentLocalPath(), "dashboard_template.html"), UTF_8);
+        String dashboard = FileUtils.readFileToString(new File(getCurrentLocalPath(), DASHBOARD_TEMPLATE_FILE), UTF_8);
         dashboard = dashboard.replace("{testList}", testEntry).
                 replace("{executedTests}", String.valueOf(executedTests));
         FileUtils.writeStringToFile(dashboardHtml, dashboard, UTF_8);
@@ -125,6 +126,26 @@ public class Dashboard {
         if (!jsFolder.exists()) {
             FileUtils.copyDirectory(new File(getCurrentLocalPath() + JS_FOLDER), jsFolder);
         }
+    }
+
+    public static synchronized void cleanupDashboard() throws IOException {
+        File testList = new File(getLocalVideosPath(), TEST_LIST_FILE);
+        File testCountFile = new File(getLocalVideosPath(), TEST_COUNT_FILE);
+        File dashboardHtml = new File(getLocalVideosPath(), DASHBOARD_FILE);
+        File logsFolder = new File(getLocalVideosPath(), LOGS_FOLDER_NAME);
+        File videosFolder = new File(getLocalVideosPath());
+        String[] extensions = new String[] { "mp4", "mkv", "flv" };
+        for (File file : FileUtils.listFiles(videosFolder, extensions, true)) {
+            FileUtils.forceDelete(file);
+        }
+        FileUtils.forceDelete(logsFolder);
+        FileUtils.forceDelete(testList);
+        FileUtils.forceDelete(testCountFile);
+        FileUtils.forceDelete(dashboardHtml);
+        String dashboard = FileUtils.readFileToString(new File(getCurrentLocalPath(), DASHBOARD_TEMPLATE_FILE), UTF_8);
+        dashboard = dashboard.replace("{testList}", "").
+                replace("{executedTests}", "0");
+        FileUtils.writeStringToFile(dashboardHtml, dashboard, UTF_8);
     }
 
     @VisibleForTesting
