@@ -7,7 +7,6 @@ import org.apache.commons.io.FileUtils;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -35,21 +34,13 @@ public class Dashboard {
     private static CommonProxyUtilities commonProxyUtilities = new CommonProxyUtilities();
     private static int executedTests = 0;
     private static int executedTestsWithVideo = 0;
-    private static String currentLocalPath = null;
-    private static String localVideosPath = null;
 
     public static String getCurrentLocalPath() {
-        if (currentLocalPath == null ||currentLocalPath.isEmpty()) {
-            currentLocalPath = commonProxyUtilities.currentLocalPath();
-        }
-        return currentLocalPath;
+        return commonProxyUtilities.currentLocalPath();
     }
 
     public static String getLocalVideosPath() {
-        if (localVideosPath == null ||localVideosPath.isEmpty()) {
-            localVideosPath = getCurrentLocalPath() + "/" + VIDEOS_FOLDER_NAME;
-        }
-        return localVideosPath;
+        return getCurrentLocalPath() + "/" + VIDEOS_FOLDER_NAME;
     }
 
     @VisibleForTesting
@@ -62,6 +53,7 @@ public class Dashboard {
         return executedTestsWithVideo;
     }
 
+    @SuppressWarnings("SameParameterValue")
     @VisibleForTesting
     public static void setExecutedTests(int executedTests, int executedTestsWithVideo) {
         Dashboard.executedTests = executedTests;
@@ -84,13 +76,8 @@ public class Dashboard {
         File testList = new File(getLocalVideosPath(), TEST_LIST_FILE);
         // Putting the new entry at the top
         if (testList.exists()) {
-            if (isFileOlderThanOneDay(testList.lastModified())) {
-                LOGGER.log(Level.FINE, "Deleting file older than one day: " + testList.getAbsolutePath());
-                testList.delete();
-            } else {
-                String testListContents = FileUtils.readFileToString(testList, UTF_8);
-                testEntry = testEntry.concat("\n").concat(testListContents);
-            }
+            String testListContents = FileUtils.readFileToString(testList, UTF_8);
+            testEntry = testEntry.concat("\n").concat(testListContents);
         }
         FileUtils.writeStringToFile(testList, testEntry, UTF_8);
 
@@ -151,21 +138,16 @@ public class Dashboard {
     @VisibleForTesting
     public static void synchronizeExecutedTestsValues(File testCountFile) throws IOException {
         if (testCountFile.exists()) {
-            if (isFileOlderThanOneDay(testCountFile.lastModified())) {
-                LOGGER.log(Level.FINE, "Deleting file older than one day: " + testCountFile.getAbsolutePath());
-                testCountFile.delete();
-            } else {
-                JsonObject executedTestData = new JsonParser()
-                        .parse(FileUtils.readFileToString(testCountFile, UTF_8))
-                        .getAsJsonObject();
-                String executedTestsInFile = executedTestData.get(EXECUTED_TESTS_FIELD).getAsString();
-                String executedTestsWithVideoInFile = executedTestData.get(EXECUTED_TESTS_WITH_VIDEO_FIELD).getAsString();
-                try {
-                    executedTests = Integer.parseInt(executedTestsInFile);
-                    executedTestsWithVideo = Integer.parseInt(executedTestsWithVideoInFile);
-                } catch (Exception e) {
-                    LOGGER.log(Level.FINE, e.toString(), e);
-                }
+            JsonObject executedTestData = new JsonParser()
+                    .parse(FileUtils.readFileToString(testCountFile, UTF_8))
+                    .getAsJsonObject();
+            String executedTestsInFile = executedTestData.get(EXECUTED_TESTS_FIELD).getAsString();
+            String executedTestsWithVideoInFile = executedTestData.get(EXECUTED_TESTS_WITH_VIDEO_FIELD).getAsString();
+            try {
+                executedTests = Integer.parseInt(executedTestsInFile);
+                executedTestsWithVideo = Integer.parseInt(executedTestsWithVideoInFile);
+            } catch (Exception e) {
+                LOGGER.log(Level.FINE, e.toString(), e);
             }
         } else {
             executedTests = 0;
@@ -180,12 +162,6 @@ public class Dashboard {
 
     public static void setCommonProxyUtilities(CommonProxyUtilities commonProxyUtilities) {
         Dashboard.commonProxyUtilities = commonProxyUtilities;
-    }
-
-    @VisibleForTesting
-    public static boolean isFileOlderThanOneDay(long lastModified) {
-        long timeSinceLastModification = new Date().getTime() - lastModified;
-        return timeSinceLastModification > (24 * 60 * 60 * 1000);
     }
 
 }
