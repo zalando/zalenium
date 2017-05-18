@@ -9,24 +9,20 @@ import java.util.logging.Logger;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import de.zalando.ep.zalenium.util.Dashboard;
 import org.openqa.grid.internal.Registry;
 import org.openqa.grid.web.servlet.RegistryBasedServlet;
-
 import com.google.common.io.ByteStreams;
 
-// import de.zalando.ep.zalenium.util.DashboardDataHandler;
-import de.zalando.ep.zalenium.util.TestInformation;
-
+@SuppressWarnings("WeakerAccess")
 public class DashboardCleanupServlet extends RegistryBasedServlet {
 
-    public static final String DO_CLEANUP_ALL = "doCleanupAll";
+    private static final String DO_CLEANUP_ALL = "doCleanupAll";
 
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = Logger.getLogger(DashboardCleanupServlet.class.getName());
 
     private static final String NOT_IMPORTANT = "notImportant";
-    private static TestInformation dashboardPathAccess = new TestInformation(NOT_IMPORTANT, NOT_IMPORTANT,
-            NOT_IMPORTANT, NOT_IMPORTANT, NOT_IMPORTANT, NOT_IMPORTANT);
 
     @SuppressWarnings("unused")
     public DashboardCleanupServlet() {
@@ -38,24 +34,15 @@ public class DashboardCleanupServlet extends RegistryBasedServlet {
     }
 
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) {
-        try {
-            sendMessage(response, "ERROR GET request not implemented", 400);
-        } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, e.toString(), e);
-        }
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        process(request, response);
     }
 
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) {
-        try {
-            process(request, response);
-        } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, e.toString(), e);
-        }
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        process(request, response);
     }
 
-    @SuppressWarnings("WeakerAccess")
     protected void process(HttpServletRequest request, HttpServletResponse response) throws IOException {
         String action = "";
         try {
@@ -67,8 +54,7 @@ public class DashboardCleanupServlet extends RegistryBasedServlet {
         String resultMsg;
         int responseStatus;
         if (DO_CLEANUP_ALL.equals(action)) {
-            String dashboardPath = dashboardPathAccess.getVideoFolderPath();
-            // DashboardDataHandler.clearRecordedVideosAndLogs(dashboardPath);
+            Dashboard.cleanupDashboard();
             resultMsg = "SUCCESS";
             responseStatus = 200;
         } else {
