@@ -29,11 +29,13 @@
         <nav class="col-sm-4 col-md-3 hidden-xs-down bg-faded sidebar">
             <ul id="tests" class="nav nav-pills flex-column">
                 <li class="nav-item">
-                    <form action="/">
-                        <h6 class="nav-link bg-success text-white text-center font-weight-bold">Tests ({executedTests})</h6>
-                        <input type="submit" id="cleanupButton" class="btn btn-outline-danger btn-sm"
-                               title="Important: this will remove all video files and logs!!" value="Remove all history" />
-                    </form>
+                    <h6 class="nav-link bg-success text-white text-center font-weight-bold">Tests ({executedTests})</h6>
+                    <div class="bg-muted clearfix">
+                        <button type="button" id="cleanupButton" class="btn btn-outline-danger btn-sm float-left"
+                                title="Important: this will remove all video files and logs!!">
+                            Cleanup
+                        </button>
+                    </div>
                 </li>
 
                 {testList}
@@ -179,8 +181,12 @@
         $('#seleniumLog').html("Selenium Log not loaded yet...");
         $('#browserDriverLog').html("Browser Driver Log not loaded yet...");
 
-        $('#seleniumLog').load($seleniumLogFile);
-        $('#browserDriverLog').load($browserDriverLogFile);
+        if ($seleniumLogFile.length > 0) {
+            $('#seleniumLog').load($seleniumLogFile);
+        }
+        if ($browserDriverLogFile.length > 0) {
+            $('#browserDriverLog').load($browserDriverLogFile);
+        }
     }
 
     // This will only work when the page is accessed via a WebServer
@@ -189,8 +195,14 @@
         $('#tests').load(document.URL +  ' #tests');
     }, 10000);
 
-    $('#cleanupButton').on('click', function () {
-        $.post('/cleanup?action=doCleanupAll', '');
+    $(document).on('click', '#cleanupButton', function () {
+        var url = [location.protocol, '//', location.host, location.pathname].join('');
+        console.log(url);
+        $.post(url + 'cleanup?action=doCleanupAll', '');
+        $('#tests').load(document.URL +  ' #tests');
+        playVideo("");
+        loadLogs("", "");
+        setTestInformation("", "", "", "");
     });
 
 </script>
