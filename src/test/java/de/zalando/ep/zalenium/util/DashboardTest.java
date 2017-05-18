@@ -28,7 +28,8 @@ public class DashboardTest {
     public void initDashboard() throws IOException {
         Dashboard.setExecutedTests(0, 0);
         TestUtils.ensureRequiredInputFilesExist(temporaryFolder);
-        TestUtils.mockCommonProxyUtilitiesForDashboardTesting(temporaryFolder);
+        CommonProxyUtilities proxyUtilities = TestUtils.mockCommonProxyUtilitiesForDashboardTesting(temporaryFolder);
+        Dashboard.setCommonProxyUtilities(proxyUtilities);
     }
 
     @After

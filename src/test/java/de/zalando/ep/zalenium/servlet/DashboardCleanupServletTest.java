@@ -11,11 +11,19 @@ import javax.servlet.WriteListener;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import de.zalando.ep.zalenium.util.CommonProxyUtilities;
+import de.zalando.ep.zalenium.util.Dashboard;
+import de.zalando.ep.zalenium.util.TestUtils;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 public class DashboardCleanupServletTest {
+
+    @Rule
+    public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
     private HttpServletRequest request;
     private HttpServletResponse response;
@@ -49,13 +57,37 @@ public class DashboardCleanupServletTest {
             }
         });
         dashboardCleanupServlet = new DashboardCleanupServlet();
+        // Temporal folder for dashboard files
+        TestUtils.ensureRequiredFilesExistForCleanup(temporaryFolder);
     }
 
     @Test
-    public void getRequestsNotAllowed() throws ServletException, IOException {
-        dashboardCleanupServlet.doGet(request, response);
-        Assert.assertEquals("ERROR GET request not implemented", response.getOutputStream().toString());
+    public void getDoCleanupAll() throws ServletException, IOException {
+        try {
+            CommonProxyUtilities proxyUtilities = TestUtils.mockCommonProxyUtilitiesForDashboardTesting(temporaryFolder);
+            Dashboard.setCommonProxyUtilities(proxyUtilities);
+            when(request.getParameter("action")).thenReturn("doCleanupAll");
+            dashboardCleanupServlet.doGet(request, response);
+            Assert.assertEquals("SUCCESS", response.getOutputStream().toString());
+
+        } finally {
+            Dashboard.restoreCommonProxyUtilities();
+        }
     }
+
+    @Test
+    public void postDoCleanupAll() throws ServletException, IOException {
+        try {
+            CommonProxyUtilities proxyUtilities = TestUtils.mockCommonProxyUtilitiesForDashboardTesting(temporaryFolder);
+            Dashboard.setCommonProxyUtilities(proxyUtilities);
+            when(request.getParameter("action")).thenReturn("doCleanupAll");
+            dashboardCleanupServlet.doPost(request, response);
+            Assert.assertEquals("SUCCESS", response.getOutputStream().toString());
+        } finally {
+            Dashboard.restoreCommonProxyUtilities();
+        }
+    }
+
 
     @Test
     public void postMissingParameter() throws ServletException, IOException {
@@ -69,12 +101,5 @@ public class DashboardCleanupServletTest {
         dashboardCleanupServlet.doPost(request, response);
         Assert.assertEquals("ERROR action not implemented. Given action=anyValue",
                 response.getOutputStream().toString());
-    }
-
-    @Test
-    public void postDoCleanupAll() throws ServletException, IOException {
-        when(request.getParameter("action")).thenReturn("doCleanupAll");
-        dashboardCleanupServlet.doPost(request, response);
-        Assert.assertEquals("SUCCESS", response.getOutputStream().toString());
     }
 }

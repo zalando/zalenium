@@ -117,11 +117,11 @@ public class TestUtils {
         };
     }
 
-    public static void mockCommonProxyUtilitiesForDashboardTesting(TemporaryFolder temporaryFolder) {
+    public static CommonProxyUtilities mockCommonProxyUtilitiesForDashboardTesting(TemporaryFolder temporaryFolder) {
         CommonProxyUtilities commonProxyUtilities = mock(CommonProxyUtilities.class);
         when(commonProxyUtilities.currentLocalPath()).thenReturn(temporaryFolder.getRoot().getAbsolutePath());
         when(commonProxyUtilities.getShortDateAndTime()).thenCallRealMethod();
-        Dashboard.setCommonProxyUtilities(commonProxyUtilities);
+        return commonProxyUtilities;
     }
 
     public static void ensureRequiredInputFilesExist(TemporaryFolder temporaryFolder) throws IOException {
@@ -132,5 +132,12 @@ public class TestUtils {
         temporaryFolder.newFolder("js");
     }
 
-
+    public static void ensureRequiredFilesExistForCleanup(TemporaryFolder temporaryFolder) throws IOException {
+        ensureRequiredInputFilesExist(temporaryFolder);
+        temporaryFolder.newFolder("videos");
+        temporaryFolder.newFolder("videos", "logs");
+        temporaryFolder.newFile("videos/list.html");
+        temporaryFolder.newFile("videos/executedTestsInfo.json");
+        temporaryFolder.newFile("videos/dashboard.html");
+    }
 }
