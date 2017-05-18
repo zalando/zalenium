@@ -21,6 +21,9 @@ public class DashboardTest {
     private TestInformation ti = new TestInformation("seleniumSessionId", "testName", "proxyName", "browser",
             "browserVersion", "platform");
 
+    @Rule
+    public TemporaryFolder temporaryFolder = new TemporaryFolder();
+
     @Before
     public void initDashboard() throws IOException {
         Dashboard.setExecutedTests(0, 0);
@@ -28,8 +31,6 @@ public class DashboardTest {
         TestUtils.mockCommonProxyUtilitiesForDashboardTesting(temporaryFolder);
     }
 
-    @Rule
-    public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
     @After
     public void restoreCommonProxyUtilities() {
