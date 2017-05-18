@@ -3,9 +3,7 @@ package de.zalando.ep.zalenium.proxy;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import de.zalando.ep.zalenium.util.*;
-import org.apache.commons.io.FileUtils;
 import org.hamcrest.CoreMatchers;
 import org.junit.*;
 import org.junit.rules.TemporaryFolder;
@@ -26,7 +24,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.mockito.Mockito.*;
 
 public class TestingBotRemoteProxyTest {
@@ -68,11 +65,7 @@ public class TestingBotRemoteProxyTest {
         DockerSeleniumStarterRemoteProxy dsStarterProxy = DockerSeleniumStarterRemoteProxy.getNewInstance(request, registry);
 
         // Temporal folder for dashboard files
-        temporaryFolder.newFile("list_template.html");
-        temporaryFolder.newFile("dashboard_template.html");
-        temporaryFolder.newFile("zalando.ico");
-        temporaryFolder.newFolder("css");
-        temporaryFolder.newFolder("js");
+        TestUtils.ensureRequiredInputFilesExist(temporaryFolder);
 
         // We add both nodes to the registry
         registry.add(testingBotProxy);
@@ -242,10 +235,8 @@ public class TestingBotRemoteProxyTest {
             testSession.getSlot().doFinishRelease();
             spyProxy.afterCommand(testSession, request, response);
 
-            CommonProxyUtilities commonProxyUtilities = mock(CommonProxyUtilities.class);
-            when(commonProxyUtilities.currentLocalPath()).thenReturn(temporaryFolder.getRoot().getAbsolutePath());
-            when(commonProxyUtilities.getShortDateAndTime()).thenCallRealMethod();
-            Dashboard.setCommonProxyUtilities(commonProxyUtilities);
+            CommonProxyUtilities proxyUtilities = TestUtils.mockCommonProxyUtilitiesForDashboardTesting(temporaryFolder);
+            Dashboard.setCommonProxyUtilities(proxyUtilities);
 
             TestInformation testInformation = spyProxy.getTestInformation(mockSeleniumSessionId);
             Dashboard.updateDashboard(testInformation);
@@ -269,61 +260,6 @@ public class TestingBotRemoteProxyTest {
             Dashboard.restoreCommonProxyUtilities();
         }
     }
-
-    @SuppressWarnings("ResultOfMethodCallIgnored")
-    @Test
-    public void dashboardFilesGetRenewed() throws IOException {
-        try {
-            // Capability which should result in a created session
-            Map<String, Object> requestedCapability = new HashMap<>();
-            requestedCapability.put(CapabilityType.BROWSER_NAME, BrowserType.CHROME);
-            requestedCapability.put(CapabilityType.PLATFORM, Platform.WIN10);
-
-            // Getting a test session in the TestingBot node
-            TestingBotRemoteProxy spyProxy = spy(testingBotProxy);
-            TestSession testSession = spyProxy.getNewSession(requestedCapability);
-            Assert.assertNotNull(testSession);
-            String mockSeleniumSessionId = "2cf5d115-ca6f-4bc4-bc06-a4fca00836ce";
-            testSession.setExternalKey(new ExternalSessionKey(mockSeleniumSessionId));
-
-            // We release the session, the node should be free
-            WebDriverRequest request = mock(WebDriverRequest.class);
-            HttpServletResponse response = mock(HttpServletResponse.class);
-            when(request.getMethod()).thenReturn("DELETE");
-            when(request.getRequestType()).thenReturn(RequestType.STOP_SESSION);
-
-            testSession.getSlot().doFinishRelease();
-            spyProxy.afterCommand(testSession, request, response);
-
-            CommonProxyUtilities commonProxyUtilities = mock(CommonProxyUtilities.class);
-            when(commonProxyUtilities.currentLocalPath()).thenReturn(temporaryFolder.getRoot().getAbsolutePath());
-            when(commonProxyUtilities.getShortDateAndTime()).thenCallRealMethod();
-            Dashboard.setCommonProxyUtilities(commonProxyUtilities);
-
-            TestInformation testInformation = spyProxy.getTestInformation(mockSeleniumSessionId);
-            Dashboard.updateDashboard(testInformation);
-            File videosFolder = new File(temporaryFolder.getRoot().getAbsolutePath(), "videos");
-            File testList = new File(videosFolder, "list.html");
-            File amountOfRunTests = new File(videosFolder, "executedTestsInfo.json");
-            Assert.assertFalse(Dashboard.isFileOlderThanOneDay(amountOfRunTests.lastModified()));
-            Assert.assertFalse(Dashboard.isFileOlderThanOneDay(testList.lastModified()));
-            amountOfRunTests.setLastModified(new Date().getTime() - (25 * 60 * 60 * 1000));
-            testList.setLastModified(new Date().getTime() - (25 * 60 * 60 * 1000));
-            Assert.assertTrue(Dashboard.isFileOlderThanOneDay(amountOfRunTests.lastModified()));
-            Assert.assertTrue(Dashboard.isFileOlderThanOneDay(testList.lastModified()));
-            Dashboard.updateDashboard(testInformation);
-            Assert.assertFalse(Dashboard.isFileOlderThanOneDay(amountOfRunTests.lastModified()));
-            Assert.assertFalse(Dashboard.isFileOlderThanOneDay(testList.lastModified()));
-            Dashboard.updateDashboard(testInformation);
-            JsonObject executedTestData = new JsonParser().parse(FileUtils.readFileToString(amountOfRunTests, UTF_8)).getAsJsonObject();
-            String executedTestsInFile = executedTestData.get("executedTests").getAsString();
-            Assert.assertEquals(Dashboard.getExecutedTests(), Integer.valueOf(executedTestsInFile).intValue());
-        } finally {
-            Dashboard.restoreCommonProxyUtilities();
-        }
-    }
-
-
 
     @Test
     public void checkVideoFileExtensionAndProxyName() {

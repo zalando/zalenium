@@ -390,6 +390,7 @@ StartUp()
     -role hub -port 4445 -servlet de.zalando.ep.zalenium.servlet.LivePreviewServlet \
     -servlet de.zalando.ep.zalenium.servlet.ZaleniumConsoleServlet \
     -servlet de.zalando.ep.zalenium.servlet.ZaleniumResourceServlet \
+    -servlet de.zalando.ep.zalenium.servlet.DashboardCleanupServlet \
     -debug ${DEBUG_ENABLED} > logs/stdout.zalenium.hub.log &
     echo $! > ${PID_PATH_SELENIUM}
 

@@ -75,7 +75,7 @@ public class LiveNodeHtmlRenderer implements HtmlRenderer {
         String slotTitle;
         if (session != null) {
             slotClass = "busy";
-            slotTitle = session.get("lastCommand").toString();
+            slotTitle = session.get("lastCommand") == null ? "" : session.get("lastCommand").toString();
         } else {
             slotTitle = testSlot.getCapabilities().toString();
         }

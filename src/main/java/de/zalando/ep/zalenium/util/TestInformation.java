@@ -107,14 +107,6 @@ public class TestInformation {
         return browserDriverLogFileName.concat("not_implemented.log");
     }
 
-    public String getBrowserConsoleLogFileName() {
-        String browserConsoleLogFileName = Dashboard.LOGS_FOLDER_NAME + "/" + testNameNoExtension + "/";
-        if ("Zalenium".equalsIgnoreCase(proxyName)) {
-            return browserConsoleLogFileName.concat(String.format("%s_browser.log", browser.toLowerCase()));
-        }
-        return browserConsoleLogFileName.concat("not_implemented.log");
-    }
-
     @SuppressWarnings("SameParameterValue")
     public void setFileExtension(String fileExtension) {
         this.fileExtension = fileExtension;
