@@ -157,8 +157,8 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
         try {
             String latestDownloadedImage = getLatestDownloadedImage(DOCKER_SELENIUM_IMAGE);
             ImageInfo imageInfo = dockerClient.inspectImage(latestDownloadedImage);
-            chromeVersion = imageInfo.config().labels().get("selenium3_chrome_version");
-            firefoxVersion = imageInfo.config().labels().get("selenium3_firefox_version");
+            chromeVersion = imageInfo.config().labels().get("selenium_chrome_version");
+            firefoxVersion = imageInfo.config().labels().get("selenium_firefox_version");
         } catch (DockerException | InterruptedException e) {
             LOGGER.log(Level.FINE, LOGGING_PREFIX + "Could not grab browser version information from the " +
                     "docker-selenium image", e);
