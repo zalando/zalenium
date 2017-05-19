@@ -652,7 +652,7 @@ ShutDown()
             local __total="$(</home/seluser/videos/executedTestsInfo.json | jq .executedTestsWithVideo)"
             log "WaitForVideosTransferred succeeded for a total of ${__total}"
         else
-            log "WaitForVideosTransferred failed after 50 seconds!"
+            log "WaitForVideosTransferred failed after 40 seconds!"
         fi
     fi
 
