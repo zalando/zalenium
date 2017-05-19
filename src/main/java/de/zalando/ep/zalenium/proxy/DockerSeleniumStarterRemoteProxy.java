@@ -359,7 +359,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
             Here a docker-selenium container will be started and it will register to the hub
             We check first if a node has been created for this request already. If so, we skip it
             but increment the number of times it has been received. In case something went wrong with the node
-            creation, we remove the mark* after 10 times and we create a node again.
+            creation, we remove the mark after 20 times and we create a node again.
             * The mark is an added custom capability
          */
         String waitingForNode = String.format("waitingFor_%s_Node", browserName.toUpperCase());
@@ -626,7 +626,6 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
             if (numberOfDockerSeleniumContainers > proxiesAndNewSessions) {
                 LOGGER.log(Level.FINE, LOGGING_PREFIX + "More docker-selenium containers running than proxies, {0} vs. {1}",
                         new Object[]{numberOfDockerSeleniumContainers, numberOfProxies});
-                Thread.sleep(500);
                 return false;
             }
 
