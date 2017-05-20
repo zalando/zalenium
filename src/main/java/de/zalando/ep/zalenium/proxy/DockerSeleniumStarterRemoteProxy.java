@@ -72,6 +72,8 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     private static final String DOCKER_SELENIUM_IMAGE = "elgalu/selenium";
     private static final int LOWER_PORT_BOUNDARY = 40000;
     private static final int UPPER_PORT_BOUNDARY = 49999;
+    private static final int NO_VNC_PORT_GAP = 10000;
+    private static final int VNC_PORT_GAP = 20000;
     private static final DockerClient defaultDockerClient = new DefaultDockerClient("unix:///var/run/docker.sock");
     private static final Environment defaultEnvironment = new Environment();
     private static final String LOGGING_PREFIX = "[DS] ";
@@ -155,8 +157,8 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
         try {
             String latestDownloadedImage = getLatestDownloadedImage(DOCKER_SELENIUM_IMAGE);
             ImageInfo imageInfo = dockerClient.inspectImage(latestDownloadedImage);
-            chromeVersion = imageInfo.config().labels().get("selenium3_chrome_version");
-            firefoxVersion = imageInfo.config().labels().get("selenium3_firefox_version");
+            chromeVersion = imageInfo.config().labels().get("selenium_chrome_version");
+            firefoxVersion = imageInfo.config().labels().get("selenium_firefox_version");
         } catch (DockerException | InterruptedException e) {
             LOGGER.log(Level.FINE, LOGGING_PREFIX + "Could not grab browser version information from the " +
                     "docker-selenium image", e);
@@ -357,7 +359,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
             Here a docker-selenium container will be started and it will register to the hub
             We check first if a node has been created for this request already. If so, we skip it
             but increment the number of times it has been received. In case something went wrong with the node
-            creation, we remove the mark* after 10 times and we create a node again.
+            creation, we remove the mark after 20 times and we create a node again.
             * The mark is an added custom capability
          */
         String waitingForNode = String.format("waitingFor_%s_Node", browserName.toUpperCase());
@@ -429,7 +431,8 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
              */
 
             final int nodePort = findFreePortInRange(LOWER_PORT_BOUNDARY, UPPER_PORT_BOUNDARY);
-            final int vncPort = nodePort + 10000;
+            final int noVncPort = nodePort + NO_VNC_PORT_GAP;
+            final int vncPort = nodePort + VNC_PORT_GAP;
 
             List<String> envVariables = new ArrayList<>();
             envVariables.add("ZALENIUM=true");
@@ -448,7 +451,8 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
             envVariables.add("SEND_ANONYMOUS_USAGE_INFO=" + sendAnonymousUsageInfo);
             envVariables.add("BUILD_URL=" + env.getStringEnvVariable("BUILD_URL", ""));
             envVariables.add("NOVNC=true");
-            envVariables.add("NOVNC_PORT=" + vncPort);
+            envVariables.add("NOVNC_PORT=" + noVncPort);
+            envVariables.add("VNC_PORT=" + vncPort);
             envVariables.add("SCREEN_WIDTH=" + getScreenWidth());
             envVariables.add("SCREEN_HEIGHT=" + getScreenHeight());
             envVariables.add("TZ=" + getTimeZone());
@@ -469,8 +473,8 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
 
             String networkMode = String.format("container:%s", getContainerName());
             HostConfig hostConfig = HostConfig.builder()
-                    .shmSize(1073741824L) // 1GB
                     .networkMode(networkMode)
+                    .appendBinds("/dev/shm:/dev/shm")
                     .appendBinds("/tmp/mounted:/tmp/mounted")
                     .autoRemove(true)
                     .build();
@@ -622,7 +626,6 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
             if (numberOfDockerSeleniumContainers > proxiesAndNewSessions) {
                 LOGGER.log(Level.FINE, LOGGING_PREFIX + "More docker-selenium containers running than proxies, {0} vs. {1}",
                         new Object[]{numberOfDockerSeleniumContainers, numberOfProxies});
-                Thread.sleep(500);
                 return false;
             }
 
@@ -665,8 +668,25 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
                     LOGGER.log(Level.FINE, LOGGING_PREFIX + e.toString(), e);
                 }
 
-                if (freePort != -1) {
+                int noVncFreePort = -1;
+                int noVncPortNumber = portNumber + NO_VNC_PORT_GAP;
+                try (ServerSocket serverSocket = new ServerSocket(noVncPortNumber)) {
+                    noVncFreePort = serverSocket.getLocalPort();
+                } catch (IOException e) {
+                    LOGGER.log(Level.FINE, LOGGING_PREFIX + e.toString(), e);
+                }
+
+                int vncFreePort = -1;
+                int vncPortNumber = portNumber + VNC_PORT_GAP;
+                try (ServerSocket serverSocket = new ServerSocket(vncPortNumber)) {
+                    vncFreePort = serverSocket.getLocalPort();
+                } catch (IOException e) {
+                    LOGGER.log(Level.FINE, LOGGING_PREFIX + e.toString(), e);
+                }
+
+                if (freePort != -1 && noVncFreePort != -1 && vncFreePort != -1) {
                     allocatedPorts.add(freePort);
+                    allocatedPorts.add(noVncFreePort);
                     return freePort;
                 }
             }
