@@ -19,6 +19,7 @@
   * [Displaying the live preview](#displaying-the-live-preview)
   * [Showing the test name on the live preview](#showing-the-test-name-on-the-live-preview)
   * [Filtering tests by group name](#filtering-tests-by-group-name)
+* [Dashboard](#dashboard)
 * [Test Configuration Options](#test-configuration-options)
   * [Test name](#test-name)
   * [Group name](#group-name)
