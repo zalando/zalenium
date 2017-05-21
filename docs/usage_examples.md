@@ -11,8 +11,6 @@
 * [One line starters](#one-line-starters)
   * [Zalenium one-liner installer](#zalenium-one-liner-installer)
   * [Install and start](#install-and-start)
-  * [Install and start with latest Selenium 3](#install-and-start-with-latest-selenium-3)
-  * [Install and start with latest Selenium 2](#install-and-start-with-latest-selenium-2)
   * [Install and start a specific version](#install-and-start-a-specific-version)
   * [Cleanup](#cleanup)
 * [Video feature](#video-feature)
@@ -41,12 +39,34 @@
 ## Starting Zalenium
 
 Basic usage, without any of the integrated cloud testing platforms.
+### Linux 
 
   ```sh
     docker run --rm -ti --name zalenium -p 4444:4444 -p 5555:5555 \
       -v /var/run/docker.sock:/var/run/docker.sock \
       -v /tmp/videos:/home/seluser/videos \
       dosel/zalenium start 
+  ```
+
+### OSX 
+Zalenium for OSX is currently compatible with Docker 1.11, 1.12 default and 1.13. In Mac is recommended that you 
+explicitly tell Zalenium which major version you are using via `-e DOCKER=1.11` due to API compatibility issues. 
+
+  ```sh
+    docker run --rm -ti --name zalenium -p 4444:4444 -p 5555:5555 \
+      -e DOCKER=1.11 \
+      -v /var/run/docker.sock:/var/run/docker.sock \
+      -v /tmp/videos:/home/seluser/videos \
+      dosel/zalenium start
+  ```
+
+### Windows 
+
+  ```sh
+    docker run --rm -ti --name zalenium -p 4444:4444 -p 5555:5555 \
+      -v /var/run/docker.sock:/var/run/docker.sock \
+      -v /c/Users/your_user_name/temp/videos:/home/seluser/videos \
+      dosel/zalenium start      
   ```
 
 ### with Sauce Labs enabled
@@ -136,18 +156,6 @@ across all containers. Please note that the folder name in the host can be any y
 
   ```sh
     curl -sSL https://raw.githubusercontent.com/dosel/t/i/p | bash -s start
-  ```
-
-### Install and start with latest Selenium 3
-
-  ```sh
-    curl -sSL https://raw.githubusercontent.com/dosel/t/i/p | bash -s 3 start
-  ```
-
-### Install and start with latest Selenium 2
-
-  ```sh
-    curl -sSL https://raw.githubusercontent.com/dosel/t/i/p | bash -s 2 start
   ```
 
 ### Install and start a specific version
