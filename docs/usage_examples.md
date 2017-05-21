@@ -211,7 +211,7 @@ Beware that `docker-compose --abort-on-container-exit` renders the video unusabl
 
 ### Displaying the live preview
 * Just go to [http://localhost:4444/grid/admin/live](http://localhost:4444/grid/admin/live)
-  * You can also replace `localhost` for the IP/machine name where Zalenium is running.
+  * You can also replace `localhost` for the IP/machine name where Zalenium is running
 * Auto-refresh, add `?refresh=numberOfSeconds` to refresh the view automatically. E.g. 
 [http://localhost:4444/grid/admin/live?refresh=20](http://localhost:4444/grid/admin/live?refresh=20) will refresh the 
 page every 20 seconds.
@@ -225,7 +225,19 @@ If more than one person is using the same instance of Zalenium, with a `group` c
 preview can be filtered to show only the tests that belong to a specific group. Pass `?group=myTestGroup` at the end 
 of the url. E.g. [http://localhost:4444/grid/admin/live?group=myTestGroup](http://localhost:4444/grid/admin/live?group=myTestGroup).
 See more details at [group name](#group-name).
- 
+
+## Dashboard
+
+<p align="center">
+  <img id="dashboard" src="../images/dashboard.gif" />
+</p>
+
+* Go to [http://localhost:5555](http://localhost:5555)
+  * You can also replace `localhost` for the IP/machine name where Zalenium is running
+* Check all the recorded videos and aggregated logs after your tests completed
+* Click on Cleanup to remove all videos and logs from the local drive and the dashboard
+  * You can also cleanup the dashboard via `http://localhost:5555/cleanup?action=doCleanupAll`
+
 ## Test Configuration Options
 
 ### Test name
