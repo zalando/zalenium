@@ -37,6 +37,18 @@ Zalenium's main goal is: to allow anyone to have a disposable and flexible Selen
 Part of the idea comes from this [Sauce Labs post](https://saucelabs.com/blog/introducing-the-sauce-plugin-for-selenium-grid).
 
 * [Getting Started](#getting-started)
+  * [Prerequisites](#prerequisites)
+  * [Set it up](#set-it-up)
+  * [Run it](#run-it)
+* [Additional features](#additional-features)
+* [Docker version](#docker-version)
+  * [Linux](#linux)
+  * [OSX](#osx)
+* [Contributions](#contributions)
+  * [Building and Testing](#building-and-testing)
+* [How it works](#how-it-works)
+* [About the project versioning](#about-the-project-versioning)
+* [Usage examples](./docs/usage_examples.md)
 
 ## Getting Started
 
@@ -135,11 +147,11 @@ running and that you can do `docker ps`):
         zalenium:YOUR_TAG start
     ```
 * Running the integration tests with Sauce Labs or BrowserStack or TestingBot. You will need an account on any of those providers 
-to run them (they have free plans). Or you can just run some of our [tests](./src/test/java/de/zalando/tip/zalenium/it/ParallelIT.java)  individually from an IDE.
+to run them (they have free plans). Or you can just run some of our [tests](./src/test/java/de/zalando/tip/zalenium/it/ParallelIT.java)
+individually from an IDE.
     ```sh
         ./run_integration_tests.sh sauceLabs|browserStack|testingBot
     ```
-
 
 ## How it works
 
@@ -164,7 +176,7 @@ one of the enabled cloud testing platforms.
 being supported.
 * The major-minor version combined with the patch level will indicate the Selenium version being supported. E.g.
   * When a release is `3.2.0a`, it supports Selenium 3.2.0
-  * The badge above show the latest image version
+  * The badge above shows the latest image version
   * Alias for the latest images, `dosel/zalenium:3`
 
 ## Zalenium in the Selenium Conf Austin 2017
