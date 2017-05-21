@@ -8,22 +8,23 @@
 
 
 # What is Zalenium?
-A Selenium Grid extension to scale up and down your local grid dynamically with docker containers. It uses
+A Selenium Grid extension to scale your local grid dynamically with docker containers. It uses
 [docker-selenium](https://github.com/elgalu/docker-selenium) to run your tests in Firefox and Chrome locally, and when
-you need a different browser, your tests get redirected to [Sauce Labs](https://saucelabs.com/) and/or
-[BrowserStack](https://www.browserstack.com/) and/or [TestingBot](https://testingbot.com/).
+you need a different browser, your tests can get redirected to a cloud testing provider ([Sauce Labs](https://saucelabs.com/), BrowserStack](https://www.browserstack.com/), [TestingBot](https://testingbot.com/)).
 
-### Why Zalenium?
-We know how complicated is to have a stable grid to run UI tests with Selenium, and moreover how hard is to maintain
-it over time. It is also very difficult to have a local grid with enough capabilities to cover all browsers and platforms.
+### Why?
+We know how complicated is to:
+* Have a stable grid to run UI tests with Selenium
+* Maintain it over time (keep up with new browser, Selenium and drivers versions)
+* Provide capabilities to cover all browsers and platforms
 
-Therefore we are trying this approach where [docker-selenium](https://github.com/elgalu/docker-selenium) nodes are
-created, used and disposed on demand when possible. With this, you can run faster your UI tests with Firefox and Chrome
-since they are running on a local grid, on a node created from scratch and disposed after the test finishes.
+That is why we took this approach where [docker-selenium](https://github.com/elgalu/docker-selenium) nodes are
+created on demand. Your UI tests in Firefox and Chrome will run faster beause they are running on a local grid,
+on a node created from scratch and disposed after the test finishes.
 
-And whenever you need a capability that cannot be fulfilled by [docker-selenium](https://github.com/elgalu/docker-selenium),
-the test gets redirected to [Sauce Labs](https://saucelabs.com/) and/or [BrowserStack](https://www.browserstack.com/)
-and/or [TestingBot](https://testingbot.com/).
+If you need a capability that cannot be fulfilled by [docker-selenium](https://github.com/elgalu/docker-selenium),
+the test gets redirected to a cloud testing provider ([Sauce Labs](https://saucelabs.com/),
+[BrowserStack](https://www.browserstack.com/), [TestingBot](https://testingbot.com/)).
 
 This creates Zalenium's main goal: to allow anyone to have a disposable and flexible Selenium Grid infrastructure.
 
