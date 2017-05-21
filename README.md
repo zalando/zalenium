@@ -10,7 +10,10 @@
 # What is Zalenium?
 A Selenium Grid extension to scale your local grid dynamically with docker containers. It uses
 [docker-selenium](https://github.com/elgalu/docker-selenium) to run your tests in Firefox and Chrome locally, and when
-you need a different browser, your tests can get redirected to a cloud testing provider ([Sauce Labs](https://saucelabs.com/), BrowserStack](https://www.browserstack.com/), [TestingBot](https://testingbot.com/)).
+you need a different browser, your tests can get redirected to a cloud testing provider ([Sauce Labs](https://saucelabs.com/), [BrowserStack](https://www.browserstack.com/), [TestingBot](https://testingbot.com/)).
+
+Features are added often to Zalenium, we invite you to test it, to contribute, to report bugs, and suggest any ideas you may
+have, see [contributing](CONTRIBUTING.md) for more details.
 
 ### Why?
 We know how complicated is to:
@@ -20,19 +23,15 @@ We know how complicated is to:
 
 That is why we took this approach where [docker-selenium](https://github.com/elgalu/docker-selenium) nodes are
 created on demand. Your UI tests in Firefox and Chrome will run faster beause they are running on a local grid,
-on a node created from scratch and disposed after the test finishes.
+on a node created from scratch and disposed after the test completes.
 
 If you need a capability that cannot be fulfilled by [docker-selenium](https://github.com/elgalu/docker-selenium),
 the test gets redirected to a cloud testing provider ([Sauce Labs](https://saucelabs.com/),
 [BrowserStack](https://www.browserstack.com/), [TestingBot](https://testingbot.com/)).
 
-This creates Zalenium's main goal: to allow anyone to have a disposable and flexible Selenium Grid infrastructure.
+Zalenium's main goal is: to allow anyone to have a disposable and flexible Selenium Grid infrastructure.
 
-The original idea comes from this [Sauce Labs post](https://saucelabs.com/blog/introducing-the-sauce-plugin-for-selenium-grid).
-
-You can already use Zalenium, nevertheless, more features are added often, therefore we invite
-you to test it, to contribute, to report bugs, and suggest any ideas you may have, see [contributing](CONTRIBUTING.md)
-for more details.
+Part of the idea comes from this [Sauce Labs post](https://saucelabs.com/blog/introducing-the-sauce-plugin-for-selenium-grid).
 
 ## Getting Started
 
