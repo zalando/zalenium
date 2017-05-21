@@ -88,9 +88,16 @@ dependencies.)
 * Stop it: `docker stop zalenium`
 
 ## Additional features
-* Live preview of your running tests [http://localhost:4444/grid/admin/live](http://localhost:4444/grid/admin/live)
-* Video recording, check them in the `/tmp/videos` folder (or the one you mapped when starting Zalenium)
 * __[BETA]__ [Dashboard](http://localhost:5555), see all the videos and aggregated logs after your tests completed
+  <p align="center">
+    <img id="dashboard" height="367" width="600" src="./images/dashboard.gif" />
+  </p>
+* Live preview of your running tests [http://localhost:4444/grid/admin/live](http://localhost:4444/grid/admin/live)
+<p align="center">
+  <img id="live-preview" height="231" width="600" src="./images/live_preview.gif" />
+</p>
+
+* Video recording, check them in the `/tmp/videos` folder (or the one you mapped when starting Zalenium)
 * Customise video file naming via capabilities and [more](./docs/usage_examples.md)
 
 ## Docker version
