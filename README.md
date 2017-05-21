@@ -1,14 +1,17 @@
+<p align="center">
+  <img id="header" height="214" width="500" src="./images/logo_zalenium_wide.png" />
+</p>
+
 [![Build Status](https://travis-ci.org/zalando/zalenium.svg?branch=master)](https://travis-ci.org/zalando/zalenium)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/c719a14f5537488b8fb95d70e27acd5f)](https://www.codacy.com/app/diemol_zalenium/zalenium?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=zalando/zalenium&amp;utm_campaign=Badge_Grade)
 [![codecov](https://codecov.io/gh/zalando/zalenium/branch/master/graph/badge.svg)](https://codecov.io/gh/zalando/zalenium)
 [![](https://images.microbadger.com/badges/version/dosel/zalenium.svg)](https://microbadger.com/images/dosel/zalenium)
-[![](https://images.microbadger.com/badges/version/dosel/zalenium:2.53.1u.svg)](https://microbadger.com/images/dosel/zalenium:2.53.1u)
 [![Docker Pulls](https://img.shields.io/docker/pulls/dosel/zalenium.svg)](https://hub.docker.com/r/dosel/zalenium/tags/)
 [![Gitter](https://badges.gitter.im/zalando/zalenium.svg)](https://gitter.im/zalando/zalenium?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
 
-# What is Zalenium?
-A Selenium Grid extension to scale your local grid dynamically with docker containers. It uses
+# Zalenium?
+This is a Selenium Grid extension to scale your local grid dynamically with docker containers. It uses
 [docker-selenium](https://github.com/elgalu/docker-selenium) to run your tests in Firefox and Chrome locally, and when
 you need a different browser, your tests can get redirected to a cloud testing provider ([Sauce Labs](https://saucelabs.com/), [BrowserStack](https://www.browserstack.com/), [TestingBot](https://testingbot.com/)).
 
@@ -161,19 +164,13 @@ to the cloud platform.
 
 Basically, the tool makes the grid expand or contract depending on the amount of requests received.
 
-## Selenium 2 and Selenium 3 - About the project versioning
+## About the project versioning
 * To make life easy for people who want to use Zalenium, we are now using as a version number the Selenium version
 being supported.
 * The major-minor version combined with the patch level will indicate the Selenium version being supported. E.g.
-  * When a release is `2.53.1a`, it supports Selenium 2.53.1
   * When a release is `3.2.0a`, it supports Selenium 3.2.0
-  * The badges above show the latest image versions for Selenium 2 and 3
-  * Alias for the latest Selenium 2 and 3 images, use `dosel/zalenium:2` and `dosel/zalenium:3`.
-
-* From version `3.2.0a`, `latest` is pointing to the most recent docker image supporting Selenium 3 (GA data shows now
-slight more usage of Selenium 3 than Selenium 2.)
-
-* Version `2.53.1u` is the last version/image supporting Selenium 2.53.1.
+  * The badge above show the latest image version
+  * Alias for the latest images, `dosel/zalenium:3`
 
 ## Zalenium in the Selenium Conf Austin 2017
 Get a better overview of what Zalenium is and how it works by checking the recorded talk [here](https://www.youtube.com/watch?v=W5qMsVrob6I)
