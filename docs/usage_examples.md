@@ -205,6 +205,10 @@ Beware that `docker-compose --abort-on-container-exit` renders the video unusabl
 
 ## Live preview
 
+<p align="center">
+  <img id="live-preview" src="../images/live_preview.gif" />
+</p>
+
 ### Displaying the live preview
 * Just go to [http://localhost:4444/grid/admin/live](http://localhost:4444/grid/admin/live)
   * You can also replace `localhost` for the IP/machine name where Zalenium is running.
