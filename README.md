@@ -10,7 +10,7 @@
 [![Gitter](https://badges.gitter.im/zalando/zalenium.svg)](https://gitter.im/zalando/zalenium?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
 
-# Zalenium?
+# Zalenium
 This is a Selenium Grid extension to scale your local grid dynamically with docker containers. It uses
 [docker-selenium](https://github.com/elgalu/docker-selenium) to run your tests in Firefox and Chrome locally, and when
 you need a different browser, your tests can get redirected to a cloud testing provider ([Sauce Labs](https://saucelabs.com/), [BrowserStack](https://www.browserstack.com/), [TestingBot](https://testingbot.com/)).
@@ -36,20 +36,21 @@ Zalenium's main goal is: to allow anyone to have a disposable and flexible Selen
 
 Part of the idea comes from this [Sauce Labs post](https://saucelabs.com/blog/introducing-the-sauce-plugin-for-selenium-grid).
 
+* [Getting Started](#getting-started)
+
 ## Getting Started
 
 #### Prerequisites
 * Docker engine running, version >= 1.11.1 (probably works with earlier versions, not tested yet).
-* Pulling the [docker-selenium](https://github.com/elgalu/docker-selenium) image. `docker pull elgalu/selenium`
-* *nix platform (tested only in OSX and Ubuntu, not tested on Windows yet).
-* If you want to use the [Sauce Labs](https://saucelabs.com/) and/or the [BrowserStack](https://www.browserstack.com/)
-and/or the [TestingBot](https://testingbot.com/) feature, you need an account with them.
+* Pull the [docker-selenium](https://github.com/elgalu/docker-selenium) image. `docker pull elgalu/selenium`
+* If you want to use the cloud testing provider integration feature ([Sauce Labs](https://saucelabs.com/),
+[BrowserStack](https://www.browserstack.com/), [TestingBot](https://testingbot.com/)), you will need an account with them.
 
-#### Setting it up
-* Make sure your docker daemon is running
+#### Set it up
+* Make sure your docker daemon is running (e.g. `docker info` works without errors).
 * `docker pull dosel/zalenium`
 
-#### Running it
+#### Run it
 Zalenium uses docker to scale on-demand, therefore we need to give it the `docker.sock` full access, this is known as
 "Docker alongside docker".
 
@@ -70,21 +71,17 @@ dependencies.)
   ```
 
 * More usage examples, more parameters, configurations, video usage and one line starters can be seen [here](./docs/usage_examples.md)
-
 * After the output, you should see the DockerSeleniumStarter node in the [grid](http://localhost:4444/grid/console)
-
+* Now you can point your Selenium tests to [http://localhost:4444/wd/hub](http://localhost:4444/wd/hub).
 * Stop it: `docker stop zalenium`
 
-#### Using it
-* Just point your Selenium tests to [http://localhost:4444/wd/hub](http://localhost:4444/wd/hub) and that's it!
-* You can use the [integration tests](./src/test/java/de/zalando/tip/zalenium/it/ParallelIT.java) we have to try Zalenium.
-* Check the live preview of your running tests [http://localhost:4444/grid/admin/live](http://localhost:4444/grid/admin/live)
-* Check the recorded videos in the `/tmp/videos` folder (or the one you mapped when starting Zalenium). More details about the videos
-feature can be seen [here](./docs/usage_examples.md#video-feature)
-* __[BETA]__ Check the [dashboard](http://localhost:5555) to see all the recorded and downloaded videos (available after
-the 1st video is ready).
+## Additional features
+* Live preview of your running tests [http://localhost:4444/grid/admin/live](http://localhost:4444/grid/admin/live)
+* Video recording, check them in the `/tmp/videos` folder (or the one you mapped when starting Zalenium)
+* __[BETA]__ [Dashboard](http://localhost:5555), see all the videos and aggregated logs after your tests completed
+* Customise video file naming via capabilities and [more](./docs/usage_examples.md)
 
-### Docker version
+## Docker version
 
 #### Linux
 For Linux systems you can simply share the docker binary via `-v $(which docker):/usr/bin/docker`
@@ -137,7 +134,8 @@ running and that you can do `docker ps`):
         -v /tmp/videos:/home/seluser/videos \
         zalenium:YOUR_TAG start
     ```
-* Running the integration tests with Sauce Labs or BrowserStack or TestingBot. You will need an account on any of those providers to run them (they have free plans). Or you can just run some of our [tests](./src/test/java/de/zalando/tip/zalenium/it/ParallelIT.java)  individually from an IDE.
+* Running the integration tests with Sauce Labs or BrowserStack or TestingBot. You will need an account on any of those providers 
+to run them (they have free plans). Or you can just run some of our [tests](./src/test/java/de/zalando/tip/zalenium/it/ParallelIT.java)  individually from an IDE.
     ```sh
         ./run_integration_tests.sh sauceLabs|browserStack|testingBot
     ```
@@ -149,20 +147,17 @@ running and that you can do `docker ps`):
 
 Zalenium works conceptually in a simple way:
 
-1. A Selenium Hub is started, listening to port 4444.
-2. One custom node for [docker-selenium](https://github.com/elgalu/docker-selenium), and when enabled, one for
-[Sauce Labs](https://saucelabs.com/) and/or one for [BrowserStack](https://www.browserstack.com/) and/or one for
-[TestingBot](https://testingbot.com) are started and get registered to the grid.
-3. When a test request arrives to the hub, the requested capabilities are verified against each one of the nodes.
-4. If the request can be executed on [docker-selenium](https://github.com/elgalu/docker-selenium), a docker container
-is created on the run, and the test request is sent back to the hub while the new node registers.
-5. After the hub acknowledges the new node, it processes the test request with it.
-6. The test is executed, and then container is disposed.
-7. If the test cannot be executed in [docker-selenium](https://github.com/elgalu/docker-selenium), it will processed by
-one of the enabled cloud testing platforms. It takes the HTTP request, adds the user and api key to it, and forwards it
-to the cloud platform.
-
-Basically, the tool makes the grid expand or contract depending on the amount of requests received.
+1. A Selenium Hub starts and listens on port 4444.
+2. One custom node for [docker-selenium](https://github.com/elgalu/docker-selenium) registers to the grid.
+3. If a cloud testing integration is enabled, a cloud proxy node to support a cloud provider ([Sauce Labs](https://saucelabs.com/),
+[BrowserStack](https://www.browserstack.com/), [TestingBot](https://testingbot.com/)) will register to the grid.
+4. A test request is received by the hub and the requested capabilities are verified against each one of the nodes.
+5. If [docker-selenium](https://github.com/elgalu/docker-selenium) can fulfill the requested capabilities, a docker container is 
+created on the run, and the test request is sent back to the hub while the new node registers.
+5. The hub acknowledges the new node and routes the the test request with to it.
+6. The test is executed and the container is disposed after test completion.
+7. If [docker-selenium](https://github.com/elgalu/docker-selenium) cannot fulfill the requested capabilities, it will processed by
+one of the enabled cloud testing platforms.
 
 ## About the project versioning
 * To make life easy for people who want to use Zalenium, we are now using as a version number the Selenium version
