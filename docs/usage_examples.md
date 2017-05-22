@@ -11,8 +11,6 @@
 * [One line starters](#one-line-starters)
   * [Zalenium one-liner installer](#zalenium-one-liner-installer)
   * [Install and start](#install-and-start)
-  * [Install and start with latest Selenium 3](#install-and-start-with-latest-selenium-3)
-  * [Install and start with latest Selenium 2](#install-and-start-with-latest-selenium-2)
   * [Install and start a specific version](#install-and-start-a-specific-version)
   * [Cleanup](#cleanup)
 * [Video feature](#video-feature)
@@ -21,6 +19,7 @@
   * [Displaying the live preview](#displaying-the-live-preview)
   * [Showing the test name on the live preview](#showing-the-test-name-on-the-live-preview)
   * [Filtering tests by group name](#filtering-tests-by-group-name)
+* [Dashboard](#dashboard)
 * [Test Configuration Options](#test-configuration-options)
   * [Test name](#test-name)
   * [Group name](#group-name)
@@ -41,12 +40,34 @@
 ## Starting Zalenium
 
 Basic usage, without any of the integrated cloud testing platforms.
+### Linux 
 
   ```sh
     docker run --rm -ti --name zalenium -p 4444:4444 -p 5555:5555 \
       -v /var/run/docker.sock:/var/run/docker.sock \
       -v /tmp/videos:/home/seluser/videos \
       dosel/zalenium start 
+  ```
+
+### OSX 
+Zalenium for OSX is currently compatible with Docker 1.11, 1.12 default and 1.13. In Mac is recommended that you 
+explicitly tell Zalenium which major version you are using via `-e DOCKER=1.11` due to API compatibility issues. 
+
+  ```sh
+    docker run --rm -ti --name zalenium -p 4444:4444 -p 5555:5555 \
+      -e DOCKER=1.11 \
+      -v /var/run/docker.sock:/var/run/docker.sock \
+      -v /tmp/videos:/home/seluser/videos \
+      dosel/zalenium start
+  ```
+
+### Windows 
+
+  ```sh
+    docker run --rm -ti --name zalenium -p 4444:4444 -p 5555:5555 \
+      -v /var/run/docker.sock:/var/run/docker.sock \
+      -v /c/Users/your_user_name/temp/videos:/home/seluser/videos \
+      dosel/zalenium start      
   ```
 
 ### with Sauce Labs enabled
@@ -138,18 +159,6 @@ across all containers. Please note that the folder name in the host can be any y
     curl -sSL https://raw.githubusercontent.com/dosel/t/i/p | bash -s start
   ```
 
-### Install and start with latest Selenium 3
-
-  ```sh
-    curl -sSL https://raw.githubusercontent.com/dosel/t/i/p | bash -s 3 start
-  ```
-
-### Install and start with latest Selenium 2
-
-  ```sh
-    curl -sSL https://raw.githubusercontent.com/dosel/t/i/p | bash -s 2 start
-  ```
-
 ### Install and start a specific version
 
   ```sh
@@ -197,9 +206,13 @@ Beware that `docker-compose --abort-on-container-exit` renders the video unusabl
 
 ## Live preview
 
+<p align="center">
+  <img id="live-preview" src="../images/live_preview.gif" />
+</p>
+
 ### Displaying the live preview
 * Just go to [http://localhost:4444/grid/admin/live](http://localhost:4444/grid/admin/live)
-  * You can also replace `localhost` for the IP/machine name where Zalenium is running.
+  * You can also replace `localhost` for the IP/machine name where Zalenium is running
 * Auto-refresh, add `?refresh=numberOfSeconds` to refresh the view automatically. E.g. 
 [http://localhost:4444/grid/admin/live?refresh=20](http://localhost:4444/grid/admin/live?refresh=20) will refresh the 
 page every 20 seconds.
@@ -213,7 +226,19 @@ If more than one person is using the same instance of Zalenium, with a `group` c
 preview can be filtered to show only the tests that belong to a specific group. Pass `?group=myTestGroup` at the end 
 of the url. E.g. [http://localhost:4444/grid/admin/live?group=myTestGroup](http://localhost:4444/grid/admin/live?group=myTestGroup).
 See more details at [group name](#group-name).
- 
+
+## Dashboard
+
+<p align="center">
+  <img id="dashboard" src="../images/dashboard.gif" />
+</p>
+
+* Go to [http://localhost:5555](http://localhost:5555)
+  * You can also replace `localhost` for the IP/machine name where Zalenium is running
+* Check all the recorded videos and aggregated logs after your tests completed
+* Click on Cleanup to remove all videos and logs from the local drive and the dashboard
+  * You can also cleanup the dashboard via `http://localhost:5555/cleanup?action=doCleanupAll`
+
 ## Test Configuration Options
 
 ### Test name
