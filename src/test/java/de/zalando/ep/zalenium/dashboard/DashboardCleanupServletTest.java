@@ -1,4 +1,4 @@
-package de.zalando.ep.zalenium.servlet;
+package de.zalando.ep.zalenium.dashboard;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -12,7 +12,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import de.zalando.ep.zalenium.util.CommonProxyUtilities;
-import de.zalando.ep.zalenium.util.Dashboard;
 import de.zalando.ep.zalenium.util.TestUtils;
 import org.junit.Assert;
 import org.junit.Before;

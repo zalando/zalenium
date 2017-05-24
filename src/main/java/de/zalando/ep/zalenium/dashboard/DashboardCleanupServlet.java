@@ -1,4 +1,4 @@
-package de.zalando.ep.zalenium.servlet;
+package de.zalando.ep.zalenium.dashboard;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -9,7 +9,6 @@ import java.util.logging.Logger;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import de.zalando.ep.zalenium.util.Dashboard;
 import org.openqa.grid.internal.Registry;
 import org.openqa.grid.web.servlet.RegistryBasedServlet;
 import com.google.common.io.ByteStreams;

@@ -8,6 +8,8 @@ package de.zalando.ep.zalenium.proxy;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import de.zalando.ep.zalenium.dashboard.Dashboard;
+import de.zalando.ep.zalenium.dashboard.TestInformation;
 import de.zalando.ep.zalenium.servlet.CloudProxyHtmlRenderer;
 import de.zalando.ep.zalenium.util.*;
 import org.apache.commons.io.FileUtils;

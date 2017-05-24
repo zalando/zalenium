@@ -1,4 +1,4 @@
-package de.zalando.ep.zalenium.util;
+package de.zalando.ep.zalenium.dashboard;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -6,6 +6,8 @@ import java.io.File;
 import java.io.IOException;
 
 import com.google.gson.JsonObject;
+import de.zalando.ep.zalenium.util.CommonProxyUtilities;
+import de.zalando.ep.zalenium.util.TestUtils;
 import org.apache.commons.io.FileUtils;
 import org.junit.After;
 import org.junit.Assert;

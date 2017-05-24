@@ -2,6 +2,7 @@ package de.zalando.ep.zalenium.util;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
+import de.zalando.ep.zalenium.dashboard.TestInformation;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.exec.CommandLine;
 import org.apache.commons.exec.DefaultExecutor;

@@ -6,7 +6,7 @@ import com.google.gson.JsonObject;
 import de.zalando.ep.zalenium.util.CommonProxyUtilities;
 import de.zalando.ep.zalenium.util.Environment;
 import de.zalando.ep.zalenium.util.TestUtils;
-import de.zalando.ep.zalenium.util.TestInformation;
+import de.zalando.ep.zalenium.dashboard.TestInformation;
 import org.hamcrest.CoreMatchers;
 import org.junit.After;
 import org.junit.Assert;

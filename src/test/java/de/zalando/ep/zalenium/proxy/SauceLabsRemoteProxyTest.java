@@ -1,6 +1,7 @@
 package de.zalando.ep.zalenium.proxy;
 
 import com.google.gson.JsonElement;
+import de.zalando.ep.zalenium.dashboard.TestInformation;
 import de.zalando.ep.zalenium.util.*;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
