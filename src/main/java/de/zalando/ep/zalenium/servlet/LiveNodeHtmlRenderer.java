@@ -11,6 +11,8 @@ import org.openqa.grid.web.servlet.beta.SlotsLines;
 import org.openqa.selenium.Platform;
 import org.openqa.selenium.remote.CapabilityType;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
@@ -91,6 +93,7 @@ public class LiveNodeHtmlRenderer implements HtmlRenderer {
         renderSummaryValues.put("{{proxyName}}", proxy.getClass().getSimpleName());
         renderSummaryValues.put("{{proxyVersion}}", getHtmlNodeVersion());
         renderSummaryValues.put("{{proxyId}}", proxy.getId());
+        renderSummaryValues.put("{{proxyIdEncoded}}", getUrlEncodedProxyId());
         renderSummaryValues.put("{{proxyPlatform}}", getPlatform(proxy));
         renderSummaryValues.put("{{testName}}", testName.toString());
         renderSummaryValues.put("{{testGroup}}", testGroup.toString());
@@ -102,6 +105,14 @@ public class LiveNodeHtmlRenderer implements HtmlRenderer {
         renderSummaryValues.put("{{vncInteractUrl}}", vncInteractUrl);
         renderSummaryValues.put("{{tabConfig}}", proxy.getConfig().toString("<p>%1$s: %2$s</p>"));
         return templateRenderer.renderTemplate(renderSummaryValues);
+    }
+
+    private String getUrlEncodedProxyId() {
+        try {
+            return URLEncoder.encode(proxy.getId(), "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            return "";
+        }
     }
 
     private String getHtmlNodeVersion() {
