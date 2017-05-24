@@ -1,5 +1,6 @@
-package de.zalando.ep.zalenium.servlet;
+package de.zalando.ep.zalenium.servlet.renderer;
 
+import de.zalando.ep.zalenium.servlet.LivePreviewServlet;
 import org.apache.commons.io.IOUtils;
 
 import java.io.IOException;

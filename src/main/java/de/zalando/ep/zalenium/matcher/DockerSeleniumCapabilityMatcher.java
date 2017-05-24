@@ -1,4 +1,4 @@
-package de.zalando.ep.zalenium.util;
+package de.zalando.ep.zalenium.matcher;
 
 import de.zalando.ep.zalenium.proxy.DockerSeleniumRemoteProxy;
 import de.zalando.ep.zalenium.proxy.DockerSeleniumStarterRemoteProxy;

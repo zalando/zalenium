@@ -1,6 +1,7 @@
 package de.zalando.ep.zalenium.servlet;
 
 import com.google.common.io.ByteStreams;
+import de.zalando.ep.zalenium.servlet.renderer.TemplateRenderer;
 import org.openqa.grid.internal.Registry;
 import org.openqa.grid.internal.RemoteProxy;
 import org.openqa.grid.internal.utils.configuration.GridHubConfiguration;

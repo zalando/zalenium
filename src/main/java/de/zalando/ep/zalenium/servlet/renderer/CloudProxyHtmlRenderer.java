@@ -1,4 +1,4 @@
-package de.zalando.ep.zalenium.servlet;
+package de.zalando.ep.zalenium.servlet.renderer;
 
 import com.google.gson.JsonObject;
 import de.zalando.ep.zalenium.proxy.BrowserStackRemoteProxy;
