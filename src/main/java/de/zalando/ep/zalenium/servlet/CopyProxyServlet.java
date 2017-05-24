@@ -71,8 +71,8 @@ public class CopyProxyServlet extends RegistryBasedServlet {
     private void createProxyFromExisting(String id) {
         for (RemoteProxy proxy : getRegistry().getAllProxies()) {
             if (proxy instanceof DockerSeleniumStarterRemoteProxy) {
-                DockerSeleniumStarterRemoteProxy dockerSeleniumRemoteProxy = (DockerSeleniumStarterRemoteProxy) proxy;
-                dockerSeleniumRemoteProxy.getNewSession(getRequestedCapability(id));
+                DockerSeleniumStarterRemoteProxy starterProxy = (DockerSeleniumStarterRemoteProxy) proxy;
+                starterProxy.getNewSession(getRequestedCapability(id));
                 break;
             }
         }
