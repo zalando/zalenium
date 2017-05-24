@@ -25,7 +25,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public class CopyNodeServletTest {
+public class CopyProxyServletTest {
 
     private Registry registry;
     private HttpServletResponse response;
@@ -66,7 +66,7 @@ public class CopyNodeServletTest {
     @Test(dataProvider = "copyProxyDataProvider")
     public void copyProxy(String usedId, boolean isCreatedCalled) throws ServletException, IOException {
 
-        CopyNodeServlet servlet = new CopyNodeServlet(registry);
+        CopyProxyServlet servlet = new CopyProxyServlet(registry);
 
         HttpServletRequest request = mock(HttpServletRequest.class);
         when(request.getParameter("id")).thenReturn(usedId);

@@ -17,16 +17,16 @@ import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class CopyNodeServlet extends RegistryBasedServlet {
+public class CopyProxyServlet extends RegistryBasedServlet {
 
-    private static final Logger LOGGER = Logger.getLogger(CopyNodeServlet.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(CopyProxyServlet.class.getName());
 
     @SuppressWarnings("unused")
-    public CopyNodeServlet(){
+    public CopyProxyServlet(){
         this(null);
     }
 
-    public CopyNodeServlet(Registry registry) {
+    public CopyProxyServlet(Registry registry) {
         super(registry);
     }
 
