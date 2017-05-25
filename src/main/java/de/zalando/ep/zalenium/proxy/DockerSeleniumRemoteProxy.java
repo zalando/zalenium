@@ -1,12 +1,7 @@
 package de.zalando.ep.zalenium.proxy;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.spotify.docker.client.DefaultDockerClient;
-import com.spotify.docker.client.DockerClient;
-import com.spotify.docker.client.LogStream;
-import com.spotify.docker.client.exceptions.DockerException;
-import com.spotify.docker.client.messages.Container;
-import com.spotify.docker.client.messages.ExecCreation;
+import de.zalando.ep.zalenium.container.DockerContainerClient;
 import de.zalando.ep.zalenium.dashboard.Dashboard;
 import de.zalando.ep.zalenium.dashboard.TestInformation;
 import de.zalando.ep.zalenium.matcher.DockerSeleniumCapabilityMatcher;
@@ -36,8 +31,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.net.URISyntaxException;
-import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -56,11 +49,11 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     static final long DEFAULT_MAX_TEST_IDLE_TIME_SECS = 90L;
     private static final Logger LOGGER = Logger.getLogger(DockerSeleniumRemoteProxy.class.getName());
     private static final int MAX_UNIQUE_TEST_SESSIONS = 1;
-    private static final DockerClient defaultDockerClient = new DefaultDockerClient("unix:///var/run/docker.sock");
     private static final Environment defaultEnvironment = new Environment();
     private static boolean videoRecordingEnabled;
-    private static DockerClient dockerClient = defaultDockerClient;
     private static Environment env = defaultEnvironment;
+    private static DockerContainerClient defaultDockerContainerClient = new DockerContainerClient();
+    private static DockerContainerClient dockerContainerClient = defaultDockerContainerClient;
     private int amountOfExecutedTests;
     private long maxTestIdleTimeSecs;
     private String testGroup;
@@ -91,13 +84,13 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     }
 
     @VisibleForTesting
-    static void setDockerClient(final DockerClient client) {
-        dockerClient = client;
+    static void setDockerClient(final DockerContainerClient client) {
+        dockerContainerClient = client;
     }
 
     @VisibleForTesting
     static void restoreDockerClient() {
-        dockerClient = defaultDockerClient;
+        dockerContainerClient = defaultDockerContainerClient;
     }
 
     @VisibleForTesting
@@ -299,34 +292,19 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         return maxTestIdleTimeSecs;
     }
 
-    protected String getContainerId() throws DockerException, InterruptedException {
+    protected String getContainerId() {
         if (containerId == null) {
-            List<Container> containerList = dockerClient.listContainers(DockerClient.ListContainersParam.allContainers());
-            for (Container container : containerList) {
-                String containerName = String.format("/%s_%s", DockerSeleniumStarterRemoteProxy.getContainerName(),
-                        getRemoteHost().getPort());
-                if (containerName.equalsIgnoreCase(container.names().get(0))) {
-                    containerId = container.id();
-                }
-            }
+            String containerName = String.format("/%s_%s", DockerSeleniumStarterRemoteProxy.getContainerName(),
+                    getRemoteHost().getPort());
+            containerId = dockerContainerClient.getContainerId(containerName, getId());
         }
         return containerId;
     }
 
     @VisibleForTesting
-    void processContainerAction(final DockerSeleniumContainerAction action, final String containerId) throws
-            DockerException, InterruptedException, IOException, URISyntaxException {
+    void processContainerAction(final DockerSeleniumContainerAction action, final String containerId) throws IOException {
         final String[] command = {"bash", "-c", action.getContainerAction()};
-        final ExecCreation execCreation = dockerClient.execCreate(containerId, command,
-                DockerClient.ExecCreateParam.attachStdout(), DockerClient.ExecCreateParam.attachStderr());
-        final LogStream output = dockerClient.execStart(execCreation.id());
-        LOGGER.log(Level.INFO, () -> String.format("%s %s", getId(), action.getContainerAction()));
-        try {
-            LOGGER.log(Level.INFO, () -> String.format("%s %s", getId(), output.readFully()));
-        } catch (RuntimeException e) {
-            LOGGER.log(Level.FINE, getId() + " " + e.toString(), e);
-            ga.trackException(e);
-        }
+        dockerContainerClient.executeCommand(containerId, command, getId());
 
         if (DockerSeleniumContainerAction.STOP_RECORDING == action) {
             copyVideos(containerId);
@@ -335,58 +313,48 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
     @VisibleForTesting
-    void copyVideos(final String containerId) throws IOException, DockerException, InterruptedException, URISyntaxException {
-        try (TarArchiveInputStream tarStream = new TarArchiveInputStream(dockerClient.archiveContainer(containerId,
-                "/videos/"))) {
-            TarArchiveEntry entry;
-            while ((entry = tarStream.getNextTarEntry()) != null) {
-                if (entry.isDirectory()) {
-                    continue;
-                }
-                String fileExtension = entry.getName().substring(entry.getName().lastIndexOf('.'));
-                testInformation.setFileExtension(fileExtension);
-                File videoFile = new File(testInformation.getVideoFolderPath(), testInformation.getFileName());
-                File parent = videoFile.getParentFile();
-                if (!parent.exists()) {
-                    parent.mkdirs();
-                }
-                OutputStream outputStream = new FileOutputStream(videoFile);
-                IOUtils.copy(tarStream, outputStream);
-                outputStream.close();
-                LOGGER.log(Level.INFO, "{0} Video file copied to: {1}/{2}", new Object[]{getId(),
-                        testInformation.getVideoFolderPath(), testInformation.getFileName()});
+    void copyVideos(final String containerId) throws IOException {
+        TarArchiveInputStream tarStream = dockerContainerClient.copyFiles(containerId, "/videos/", getId());
+        TarArchiveEntry entry;
+        while ((entry = tarStream.getNextTarEntry()) != null) {
+            if (entry.isDirectory()) {
+                continue;
             }
-        } catch (Exception e) {
-            LOGGER.log(Level.FINE, getId() + " Something happened while copying the video file, " +
-                    "most of the time it is an issue while closing the input/output stream, which is usually OK.", e);
+            String fileExtension = entry.getName().substring(entry.getName().lastIndexOf('.'));
+            testInformation.setFileExtension(fileExtension);
+            File videoFile = new File(testInformation.getVideoFolderPath(), testInformation.getFileName());
+            File parent = videoFile.getParentFile();
+            if (!parent.exists()) {
+                parent.mkdirs();
+            }
+            OutputStream outputStream = new FileOutputStream(videoFile);
+            IOUtils.copy(tarStream, outputStream);
+            outputStream.close();
+            LOGGER.log(Level.INFO, "{0} Video file copied to: {1}/{2}", new Object[]{getId(),
+                    testInformation.getVideoFolderPath(), testInformation.getFileName()});
         }
     }
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
     @VisibleForTesting
-    void copyLogs(final String containerId) throws IOException, DockerException, InterruptedException, URISyntaxException {
-        try (TarArchiveInputStream tarStream = new TarArchiveInputStream(dockerClient.archiveContainer(containerId,
-                "/var/log/cont/"))) {
-            TarArchiveEntry entry;
-            while ((entry = tarStream.getNextTarEntry()) != null) {
-                if (entry.isDirectory()) {
-                    continue;
-                }
-                String fileName = entry.getName().replace("cont/", "");
-                File logFile = new File(testInformation.getLogsFolderPath(), fileName);
-                File parent = logFile.getParentFile();
-                if (!parent.exists()) {
-                    parent.mkdirs();
-                }
-                OutputStream outputStream = new FileOutputStream(logFile);
-                IOUtils.copy(tarStream, outputStream);
-                outputStream.close();
+    void copyLogs(final String containerId) throws IOException {
+        TarArchiveInputStream tarStream = dockerContainerClient.copyFiles(containerId, "/var/log/cont/", getId());
+        TarArchiveEntry entry;
+        while ((entry = tarStream.getNextTarEntry()) != null) {
+            if (entry.isDirectory()) {
+                continue;
             }
-            LOGGER.log(Level.INFO, "{0} Logs copied to: {1}", new Object[]{getId(), testInformation.getLogsFolderPath()});
-        } catch (Exception e) {
-            LOGGER.log(Level.FINE, getId() + " Something happened while copying the log file, " +
-                    "most of the time it is an issue while closing the input/output stream, which is usually OK.", e);
+            String fileName = entry.getName().replace("cont/", "");
+            File logFile = new File(testInformation.getLogsFolderPath(), fileName);
+            File parent = logFile.getParentFile();
+            if (!parent.exists()) {
+                parent.mkdirs();
+            }
+            OutputStream outputStream = new FileOutputStream(logFile);
+            IOUtils.copy(tarStream, outputStream);
+            outputStream.close();
         }
+        LOGGER.log(Level.INFO, "{0} Logs copied to: {1}", new Object[]{getId(), testInformation.getLogsFolderPath()});
     }
 
     public enum DockerSeleniumContainerAction {
@@ -478,7 +446,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
             }
 
             try {
-                dockerClient.stopContainer(dockerSeleniumRemoteProxy.getContainerId(), 5);
+                dockerContainerClient.stopContainer(dockerSeleniumRemoteProxy.getContainerId(), dockerSeleniumRemoteProxy.getId());
             } catch (Exception e) {
                 LOGGER.log(Level.SEVERE, dockerSeleniumRemoteProxy.getId() + " " + e.getMessage(), e);
                 dockerSeleniumRemoteProxy.ga.trackException(e);
