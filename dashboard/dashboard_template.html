@@ -19,192 +19,216 @@
 </head>
 
 <body>
-<nav class="navbar navbar-toggleable-md navbar-inverse fixed-top bg-primary">
-    <a class="navbar-brand" href="#">Zalenium - Dashboard</a>
-</nav>
-
-<div class="container-fluid">
-    <div class="row">
-
-        <nav class="col-sm-4 col-md-3 hidden-xs-down bg-faded sidebar">
-            <ul id="tests" class="nav nav-pills flex-column">
-                <li class="nav-item">
-                    <h6 class="nav-link bg-success text-white text-center font-weight-bold">Tests ({executedTests})</h6>
-                    <div class="bg-muted clearfix">
-                        <button type="button" id="cleanupButton" class="btn btn-outline-danger btn-sm float-left"
-                                title="Important: this will remove all video files and logs!!">
-                            Cleanup
-                        </button>
-                    </div>
-                </li>
-
-                {testList}
-
+    <nav class="navbar navbar-toggleable-md navbar-inverse fixed-top bg-primary">
+        <a class="navbar-brand" href="#">Zalenium - Dashboard</a>
+        <div class="collapse navbar-collapse" id="navbarsExampleDefault">
+            <ul class="navbar-nav mr-auto">
             </ul>
+            <form class="form-inline mt-2 mt-md-0">
+                <button type="button" id="cleanupButton" class="btn btn-outline-danger my-2 my-sm-0"
+                        title="Important: this will remove all video files and logs!!">
+                    Cleanup
+                </button>
+            </form>
+        </div>
+    </nav>
 
-        </nav>
+    <div class="container-fluid">
+        <div class="row">
 
-        <main class="col-sm-8 offset-sm-3 col-md-9 offset-md-3 pt-3">
-            <section class="row text-center placeholders">
-                <div class="col-6 col-sm-5 placeholder">
-                    <label id="test-name"></label>
+            <nav class="col-sm-4 col-md-3 hidden-xs-down bg-faded sidebar">
+                <div>
+                    <input id="search" type="text" class="form-control input" placeholder="Search" />
                 </div>
-                <div class="col-6 col-sm-3 placeholder">
-                    <label id="browser-platform"></label>
-                </div>
-                <div class="col-6 col-sm-2 placeholder">
-                    <label id="proxy-name"></label>
-                </div>
-                <div class="col-6 col-sm-2 placeholder">
-                    <label id="date-time"></label>
-                </div>
-            </section>
-            <!-- Nav tabs -->
-            <ul class="nav nav-tabs" role="tablist" id="testTabs">
-                <li class="nav-item">
-                    <a class="nav-link active" data-toggle="tab" href="#videoFile" role="tab">Video</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" data-toggle="tab" href="#logs" role="tab">Logs</a>
-                </li>
-            </ul>
+                <ul id="tests" class="nav nav-pills flex-column list-group">
+                    <li class="nav-item" id="testsHeader">
+                        <h6 class="nav-link bg-success text-white text-center font-weight-bold">Tests ({executedTests})</h6>
+                    </li>
+                    {testList}
+                </ul>
+            </nav>
 
-            <!-- Tab panes -->
-            <div class="tab-content">
-                <div class="tab-pane fade active" id="videoFile" role="tabpanel">
-                    <div align="center" class="embed-responsive embed-responsive-16by9 bg-faded">
-                        <video id="video" controls autoplay class="embed-responsive-item">
-                            <source id="video-source" src="" type=video/mp4>
-                        </video>
+            <main class="col-sm-8 offset-sm-3 col-md-9 offset-md-3 pt-3">
+                <section class="row text-center placeholders">
+                    <div class="col-6 col-sm-5 placeholder">
+                        <label id="test-name"></label>
                     </div>
-                </div>
-                <div class="tab-pane fade" id="logs" role="tabpanel">
-                    <div id="accordion" role="tablist" aria-multiselectable="true">
-                        <div class="card">
-                            <div class="card-header" role="tab" id="headingOne">
-                                <h5 class="mb-0">
-                                    <a data-toggle="collapse" data-parent="#accordion" href="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
-                                        Selenium Log
-                                    </a>
-                                </h5>
+                    <div class="col-6 col-sm-3 placeholder">
+                        <label id="browser-platform"></label>
+                    </div>
+                    <div class="col-6 col-sm-2 placeholder">
+                        <label id="proxy-name"></label>
+                    </div>
+                    <div class="col-6 col-sm-2 placeholder">
+                        <label id="date-time"></label>
+                    </div>
+                </section>
+                <!-- Nav tabs -->
+                <ul class="nav nav-tabs" role="tablist" id="testTabs">
+                    <li class="nav-item">
+                        <a class="nav-link active" data-toggle="tab" href="#videoFile" role="tab">Video</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-toggle="tab" href="#logs" role="tab">Logs</a>
+                    </li>
+                </ul>
+
+                <!-- Tab panes -->
+                <div class="tab-content">
+                    <div class="tab-pane fade active" id="videoFile" role="tabpanel">
+                        <div align="center" class="embed-responsive embed-responsive-16by9 bg-faded">
+                            <video id="video" controls autoplay class="embed-responsive-item">
+                                <source id="video-source" src="" type=video/mp4>
+                            </video>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="logs" role="tabpanel">
+                        <div id="accordion" role="tablist" aria-multiselectable="true">
+                            <div class="card">
+                                <div class="card-header" role="tab" id="headingOne">
+                                    <h5 class="mb-0">
+                                        <a data-toggle="collapse" data-parent="#accordion" href="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
+                                            Selenium Log
+                                        </a>
+                                    </h5>
+                                </div>
+
+                                <div id="collapseOne" class="collapse" role="tabpanel" aria-labelledby="headingOne">
+                                    <div class="card-block">
+                                        <pre id="seleniumLog">
+                                            Selenium Log not loaded yet...
+                                        </pre>
+                                    </div>
+                                </div>
                             </div>
-
-                            <div id="collapseOne" class="collapse" role="tabpanel" aria-labelledby="headingOne">
-                                <div class="card-block">
-                                    <pre id="seleniumLog">
-                                        Selenium Log not loaded yet...
-                                    </pre>
+                            <div class="card">
+                                <div class="card-header" role="tab" id="headingTwo">
+                                    <h5 class="mb-0">
+                                        <a class="collapsed" data-toggle="collapse" data-parent="#accordion" href="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                                            Browser Driver Log
+                                        </a>
+                                    </h5>
+                                </div>
+                                <div id="collapseTwo" class="collapse" role="tabpanel" aria-labelledby="headingTwo">
+                                    <div class="card-block">
+                                        <pre id="browserDriverLog">
+                                            Browser Driver Log not loaded yet...
+                                        </pre>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                        <div class="card">
-                            <div class="card-header" role="tab" id="headingTwo">
-                                <h5 class="mb-0">
-                                    <a class="collapsed" data-toggle="collapse" data-parent="#accordion" href="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
-                                        Browser Driver Log
-                                    </a>
-                                </h5>
-                            </div>
-                            <div id="collapseTwo" class="collapse" role="tabpanel" aria-labelledby="headingTwo">
-                                <div class="card-block">
-                                    <pre id="browserDriverLog">
-                                        Browser Driver Log not loaded yet...
-                                    </pre>
-                                </div>
-                            </div>
-                        </div>
                     </div>
                 </div>
-            </div>
 
-        </main>
+            </main>
 
+        </div>
     </div>
-</div>
 
-<!-- Bootstrap core JavaScript
-================================================== -->
-<!-- Placed at the end of the document so the pages load faster -->
-<!-- Taken from https://code.jquery.com/jquery-3.1.1.min.js -->
-<script src="js/jquery.min.js"></script>
-<!-- Taken from https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js -->
-<script src="js/tether.min.js"></script>
-<!-- Taken from https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js -->
-<script src="js/bootstrap.min.js"></script>
-<script>
-    $("#tests").on("click", ".list-group-item", function() {
-        var $this = $(this);
-        var $video = $this.data("video");
-        var $testName = $this.data("test-name");
-        var $browserPlatform = $this.data("browser-platform");
-        var $proxyName = $this.data("proxy-name");
-        var $dateTime = $this.data("date-time");
-        var $seleniumLogFile = $this.data("selenium-log");
-        var $browserDriverLogFile = $this.data("browser-driver");
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <!-- Taken from https://code.jquery.com/jquery-3.1.1.min.js -->
+    <script src="js/jquery.min.js"></script>
+    <!-- Taken from https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js -->
+    <script src="js/tether.min.js"></script>
+    <!-- Taken from https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js -->
+    <script src="js/bootstrap.min.js"></script>
+    <script>
+        $(document).on('keyup', '#search', function () {
+            var current_query = $('#search').val().toUpperCase();
+            if (current_query !== "") {
+                $(".list-group li").each(function(){
+                    var current_id = $(this).attr('id');
+                    if (current_id !== "testsHeader") {
+                        $(this).hide();
+                        var current_keyword = $(this).text().toUpperCase();
+                        if (current_keyword.indexOf(current_query) >=0) {
+                            $(this).show();
+                        }
+                    }
+                });
+            } else {
+                $(".list-group li").show();
+            }
+        });
 
-        $('.active').removeClass("active");
-        $this.toggleClass("active");
+        $("#tests").on("click", ".list-group-item", function() {
+            var $this = $(this);
+            var $video = $this.data("video");
+            var $testName = $this.data("test-name");
+            var $browserPlatform = $this.data("browser-platform");
+            var $proxyName = $this.data("proxy-name");
+            var $dateTime = $this.data("date-time");
+            var $seleniumLogFile = $this.data("selenium-log");
+            var $browserDriverLogFile = $this.data("browser-driver");
 
-        // Pass clicked link element to another function
-        playVideo($video);
+            $('.active').removeClass("active");
+            $this.toggleClass("active");
 
-        // Set test info to be displayed
-        setTestInformation($testName, $browserPlatform, $proxyName, $dateTime);
+            // Pass clicked link element to another function
+            playVideo($video);
 
-        // Load logs
-        loadLogs($seleniumLogFile, $browserDriverLogFile);
+            // Set test info to be displayed
+            setTestInformation($testName, $browserPlatform, $proxyName, $dateTime);
 
-        // Select first tab
-        $('#testTabs').find('a:first').tab('show')
-    });
+            // Load logs
+            loadLogs($seleniumLogFile, $browserDriverLogFile);
 
-    function playVideo($video) {
-        var video = document.getElementById("video");
-        var source = document.getElementById("video-source");
-        source.setAttribute("src", $video);
-        source.setAttribute("type", "video/mp4");
-        video.pause();
-        video.load();
-        video.play();
-    }
+            // Select first tab
+            $('#testTabs').find('a:first').tab('show')
+        });
 
-    function setTestInformation($testName, $browserPlatform, $proxyName, $dateTime) {
-        document.getElementById("test-name").innerHTML = $testName;
-        document.getElementById("browser-platform").innerHTML = $browserPlatform;
-        document.getElementById("proxy-name").innerHTML = $proxyName;
-        document.getElementById("date-time").innerHTML = $dateTime;
-    }
-
-    function loadLogs($seleniumLogFile, $browserDriverLogFile) {
-        $('#collapseOne').removeClass("show");
-        $('#collapseTwo').removeClass("show");
-        $('#seleniumLog').html("Selenium Log not loaded yet...");
-        $('#browserDriverLog').html("Browser Driver Log not loaded yet...");
-
-        if ($seleniumLogFile.length > 0) {
-            $('#seleniumLog').load($seleniumLogFile);
+        function playVideo($video) {
+            var video = document.getElementById("video");
+            var source = document.getElementById("video-source");
+            source.setAttribute("src", $video);
+            source.setAttribute("type", "video/mp4");
+            video.pause();
+            video.load();
+            video.play();
         }
-        if ($browserDriverLogFile.length > 0) {
-            $('#browserDriverLog').load($browserDriverLogFile);
+
+        function setTestInformation($testName, $browserPlatform, $proxyName, $dateTime) {
+            document.getElementById("test-name").innerHTML = $testName;
+            document.getElementById("browser-platform").innerHTML = $browserPlatform;
+            document.getElementById("proxy-name").innerHTML = $proxyName;
+            document.getElementById("date-time").innerHTML = $dateTime;
         }
-    }
 
-    // This will only work when the page is accessed via a WebServer
-    // Loads new tests in the list as the file gets modified
-    setInterval(function() {
-        $('#tests').load(document.URL +  ' #tests');
-    }, 10000);
+        function loadLogs($seleniumLogFile, $browserDriverLogFile) {
+            $('#collapseOne').removeClass("show");
+            $('#collapseTwo').removeClass("show");
+            $('#seleniumLog').html("Selenium Log not loaded yet...");
+            $('#browserDriverLog').html("Browser Driver Log not loaded yet...");
 
-    $(document).on('click', '#cleanupButton', function () {
-        var url = [location.protocol, '//', location.host, location.pathname].join('');
-        console.log(url);
-        $.post(url + 'cleanup?action=doCleanupAll', '');
-        $('#tests').load(document.URL +  ' #tests');
-        playVideo("");
-        loadLogs("", "");
-        setTestInformation("", "", "", "");
-    });
+            if ($seleniumLogFile.length > 0) {
+                $('#seleniumLog').load($seleniumLogFile);
+            }
+            if ($browserDriverLogFile.length > 0) {
+                $('#browserDriverLog').load($browserDriverLogFile);
+            }
+        }
 
-</script>
+        // This will only work when the page is accessed via a WebServer
+        // Loads new tests in the list as the file gets modified
+        setInterval(function() {
+            var current_query = $('#search').val().toUpperCase();
+            if (current_query === "") {
+                $('#tests').load(document.URL +  ' #tests');
+            }
+        }, 2000);
+
+        $(document).on('click', '#cleanupButton', function () {
+            var url = [location.protocol, '//', location.host, location.pathname].join('');
+            $.post(url + 'cleanup?action=doCleanupAll', '');
+            $('#tests').load(document.URL +  ' #tests');
+            playVideo("");
+            loadLogs("", "");
+            setTestInformation("", "", "", "");
+        });
+
+    </script>
 </body>
 </html>
