@@ -391,6 +391,7 @@ StartUp()
     -servlet de.zalando.ep.zalenium.servlet.ZaleniumConsoleServlet \
     -servlet de.zalando.ep.zalenium.servlet.ZaleniumResourceServlet \
     -servlet de.zalando.ep.zalenium.servlet.DashboardCleanupServlet \
+    -servlet de.zalando.ep.zalenium.servlet.CopyProxyServlet \
     -debug ${DEBUG_ENABLED} > logs/stdout.zalenium.hub.log &
     echo $! > ${PID_PATH_SELENIUM}
 
