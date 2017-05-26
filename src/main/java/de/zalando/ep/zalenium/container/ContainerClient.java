@@ -2,8 +2,8 @@ package de.zalando.ep.zalenium.container;
 
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 
-// This interface simply defines the methods that must be implemented in any class that wants to create the
-// containers used by Zalenium
+import java.util.List;
+
 public interface ContainerClient {
 
     String getContainerId(String containerName, String nodeId);
@@ -14,4 +14,11 @@ public interface ContainerClient {
 
     void executeCommand(String containerId, String[] command, String nodeId);
 
+    String getLatestDownloadedImage(String imageName, String nodeId);
+
+    String getLabelValue(String image, String label, String nodeId);
+
+    int getRunningContainers(String image, String nodeId);
+
+    void createContainer(String zaleniumContainerName, String containerName, String image, List<String> envVars);
 }

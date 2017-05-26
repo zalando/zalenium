@@ -1,10 +1,7 @@
 package de.zalando.ep.zalenium.proxy;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.spotify.docker.client.DefaultDockerClient;
-import com.spotify.docker.client.DockerClient;
-import com.spotify.docker.client.exceptions.DockerException;
-import com.spotify.docker.client.messages.*;
+import de.zalando.ep.zalenium.container.DockerContainerClient;
 import de.zalando.ep.zalenium.matcher.DockerSeleniumCapabilityMatcher;
 import de.zalando.ep.zalenium.util.Environment;
 import de.zalando.ep.zalenium.util.GoogleAnalyticsApi;
@@ -74,13 +71,15 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     private static final int UPPER_PORT_BOUNDARY = 49999;
     private static final int NO_VNC_PORT_GAP = 10000;
     private static final int VNC_PORT_GAP = 20000;
-    private static final DockerClient defaultDockerClient = new DefaultDockerClient("unix:///var/run/docker.sock");
+    private static final DockerContainerClient defaultDockerContainerClient = new DockerContainerClient();
     private static final Environment defaultEnvironment = new Environment();
     private static final String LOGGING_PREFIX = "[DS] ";
     private static List<DesiredCapabilities> dockerSeleniumCapabilities = new ArrayList<>();
-    private static DockerClient dockerClient = defaultDockerClient;
+    private static DockerContainerClient dockerContainerClient = defaultDockerContainerClient;
     private static Environment env = defaultEnvironment;
     private static GoogleAnalyticsApi ga = new GoogleAnalyticsApi();
+    private static String chromeVersion = null;
+    private static String firefoxVersion = null;
     private static int chromeContainersOnStartup;
     private static int firefoxContainersOnStartup;
     private static int maxDockerSeleniumContainers;
@@ -150,18 +149,14 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
             return dockerSeleniumCapabilities;
         }
 
-        String chromeVersion = "";
-        String firefoxVersion = "";
-
         // Getting versions from the current docker-selenium image
-        try {
-            String latestDownloadedImage = getLatestDownloadedImage(DOCKER_SELENIUM_IMAGE);
-            ImageInfo imageInfo = dockerClient.inspectImage(latestDownloadedImage);
-            chromeVersion = imageInfo.config().labels().get("selenium_chrome_version");
-            firefoxVersion = imageInfo.config().labels().get("selenium_firefox_version");
-        } catch (DockerException | InterruptedException e) {
-            LOGGER.log(Level.FINE, LOGGING_PREFIX + "Could not grab browser version information from the " +
-                    "docker-selenium image", e);
+        if (firefoxVersion == null) {
+            String latestDownloadedImage = dockerContainerClient.getLatestDownloadedImage(DOCKER_SELENIUM_IMAGE, "DS");
+            firefoxVersion = dockerContainerClient.getLabelValue(latestDownloadedImage, "selenium_firefox_version", "DS");
+        }
+        if (chromeVersion == null) {
+            String latestDownloadedImage = dockerContainerClient.getLatestDownloadedImage(DOCKER_SELENIUM_IMAGE, "DS");
+            chromeVersion = dockerContainerClient.getLabelValue(latestDownloadedImage, "selenium_chrome_version", "DS");
         }
 
         dockerSeleniumCapabilities.clear();
@@ -190,13 +185,13 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     }
 
     @VisibleForTesting
-    static void setDockerClient(final DockerClient client) {
-        dockerClient = client;
+    static void setDockerClient(final DockerContainerClient client) {
+        dockerContainerClient = client;
     }
 
     @VisibleForTesting
     static void restoreDockerClient() {
-        dockerClient = defaultDockerClient;
+        dockerContainerClient = defaultDockerContainerClient;
     }
 
     @VisibleForTesting
@@ -306,22 +301,6 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     @VisibleForTesting
     static void restoreEnvironment() {
         env = defaultEnvironment;
-    }
-
-    @SuppressWarnings("ConstantConditions")
-    private static String getLatestDownloadedImage(String imageName) throws DockerException, InterruptedException {
-        List<Image> images = dockerClient.listImages(DockerClient.ListImagesParam.byName(imageName));
-        if (images.isEmpty()) {
-            LOGGER.log(Level.SEVERE, "A downloaded docker-selenium image was not found!");
-            return DOCKER_SELENIUM_IMAGE;
-        }
-        for (int i = images.size() - 1; i >= 0; i--) {
-            if (images.get(i).repoTags() == null) {
-                images.remove(i);
-            }
-        }
-        images.sort((o1, o2) -> o2.created().compareTo(o1.created()));
-        return images.get(0).repoTags().get(0);
     }
 
     public HtmlRenderer getHtmlRender() {
@@ -471,30 +450,10 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
                 envVariables.add("FIREFOX=false");
             }
 
-            String networkMode = String.format("container:%s", getContainerName());
-            HostConfig hostConfig = HostConfig.builder()
-                    .networkMode(networkMode)
-                    .appendBinds("/dev/shm:/dev/shm")
-                    .appendBinds("/tmp/mounted:/tmp/mounted")
-                    .autoRemove(true)
-                    .build();
-
-            try {
-                final ContainerConfig containerConfig = ContainerConfig.builder()
-                        .image(getLatestDownloadedImage(DOCKER_SELENIUM_IMAGE))
-                        .env(envVariables)
-                        .hostConfig(hostConfig)
-                        .build();
-
-                String dockerSeleniumContainerName = String.format("%s_%s", getContainerName(), nodePort);
-                final ContainerCreation dockerSeleniumContainer = dockerClient.createContainer(containerConfig,
-                        dockerSeleniumContainerName);
-                dockerClient.startContainer(dockerSeleniumContainer.id());
-                return true;
-            } catch (Exception e) {
-                LOGGER.log(Level.SEVERE, LOGGING_PREFIX + e.toString(), e);
-                ga.trackException(e);
-            }
+            String latestImage = dockerContainerClient.getLatestDownloadedImage(DOCKER_SELENIUM_IMAGE, "DS");
+            String dockerSeleniumContainerName = String.format("%s_%s", getContainerName(), nodePort);
+            dockerContainerClient.createContainer(getContainerName(), dockerSeleniumContainerName, latestImage, envVariables);
+            return true;
         }
         return false;
     }
@@ -511,7 +470,8 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
         new Thread(() -> {
             LOGGER.log(Level.INFO, String.format("%s Setting up %s nodes...", LOGGING_PREFIX, configuredContainers));
             int createdContainers = 0;
-            while (createdContainers < containersToCreate && getNumberOfRunningContainers() <= getMaxDockerSeleniumContainers()) {
+            while (createdContainers < containersToCreate &&
+                    dockerContainerClient.getRunningContainers(DOCKER_SELENIUM_IMAGE, "DS") <= getMaxDockerSeleniumContainers()) {
                 boolean wasContainerCreated;
                 if (createdContainers < getChromeContainersOnStartup()) {
                     wasContainerCreated = startDockerSeleniumContainer(BrowserType.CHROME);
@@ -585,26 +545,9 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
         }
     }
 
-    private int getNumberOfRunningContainers() {
-        try {
-            List<Container> containerList = dockerClient.listContainers(DockerClient.ListContainersParam.allContainers());
-            int numberOfDockerSeleniumContainers = 0;
-            for (Container container : containerList) {
-                if (container.image().contains(DOCKER_SELENIUM_IMAGE) && !"exited".equalsIgnoreCase(container.state())) {
-                    numberOfDockerSeleniumContainers++;
-                }
-            }
-            return numberOfDockerSeleniumContainers;
-        } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, LOGGING_PREFIX + e.toString(), e);
-            ga.trackException(e);
-        }
-        return 0;
-    }
-
     private boolean validateAmountOfDockerSeleniumContainers() {
         try {
-            int numberOfDockerSeleniumContainers = getNumberOfRunningContainers();
+            int numberOfDockerSeleniumContainers = dockerContainerClient.getRunningContainers(DOCKER_SELENIUM_IMAGE, "DS");
 
             /*
                 Validation to avoid the situation where 20 containers are running and only 4 proxies are registered.
