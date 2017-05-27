@@ -28,6 +28,7 @@ import org.openqa.selenium.remote.DesiredCapabilities;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.WriteListener;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
@@ -165,6 +166,13 @@ public class TestUtils {
         ContainerConfig containerConfig = mock(ContainerConfig.class);
 
         try {
+            URL logsLocation = TestUtils.class.getClassLoader().getResource("logs.tar");
+            URL videosLocation = TestUtils.class.getClassLoader().getResource("videos.tar");
+            File logsFile = new File(logsLocation.getPath());
+            File videosFile = new File(videosLocation.getPath());
+            when(dockerClient.archiveContainer(null, "/var/log/cont/")).thenReturn(new FileInputStream(logsFile));
+            when(dockerClient.archiveContainer(null, "/videos/")).thenReturn(new FileInputStream(videosFile));
+
             String[] startVideo = {"bash", "-c", "start-video"};
             String[] stopVideo = {"bash", "-c", "stop-video"};
             String[] transferLogs = {"bash", "-c", "transfer-logs.sh"};
@@ -185,7 +193,7 @@ public class TestUtils {
             when(imageInfo.config()).thenReturn(containerConfig);
 
             when(dockerClient.inspectImage(anyString())).thenReturn(imageInfo);
-        } catch (DockerException | InterruptedException e) {
+        } catch (DockerException | InterruptedException | IOException e) {
             e.printStackTrace();
         }
 
