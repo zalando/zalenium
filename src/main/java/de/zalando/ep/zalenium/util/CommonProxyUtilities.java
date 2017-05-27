@@ -63,17 +63,6 @@ public class CommonProxyUtilities {
         return null;
     }
 
-    public JsonElement readJSONFromFile(String fileName) {
-        try(FileReader fr = new FileReader(new File(currentLocalPath(), fileName))) {
-            BufferedReader rd = new BufferedReader(fr);
-            String jsonText = readAll(rd);
-            return new JsonParser().parse(jsonText);
-        } catch (Exception e) {
-            LOG.log(Level.SEVERE, e.toString(), e);
-        }
-        return null;
-    }
-
     public String currentLocalPath() {
         try {
             File jarLocation = new File(CommonProxyUtilities.class.getProtectionDomain().getCodeSource()

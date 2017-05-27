@@ -57,7 +57,6 @@ public class TestingBotRemoteProxyTest {
         when(commonProxyUtilities.readJSONFromUrl(mockTestInfoUrl,
                 env.getStringEnvVariable("TESTINGBOT_KEY", ""),
                 env.getStringEnvVariable("TESTINGBOT_SECRET", ""))).thenReturn(informationSample);
-        when(commonProxyUtilities.readJSONFromFile(anyString())).thenCallRealMethod();
         TestingBotRemoteProxy.setCommonProxyUtilities(commonProxyUtilities);
         testingBotProxy = TestingBotRemoteProxy.getNewInstance(request, registry);
 
