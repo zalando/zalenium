@@ -64,12 +64,12 @@ public class DockerSeleniumRemoteProxyTest {
         when(dockerClient.execStart(anyString())).thenReturn(logStream);
         doNothing().when(dockerClient).stopContainer(anyString(), anyInt());
 
-        DockerSeleniumRemoteProxy.setDockerClient(dockerClient);
+        DockerSeleniumRemoteProxy.setContainerClient(dockerClient);
     }
 
     @After
     public void tearDown() {
-        DockerSeleniumRemoteProxy.restoreDockerClient();
+        DockerSeleniumRemoteProxy.restoreContainerClient();
         DockerSeleniumRemoteProxy.restoreEnvironment();
     }
 
@@ -292,7 +292,7 @@ public class DockerSeleniumRemoteProxyTest {
 
             // Creating a spy proxy to verify the invoked methods
             DockerSeleniumRemoteProxy spyProxy = spy(proxy);
-            DockerSeleniumRemoteProxy.setDockerClient(dockerClient);
+            DockerSeleniumRemoteProxy.setContainerClient(dockerClient);
 
             // Wait for the container to be ready
             containerId = waitForContainerToBeReady(dockerClient, spyProxy);
@@ -368,7 +368,7 @@ public class DockerSeleniumRemoteProxyTest {
 
             // Creating a spy proxy to verify the invoked methods
             DockerSeleniumRemoteProxy spyProxy = spy(proxy);
-            DockerSeleniumRemoteProxy.setDockerClient(dockerClient);
+            DockerSeleniumRemoteProxy.setContainerClient(dockerClient);
             DockerSeleniumRemoteProxy.setEnv(environment);
             DockerSeleniumRemoteProxy.readEnvVarForVideoRecording();
 

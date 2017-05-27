@@ -6,19 +6,21 @@ import java.util.List;
 
 public interface ContainerClient {
 
-    String getContainerId(String containerName, String nodeId);
+    void setNodeId(String nodeId);
 
-    TarArchiveInputStream copyFiles(String containerId, String folderName, String nodeId);
+    String getContainerId(String containerName);
 
-    void stopContainer(String containerId, String nodeId);
+    TarArchiveInputStream copyFiles(String containerId, String folderName);
 
-    void executeCommand(String containerId, String[] command, String nodeId);
+    void stopContainer(String containerId);
 
-    String getLatestDownloadedImage(String imageName, String nodeId);
+    void executeCommand(String containerId, String[] command);
 
-    String getLabelValue(String image, String label, String nodeId);
+    String getLatestDownloadedImage(String imageName);
 
-    int getRunningContainers(String image, String nodeId);
+    String getLabelValue(String image, String label);
+
+    int getRunningContainers(String image);
 
     void createContainer(String zaleniumContainerName, String containerName, String image, List<String> envVars);
 }

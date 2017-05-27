@@ -19,8 +19,13 @@ public class DockerContainerClient implements ContainerClient {
     private static final DockerClient dockerClient = new DefaultDockerClient("unix:///var/run/docker.sock");
     private static final Logger logger = Logger.getLogger(DockerContainerClient.class.getName());
     private static final GoogleAnalyticsApi ga = new GoogleAnalyticsApi();
+    private String nodeId;
 
-    public String getContainerId(String containerName, String nodeId) {
+    public void setNodeId(String nodeId) {
+        this.nodeId = nodeId;
+    }
+
+    public String getContainerId(String containerName) {
         List<Container> containerList = null;
         try {
             containerList = dockerClient.listContainers(DockerClient.ListContainersParam.allContainers());
@@ -36,7 +41,7 @@ public class DockerContainerClient implements ContainerClient {
         return null;
     }
 
-    public TarArchiveInputStream copyFiles(String containerId, String folderName, String nodeId) {
+    public TarArchiveInputStream copyFiles(String containerId, String folderName) {
         try (TarArchiveInputStream tarStream = new TarArchiveInputStream(dockerClient.archiveContainer(containerId,
                 folderName))) {
             return tarStream;
@@ -47,7 +52,7 @@ public class DockerContainerClient implements ContainerClient {
         return null;
     }
 
-    public void stopContainer(String containerId, String nodeId) {
+    public void stopContainer(String containerId) {
         try {
             dockerClient.stopContainer(containerId, 5);
         } catch (DockerException | InterruptedException e) {
@@ -56,7 +61,7 @@ public class DockerContainerClient implements ContainerClient {
         }
     }
 
-    public void executeCommand(String containerId, String[] command, String nodeId) {
+    public void executeCommand(String containerId, String[] command) {
         final ExecCreation execCreation;
         try {
             execCreation = dockerClient.execCreate(containerId, command,
@@ -70,7 +75,7 @@ public class DockerContainerClient implements ContainerClient {
         }
     }
 
-    public String getLatestDownloadedImage(String imageName, String nodeId) {
+    public String getLatestDownloadedImage(String imageName) {
         List<Image> images;
         try {
             images = dockerClient.listImages(DockerClient.ListImagesParam.byName(imageName));
@@ -92,7 +97,7 @@ public class DockerContainerClient implements ContainerClient {
         return imageName;
     }
 
-    public String getLabelValue(String image, String label, String nodeId) {
+    public String getLabelValue(String image, String label) {
         try {
             ImageInfo imageInfo = dockerClient.inspectImage(image);
             return imageInfo.config().labels().get(label);
@@ -103,7 +108,7 @@ public class DockerContainerClient implements ContainerClient {
         return null;
     }
 
-    public int getRunningContainers(String image, String nodeId) {
+    public int getRunningContainers(String image) {
         try {
             List<Container> containerList = dockerClient.listContainers(DockerClient.ListContainersParam.allContainers());
             int numberOfDockerSeleniumContainers = 0;
@@ -139,7 +144,7 @@ public class DockerContainerClient implements ContainerClient {
             final ContainerCreation container = dockerClient.createContainer(containerConfig, containerName);
             dockerClient.startContainer(container.id());
         } catch (DockerException | InterruptedException e) {
-            logger.log(Level.WARNING, "Error while starting a new container", e);
+            logger.log(Level.WARNING, nodeId + " Error while starting a new container", e);
             ga.trackException(e);
         }
     }

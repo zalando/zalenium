@@ -59,7 +59,7 @@ public class DockerSeleniumStarterRemoteProxyTest {
         when(containerCreation.id()).thenReturn("ANY_CONTAINER_ID");
         when(dockerClient.createContainer(any(ContainerConfig.class), anyString())).thenReturn(containerCreation);
 
-        DockerSeleniumStarterRemoteProxy.setDockerClient(dockerClient);
+        DockerSeleniumStarterRemoteProxy.setContainerClient(dockerClient);
 
         // Spying on the proxy to see if methods are invoked or not
         spyProxy = spy(proxy);
@@ -72,7 +72,7 @@ public class DockerSeleniumStarterRemoteProxyTest {
 
     @AfterClass
     public static void tearDown() {
-        DockerSeleniumStarterRemoteProxy.restoreDockerClient();
+        DockerSeleniumStarterRemoteProxy.restoreContainerClient();
         DockerSeleniumStarterRemoteProxy.restoreEnvironment();
     }
 

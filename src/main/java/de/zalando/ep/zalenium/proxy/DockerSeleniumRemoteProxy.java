@@ -1,11 +1,13 @@
 package de.zalando.ep.zalenium.proxy;
 
 import com.google.common.annotations.VisibleForTesting;
-import de.zalando.ep.zalenium.container.DockerContainerClient;
+import de.zalando.ep.zalenium.container.ContainerClient;
+import de.zalando.ep.zalenium.container.ContainerFactory;
 import de.zalando.ep.zalenium.dashboard.Dashboard;
 import de.zalando.ep.zalenium.dashboard.TestInformation;
 import de.zalando.ep.zalenium.matcher.DockerSeleniumCapabilityMatcher;
-import de.zalando.ep.zalenium.util.*;
+import de.zalando.ep.zalenium.util.Environment;
+import de.zalando.ep.zalenium.util.GoogleAnalyticsApi;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.compress.utils.IOUtils;
@@ -52,8 +54,9 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     private static final Environment defaultEnvironment = new Environment();
     private static boolean videoRecordingEnabled;
     private static Environment env = defaultEnvironment;
-    private static DockerContainerClient defaultDockerContainerClient = new DockerContainerClient();
-    private static DockerContainerClient dockerContainerClient = defaultDockerContainerClient;
+    private static ContainerClient defaultContainerClient = ContainerFactory.getContainerClient();
+    private static ContainerClient containerClient = defaultContainerClient;
+    private final HtmlRenderer renderer = new WebProxyHtmlRendererBeta(this);
     private int amountOfExecutedTests;
     private long maxTestIdleTimeSecs;
     private String testGroup;
@@ -64,16 +67,12 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     private DockerSeleniumNodePoller dockerSeleniumNodePollerThread = null;
     private GoogleAnalyticsApi ga = new GoogleAnalyticsApi();
     private CapabilityMatcher capabilityHelper;
-    private final HtmlRenderer renderer = new WebProxyHtmlRendererBeta(this);
 
     public DockerSeleniumRemoteProxy(RegistrationRequest request, Registry registry) {
         super(request, registry);
         this.amountOfExecutedTests = 0;
         readEnvVarForVideoRecording();
-    }
-
-    public HtmlRenderer getHtmlRender() {
-        return this.renderer;
+        containerClient.setNodeId(getId());
     }
 
     @VisibleForTesting
@@ -84,13 +83,13 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     }
 
     @VisibleForTesting
-    static void setDockerClient(final DockerContainerClient client) {
-        dockerContainerClient = client;
+    static void setContainerClient(final ContainerClient client) {
+        containerClient = client;
     }
 
     @VisibleForTesting
-    static void restoreDockerClient() {
-        dockerContainerClient = defaultDockerContainerClient;
+    static void restoreContainerClient() {
+        containerClient = defaultContainerClient;
     }
 
     @VisibleForTesting
@@ -110,6 +109,10 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
 
     private static void setVideoRecordingEnabled(boolean videoRecordingEnabled) {
         DockerSeleniumRemoteProxy.videoRecordingEnabled = videoRecordingEnabled;
+    }
+
+    public HtmlRenderer getHtmlRender() {
+        return this.renderer;
     }
 
     /*
@@ -296,7 +299,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         if (containerId == null) {
             String containerName = String.format("/%s_%s", DockerSeleniumStarterRemoteProxy.getContainerName(),
                     getRemoteHost().getPort());
-            containerId = dockerContainerClient.getContainerId(containerName, getId());
+            containerId = containerClient.getContainerId(containerName);
         }
         return containerId;
     }
@@ -304,7 +307,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     @VisibleForTesting
     void processContainerAction(final DockerSeleniumContainerAction action, final String containerId) throws IOException {
         final String[] command = {"bash", "-c", action.getContainerAction()};
-        dockerContainerClient.executeCommand(containerId, command, getId());
+        containerClient.executeCommand(containerId, command);
 
         if (DockerSeleniumContainerAction.STOP_RECORDING == action) {
             copyVideos(containerId);
@@ -314,7 +317,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     @SuppressWarnings("ResultOfMethodCallIgnored")
     @VisibleForTesting
     void copyVideos(final String containerId) throws IOException {
-        TarArchiveInputStream tarStream = dockerContainerClient.copyFiles(containerId, "/videos/", getId());
+        TarArchiveInputStream tarStream = containerClient.copyFiles(containerId, "/videos/");
         TarArchiveEntry entry;
         while ((entry = tarStream.getNextTarEntry()) != null) {
             if (entry.isDirectory()) {
@@ -338,7 +341,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     @SuppressWarnings("ResultOfMethodCallIgnored")
     @VisibleForTesting
     void copyLogs(final String containerId) throws IOException {
-        TarArchiveInputStream tarStream = dockerContainerClient.copyFiles(containerId, "/var/log/cont/", getId());
+        TarArchiveInputStream tarStream = containerClient.copyFiles(containerId, "/var/log/cont/");
         TarArchiveEntry entry;
         while ((entry = tarStream.getNextTarEntry()) != null) {
             if (entry.isDirectory()) {
@@ -446,7 +449,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
             }
 
             try {
-                dockerContainerClient.stopContainer(dockerSeleniumRemoteProxy.getContainerId(), dockerSeleniumRemoteProxy.getId());
+                containerClient.stopContainer(dockerSeleniumRemoteProxy.getContainerId());
             } catch (Exception e) {
                 LOGGER.log(Level.SEVERE, dockerSeleniumRemoteProxy.getId() + " " + e.getMessage(), e);
                 dockerSeleniumRemoteProxy.ga.trackException(e);
