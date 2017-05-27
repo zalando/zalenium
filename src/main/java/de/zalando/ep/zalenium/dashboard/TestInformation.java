@@ -1,4 +1,7 @@
-package de.zalando.ep.zalenium.util;
+package de.zalando.ep.zalenium.dashboard;
+
+import de.zalando.ep.zalenium.dashboard.Dashboard;
+import de.zalando.ep.zalenium.util.CommonProxyUtilities;
 
 import java.util.ArrayList;
 import java.util.List;

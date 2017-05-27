@@ -1,8 +1,9 @@
-package de.zalando.ep.zalenium.util;
+package de.zalando.ep.zalenium.dashboard;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import de.zalando.ep.zalenium.util.CommonProxyUtilities;
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;

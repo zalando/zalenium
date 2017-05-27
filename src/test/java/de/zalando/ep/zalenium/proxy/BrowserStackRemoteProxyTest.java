@@ -6,7 +6,7 @@ import com.google.gson.JsonObject;
 import de.zalando.ep.zalenium.util.CommonProxyUtilities;
 import de.zalando.ep.zalenium.util.Environment;
 import de.zalando.ep.zalenium.util.TestUtils;
-import de.zalando.ep.zalenium.util.TestInformation;
+import de.zalando.ep.zalenium.dashboard.TestInformation;
 import org.hamcrest.CoreMatchers;
 import org.junit.After;
 import org.junit.Assert;
@@ -44,7 +44,6 @@ public class BrowserStackRemoteProxyTest {
                 BrowserStackRemoteProxy.class.getCanonicalName());
         CommonProxyUtilities commonProxyUtilities = mock(CommonProxyUtilities.class);
         when(commonProxyUtilities.readJSONFromUrl(anyString(), anyString(), anyString())).thenReturn(null);
-        when(commonProxyUtilities.readJSONFromFile(anyString())).thenCallRealMethod();
         BrowserStackRemoteProxy.setCommonProxyUtilities(commonProxyUtilities);
         browserStackProxy = BrowserStackRemoteProxy.getNewInstance(request, registry);
 
@@ -132,7 +131,6 @@ public class BrowserStackRemoteProxyTest {
             when(commonProxyUtilities.readJSONFromUrl(mockTestInformationUrl,
                     env.getStringEnvVariable("BROWSER_STACK_USER", ""),
                     env.getStringEnvVariable("BROWSER_STACK_KEY", ""))).thenReturn(informationSample);
-            when(commonProxyUtilities.readJSONFromFile(anyString())).thenCallRealMethod();
             BrowserStackRemoteProxy.setCommonProxyUtilities(commonProxyUtilities);
 
             // Getting a test session in the sauce labs node

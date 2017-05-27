@@ -1,9 +1,7 @@
 package de.zalando.ep.zalenium.proxy;
 
-import com.spotify.docker.client.DockerClient;
 import com.spotify.docker.client.exceptions.DockerException;
-import com.spotify.docker.client.messages.ContainerConfig;
-import com.spotify.docker.client.messages.ContainerCreation;
+import de.zalando.ep.zalenium.container.ContainerClient;
 import de.zalando.ep.zalenium.util.Environment;
 import de.zalando.ep.zalenium.util.TestUtils;
 import org.junit.After;
@@ -11,6 +9,8 @@ import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 import org.openqa.grid.common.RegistrationRequest;
 import org.openqa.grid.internal.Registry;
 import org.openqa.grid.internal.TestSession;
@@ -18,6 +18,8 @@ import org.openqa.selenium.Platform;
 import org.openqa.selenium.remote.BrowserType;
 import org.openqa.selenium.remote.CapabilityType;
 
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -36,11 +38,25 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.withSettings;
 import static org.awaitility.Awaitility.await;
 
-
+@RunWith(value = Parameterized.class)
 public class DockerSeleniumStarterRemoteProxyTest {
 
     private DockerSeleniumStarterRemoteProxy spyProxy;
     private Registry registry;
+    private ContainerClient containerClient;
+
+    public DockerSeleniumStarterRemoteProxyTest(ContainerClient containerClient) {
+        this.containerClient = containerClient;
+    }
+
+    // Using parameters now, so in the future we can add just something like "TestUtils.getMockedKubernetesClient()"
+    @Parameterized.Parameters
+    public static Collection<Object[]> data() {
+        return Arrays.asList(new Object[][] {
+                {TestUtils.getMockedDockerContainerClient()}
+        });
+    }
+
 
     @Before
     public void setUp() throws DockerException, InterruptedException {
@@ -53,13 +69,7 @@ public class DockerSeleniumStarterRemoteProxyTest {
         // Creating the proxy
         DockerSeleniumStarterRemoteProxy proxy = DockerSeleniumStarterRemoteProxy.getNewInstance(request, registry);
 
-        // Mock the docker client
-        DockerClient dockerClient = mock(DockerClient.class);
-        ContainerCreation containerCreation = mock(ContainerCreation.class);
-        when(containerCreation.id()).thenReturn("ANY_CONTAINER_ID");
-        when(dockerClient.createContainer(any(ContainerConfig.class), anyString())).thenReturn(containerCreation);
-
-        DockerSeleniumStarterRemoteProxy.setDockerClient(dockerClient);
+        DockerSeleniumStarterRemoteProxy.setContainerClient(containerClient);
 
         // Spying on the proxy to see if methods are invoked or not
         spyProxy = spy(proxy);
@@ -72,7 +82,7 @@ public class DockerSeleniumStarterRemoteProxyTest {
 
     @AfterClass
     public static void tearDown() {
-        DockerSeleniumStarterRemoteProxy.restoreDockerClient();
+        DockerSeleniumStarterRemoteProxy.restoreContainerClient();
         DockerSeleniumStarterRemoteProxy.restoreEnvironment();
     }
 

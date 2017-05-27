@@ -1,6 +1,7 @@
 package de.zalando.ep.zalenium.proxy;
 
 import com.google.gson.JsonElement;
+import de.zalando.ep.zalenium.dashboard.TestInformation;
 import de.zalando.ep.zalenium.util.*;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -38,7 +39,6 @@ public class SauceLabsRemoteProxyTest {
                 SauceLabsRemoteProxy.class.getCanonicalName());
         CommonProxyUtilities commonProxyUtilities = mock(CommonProxyUtilities.class);
         when(commonProxyUtilities.readJSONFromUrl(anyString(), anyString(), anyString())).thenReturn(null);
-        when(commonProxyUtilities.readJSONFromFile(anyString())).thenCallRealMethod();
         SauceLabsRemoteProxy.setCommonProxyUtilities(commonProxyUtilities);
         sauceLabsProxy = SauceLabsRemoteProxy.getNewInstance(request, registry);
 
@@ -148,7 +148,6 @@ public class SauceLabsRemoteProxyTest {
             JsonElement informationSample = TestUtils.getTestInformationSample("saucelabs_testinformation.json");
             CommonProxyUtilities commonProxyUtilities = mock(CommonProxyUtilities.class);
             when(commonProxyUtilities.readJSONFromUrl(anyString(), anyString(), anyString())).thenReturn(informationSample);
-            when(commonProxyUtilities.readJSONFromFile(anyString())).thenCallRealMethod();
             doCallRealMethod().when(commonProxyUtilities).convertFlvFileToMP4(any(TestInformation.class));
             SauceLabsRemoteProxy.setCommonProxyUtilities(commonProxyUtilities);
 
@@ -184,7 +183,6 @@ public class SauceLabsRemoteProxyTest {
         try {
             CommonProxyUtilities commonProxyUtilities = mock(CommonProxyUtilities.class);
             when(commonProxyUtilities.readJSONFromUrl(anyString(), anyString(), anyString())).thenReturn(null);
-            when(commonProxyUtilities.readJSONFromFile(anyString())).thenCallRealMethod();
             SauceLabsRemoteProxy.setCommonProxyUtilities(commonProxyUtilities);
 
             RegistrationRequest request = TestUtils.getRegistrationRequestForTesting(30001,

@@ -3,6 +3,8 @@ package de.zalando.ep.zalenium.proxy;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import de.zalando.ep.zalenium.dashboard.Dashboard;
+import de.zalando.ep.zalenium.dashboard.TestInformation;
 import de.zalando.ep.zalenium.util.*;
 import org.hamcrest.CoreMatchers;
 import org.junit.*;
@@ -55,7 +57,6 @@ public class TestingBotRemoteProxyTest {
         when(commonProxyUtilities.readJSONFromUrl(mockTestInfoUrl,
                 env.getStringEnvVariable("TESTINGBOT_KEY", ""),
                 env.getStringEnvVariable("TESTINGBOT_SECRET", ""))).thenReturn(informationSample);
-        when(commonProxyUtilities.readJSONFromFile(anyString())).thenCallRealMethod();
         TestingBotRemoteProxy.setCommonProxyUtilities(commonProxyUtilities);
         testingBotProxy = TestingBotRemoteProxy.getNewInstance(request, registry);
 
