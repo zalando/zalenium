@@ -1,8 +1,17 @@
 package de.zalando.ep.zalenium.util;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.spotify.docker.client.DockerClient;
+import com.spotify.docker.client.LogStream;
+import com.spotify.docker.client.exceptions.DockerException;
+import com.spotify.docker.client.messages.ContainerConfig;
+import com.spotify.docker.client.messages.ContainerCreation;
+import com.spotify.docker.client.messages.ExecCreation;
+import com.spotify.docker.client.messages.ImageInfo;
+import de.zalando.ep.zalenium.container.DockerContainerClient;
 import de.zalando.ep.zalenium.proxy.DockerSeleniumStarterRemoteProxy;
 import org.apache.commons.io.FileUtils;
 import org.junit.rules.TemporaryFolder;
@@ -22,11 +31,12 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.List;
+import java.util.*;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -140,4 +150,39 @@ public class TestUtils {
         temporaryFolder.newFile("videos/executedTestsInfo.json");
         temporaryFolder.newFile("videos/dashboard.html");
     }
+
+    public static DockerContainerClient getMockedDockerContainerClient() {
+        DockerClient dockerClient = mock(DockerClient.class);
+        ExecCreation execCreation = mock(ExecCreation.class);
+        LogStream logStream = mock(LogStream.class);
+        when(logStream.readFully()).thenReturn("ANY_STRING");
+        when(execCreation.id()).thenReturn("ANY_ID");
+
+        ContainerCreation containerCreation = mock(ContainerCreation.class);
+        when(containerCreation.id()).thenReturn("ANY_CONTAINER_ID");
+
+        ImageInfo imageInfo = mock(ImageInfo.class);
+        ContainerConfig containerConfig = mock(ContainerConfig.class);
+
+        try {
+            when(dockerClient.execCreate(anyString(), any(String[].class), any(DockerClient.ExecCreateParam.class),
+                    any(DockerClient.ExecCreateParam.class))).thenReturn(execCreation);
+            when(dockerClient.execStart(anyString())).thenReturn(logStream);
+            doNothing().when(dockerClient).stopContainer(anyString(), anyInt());
+
+            when(dockerClient.createContainer(any(ContainerConfig.class), anyString())).thenReturn(containerCreation);
+
+            when(containerConfig.labels()).thenReturn(ImmutableMap.of("selenium_firefox_version", "52",
+                    "selenium_chrome_version", "58"));
+            when(imageInfo.config()).thenReturn(containerConfig);
+
+            when(dockerClient.inspectImage(anyString())).thenReturn(imageInfo);
+        } catch (DockerException | InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        DockerContainerClient.setContainerClient(dockerClient);
+        return new DockerContainerClient();
+    }
+
 }

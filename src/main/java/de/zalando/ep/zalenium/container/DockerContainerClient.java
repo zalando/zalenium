@@ -1,5 +1,6 @@
 package de.zalando.ep.zalenium.container;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.spotify.docker.client.DefaultDockerClient;
 import com.spotify.docker.client.DockerClient;
 import com.spotify.docker.client.LogStream;
@@ -16,10 +17,21 @@ import java.util.logging.Logger;
 @SuppressWarnings("ConstantConditions")
 public class DockerContainerClient implements ContainerClient {
 
-    private static final DockerClient dockerClient = new DefaultDockerClient("unix:///var/run/docker.sock");
+    private static final DockerClient defaultDockerClient = new DefaultDockerClient("unix:///var/run/docker.sock");
     private static final Logger logger = Logger.getLogger(DockerContainerClient.class.getName());
     private static final GoogleAnalyticsApi ga = new GoogleAnalyticsApi();
+    private static DockerClient dockerClient = defaultDockerClient;
     private String nodeId;
+
+    @VisibleForTesting
+    public static void setContainerClient(final DockerClient client) {
+        dockerClient = client;
+    }
+
+    @VisibleForTesting
+    public static void restoreDockerContainerClient() {
+        dockerClient = defaultDockerClient;
+    }
 
     public void setNodeId(String nodeId) {
         this.nodeId = nodeId;

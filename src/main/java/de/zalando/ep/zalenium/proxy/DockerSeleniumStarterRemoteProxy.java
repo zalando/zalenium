@@ -81,6 +81,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     private static GoogleAnalyticsApi ga = new GoogleAnalyticsApi();
     private static String chromeVersion = null;
     private static String firefoxVersion = null;
+    private static String latestDownloadedImage = null;
     private static int chromeContainersOnStartup;
     private static int firefoxContainersOnStartup;
     private static int maxDockerSeleniumContainers;
@@ -99,7 +100,6 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     @SuppressWarnings("WeakerAccess")
     public DockerSeleniumStarterRemoteProxy(RegistrationRequest request, Registry registry) {
         super(updateDSCapabilities(request), registry);
-        containerClient.setNodeId(getId());
     }
 
     /*
@@ -139,6 +139,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
      */
     @VisibleForTesting
     protected static RegistrationRequest updateDSCapabilities(RegistrationRequest registrationRequest) {
+        containerClient.setNodeId(LOGGING_PREFIX);
         registrationRequest.getConfiguration().capabilities.clear();
         registrationRequest.getConfiguration().capabilities.addAll(getCapabilities());
         return registrationRequest;
@@ -153,12 +154,10 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
 
         // Getting versions from the current docker-selenium image
         if (firefoxVersion == null) {
-            String latestDownloadedImage = containerClient.getLatestDownloadedImage(DOCKER_SELENIUM_IMAGE);
-            firefoxVersion = containerClient.getLabelValue(latestDownloadedImage, "selenium_firefox_version");
+            firefoxVersion = containerClient.getLabelValue(getLatestDownloadedImage(), "selenium_firefox_version");
         }
         if (chromeVersion == null) {
-            String latestDownloadedImage = containerClient.getLatestDownloadedImage(DOCKER_SELENIUM_IMAGE);
-            chromeVersion = containerClient.getLabelValue(latestDownloadedImage, "selenium_chrome_version");
+            chromeVersion = containerClient.getLabelValue(getLatestDownloadedImage(), "selenium_chrome_version");
         }
 
         dockerSeleniumCapabilities.clear();
@@ -269,6 +268,13 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     @VisibleForTesting
     protected static void setScreenHeight(int screenHeight) {
         DockerSeleniumStarterRemoteProxy.screenHeight = screenHeight <= 0 ? DEFAULT_SCREEN_HEIGHT : screenHeight;
+    }
+
+    private static String getLatestDownloadedImage() {
+        if (latestDownloadedImage == null) {
+            latestDownloadedImage = containerClient.getLatestDownloadedImage(DOCKER_SELENIUM_IMAGE);
+        }
+        return latestDownloadedImage;
     }
 
     public static int getConfiguredScreenWidth() {
