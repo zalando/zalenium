@@ -7,8 +7,8 @@ import com.spotify.docker.client.LogStream;
 import com.spotify.docker.client.exceptions.DockerException;
 import com.spotify.docker.client.messages.*;
 import de.zalando.ep.zalenium.util.GoogleAnalyticsApi;
-import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 
+import java.io.InputStream;
 import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
@@ -48,11 +48,10 @@ public class DockerContainerClient implements ContainerClient {
         return null;
     }
 
-    public TarArchiveInputStream copyFiles(String containerId, String folderName) {
-        try (TarArchiveInputStream tarStream = new TarArchiveInputStream(dockerClient.archiveContainer(containerId,
-                folderName))) {
-            return tarStream;
-        } catch (Exception e) {
+    public InputStream copyFiles(String containerId, String folderName) {
+        try {
+            return dockerClient.archiveContainer(containerId, folderName);
+        } catch (DockerException | InterruptedException e) {
             logger.log(Level.WARNING, nodeId + " Something happened while copying the folder " + folderName + ", " +
                     "most of the time it is an issue while closing the input/output stream, which is usually OK.", e);
         }

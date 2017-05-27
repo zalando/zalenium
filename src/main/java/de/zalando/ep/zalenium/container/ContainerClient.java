@@ -1,7 +1,6 @@
 package de.zalando.ep.zalenium.container;
 
-import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
-
+import java.io.InputStream;
 import java.util.List;
 
 public interface ContainerClient {
@@ -10,7 +9,7 @@ public interface ContainerClient {
 
     String getContainerId(String containerName);
 
-    TarArchiveInputStream copyFiles(String containerId, String folderName);
+    InputStream copyFiles(String containerId, String folderName);
 
     void stopContainer(String containerId);
 
