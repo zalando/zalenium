@@ -1,5 +1,6 @@
 package de.zalando.ep.zalenium.util;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -7,10 +8,7 @@ import com.google.gson.JsonParser;
 import com.spotify.docker.client.DockerClient;
 import com.spotify.docker.client.LogStream;
 import com.spotify.docker.client.exceptions.DockerException;
-import com.spotify.docker.client.messages.ContainerConfig;
-import com.spotify.docker.client.messages.ContainerCreation;
-import com.spotify.docker.client.messages.ExecCreation;
-import com.spotify.docker.client.messages.ImageInfo;
+import com.spotify.docker.client.messages.*;
 import de.zalando.ep.zalenium.container.DockerContainerClient;
 import de.zalando.ep.zalenium.proxy.DockerSeleniumStarterRemoteProxy;
 import org.apache.commons.io.FileUtils;
@@ -152,6 +150,7 @@ public class TestUtils {
         temporaryFolder.newFile("videos/dashboard.html");
     }
 
+    @SuppressWarnings("ConstantConditions")
     public static DockerContainerClient getMockedDockerContainerClient() {
         DockerClient dockerClient = mock(DockerClient.class);
         ExecCreation execCreation = mock(ExecCreation.class);
@@ -164,6 +163,11 @@ public class TestUtils {
 
         ImageInfo imageInfo = mock(ImageInfo.class);
         ContainerConfig containerConfig = mock(ContainerConfig.class);
+        ContainerInfo containerInfo = mock(ContainerInfo.class);
+        ContainerMount containerMount = mock(ContainerMount.class);
+        when(containerMount.destination()).thenReturn("/tmp/mounted");
+        when(containerMount.source()).thenReturn("/tmp/mounted");
+        when(containerInfo.mounts()).thenReturn(ImmutableList.of(containerMount));
 
         try {
             URL logsLocation = TestUtils.class.getClassLoader().getResource("logs.tar");
@@ -191,6 +195,7 @@ public class TestUtils {
             when(containerConfig.labels()).thenReturn(ImmutableMap.of("selenium_firefox_version", "52",
                     "selenium_chrome_version", "58"));
             when(imageInfo.config()).thenReturn(containerConfig);
+            when(dockerClient.inspectContainer(null)).thenReturn(containerInfo);
 
             when(dockerClient.inspectImage(anyString())).thenReturn(imageInfo);
         } catch (DockerException | InterruptedException | IOException e) {

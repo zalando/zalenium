@@ -9,6 +9,7 @@ import com.spotify.docker.client.messages.*;
 import de.zalando.ep.zalenium.util.GoogleAnalyticsApi;
 
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
@@ -22,6 +23,7 @@ public class DockerContainerClient implements ContainerClient {
     private static final GoogleAnalyticsApi ga = new GoogleAnalyticsApi();
     private static DockerClient dockerClient = defaultDockerClient;
     private String nodeId;
+    private ContainerMount mountedFolder;
 
     @VisibleForTesting
     public static void setContainerClient(final DockerClient client) {
@@ -133,10 +135,18 @@ public class DockerContainerClient implements ContainerClient {
 
     public void createContainer(String zaleniumContainerName, String containerName, String image, List<String> envVars) {
         String networkMode = String.format("container:%s", zaleniumContainerName);
+
+        List<String> binds = new ArrayList<>();
+        binds.add("/dev/shm:/dev/shm");
+        loadMountedFolder(zaleniumContainerName);
+        if (this.mountedFolder != null) {
+            String mountedBind = String.format("%s:%s", this.mountedFolder.source(), this.mountedFolder.destination());
+            binds.add(mountedBind);
+        }
+
         HostConfig hostConfig = HostConfig.builder()
                 .networkMode(networkMode)
-                .appendBinds("/dev/shm:/dev/shm")
-                .appendBinds("/tmp/mounted:/tmp/mounted")
+                .appendBinds(binds)
                 .autoRemove(true)
                 .build();
 
@@ -155,4 +165,22 @@ public class DockerContainerClient implements ContainerClient {
         }
     }
 
+    private void loadMountedFolder(String zaleniumContainerName) {
+        if (this.mountedFolder == null) {
+            String containerId = getContainerId(String.format("/%s", zaleniumContainerName));
+            ContainerInfo containerInfo = null;
+            try {
+                containerInfo = dockerClient.inspectContainer(containerId);
+            } catch (DockerException | InterruptedException e) {
+                logger.log(Level.WARNING, nodeId + " Error while getting mounted folders.", e);
+                ga.trackException(e);
+            }
+            for (ContainerMount containerMount : containerInfo.mounts()) {
+                if ("/tmp/mounted".equalsIgnoreCase(containerMount.destination())) {
+                    this.mountedFolder = containerMount;
+                }
+            }
+        }
+    }
 }
+
