@@ -1,10 +1,7 @@
 package de.zalando.ep.zalenium.proxy;
 
-import com.spotify.docker.client.DefaultDockerClient;
-import com.spotify.docker.client.DockerClient;
-import com.spotify.docker.client.LogStream;
 import com.spotify.docker.client.exceptions.DockerException;
-import com.spotify.docker.client.messages.*;
+import de.zalando.ep.zalenium.container.ContainerClient;
 import de.zalando.ep.zalenium.util.Environment;
 import de.zalando.ep.zalenium.util.TestUtils;
 import org.awaitility.Duration;
@@ -12,6 +9,9 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameters;
 import org.openqa.grid.common.RegistrationRequest;
 import org.openqa.grid.internal.Registry;
 import org.openqa.grid.internal.TestSession;
@@ -24,22 +24,30 @@ import org.openqa.selenium.remote.CapabilityType;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.Callable;
 
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.awaitility.Awaitility.await;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
+@RunWith(value = Parameterized.class)
 public class DockerSeleniumRemoteProxyTest {
 
     private DockerSeleniumRemoteProxy proxy;
     private Registry registry;
+    private ContainerClient containerClient;
+
+    public DockerSeleniumRemoteProxyTest(ContainerClient containerClient) {
+        this.containerClient = containerClient;
+    }
+
+    @Parameters
+    public static Collection<Object[]> data() {
+        return Arrays.asList(new Object[][] {
+                {TestUtils.getMockedDockerContainerClient()}
+        });
+    }
 
     @Before
     public void setUp() throws DockerException, InterruptedException, IOException {
@@ -54,23 +62,12 @@ public class DockerSeleniumRemoteProxyTest {
         // Creating the proxy
         proxy = DockerSeleniumRemoteProxy.getNewInstance(request, registry);
 
-        DockerClient dockerClient = mock(DockerClient.class);
-        ExecCreation execCreation = mock(ExecCreation.class);
-        LogStream logStream = mock(LogStream.class);
-        when(logStream.readFully()).thenReturn("ANY_STRING");
-        when(execCreation.id()).thenReturn("ANY_ID");
-        when(dockerClient.execCreate(anyString(), any(String[].class), any(DockerClient.ExecCreateParam.class),
-                any(DockerClient.ExecCreateParam.class))).thenReturn(execCreation);
-        when(dockerClient.execStart(anyString())).thenReturn(logStream);
-        doNothing().when(dockerClient).stopContainer(anyString(), anyInt());
-
-        DockerSeleniumRemoteProxy.setContainerClient(dockerClient);
+        DockerSeleniumRemoteProxy.setContainerClient(containerClient);
     }
 
     @After
     public void tearDown() {
         DockerSeleniumRemoteProxy.restoreContainerClient();
-        DockerSeleniumRemoteProxy.restoreEnvironment();
     }
 
     @Test
@@ -256,29 +253,24 @@ public class DockerSeleniumRemoteProxyTest {
 
     @Test
     public void fallbackToDefaultValueWhenEnvVariableIsNotABoolean() {
-        Environment environment = mock(Environment.class, withSettings().useConstructor());
-        when(environment.getEnvVariable(DockerSeleniumRemoteProxy.ZALENIUM_VIDEO_RECORDING_ENABLED))
-                .thenReturn("any_nonsense_value");
-        when(environment.getBooleanEnvVariable(any(String.class), any(Boolean.class))).thenCallRealMethod();
-        DockerSeleniumRemoteProxy.setEnv(environment);
-        DockerSeleniumRemoteProxy.readEnvVarForVideoRecording();
+        try {
+            Environment environment = mock(Environment.class, withSettings().useConstructor());
+            when(environment.getEnvVariable(DockerSeleniumRemoteProxy.ZALENIUM_VIDEO_RECORDING_ENABLED))
+                    .thenReturn("any_nonsense_value");
+            when(environment.getBooleanEnvVariable(any(String.class), any(Boolean.class))).thenCallRealMethod();
+            DockerSeleniumRemoteProxy.setEnv(environment);
+            DockerSeleniumRemoteProxy.readEnvVarForVideoRecording();
 
-        Assert.assertEquals(DockerSeleniumRemoteProxy.DEFAULT_VIDEO_RECORDING_ENABLED,
-                DockerSeleniumRemoteProxy.isVideoRecordingEnabled());
+            Assert.assertEquals(DockerSeleniumRemoteProxy.DEFAULT_VIDEO_RECORDING_ENABLED,
+                    DockerSeleniumRemoteProxy.isVideoRecordingEnabled());
+        } finally {
+            DockerSeleniumRemoteProxy.restoreEnvironment();
+        }
     }
 
     @Test
     public void videoRecordingIsStartedAndStopped() throws DockerException, InterruptedException,
             URISyntaxException, IOException {
-
-        DockerClient dockerClient = new DefaultDockerClient("unix:///var/run/docker.sock");
-        String containerId = null;
-        String zaleniumContainerId = null;
-        try {
-            cleanUpZaleniumContainer(dockerClient);
-
-            // We create a container with the name "zalenium", so the container creation in the next step works
-            zaleniumContainerId = createZaleniumContainer(dockerClient);
 
             // Create a docker-selenium container
             RegistrationRequest request = TestUtils.getRegistrationRequestForTesting(30000,
@@ -292,10 +284,6 @@ public class DockerSeleniumRemoteProxyTest {
 
             // Creating a spy proxy to verify the invoked methods
             DockerSeleniumRemoteProxy spyProxy = spy(proxy);
-            DockerSeleniumRemoteProxy.setContainerClient(dockerClient);
-
-            // Wait for the container to be ready
-            containerId = waitForContainerToBeReady(dockerClient, spyProxy);
 
             // Start poller thread
             spyProxy.startPolling();
@@ -315,7 +303,7 @@ public class DockerSeleniumRemoteProxyTest {
             verify(spyProxy, times(1)).
                     videoRecording(DockerSeleniumRemoteProxy.DockerSeleniumContainerAction.START_RECORDING);
             verify(spyProxy, times(1)).
-                    processContainerAction(DockerSeleniumRemoteProxy.DockerSeleniumContainerAction.START_RECORDING, containerId);
+                    processContainerAction(DockerSeleniumRemoteProxy.DockerSeleniumContainerAction.START_RECORDING, null);
 
             // We release the sessions, the node should be free
             webDriverRequest = mock(WebDriverRequest.class);
@@ -331,25 +319,14 @@ public class DockerSeleniumRemoteProxyTest {
             verify(spyProxy, timeout(40000))
                     .videoRecording(DockerSeleniumRemoteProxy.DockerSeleniumContainerAction.STOP_RECORDING);
             verify(spyProxy, timeout(40000))
-                    .processContainerAction(DockerSeleniumRemoteProxy.DockerSeleniumContainerAction.STOP_RECORDING, containerId);
-            verify(spyProxy, timeout(40000)).copyVideos(containerId);
-        } finally {
-            cleanUpAfterVideoRecordingTests(dockerClient, containerId, zaleniumContainerId);
-        }
+                    .processContainerAction(DockerSeleniumRemoteProxy.DockerSeleniumContainerAction.STOP_RECORDING, null);
+            verify(spyProxy, timeout(40000)).copyVideos(null);
     }
 
     @Test
     public void videoRecordingIsDisabled() throws DockerException, InterruptedException, IOException, URISyntaxException {
 
-        DockerClient dockerClient = new DefaultDockerClient("unix:///var/run/docker.sock");
-        String containerId = null;
-        String zaleniumContainerId = null;
         try {
-            cleanUpZaleniumContainer(dockerClient);
-
-            // We create a container with the name "zalenium", so the container creation in the next step works
-            zaleniumContainerId = createZaleniumContainer(dockerClient);
-
             // Create a docker-selenium container
             RegistrationRequest request = TestUtils.getRegistrationRequestForTesting(30000,
                     DockerSeleniumStarterRemoteProxy.class.getCanonicalName());
@@ -368,12 +345,8 @@ public class DockerSeleniumRemoteProxyTest {
 
             // Creating a spy proxy to verify the invoked methods
             DockerSeleniumRemoteProxy spyProxy = spy(proxy);
-            DockerSeleniumRemoteProxy.setContainerClient(dockerClient);
             DockerSeleniumRemoteProxy.setEnv(environment);
             DockerSeleniumRemoteProxy.readEnvVarForVideoRecording();
-
-            // Wait for the container to be ready
-            containerId = waitForContainerToBeReady(dockerClient, spyProxy);
 
             // Start poller thread
             spyProxy.startPolling();
@@ -393,7 +366,7 @@ public class DockerSeleniumRemoteProxyTest {
             verify(spyProxy, times(1))
                     .videoRecording(DockerSeleniumRemoteProxy.DockerSeleniumContainerAction.START_RECORDING);
             verify(spyProxy, never())
-                    .processContainerAction(DockerSeleniumRemoteProxy.DockerSeleniumContainerAction.START_RECORDING, containerId);
+                    .processContainerAction(DockerSeleniumRemoteProxy.DockerSeleniumContainerAction.START_RECORDING, "");
 
             // We release the sessions, the node should be free
             webDriverRequest = mock(WebDriverRequest.class);
@@ -410,10 +383,10 @@ public class DockerSeleniumRemoteProxyTest {
             verify(spyProxy, timeout(40000))
                     .videoRecording(DockerSeleniumRemoteProxy.DockerSeleniumContainerAction.STOP_RECORDING);
             verify(spyProxy, never())
-                    .processContainerAction(DockerSeleniumRemoteProxy.DockerSeleniumContainerAction.STOP_RECORDING, containerId);
-            verify(spyProxy, never()).copyVideos(containerId);
+                    .processContainerAction(DockerSeleniumRemoteProxy.DockerSeleniumContainerAction.STOP_RECORDING, "");
+            verify(spyProxy, never()).copyVideos("");
         } finally {
-            cleanUpAfterVideoRecordingTests(dockerClient, containerId, zaleniumContainerId);
+            DockerSeleniumRemoteProxy.restoreEnvironment();
         }
     }
 
@@ -425,66 +398,6 @@ public class DockerSeleniumRemoteProxyTest {
         TestSession newSession = proxy.getNewSession(requestedCapability);
         Assert.assertNotNull(newSession);
         Assert.assertEquals(DockerSeleniumRemoteProxy.isVideoRecordingEnabled(), false);
-    }
-
-    private void cleanUpAfterVideoRecordingTests(DockerClient dockerClient, String containerId,
-                                     String zaleniumContainerId) throws DockerException, InterruptedException {
-        String busyboxLatestImage = "busybox:latest";
-        DockerSeleniumStarterRemoteProxy.setMaxDockerSeleniumContainers(0);
-        if (containerId != null) {
-            dockerClient.stopContainer(containerId, 5);
-        }
-        if (zaleniumContainerId != null) {
-            dockerClient.stopContainer(zaleniumContainerId, 5);
-        }
-        dockerClient.removeImage(busyboxLatestImage, true, true);
-    }
-
-    private String waitForContainerToBeReady(DockerClient dockerClient, DockerSeleniumRemoteProxy spyProxy)
-            throws DockerException, InterruptedException {
-        Callable<Boolean> callable = () -> spyProxy.getContainerId() != null;
-        await().atMost(20, SECONDS).pollInterval(500, MILLISECONDS).until(callable);
-        String containerId = spyProxy.getContainerId();
-        final String[] command = {"bash", "-c", "wait_all_done 30s"};
-        final ExecCreation execCreation = dockerClient.execCreate(containerId, command,
-                DockerClient.ExecCreateParam.attachStdout(), DockerClient.ExecCreateParam.attachStderr());
-        dockerClient.execStart(execCreation.id());
-
-        final String finalContainerId = containerId;
-        callable = () ->
-                !dockerClient.topContainer(finalContainerId).processes().toString().contains("wait_all_done");
-        await().atMost(40, SECONDS).pollInterval(2, SECONDS).until(callable);
-        return containerId;
-    }
-
-    private String createZaleniumContainer(DockerClient dockerClient) throws DockerException, InterruptedException {
-        String busyboxLatestImage = "busybox:latest";
-        dockerClient.pull(busyboxLatestImage);
-        final HostConfig hostConfig = HostConfig.builder()
-                .autoRemove(true)
-                .build();
-        final ContainerConfig containerConfig = ContainerConfig.builder()
-                .image(busyboxLatestImage)
-                // make sure the container's busy doing something upon startup
-                .cmd("sh", "-c", "while :; do sleep 1; done")
-                .hostConfig(hostConfig)
-                .build();
-        final ContainerCreation containerCreation = dockerClient.createContainer(containerConfig, "zalenium");
-        String zaleniumContainerId = containerCreation.id();
-        dockerClient.startContainer(zaleniumContainerId);
-        return zaleniumContainerId;
-    }
-
-    private void cleanUpZaleniumContainer(DockerClient dockerClient) throws DockerException, InterruptedException {
-        // Removing first all docker-selenium containers
-        List<Container> containerList = dockerClient.listContainers(DockerClient.ListContainersParam.allContainers());
-        for (Container container : containerList) {
-            String containerName = "zalenium";
-            if (container.names().get(0).contains(containerName)) {
-                dockerClient.stopContainer(container.id(), 5);
-                dockerClient.removeContainer(container.id());
-            }
-        }
     }
 
     private Map<String, Object> getCapabilitySupportedByDockerSelenium() {

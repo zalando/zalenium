@@ -165,8 +165,16 @@ public class TestUtils {
         ContainerConfig containerConfig = mock(ContainerConfig.class);
 
         try {
-            when(dockerClient.execCreate(anyString(), any(String[].class), any(DockerClient.ExecCreateParam.class),
-                    any(DockerClient.ExecCreateParam.class))).thenReturn(execCreation);
+            String[] startVideo = {"bash", "-c", "start-video"};
+            String[] stopVideo = {"bash", "-c", "stop-video"};
+            String[] transferLogs = {"bash", "-c", "transfer-logs.sh"};
+            when(dockerClient.execCreate(null, startVideo, DockerClient.ExecCreateParam.attachStdout(),
+                    DockerClient.ExecCreateParam.attachStderr())).thenReturn(execCreation);
+            when(dockerClient.execCreate(null, stopVideo, DockerClient.ExecCreateParam.attachStdout(),
+                    DockerClient.ExecCreateParam.attachStderr())).thenReturn(execCreation);
+            when(dockerClient.execCreate(null, transferLogs, DockerClient.ExecCreateParam.attachStdout(),
+                    DockerClient.ExecCreateParam.attachStderr())).thenReturn(execCreation);
+
             when(dockerClient.execStart(anyString())).thenReturn(logStream);
             doNothing().when(dockerClient).stopContainer(anyString(), anyInt());
 

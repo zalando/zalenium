@@ -28,11 +28,6 @@ public class DockerContainerClient implements ContainerClient {
         dockerClient = client;
     }
 
-    @VisibleForTesting
-    public static void restoreDockerContainerClient() {
-        dockerClient = defaultDockerClient;
-    }
-
     public void setNodeId(String nodeId) {
         this.nodeId = nodeId;
     }

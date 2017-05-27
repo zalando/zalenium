@@ -49,6 +49,7 @@ public class DockerSeleniumStarterRemoteProxyTest {
         this.containerClient = containerClient;
     }
 
+    // Using parameters now, so in the future we can add just something like "TestUtils.getMockedKubernetesClient()"
     @Parameterized.Parameters
     public static Collection<Object[]> data() {
         return Arrays.asList(new Object[][] {
