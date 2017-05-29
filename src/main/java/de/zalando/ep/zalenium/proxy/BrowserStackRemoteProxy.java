@@ -84,7 +84,7 @@ public class BrowserStackRemoteProxy extends CloudTestingRemoteProxy {
         JsonObject testData = getCommonProxyUtilities().readJSONFromUrl(browserStackTestUrl, BROWSER_STACK_USER,
                 BROWSER_STACK_KEY).getAsJsonObject();
         JsonObject automation_session = testData.getAsJsonObject("automation_session");
-        String testName = automation_session.get("name").getAsString();
+        String testName = automation_session.get("name").isJsonNull() ? null : automation_session.get("name").getAsString();
         String browser = automation_session.get("browser").getAsString();
         String browserVersion = automation_session.get("browser_version").getAsString();
         String platform = automation_session.get("os").getAsString();
