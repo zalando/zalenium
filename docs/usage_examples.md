@@ -124,11 +124,12 @@ starting Chrome with a specific profile.
     docker run --rm -ti --name zalenium -p 4444:4444 -p 5555:5555 \
       -v /var/run/docker.sock:/var/run/docker.sock \
       -v /tmp/videos:/home/seluser/videos \
-      -v /tmp/mounted:/tmp/mounted \      
+      -v /your/local/folder:/tmp/mounted \      
       dosel/zalenium start 
   ```
-After starting Zalenium with this mounted volume, any file created in the host in `/tmp/mounted`, will be available in `/tmp/mounted` 
-across all containers. Please note that the folder name in the host can be any you want, the important part is to map properly.
+After starting Zalenium with this mounted volume, any file created in the host in `/your/local/folder`, will be available in
+`/tmp/mounted` across all containers. Please note that the folder name in the host can be any you want, the important part is 
+to map properly.
 
 ### More configuration parameters
 
