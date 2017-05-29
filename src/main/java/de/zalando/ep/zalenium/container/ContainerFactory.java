@@ -1,5 +1,7 @@
 package de.zalando.ep.zalenium.container;
 
+import java.io.File;
+
 public class ContainerFactory {
 
     public static ContainerClient getContainerClient() {
@@ -9,7 +11,13 @@ public class ContainerFactory {
             When the KubernetesClient is implemented, some IFs need to be added and then just an invocation to
             something like: "return new KubernetesClient();"
          */
-        return new DockerContainerClient();
+        File kubernetesServiceAccountFile = new File("/var/run/secrets/kubernetes.io/serviceaccount/token");
+        if (kubernetesServiceAccountFile.canRead()) {
+            return KubernetesContainerClient.getInstance();
+        }
+        else {
+            return new DockerContainerClient();
+        }
     }
 
 }

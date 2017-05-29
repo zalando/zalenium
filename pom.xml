@@ -51,6 +51,7 @@
         <selenium-server.major-minor.version>3.3</selenium-server.major-minor.version>
         <selenium-server.patch-level.version>1</selenium-server.patch-level.version>
         <docker-client.version>8.6.0</docker-client.version>
+        <kubernetes-client.version>2.3.1</kubernetes-client.version>
         <junit.version>4.12</junit.version>
         <mockito.version>2.8.9</mockito.version>
         <awaitility.version>3.0.0</awaitility.version>
@@ -95,6 +96,21 @@
                 </exclusion>
             </exclusions>
         </dependency>
+        <dependency>
+         <groupId>io.fabric8</groupId>
+         <artifactId>openshift-client</artifactId>
+         <version>${kubernetes-client.version}</version>
+         <exclusions>
+            <exclusion>
+               <groupId>org.slf4j</groupId>
+               <artifactId>jul-to-slf4j</artifactId>
+            </exclusion>
+            <exclusion>
+               <groupId>org.slf4j</groupId>
+               <artifactId>slf4j-api</artifactId>
+            </exclusion>
+         </exclusions>
+      </dependency>
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>

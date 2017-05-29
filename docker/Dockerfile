@@ -367,6 +367,8 @@ RUN  export SELBASE="https://selenium-release.storage.googleapis.com" \
 #==========
 # Zalenium
 #==========
+EXPOSE 4444 4445 5555
+
 ENV ZAL_VER="${project.build.finalName}" \
     BROWSER_STACK_TUNNEL_OPTS="-skipCheck -v -forcelocal" \
     BROWSER_STACK_TUNNEL_ID="zalenium" \

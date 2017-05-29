@@ -3,9 +3,13 @@
 # set -e: exit asap if a command exits with a non-zero status
 set -e
 
+USE_KUBERNETES=false
+if [ -f /var/run/secrets/kubernetes.io/serviceaccount/token ]; then
+    echo "Kubernetes service account found."
+    USE_KUBERNETES=true
 # /usr/bin/docker exists when docker run has
 #   -v $(which docker):/usr/bin/docker
-if [ -f /usr/bin/docker ]; then
+elif [ -f /usr/bin/docker ]; then
     echo "Docker binary already present, will use that one."
 else
     # Grab the complete docker version `1.12.5` out of the partial one `1.12`
@@ -79,9 +83,11 @@ else
     # We will need sudo to run docker alongside docker
     # because we don't have the matching group and user id (*nix)
 
-    # Make sure Docker works (with sudo) before continuing
-    docker --version
-    sudo docker images elgalu/selenium >/dev/null
+    if [ "${USE_KUBERNETES}" == "false" ]; then
+        # Make sure Docker works (with sudo) before continuing
+        docker --version
+        sudo docker images elgalu/selenium >/dev/null
+    fi
 
     # Replace the current process with zalenium.sh
     exec sudo --preserve-env ./zalenium.sh "$@"
