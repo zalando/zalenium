@@ -76,7 +76,12 @@ public class DockerContainerClient implements ContainerClient {
                     DockerClient.ExecCreateParam.attachStdout(), DockerClient.ExecCreateParam.attachStderr());
             final LogStream output = dockerClient.execStart(execCreation.id());
             logger.log(Level.INFO, () -> String.format("%s %s", nodeId, Arrays.toString(command)));
-            logger.log(Level.INFO, () -> String.format("%s %s", nodeId, output.readFully()));
+            try {
+                logger.log(Level.INFO, () -> String.format("%s %s", nodeId, output.readFully()));
+            } catch (Exception e) {
+                logger.log(Level.FINE, nodeId + " Error while executing the output.readFully()", e);
+                ga.trackException(e);
+            }
         } catch (DockerException | InterruptedException e) {
             logger.log(Level.WARNING, nodeId + " Error while executing the command", e);
             ga.trackException(e);
