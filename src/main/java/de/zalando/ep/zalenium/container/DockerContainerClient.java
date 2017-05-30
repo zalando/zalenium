@@ -83,7 +83,7 @@ public class DockerContainerClient implements ContainerClient {
                 ga.trackException(e);
             }
         } catch (DockerException | InterruptedException e) {
-            logger.log(Level.WARNING, nodeId + " Error while executing the command", e);
+            logger.log(Level.FINE, nodeId + " Error while executing the command", e);
             ga.trackException(e);
         }
     }
