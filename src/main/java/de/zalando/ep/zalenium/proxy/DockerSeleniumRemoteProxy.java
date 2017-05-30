@@ -162,10 +162,11 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     private long getConfiguredIdleTimeout(Map<String, Object> requestedCapability) {
         long configuredIdleTimeout;
         try {
-            configuredIdleTimeout = (long) requestedCapability.getOrDefault("idleTimeout", DEFAULT_MAX_TEST_IDLE_TIME_SECS);
+            Object idleTimeout = requestedCapability.getOrDefault("idleTimeout", DEFAULT_MAX_TEST_IDLE_TIME_SECS);
+            configuredIdleTimeout = Long.valueOf(String.valueOf(idleTimeout));
         } catch (Exception e) {
             configuredIdleTimeout = DEFAULT_MAX_TEST_IDLE_TIME_SECS;
-            LOGGER.log(Level.FINE, getId() + " " + e.toString(), e);
+            LOGGER.log(Level.WARNING, getId() + " " + e.toString(), e);
         }
         if (configuredIdleTimeout <= 0) {
             configuredIdleTimeout = DEFAULT_MAX_TEST_IDLE_TIME_SECS;

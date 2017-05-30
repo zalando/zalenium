@@ -148,6 +148,15 @@ public class DockerSeleniumRemoteProxyTest {
     }
 
     @Test
+    public void testIdleTimeoutUsesValueInStringPassedAsCapability() {
+        Map<String, Object> requestedCapability = getCapabilitySupportedByDockerSelenium();
+        requestedCapability.put("idleTimeout", "200");
+
+        proxy.getNewSession(requestedCapability);
+        Assert.assertEquals(proxy.getMaxTestIdleTimeSecs(), 200L);
+    }
+
+    @Test
     public void testIdleTimeoutUsesValuePassedAsCapability() {
         Map<String, Object> requestedCapability = getCapabilitySupportedByDockerSelenium();
         requestedCapability.put("idleTimeout", 180L);
