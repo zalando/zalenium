@@ -54,8 +54,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     private static final Environment defaultEnvironment = new Environment();
     private static boolean videoRecordingEnabled;
     private static Environment env = defaultEnvironment;
-    private static ContainerClient defaultContainerClient = ContainerFactory.getContainerClient();
-    private static ContainerClient containerClient = defaultContainerClient;
+    private ContainerClient containerClient = ContainerFactory.getContainerClient();
     private final HtmlRenderer renderer = new WebProxyHtmlRendererBeta(this);
     private int amountOfExecutedTests;
     private long maxTestIdleTimeSecs;
@@ -83,13 +82,18 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     }
 
     @VisibleForTesting
-    static void setContainerClient(final ContainerClient client) {
+    ContainerClient getContainerClient() {
+        return containerClient;
+    }
+
+    @VisibleForTesting
+    void setContainerClient(final ContainerClient client) {
         containerClient = client;
     }
 
     @VisibleForTesting
-    static void restoreContainerClient() {
-        containerClient = defaultContainerClient;
+    void restoreContainerClient() {
+        containerClient = ContainerFactory.getContainerClient();
     }
 
     @VisibleForTesting
@@ -450,7 +454,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
             }
 
             try {
-                containerClient.stopContainer(dockerSeleniumRemoteProxy.getContainerId());
+                dockerSeleniumRemoteProxy.getContainerClient().stopContainer(dockerSeleniumRemoteProxy.getContainerId());
             } catch (Exception e) {
                 LOGGER.log(Level.SEVERE, dockerSeleniumRemoteProxy.getId() + " " + e.getMessage(), e);
                 dockerSeleniumRemoteProxy.ga.trackException(e);

@@ -62,12 +62,12 @@ public class DockerSeleniumRemoteProxyTest {
         // Creating the proxy
         proxy = DockerSeleniumRemoteProxy.getNewInstance(request, registry);
 
-        DockerSeleniumRemoteProxy.setContainerClient(containerClient);
+        proxy.setContainerClient(containerClient);
     }
 
     @After
     public void tearDown() {
-        DockerSeleniumRemoteProxy.restoreContainerClient();
+        proxy.restoreContainerClient();
     }
 
     @Test
