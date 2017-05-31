@@ -54,8 +54,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     private static final Environment defaultEnvironment = new Environment();
     private static boolean videoRecordingEnabled;
     private static Environment env = defaultEnvironment;
-    private static ContainerClient defaultContainerClient = ContainerFactory.getContainerClient();
-    private static ContainerClient containerClient = defaultContainerClient;
+    private ContainerClient containerClient = ContainerFactory.getContainerClient();
     private final HtmlRenderer renderer = new WebProxyHtmlRendererBeta(this);
     private int amountOfExecutedTests;
     private long maxTestIdleTimeSecs;
@@ -83,13 +82,18 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     }
 
     @VisibleForTesting
-    static void setContainerClient(final ContainerClient client) {
+    ContainerClient getContainerClient() {
+        return containerClient;
+    }
+
+    @VisibleForTesting
+    void setContainerClient(final ContainerClient client) {
         containerClient = client;
     }
 
     @VisibleForTesting
-    static void restoreContainerClient() {
-        containerClient = defaultContainerClient;
+    void restoreContainerClient() {
+        containerClient = ContainerFactory.getContainerClient();
     }
 
     @VisibleForTesting
@@ -162,10 +166,11 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     private long getConfiguredIdleTimeout(Map<String, Object> requestedCapability) {
         long configuredIdleTimeout;
         try {
-            configuredIdleTimeout = (long) requestedCapability.getOrDefault("idleTimeout", DEFAULT_MAX_TEST_IDLE_TIME_SECS);
+            Object idleTimeout = requestedCapability.getOrDefault("idleTimeout", DEFAULT_MAX_TEST_IDLE_TIME_SECS);
+            configuredIdleTimeout = Long.valueOf(String.valueOf(idleTimeout));
         } catch (Exception e) {
             configuredIdleTimeout = DEFAULT_MAX_TEST_IDLE_TIME_SECS;
-            LOGGER.log(Level.FINE, getId() + " " + e.toString(), e);
+            LOGGER.log(Level.WARNING, getId() + " " + e.toString(), e);
         }
         if (configuredIdleTimeout <= 0) {
             configuredIdleTimeout = DEFAULT_MAX_TEST_IDLE_TIME_SECS;
@@ -449,7 +454,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
             }
 
             try {
-                containerClient.stopContainer(dockerSeleniumRemoteProxy.getContainerId());
+                dockerSeleniumRemoteProxy.getContainerClient().stopContainer(dockerSeleniumRemoteProxy.getContainerId());
             } catch (Exception e) {
                 LOGGER.log(Level.SEVERE, dockerSeleniumRemoteProxy.getId() + " " + e.getMessage(), e);
                 dockerSeleniumRemoteProxy.ga.trackException(e);

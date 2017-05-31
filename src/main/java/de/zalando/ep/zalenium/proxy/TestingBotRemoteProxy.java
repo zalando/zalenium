@@ -90,7 +90,7 @@ public class TestingBotRemoteProxy extends CloudTestingRemoteProxy {
         for (int i = 0; i < 5; i++) {
             JsonObject testData = getCommonProxyUtilities().readJSONFromUrl(testingBotTestUrl, TESTINGBOT_KEY,
                     TESTINGBOT_SECRET).getAsJsonObject();
-            String testName = testData.get("name").getAsString();
+            String testName = testData.get("name").isJsonNull() ? null : testData.get("name").getAsString();
             String browser = testData.get("browser").getAsString();
             String browserVersion = testData.get("browser_version").getAsString();
             String platform = testData.get("os").getAsString();

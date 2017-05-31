@@ -62,12 +62,12 @@ public class DockerSeleniumRemoteProxyTest {
         // Creating the proxy
         proxy = DockerSeleniumRemoteProxy.getNewInstance(request, registry);
 
-        DockerSeleniumRemoteProxy.setContainerClient(containerClient);
+        proxy.setContainerClient(containerClient);
     }
 
     @After
     public void tearDown() {
-        DockerSeleniumRemoteProxy.restoreContainerClient();
+        proxy.restoreContainerClient();
     }
 
     @Test
@@ -145,6 +145,15 @@ public class DockerSeleniumRemoteProxyTest {
 
         proxy.getNewSession(requestedCapability);
         Assert.assertEquals(proxy.getMaxTestIdleTimeSecs(), DockerSeleniumRemoteProxy.DEFAULT_MAX_TEST_IDLE_TIME_SECS);
+    }
+
+    @Test
+    public void testIdleTimeoutUsesValueInStringPassedAsCapability() {
+        Map<String, Object> requestedCapability = getCapabilitySupportedByDockerSelenium();
+        requestedCapability.put("idleTimeout", "200");
+
+        proxy.getNewSession(requestedCapability);
+        Assert.assertEquals(proxy.getMaxTestIdleTimeSecs(), 200L);
     }
 
     @Test
