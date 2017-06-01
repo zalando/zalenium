@@ -404,8 +404,8 @@ StartUp()
     echo "Starting DockerSeleniumStarter node..."
 
     java -jar ${SELENIUM_ARTIFACT} -role node -hub http://localhost:4444/grid/register \
-     -proxy de.zalando.ep.zalenium.proxy.DockerSeleniumStarterRemoteProxy \
-     -port 30000 -debug ${DEBUG_ENABLED} > logs/stdout.zalenium.docker.node.log &
+     -registerCycle 0 -proxy de.zalando.ep.zalenium.proxy.DockerSeleniumStarterRemoteProxy \
+     -nodePolling 30000 -port 30000 -debug ${DEBUG_ENABLED} > logs/stdout.zalenium.docker.node.log &
     echo $! > ${PID_PATH_DOCKER_SELENIUM_NODE}
 
     if ! timeout --foreground "30s" bash -c WaitStarterProxy; then
@@ -432,8 +432,8 @@ StartUp()
     if [ "$SAUCE_LABS_ENABLED" = true ]; then
         echo "Starting Sauce Labs node..."
         java -jar ${SELENIUM_ARTIFACT} -role node -hub http://localhost:4444/grid/register \
-         -proxy de.zalando.ep.zalenium.proxy.SauceLabsRemoteProxy \
-         -port 30001 -debug ${DEBUG_ENABLED} > logs/stdout.zalenium.sauce.node.log &
+         -registerCycle 0 -proxy de.zalando.ep.zalenium.proxy.SauceLabsRemoteProxy \
+         -nodePolling 30000 -port 30001 -debug ${DEBUG_ENABLED} > logs/stdout.zalenium.sauce.node.log &
         echo $! > ${PID_PATH_SAUCE_LABS_NODE}
 
         if ! timeout --foreground "40s" bash -c WaitSauceLabsProxy; then
@@ -458,8 +458,8 @@ StartUp()
     if [ "$BROWSER_STACK_ENABLED" = true ]; then
         echo "Starting Browser Stack node..."
         java -jar ${SELENIUM_ARTIFACT} -role node -hub http://localhost:4444/grid/register \
-         -proxy de.zalando.ep.zalenium.proxy.BrowserStackRemoteProxy \
-         -port 30002 -debug ${DEBUG_ENABLED} > logs/stdout.zalenium.browserstack.node.log &
+         -registerCycle 0 -proxy de.zalando.ep.zalenium.proxy.BrowserStackRemoteProxy \
+         -nodePolling 30000 -port 30002 -debug ${DEBUG_ENABLED} > logs/stdout.zalenium.browserstack.node.log &
         echo $! > ${PID_PATH_BROWSER_STACK_NODE}
 
         if ! timeout --foreground "40s" bash -c WaitBrowserStackProxy; then
@@ -483,8 +483,8 @@ StartUp()
     if [ "$TESTINGBOT_ENABLED" = true ]; then
         echo "Starting TestingBot node..."
         java -jar ${SELENIUM_ARTIFACT} -role node -hub http://localhost:4444/grid/register \
-         -proxy de.zalando.ep.zalenium.proxy.TestingBotRemoteProxy \
-         -port 30003 -debug ${DEBUG_ENABLED} > logs/stdout.zalenium.testingbot.node.log &
+         -registerCycle 0 -proxy de.zalando.ep.zalenium.proxy.TestingBotRemoteProxy \
+         -nodePolling 30000 -port 30003 -debug ${DEBUG_ENABLED} > logs/stdout.zalenium.testingbot.node.log &
         echo $! > ${PID_PATH_TESTINGBOT_NODE}
 
         if ! timeout --foreground "40s" bash -c WaitTestingBotProxy; then
