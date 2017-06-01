@@ -6,6 +6,7 @@ import de.zalando.ep.zalenium.container.ContainerFactory;
 import de.zalando.ep.zalenium.matcher.DockerSeleniumCapabilityMatcher;
 import de.zalando.ep.zalenium.util.Environment;
 import de.zalando.ep.zalenium.util.GoogleAnalyticsApi;
+import org.apache.commons.lang3.RandomUtils;
 import org.openqa.grid.common.RegistrationRequest;
 import org.openqa.grid.internal.Registry;
 import org.openqa.grid.internal.RemoteProxy;
@@ -413,12 +414,13 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
                 Building the docker command, depending if Chrome or Firefox is requested.
                 To launch only the requested node type.
              */
-            LOGGER.info("hostIpAddress -> " + hostIpAddress);
             boolean sendAnonymousUsageInfo = env.getBooleanEnvVariable("ZALENIUM_SEND_ANONYMOUS_USAGE_INFO", false);
 
             final int nodePort = findFreePortInRange(LOWER_PORT_BOUNDARY, UPPER_PORT_BOUNDARY);
             final int noVncPort = nodePort + NO_VNC_PORT_GAP;
             final int vncPort = nodePort + VNC_PORT_GAP;
+
+            String nodePolling = String.valueOf(RandomUtils.nextInt(90, 120) * 1000);
 
             Map<String, String> envVars = new HashMap<>();
             envVars.put("ZALENIUM", "true");
@@ -439,7 +441,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
             envVars.put("SCREEN_HEIGHT", String.valueOf(getScreenHeight()));
             envVars.put("TZ", getTimeZone());
             envVars.put("SELENIUM_NODE_REGISTER_CYCLE", "0");
-            envVars.put("SEL_NODEPOLLING_MS", "30000");
+            envVars.put("SEL_NODEPOLLING_MS", nodePolling);
             envVars.put("SELENIUM_NODE_PROXY_PARAMS", "de.zalando.ep.zalenium.proxy.DockerSeleniumRemoteProxy");
             if (BrowserType.CHROME.equalsIgnoreCase(browser)) {
                 envVars.put("SELENIUM_NODE_CH_PORT", String.valueOf(nodePort));
