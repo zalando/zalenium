@@ -11,9 +11,12 @@ import de.zalando.ep.zalenium.util.GoogleAnalyticsApi;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 @SuppressWarnings("ConstantConditions")
 public class DockerContainerClient implements ContainerClient {
@@ -137,8 +140,9 @@ public class DockerContainerClient implements ContainerClient {
         return 0;
     }
 
-    public void createContainer(String zaleniumContainerName, String containerName, String image, List<String> envVars) {
-        String networkMode = String.format("container:%s", zaleniumContainerName);
+    public void createContainer(String zaleniumContainerName, String image, Map<String, String> envVars,
+                                String nodePort) {
+        String containerName = String.format("%s_%s", zaleniumContainerName, nodePort);
 
         List<String> binds = new ArrayList<>();
         binds.add("/dev/shm:/dev/shm");
@@ -147,16 +151,37 @@ public class DockerContainerClient implements ContainerClient {
             String mountedBind = String.format("%s:%s", this.mountedFolder.source(), this.mountedFolder.destination());
             binds.add(mountedBind);
         }
+        // TODO: Remove this if, only temporal to debug performance issues
+        if (getContainerId(String.format("/%s", zaleniumContainerName)) == null) {
+            envVars.put("SELENIUM_NODE_HOST", envVars.get("SELENIUM_HUB_HOST"));
+        }
+
+        String noVncPort = envVars.get("NOVNC_PORT");
+
+        final Map<String, List<PortBinding>> portBindings = new HashMap<>();
+        List<PortBinding> portBindingList = new ArrayList<>();
+        portBindingList.add(PortBinding.of("", nodePort));
+        portBindings.put(nodePort, portBindingList);
+        portBindingList = new ArrayList<>();
+        portBindingList.add(PortBinding.of("", noVncPort));
+        portBindings.put(noVncPort, portBindingList);
 
         HostConfig hostConfig = HostConfig.builder()
-                .networkMode(networkMode)
                 .appendBinds(binds)
+                .portBindings(portBindings)
                 .autoRemove(true)
+                .privileged(true)
                 .build();
 
+        List<String> flattenedEnvVars = envVars.entrySet().stream()
+                .map(e -> e.getKey() + "=" + e.getValue())
+                .collect(Collectors.toList());
+
+        final String[] exposedPorts = {nodePort, noVncPort};
         final ContainerConfig containerConfig = ContainerConfig.builder()
                 .image(image)
-                .env(envVars)
+                .env(flattenedEnvVars)
+                .exposedPorts(exposedPorts)
                 .hostConfig(hostConfig)
                 .build();
 
@@ -172,6 +197,9 @@ public class DockerContainerClient implements ContainerClient {
     private void loadMountedFolder(String zaleniumContainerName) {
         if (this.mountedFolder == null) {
             String containerId = getContainerId(String.format("/%s", zaleniumContainerName));
+            if (containerId == null) {
+                return;
+            }
             ContainerInfo containerInfo = null;
             try {
                 containerInfo = dockerClient.inspectContainer(containerId);

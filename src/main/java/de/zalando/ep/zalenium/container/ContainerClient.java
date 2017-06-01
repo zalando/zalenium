@@ -1,7 +1,7 @@
 package de.zalando.ep.zalenium.container;
 
 import java.io.InputStream;
-import java.util.List;
+import java.util.Map;
 
 public interface ContainerClient {
 
@@ -21,5 +21,5 @@ public interface ContainerClient {
 
     int getRunningContainers(String image);
 
-    void createContainer(String zaleniumContainerName, String containerName, String image, List<String> envVars);
+    void createContainer(String zaleniumContainerName, String image, Map<String, String> envVars, String nodePort);
 }

@@ -16,6 +16,7 @@ import org.openqa.grid.internal.utils.HtmlRenderer;
 import org.openqa.grid.selenium.proxy.DefaultRemoteProxy;
 import org.openqa.grid.web.servlet.beta.WebProxyHtmlRendererBeta;
 import org.openqa.selenium.Platform;
+import org.openqa.selenium.net.NetworkUtils;
 import org.openqa.selenium.remote.BrowserType;
 import org.openqa.selenium.remote.CapabilityType;
 import org.openqa.selenium.remote.DesiredCapabilities;
@@ -371,11 +372,6 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
         return null;
     }
 
-    /*
-        Starting a few containers (Firefox, Chrome), so they are ready when the tests come.
-        Executed in a thread so we don't wait for the containers to be created and the node
-        registration is not delayed.
-    */
     @Override
     public void beforeRegistration() {
         readConfigurationFromEnvVariables();
@@ -410,57 +406,56 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
 
         if (validateAmountOfDockerSeleniumContainers() || forceCreation) {
 
-            String hostIpAddress = "localhost";
+            NetworkUtils networkUtils = new NetworkUtils();
+            String hostIpAddress = networkUtils.getIp4NonLoopbackAddressOfThisMachine().getHostAddress();
 
             /*
                 Building the docker command, depending if Chrome or Firefox is requested.
                 To launch only the requested node type.
              */
+            LOGGER.info("hostIpAddress -> " + hostIpAddress);
+            boolean sendAnonymousUsageInfo = env.getBooleanEnvVariable("ZALENIUM_SEND_ANONYMOUS_USAGE_INFO", false);
 
             final int nodePort = findFreePortInRange(LOWER_PORT_BOUNDARY, UPPER_PORT_BOUNDARY);
             final int noVncPort = nodePort + NO_VNC_PORT_GAP;
             final int vncPort = nodePort + VNC_PORT_GAP;
 
-            List<String> envVariables = new ArrayList<>();
-            envVariables.add("ZALENIUM=true");
-            envVariables.add("SELENIUM_HUB_HOST=" + hostIpAddress);
-            envVariables.add("SELENIUM_HUB_PORT=4445");
-            envVariables.add("SELENIUM_NODE_HOST=" + hostIpAddress);
-            envVariables.add("GRID=false");
-            envVariables.add("RC_CHROME=false");
-            envVariables.add("RC_FIREFOX=false");
-            envVariables.add("USE_SELENIUM=3");
-            envVariables.add("WAIT_TIMEOUT=120s");
-            envVariables.add("PICK_ALL_RANDOM_PORTS=true");
-            envVariables.add("VIDEO_STOP_SLEEP_SECS=1");
-            envVariables.add("WAIT_TIME_OUT_VIDEO_STOP=20s");
-            boolean sendAnonymousUsageInfo = env.getBooleanEnvVariable("ZALENIUM_SEND_ANONYMOUS_USAGE_INFO", false);
-            envVariables.add("SEND_ANONYMOUS_USAGE_INFO=" + sendAnonymousUsageInfo);
-            envVariables.add("BUILD_URL=" + env.getStringEnvVariable("BUILD_URL", ""));
-            envVariables.add("NOVNC=true");
-            envVariables.add("NOVNC_PORT=" + noVncPort);
-            envVariables.add("VNC_PORT=" + vncPort);
-            envVariables.add("SCREEN_WIDTH=" + getScreenWidth());
-            envVariables.add("SCREEN_HEIGHT=" + getScreenHeight());
-            envVariables.add("TZ=" + getTimeZone());
-            envVariables.add("SELENIUM_NODE_REGISTER_CYCLE=0");
-            envVariables.add("SELENIUM_NODE_PROXY_PARAMS=de.zalando.ep.zalenium.proxy.DockerSeleniumRemoteProxy");
+            Map<String, String> envVars = new HashMap<>();
+            envVars.put("ZALENIUM", "true");
+            envVars.put("SELENIUM_HUB_HOST", hostIpAddress);
+            envVars.put("SELENIUM_HUB_PORT", "4445");
+            envVars.put("SELENIUM_NODE_HOST", "{{CONTAINER_IP}}");
+            envVars.put("GRID", "false");
+            envVars.put("WAIT_TIMEOUT", "120s");
+            envVars.put("PICK_ALL_RANDOM_PORTS", "true");
+            envVars.put("VIDEO_STOP_SLEEP_SECS", "1");
+            envVars.put("WAIT_TIME_OUT_VIDEO_STOP", "20s");
+            envVars.put("SEND_ANONYMOUS_USAGE_INFO", String.valueOf(sendAnonymousUsageInfo));
+            envVars.put("BUILD_URL", env.getStringEnvVariable("BUILD_URL", ""));
+            envVars.put("NOVNC", "true");
+            envVars.put("NOVNC_PORT", String.valueOf(noVncPort));
+            envVars.put("VNC_PORT", String.valueOf(vncPort));
+            envVars.put("SCREEN_WIDTH", String.valueOf(getScreenWidth()));
+            envVars.put("SCREEN_HEIGHT", String.valueOf(getScreenHeight()));
+            envVars.put("TZ", getTimeZone());
+            envVars.put("SELENIUM_NODE_REGISTER_CYCLE", "0");
+            envVars.put("SEL_NODEPOLLING_MS", "30000");
+            envVars.put("SELENIUM_NODE_PROXY_PARAMS", "de.zalando.ep.zalenium.proxy.DockerSeleniumRemoteProxy");
             if (BrowserType.CHROME.equalsIgnoreCase(browser)) {
-                envVariables.add("SELENIUM_NODE_CH_PORT=" + nodePort);
-                envVariables.add("CHROME=true");
+                envVars.put("SELENIUM_NODE_CH_PORT", String.valueOf(nodePort));
+                envVars.put("CHROME", "true");
             } else {
-                envVariables.add("CHROME=false");
+                envVars.put("CHROME", "false");
             }
             if (BrowserType.FIREFOX.equalsIgnoreCase(browser)) {
-                envVariables.add("SELENIUM_NODE_FF_PORT=" + nodePort);
-                envVariables.add("FIREFOX=true");
+                envVars.put("SELENIUM_NODE_FF_PORT", String.valueOf(nodePort));
+                envVars.put("FIREFOX", "true");
             } else {
-                envVariables.add("FIREFOX=false");
+                envVars.put("FIREFOX", "false");
             }
 
             String latestImage = containerClient.getLatestDownloadedImage(DOCKER_SELENIUM_IMAGE);
-            String dockerSeleniumContainerName = String.format("%s_%s", getContainerName(), nodePort);
-            containerClient.createContainer(getContainerName(), dockerSeleniumContainerName, latestImage, envVariables);
+            containerClient.createContainer(getContainerName(), latestImage, envVars, String.valueOf(nodePort));
             return true;
         }
         return false;
