@@ -54,8 +54,8 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     private static final Environment defaultEnvironment = new Environment();
     private static boolean videoRecordingEnabled;
     private static Environment env = defaultEnvironment;
-    private ContainerClient containerClient = ContainerFactory.getContainerClient();
     private final HtmlRenderer renderer = new WebProxyHtmlRendererBeta(this);
+    private ContainerClient containerClient = ContainerFactory.getContainerClient();
     private int amountOfExecutedTests;
     private long maxTestIdleTimeSecs;
     private String testGroup;
@@ -82,21 +82,6 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     }
 
     @VisibleForTesting
-    ContainerClient getContainerClient() {
-        return containerClient;
-    }
-
-    @VisibleForTesting
-    void setContainerClient(final ContainerClient client) {
-        containerClient = client;
-    }
-
-    @VisibleForTesting
-    void restoreContainerClient() {
-        containerClient = ContainerFactory.getContainerClient();
-    }
-
-    @VisibleForTesting
     protected static void setEnv(final Environment env) {
         DockerSeleniumRemoteProxy.env = env;
     }
@@ -113,6 +98,21 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
 
     private static void setVideoRecordingEnabled(boolean videoRecordingEnabled) {
         DockerSeleniumRemoteProxy.videoRecordingEnabled = videoRecordingEnabled;
+    }
+
+    @VisibleForTesting
+    ContainerClient getContainerClient() {
+        return containerClient;
+    }
+
+    @VisibleForTesting
+    void setContainerClient(final ContainerClient client) {
+        containerClient = client;
+    }
+
+    @VisibleForTesting
+    void restoreContainerClient() {
+        containerClient = ContainerFactory.getContainerClient();
     }
 
     public HtmlRenderer getHtmlRender() {

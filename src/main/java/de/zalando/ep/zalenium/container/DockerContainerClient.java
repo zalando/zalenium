@@ -18,15 +18,14 @@ import java.util.logging.Logger;
 @SuppressWarnings("ConstantConditions")
 public class DockerContainerClient implements ContainerClient {
 
-    private static final DockerClient defaultDockerClient = new DefaultDockerClient("unix:///var/run/docker.sock");
-    private static final Logger logger = Logger.getLogger(DockerContainerClient.class.getName());
-    private static final GoogleAnalyticsApi ga = new GoogleAnalyticsApi();
-    private static DockerClient dockerClient = defaultDockerClient;
+    private final Logger logger = Logger.getLogger(DockerContainerClient.class.getName());
+    private final GoogleAnalyticsApi ga = new GoogleAnalyticsApi();
+    private DockerClient dockerClient = new DefaultDockerClient("unix:///var/run/docker.sock");
     private String nodeId;
     private ContainerMount mountedFolder;
 
     @VisibleForTesting
-    public static void setContainerClient(final DockerClient client) {
+    public void setContainerClient(final DockerClient client) {
         dockerClient = client;
     }
 
@@ -114,7 +113,7 @@ public class DockerContainerClient implements ContainerClient {
         try {
             ImageInfo imageInfo = dockerClient.inspectImage(image);
             return imageInfo.config().labels().get(label);
-        } catch (DockerException | InterruptedException e) {
+        } catch (Exception e) {
             logger.log(Level.WARNING, nodeId + " Error while getting label value", e);
             ga.trackException(e);
         }
