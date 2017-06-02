@@ -377,7 +377,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     public void beforeRegistration() {
         readConfigurationFromEnvVariables();
         setupCompleted = false;
-        createStartupContainers();
+        createContainersOnStartup();
     }
 
     @Override
@@ -468,26 +468,35 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
         return setupCompleted;
     }
 
-    private void createStartupContainers() {
+    private void createContainersOnStartup() {
         int configuredContainers = getChromeContainersOnStartup() + getFirefoxContainersOnStartup();
         int containersToCreate = configuredContainers > getMaxDockerSeleniumContainers() ?
                 getMaxDockerSeleniumContainers() : configuredContainers;
-        new Thread(() -> {
-            LOGGER.log(Level.INFO, String.format("%s Setting up %s nodes...", LOGGING_PREFIX, configuredContainers));
-            int createdContainers = 0;
-            while (createdContainers < containersToCreate &&
-                    containerClient.getRunningContainers(DOCKER_SELENIUM_IMAGE) <= getMaxDockerSeleniumContainers()) {
-                boolean wasContainerCreated;
-                if (createdContainers < getChromeContainersOnStartup()) {
-                    wasContainerCreated = startDockerSeleniumContainer(BrowserType.CHROME);
-                } else {
-                    wasContainerCreated = startDockerSeleniumContainer(BrowserType.FIREFOX);
-                }
-                createdContainers = wasContainerCreated ? createdContainers + 1 : createdContainers;
+        LOGGER.log(Level.INFO, String.format("%s Setting up %s nodes...", LOGGING_PREFIX, configuredContainers));
+        // Thread.sleep() is to avoid having containers starting at the same time
+        for (int i = 0; i < containersToCreate; i++) {
+            if (i < getChromeContainersOnStartup()) {
+                new Thread(() -> {
+                    try {
+                        Thread.sleep(RandomUtils.nextInt(1, containersToCreate) * 1000);
+                    } catch (InterruptedException e) {
+                        LOGGER.log(Level.FINE, getId() + " Error sleeping before starting a Chrome container", e);
+                    }
+                    startDockerSeleniumContainer(BrowserType.CHROME, true);
+                }).start();
+            } else {
+                new Thread(() -> {
+                    try {
+                        Thread.sleep(RandomUtils.nextInt(1, containersToCreate) * 1000);
+                    } catch (InterruptedException e) {
+                        LOGGER.log(Level.FINE, getId() + " Error sleeping before starting a Firefox container", e);
+                    }
+                    startDockerSeleniumContainer(BrowserType.FIREFOX, true);
+                }).start();
             }
-            LOGGER.log(Level.INFO, String.format("%s containers were created, it will take a bit more until all get registered.", createdContainers));
-            setupCompleted = true;
-        }).start();
+        }
+        setupCompleted = true;
+        LOGGER.log(Level.INFO, String.format("%s containers were created, it will take a bit more until all get registered.", containersToCreate));
     }
 
     /*
