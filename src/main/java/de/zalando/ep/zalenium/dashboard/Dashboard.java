@@ -61,58 +61,62 @@ public class Dashboard {
         Dashboard.executedTestsWithVideo = executedTestsWithVideo;
     }
 
-    public static synchronized void updateDashboard(TestInformation testInformation) throws IOException {
+    public static synchronized void updateDashboard(TestInformation testInformation) {
         File testCountFile = new File(getLocalVideosPath(), TEST_COUNT_FILE);
-        synchronizeExecutedTestsValues(testCountFile);
+        try {
+            synchronizeExecutedTestsValues(testCountFile);
 
-        String testEntry = FileUtils.readFileToString(new File(getCurrentLocalPath(), "list_template.html"), UTF_8);
-        testEntry = testEntry.replace("{fileName}", testInformation.getFileName()).
-                replace("{testName}", testInformation.getTestName()).
-                replace("{dateAndTime}", commonProxyUtilities.getShortDateAndTime()).
-                replace("{browserAndPlatform}", testInformation.getBrowserAndPlatform()).
-                replace("{proxyName}", testInformation.getProxyName()).
-                replace("{seleniumLogFileName}", testInformation.getSeleniumLogFileName()).
-                replace("{browserDriverLogFileName}", testInformation.getBrowserDriverLogFileName());
+            String testEntry = FileUtils.readFileToString(new File(getCurrentLocalPath(), "list_template.html"), UTF_8);
+            testEntry = testEntry.replace("{fileName}", testInformation.getFileName()).
+                    replace("{testName}", testInformation.getTestName()).
+                    replace("{dateAndTime}", commonProxyUtilities.getShortDateAndTime()).
+                    replace("{browserAndPlatform}", testInformation.getBrowserAndPlatform()).
+                    replace("{proxyName}", testInformation.getProxyName()).
+                    replace("{seleniumLogFileName}", testInformation.getSeleniumLogFileName()).
+                    replace("{browserDriverLogFileName}", testInformation.getBrowserDriverLogFileName());
 
-        File testList = new File(getLocalVideosPath(), TEST_LIST_FILE);
-        // Putting the new entry at the top
-        if (testList.exists()) {
-            String testListContents = FileUtils.readFileToString(testList, UTF_8);
-            testEntry = testEntry.concat("\n").concat(testListContents);
-        }
-        FileUtils.writeStringToFile(testList, testEntry, UTF_8);
+            File testList = new File(getLocalVideosPath(), TEST_LIST_FILE);
+            // Putting the new entry at the top
+            if (testList.exists()) {
+                String testListContents = FileUtils.readFileToString(testList, UTF_8);
+                testEntry = testEntry.concat("\n").concat(testListContents);
+            }
+            FileUtils.writeStringToFile(testList, testEntry, UTF_8);
 
-        executedTests++;
-        if (testInformation.isVideoRecorded()) {
-            executedTestsWithVideo++;
-        }
+            executedTests++;
+            if (testInformation.isVideoRecorded()) {
+                executedTestsWithVideo++;
+            }
 
-        LOGGER.log(Level.FINE, "Test count: " + executedTests);
-        LOGGER.log(Level.FINE, "Test count with video: " + executedTestsWithVideo);
-        JsonObject testQuantities = new JsonObject();
-        testQuantities.addProperty(EXECUTED_TESTS_FIELD, executedTests);
-        testQuantities.addProperty(EXECUTED_TESTS_WITH_VIDEO_FIELD, executedTestsWithVideo);
-        FileUtils.writeStringToFile(testCountFile, testQuantities.toString(), UTF_8);
+            LOGGER.log(Level.FINE, "Test count: " + executedTests);
+            LOGGER.log(Level.FINE, "Test count with video: " + executedTestsWithVideo);
+            JsonObject testQuantities = new JsonObject();
+            testQuantities.addProperty(EXECUTED_TESTS_FIELD, executedTests);
+            testQuantities.addProperty(EXECUTED_TESTS_WITH_VIDEO_FIELD, executedTestsWithVideo);
+            FileUtils.writeStringToFile(testCountFile, testQuantities.toString(), UTF_8);
 
-        File dashboardHtml = new File(getLocalVideosPath(), DASHBOARD_FILE);
-        String dashboard = FileUtils.readFileToString(new File(getCurrentLocalPath(), DASHBOARD_TEMPLATE_FILE), UTF_8);
-        dashboard = dashboard.replace("{testList}", testEntry).
-                replace("{executedTests}", String.valueOf(executedTests));
-        FileUtils.writeStringToFile(dashboardHtml, dashboard, UTF_8);
+            File dashboardHtml = new File(getLocalVideosPath(), DASHBOARD_FILE);
+            String dashboard = FileUtils.readFileToString(new File(getCurrentLocalPath(), DASHBOARD_TEMPLATE_FILE), UTF_8);
+            dashboard = dashboard.replace("{testList}", testEntry).
+                    replace("{executedTests}", String.valueOf(executedTests));
+            FileUtils.writeStringToFile(dashboardHtml, dashboard, UTF_8);
 
-        File zalandoIco = new File(getLocalVideosPath(), ZALANDO_ICO);
-        if (!zalandoIco.exists()) {
-            FileUtils.copyFile(new File(getCurrentLocalPath(), ZALANDO_ICO), zalandoIco);
-        }
+            File zalandoIco = new File(getLocalVideosPath(), ZALANDO_ICO);
+            if (!zalandoIco.exists()) {
+                FileUtils.copyFile(new File(getCurrentLocalPath(), ZALANDO_ICO), zalandoIco);
+            }
 
-        File cssFolder = new File(getLocalVideosPath() + CSS_FOLDER);
-        File jsFolder = new File(getLocalVideosPath() + JS_FOLDER);
+            File cssFolder = new File(getLocalVideosPath() + CSS_FOLDER);
+            File jsFolder = new File(getLocalVideosPath() + JS_FOLDER);
 
-        if (!cssFolder.exists()) {
-            FileUtils.copyDirectory(new File(getCurrentLocalPath() + CSS_FOLDER), cssFolder);
-        }
-        if (!jsFolder.exists()) {
-            FileUtils.copyDirectory(new File(getCurrentLocalPath() + JS_FOLDER), jsFolder);
+            if (!cssFolder.exists()) {
+                FileUtils.copyDirectory(new File(getCurrentLocalPath() + CSS_FOLDER), cssFolder);
+            }
+            if (!jsFolder.exists()) {
+                FileUtils.copyDirectory(new File(getCurrentLocalPath() + JS_FOLDER), jsFolder);
+            }
+        } catch (IOException e) {
+            LOGGER.log(Level.WARNING, "Error while updating the dashboard.", e);
         }
     }
 
