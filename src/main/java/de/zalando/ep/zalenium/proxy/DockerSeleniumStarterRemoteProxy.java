@@ -353,17 +353,16 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
         String waitingForNode = String.format("waitingFor_%s_Node", browserName.toUpperCase());
         if (!requestedCapability.containsKey(waitingForNode)) {
             LOGGER.log(Level.INFO, LOGGING_PREFIX + "Starting new node for {0}.", requestedCapability);
-            if (startDockerSeleniumContainer(browserName)) {
-                requestedCapability.put(waitingForNode, 1);
-            }
+            requestedCapability.put(waitingForNode, 1);
+            new Thread(() -> startDockerSeleniumContainer(browserName)).start();
         } else {
             int attempts = (int) requestedCapability.get(waitingForNode);
             attempts++;
             if (attempts >= 20) {
-                LOGGER.log(Level.FINE, LOGGING_PREFIX + "Request has waited 20 attempts for a node, something " +
+                LOGGER.log(Level.INFO, LOGGING_PREFIX + "Request has waited 20 attempts for a node, something " +
                         "went wrong with the previous attempts, creating a new node for {0}.", requestedCapability);
-                startDockerSeleniumContainer(browserName, true);
                 requestedCapability.put(waitingForNode, 1);
+                new Thread(() -> startDockerSeleniumContainer(browserName, true)).start();
             } else {
                 requestedCapability.put(waitingForNode, attempts);
                 LOGGER.log(Level.FINE, LOGGING_PREFIX + "Request waiting for a node new node for {0}.", requestedCapability);
@@ -404,7 +403,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     @VisibleForTesting
     public boolean startDockerSeleniumContainer(String browser, boolean forceCreation) {
 
-        if (validateAmountOfDockerSeleniumContainers() || forceCreation) {
+        if (forceCreation || validateAmountOfDockerSeleniumContainers()) {
 
             NetworkUtils networkUtils = new NetworkUtils();
             String hostIpAddress = networkUtils.getIp4NonLoopbackAddressOfThisMachine().getHostAddress();
