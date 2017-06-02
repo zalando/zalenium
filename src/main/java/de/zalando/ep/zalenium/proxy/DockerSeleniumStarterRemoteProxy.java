@@ -9,7 +9,6 @@ import de.zalando.ep.zalenium.util.GoogleAnalyticsApi;
 import org.apache.commons.lang3.RandomUtils;
 import org.openqa.grid.common.RegistrationRequest;
 import org.openqa.grid.internal.Registry;
-import org.openqa.grid.internal.RemoteProxy;
 import org.openqa.grid.internal.TestSession;
 import org.openqa.grid.internal.listeners.RegistrationListener;
 import org.openqa.grid.internal.utils.CapabilityMatcher;
@@ -562,37 +561,13 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     private boolean validateAmountOfDockerSeleniumContainers() {
         try {
             int numberOfDockerSeleniumContainers = containerClient.getRunningContainers(DOCKER_SELENIUM_IMAGE);
-
-            /*
-                Validation to avoid the situation where 20 containers are running and only 4 proxies are registered.
-                The remaining 16 are not registered because they are all trying to do it and the hub just cannot
-                process all the registrations fast enough, causing many unexpected errors.
-            */
-            int numberOfProxies = 0;
-            for (RemoteProxy remoteProxy : getRegistry().getAllProxies()) {
-                if (remoteProxy instanceof DockerSeleniumRemoteProxy) {
-                    numberOfProxies++;
-                }
-            }
-            LOGGER.log(Level.FINE, "Number of proxies -> " + numberOfProxies);
-            int newSessionRequestCount = getRegistry().getNewSessionRequestCount();
-            LOGGER.log(Level.FINE, "(getNewSessionRequestCount()) -> " + newSessionRequestCount);
-            int proxiesAndNewSessions = numberOfProxies + newSessionRequestCount;
-            LOGGER.log(Level.FINE, "Number of proxies + new sessions requested -> " + proxiesAndNewSessions);
-            LOGGER.log(Level.FINE, "Number of DockerSelenium containers -> " + numberOfDockerSeleniumContainers);
-            if (numberOfDockerSeleniumContainers > proxiesAndNewSessions) {
-                LOGGER.log(Level.FINE, LOGGING_PREFIX + "More docker-selenium containers running than proxies, {0} vs. {1}",
-                        new Object[]{numberOfDockerSeleniumContainers, numberOfProxies});
-                return false;
-            }
-
-            LOGGER.log(Level.FINE, () -> String.format("%s %s docker-selenium containers running", LOGGING_PREFIX,
-                    numberOfDockerSeleniumContainers));
             if (numberOfDockerSeleniumContainers >= getMaxDockerSeleniumContainers()) {
                 LOGGER.log(Level.WARNING, LOGGING_PREFIX + "Max. number of docker-selenium containers has been reached, " +
                         "no more will be created until the number decreases below {0}.", getMaxDockerSeleniumContainers());
                 return false;
             }
+            LOGGER.log(Level.INFO, () -> String.format("%s %s docker-selenium containers running", LOGGING_PREFIX,
+                    numberOfDockerSeleniumContainers));
             return true;
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, LOGGING_PREFIX + e.toString(), e);
@@ -604,7 +579,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     /*
         Method adapted from https://gist.github.com/vorburger/3429822
      */
-    private int findFreePortInRange(int lowerBoundary, int upperBoundary) {
+    private synchronized int findFreePortInRange(int lowerBoundary, int upperBoundary) {
         /*
             If the list size is this big (~9800), it means that almost all ports have been used, but
             probably many have been released already. The list is cleared so ports can be reused.
