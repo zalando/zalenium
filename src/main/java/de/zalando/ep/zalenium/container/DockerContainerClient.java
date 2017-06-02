@@ -25,7 +25,8 @@ public class DockerContainerClient implements ContainerClient {
     private final GoogleAnalyticsApi ga = new GoogleAnalyticsApi();
     private DockerClient dockerClient = new DefaultDockerClient("unix:///var/run/docker.sock");
     private String nodeId;
-    private ContainerMount mountedFolder;
+    private ContainerMount mntFolder;
+    private boolean mntFolderChecked = false;
 
     @VisibleForTesting
     public void setContainerClient(final DockerClient client) {
@@ -147,13 +148,9 @@ public class DockerContainerClient implements ContainerClient {
         List<String> binds = new ArrayList<>();
         binds.add("/dev/shm:/dev/shm");
         loadMountedFolder(zaleniumContainerName);
-        if (this.mountedFolder != null) {
-            String mountedBind = String.format("%s:%s", this.mountedFolder.source(), this.mountedFolder.destination());
+        if (this.mntFolder != null) {
+            String mountedBind = String.format("%s:%s", this.mntFolder.source(), this.mntFolder.destination());
             binds.add(mountedBind);
-        }
-        // TODO: Remove this if, only temporal to debug performance issues
-        if (getContainerId(String.format("/%s", zaleniumContainerName)) == null) {
-            envVars.put("SELENIUM_NODE_HOST", envVars.get("SELENIUM_HUB_HOST"));
         }
 
         String noVncPort = envVars.get("NOVNC_PORT");
@@ -195,7 +192,8 @@ public class DockerContainerClient implements ContainerClient {
     }
 
     private void loadMountedFolder(String zaleniumContainerName) {
-        if (this.mountedFolder == null) {
+        if (this.mntFolder == null && !this.mntFolderChecked) {
+            this.mntFolderChecked = true;
             String containerId = getContainerId(String.format("/%s", zaleniumContainerName));
             if (containerId == null) {
                 return;
@@ -209,7 +207,7 @@ public class DockerContainerClient implements ContainerClient {
             }
             for (ContainerMount containerMount : containerInfo.mounts()) {
                 if ("/tmp/mounted".equalsIgnoreCase(containerMount.destination())) {
-                    this.mountedFolder = containerMount;
+                    this.mntFolder = containerMount;
                 }
             }
         }
