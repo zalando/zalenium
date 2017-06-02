@@ -310,7 +310,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     }
 
     @VisibleForTesting
-    void processContainerAction(final DockerSeleniumContainerAction action, final String containerId) throws IOException {
+    void processContainerAction(final DockerSeleniumContainerAction action, final String containerId) {
         final String[] command = {"bash", "-c", action.getContainerAction()};
         containerClient.executeCommand(containerId, command);
 
@@ -321,48 +321,58 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
     @VisibleForTesting
-    void copyVideos(final String containerId) throws IOException {
+    void copyVideos(final String containerId) {
         TarArchiveInputStream tarStream = new TarArchiveInputStream(containerClient.copyFiles(containerId, "/videos/"));
         TarArchiveEntry entry;
-        while ((entry = tarStream.getNextTarEntry()) != null) {
-            if (entry.isDirectory()) {
-                continue;
+        try {
+            while ((entry = tarStream.getNextTarEntry()) != null) {
+                if (entry.isDirectory()) {
+                    continue;
+                }
+                String fileExtension = entry.getName().substring(entry.getName().lastIndexOf('.'));
+                testInformation.setFileExtension(fileExtension);
+                File videoFile = new File(testInformation.getVideoFolderPath(), testInformation.getFileName());
+                File parent = videoFile.getParentFile();
+                if (!parent.exists()) {
+                    parent.mkdirs();
+                }
+                OutputStream outputStream = new FileOutputStream(videoFile);
+                IOUtils.copy(tarStream, outputStream);
+                outputStream.close();
+                LOGGER.log(Level.INFO, "{0} Video file copied to: {1}/{2}", new Object[]{getId(),
+                        testInformation.getVideoFolderPath(), testInformation.getFileName()});
             }
-            String fileExtension = entry.getName().substring(entry.getName().lastIndexOf('.'));
-            testInformation.setFileExtension(fileExtension);
-            File videoFile = new File(testInformation.getVideoFolderPath(), testInformation.getFileName());
-            File parent = videoFile.getParentFile();
-            if (!parent.exists()) {
-                parent.mkdirs();
-            }
-            OutputStream outputStream = new FileOutputStream(videoFile);
-            IOUtils.copy(tarStream, outputStream);
-            outputStream.close();
-            LOGGER.log(Level.INFO, "{0} Video file copied to: {1}/{2}", new Object[]{getId(),
-                    testInformation.getVideoFolderPath(), testInformation.getFileName()});
+        } catch (IOException e) {
+            LOGGER.log(Level.WARNING, getId() + " Error while copying the video", e);
+            ga.trackException(e);
         }
     }
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
     @VisibleForTesting
-    void copyLogs(final String containerId) throws IOException {
+    void copyLogs(final String containerId) {
         TarArchiveInputStream tarStream = new TarArchiveInputStream(containerClient.copyFiles(containerId, "/var/log/cont/"));
         TarArchiveEntry entry;
-        while ((entry = tarStream.getNextTarEntry()) != null) {
-            if (entry.isDirectory()) {
-                continue;
+        try {
+            while ((entry = tarStream.getNextTarEntry()) != null) {
+                if (entry.isDirectory()) {
+                    continue;
+                }
+                String fileName = entry.getName().replace("cont/", "");
+                File logFile = new File(testInformation.getLogsFolderPath(), fileName);
+                File parent = logFile.getParentFile();
+                if (!parent.exists()) {
+                    parent.mkdirs();
+                }
+                OutputStream outputStream = new FileOutputStream(logFile);
+                IOUtils.copy(tarStream, outputStream);
+                outputStream.close();
             }
-            String fileName = entry.getName().replace("cont/", "");
-            File logFile = new File(testInformation.getLogsFolderPath(), fileName);
-            File parent = logFile.getParentFile();
-            if (!parent.exists()) {
-                parent.mkdirs();
-            }
-            OutputStream outputStream = new FileOutputStream(logFile);
-            IOUtils.copy(tarStream, outputStream);
-            outputStream.close();
+            LOGGER.log(Level.INFO, "{0} Logs copied to: {1}", new Object[]{getId(), testInformation.getLogsFolderPath()});
+        } catch (IOException e) {
+            LOGGER.log(Level.WARNING, getId() + " Error while copying the logs", e);
+            ga.trackException(e);
         }
-        LOGGER.log(Level.INFO, "{0} Logs copied to: {1}", new Object[]{getId(), testInformation.getLogsFolderPath()});
     }
 
     public enum DockerSeleniumContainerAction {
@@ -411,20 +421,6 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                 boolean isTestIdle = dockerSeleniumRemoteProxy.isTestIdle();
 
                 if (isTestCompleted || isTestIdle) {
-                    dockerSeleniumRemoteProxy.videoRecording(DockerSeleniumContainerAction.STOP_RECORDING);
-                    try {
-                        dockerSeleniumRemoteProxy.processContainerAction(DockerSeleniumContainerAction.TRANSFER_LOGS,
-                                dockerSeleniumRemoteProxy.getContainerId());
-                        dockerSeleniumRemoteProxy.copyLogs(dockerSeleniumRemoteProxy.getContainerId());
-                    } catch (Exception e) {
-                        LOGGER.log(Level.FINE, dockerSeleniumRemoteProxy.getId() + " Error copying the logs.", e);
-                    }
-                    try {
-                        Dashboard.updateDashboard(dockerSeleniumRemoteProxy.testInformation);
-                    } catch (IOException e) {
-                        LOGGER.log(Level.FINE, dockerSeleniumRemoteProxy.getId() + " Error while updating the " +
-                                "dashboard.", e);
-                    }
                     shutdownNode(isTestIdle);
                     return;
                 }
@@ -434,16 +430,17 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                 } catch (InterruptedException e) {
                     LOGGER.log(Level.FINE, dockerSeleniumRemoteProxy.getId() + " Error while sleeping the " +
                             "thread, stopping thread execution.", e);
-                    Thread.currentThread().interrupt();
-                    dockerSeleniumRemoteProxy.ga.trackException(e);
-                    dockerSeleniumRemoteProxy.stopPolling();
-                    dockerSeleniumRemoteProxy.startPolling();
-                    return;
                 }
             }
         }
 
         private void shutdownNode(boolean isTestIdle) {
+            dockerSeleniumRemoteProxy.videoRecording(DockerSeleniumContainerAction.STOP_RECORDING);
+            dockerSeleniumRemoteProxy.processContainerAction(DockerSeleniumContainerAction.TRANSFER_LOGS,
+                    dockerSeleniumRemoteProxy.getContainerId());
+            dockerSeleniumRemoteProxy.copyLogs(dockerSeleniumRemoteProxy.getContainerId());
+            Dashboard.updateDashboard(dockerSeleniumRemoteProxy.testInformation);
+
             String shutdownReason = String.format("%s Marking the node as down because it was stopped after %s tests.",
                     dockerSeleniumRemoteProxy.getId(), MAX_UNIQUE_TEST_SESSIONS);
 
@@ -453,16 +450,10 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                         dockerSeleniumRemoteProxy.getId(), dockerSeleniumRemoteProxy.getMaxTestIdleTimeSecs());
             }
 
-            try {
-                dockerSeleniumRemoteProxy.getContainerClient().stopContainer(dockerSeleniumRemoteProxy.getContainerId());
-            } catch (Exception e) {
-                LOGGER.log(Level.SEVERE, dockerSeleniumRemoteProxy.getId() + " " + e.getMessage(), e);
-                dockerSeleniumRemoteProxy.ga.trackException(e);
-            } finally {
-                dockerSeleniumRemoteProxy.addNewEvent(new RemoteNotReachableException(shutdownReason));
-                dockerSeleniumRemoteProxy.addNewEvent(new RemoteUnregisterException(shutdownReason));
-                dockerSeleniumRemoteProxy.teardown();
-            }
+            dockerSeleniumRemoteProxy.getContainerClient().stopContainer(dockerSeleniumRemoteProxy.getContainerId());
+            dockerSeleniumRemoteProxy.addNewEvent(new RemoteNotReachableException(shutdownReason));
+            dockerSeleniumRemoteProxy.addNewEvent(new RemoteUnregisterException(shutdownReason));
+            dockerSeleniumRemoteProxy.teardown();
         }
 
     }
