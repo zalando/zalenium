@@ -72,18 +72,20 @@ public class DockerContainerClient implements ContainerClient {
         }
     }
 
-    public void executeCommand(String containerId, String[] command) {
+    public void executeCommand(String containerId, String[] command, boolean waitForExecution) {
         final ExecCreation execCreation;
         try {
             execCreation = dockerClient.execCreate(containerId, command,
                     DockerClient.ExecCreateParam.attachStdout(), DockerClient.ExecCreateParam.attachStderr());
             final LogStream output = dockerClient.execStart(execCreation.id());
             logger.log(Level.INFO, () -> String.format("%s %s", nodeId, Arrays.toString(command)));
-            try {
-                logger.log(Level.INFO, () -> String.format("%s %s", nodeId, output.readFully()));
-            } catch (Exception e) {
-                logger.log(Level.FINE, nodeId + " Error while executing the output.readFully()", e);
-                ga.trackException(e);
+            if (waitForExecution) {
+                try {
+                    logger.log(Level.INFO, () -> String.format("%s %s", nodeId, output.readFully()));
+                } catch (Exception e) {
+                    logger.log(Level.FINE, nodeId + " Error while executing the output.readFully()", e);
+                    ga.trackException(e);
+                }
             }
         } catch (DockerException | InterruptedException e) {
             logger.log(Level.FINE, nodeId + " Error while executing the command", e);

@@ -13,7 +13,7 @@ public interface ContainerClient {
 
     void stopContainer(String containerId);
 
-    void executeCommand(String containerId, String[] command);
+    void executeCommand(String containerId, String[] command, boolean waitForExecution);
 
     String getLatestDownloadedImage(String imageName);
 
