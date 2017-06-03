@@ -358,8 +358,8 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
         } else {
             int attempts = (int) requestedCapability.get(waitingForNode);
             attempts++;
-            if (attempts >= 20) {
-                LOGGER.log(Level.INFO, LOGGING_PREFIX + "Request has waited 20 attempts for a node, something " +
+            if (attempts >= 30) {
+                LOGGER.log(Level.INFO, LOGGING_PREFIX + "Request has waited 30 attempts for a node, something " +
                         "went wrong with the previous attempts, creating a new node for {0}.", requestedCapability);
                 requestedCapability.put(waitingForNode, 1);
                 new Thread(() -> startDockerSeleniumContainer(browserName, true)).start();
@@ -565,7 +565,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
                         "no more will be created until the number decreases below {0}.", getMaxDockerSeleniumContainers());
                 return false;
             }
-            LOGGER.log(Level.INFO, () -> String.format("%s %s docker-selenium containers running", LOGGING_PREFIX,
+            LOGGER.log(Level.FINE, () -> String.format("%s %s docker-selenium containers running", LOGGING_PREFIX,
                     numberOfDockerSeleniumContainers));
             return true;
         } catch (Exception e) {

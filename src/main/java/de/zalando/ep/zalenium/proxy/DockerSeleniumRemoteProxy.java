@@ -62,7 +62,6 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     private String testName;
     private String containerId = null;
     private TestInformation testInformation;
-    private boolean afterSessionEventReceived = false;
     private DockerSeleniumNodePoller dockerSeleniumNodePollerThread = null;
     private GoogleAnalyticsApi ga = new GoogleAnalyticsApi();
     private CapabilityMatcher capabilityHelper;
@@ -179,21 +178,21 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     }
 
     @Override
-    public void beforeCommand(TestSession session, HttpServletRequest request, HttpServletResponse response) {
+    public void afterCommand(TestSession session, HttpServletRequest request, HttpServletResponse response) {
+        super.afterCommand(session, request, response);
         if (request instanceof WebDriverRequest && "POST".equalsIgnoreCase(request.getMethod())) {
             WebDriverRequest seleniumRequest = (WebDriverRequest) request;
             if (RequestType.START_SESSION.equals(seleniumRequest.getRequestType())) {
                 videoRecording(DockerSeleniumContainerAction.START_RECORDING);
             }
         }
-        super.beforeCommand(session, request, response);
     }
 
     @Override
     public void afterSession(TestSession session) {
-        this.afterSessionEventReceived = true;
         String message = String.format("%s AFTER_SESSION command received. Node should shutdown soon...", getId());
         LOGGER.log(Level.INFO, message);
+        shutdownNode(false);
         long executionTime = (System.currentTimeMillis() - session.getSlot().getLastSessionStart()) / 1000;
         ga.testEvent(DockerSeleniumRemoteProxy.class.getName(), session.getRequestedCapabilities().toString(),
                 executionTime);
@@ -311,11 +310,16 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
 
     @VisibleForTesting
     void processContainerAction(final DockerSeleniumContainerAction action, final String containerId) {
+        boolean waitForExecution = DockerSeleniumContainerAction.STOP_RECORDING == action ||
+                DockerSeleniumContainerAction.TRANSFER_LOGS == action;
         final String[] command = {"bash", "-c", action.getContainerAction()};
-        containerClient.executeCommand(containerId, command);
+        containerClient.executeCommand(containerId, command, waitForExecution);
 
-        if (DockerSeleniumContainerAction.STOP_RECORDING == action) {
+        if (waitForExecution && DockerSeleniumContainerAction.STOP_RECORDING == action) {
             copyVideos(containerId);
+        }
+        if (waitForExecution && DockerSeleniumContainerAction.TRANSFER_LOGS == action) {
+            copyLogs(containerId);
         }
     }
 
@@ -324,6 +328,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     void copyVideos(final String containerId) {
         TarArchiveInputStream tarStream = new TarArchiveInputStream(containerClient.copyFiles(containerId, "/videos/"));
         TarArchiveEntry entry;
+        boolean videoWasCopied = false;
         try {
             while ((entry = tarStream.getNextTarEntry()) != null) {
                 if (entry.isDirectory()) {
@@ -339,13 +344,19 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                 OutputStream outputStream = new FileOutputStream(videoFile);
                 IOUtils.copy(tarStream, outputStream);
                 outputStream.close();
+                videoWasCopied = true;
                 LOGGER.log(Level.INFO, "{0} Video file copied to: {1}/{2}", new Object[]{getId(),
                         testInformation.getVideoFolderPath(), testInformation.getFileName()});
             }
         } catch (IOException e) {
             LOGGER.log(Level.WARNING, getId() + " Error while copying the video", e);
             ga.trackException(e);
+        } finally {
+            if (!videoWasCopied) {
+                testInformation.setVideoRecorded(false);
+            }
         }
+
     }
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
@@ -374,6 +385,27 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
             ga.trackException(e);
         }
     }
+
+    private void shutdownNode(boolean isTestIdle) {
+        videoRecording(DockerSeleniumContainerAction.STOP_RECORDING);
+        processContainerAction(DockerSeleniumContainerAction.TRANSFER_LOGS, getContainerId());
+        Dashboard.updateDashboard(testInformation);
+
+        String shutdownReason = String.format("%s Marking the node as down because it was stopped after %s tests.",
+                getId(), MAX_UNIQUE_TEST_SESSIONS);
+
+        if (isTestIdle) {
+            terminateIdleTest();
+            shutdownReason = String.format("%s Marking the node as down because the test has been idle for more than %s seconds.",
+                    getId(), getMaxTestIdleTimeSecs());
+        }
+
+        getContainerClient().stopContainer(getContainerId());
+        addNewEvent(new RemoteNotReachableException(shutdownReason));
+        addNewEvent(new RemoteUnregisterException(shutdownReason));
+        teardown();
+    }
+
 
     public enum DockerSeleniumContainerAction {
         START_RECORDING("start-video"), STOP_RECORDING("stop-video"), TRANSFER_LOGS("transfer-logs.sh");
@@ -410,52 +442,21 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         public void run() {
             while (true) {
                 /*
-                    If the proxy is not busy and it can be released since the MAX_UNIQUE_TEST_SESSIONS have been executed,
-                    then the node executes its teardown.
-                    OR
                     If the current session has been idle for a while, the node shuts down
                 */
-                boolean isTestCompleted = !dockerSeleniumRemoteProxy.isBusy()
-                        && dockerSeleniumRemoteProxy.isTestSessionLimitReached()
-                        && dockerSeleniumRemoteProxy.afterSessionEventReceived;
-                boolean isTestIdle = dockerSeleniumRemoteProxy.isTestIdle();
-
-                if (isTestCompleted || isTestIdle) {
-                    shutdownNode(isTestIdle);
+                if (dockerSeleniumRemoteProxy.isTestIdle()) {
+                    dockerSeleniumRemoteProxy.shutdownNode(true);
                     return;
                 }
-
                 try {
                     Thread.sleep(getSleepTimeBetweenChecks());
                 } catch (InterruptedException e) {
                     LOGGER.log(Level.FINE, dockerSeleniumRemoteProxy.getId() + " Error while sleeping the " +
                             "thread, stopping thread execution.", e);
+                    return;
                 }
             }
         }
-
-        private void shutdownNode(boolean isTestIdle) {
-            dockerSeleniumRemoteProxy.videoRecording(DockerSeleniumContainerAction.STOP_RECORDING);
-            dockerSeleniumRemoteProxy.processContainerAction(DockerSeleniumContainerAction.TRANSFER_LOGS,
-                    dockerSeleniumRemoteProxy.getContainerId());
-            dockerSeleniumRemoteProxy.copyLogs(dockerSeleniumRemoteProxy.getContainerId());
-            Dashboard.updateDashboard(dockerSeleniumRemoteProxy.testInformation);
-
-            String shutdownReason = String.format("%s Marking the node as down because it was stopped after %s tests.",
-                    dockerSeleniumRemoteProxy.getId(), MAX_UNIQUE_TEST_SESSIONS);
-
-            if (isTestIdle) {
-                dockerSeleniumRemoteProxy.terminateIdleTest();
-                shutdownReason = String.format("%s Marking the node as down because the test has been idle for more than %s seconds.",
-                        dockerSeleniumRemoteProxy.getId(), dockerSeleniumRemoteProxy.getMaxTestIdleTimeSecs());
-            }
-
-            dockerSeleniumRemoteProxy.getContainerClient().stopContainer(dockerSeleniumRemoteProxy.getContainerId());
-            dockerSeleniumRemoteProxy.addNewEvent(new RemoteNotReachableException(shutdownReason));
-            dockerSeleniumRemoteProxy.addNewEvent(new RemoteUnregisterException(shutdownReason));
-            dockerSeleniumRemoteProxy.teardown();
-        }
-
     }
 
 
