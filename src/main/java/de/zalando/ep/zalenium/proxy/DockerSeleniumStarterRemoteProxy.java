@@ -39,6 +39,7 @@ import java.util.logging.Logger;
 @SuppressWarnings("WeakerAccess")
 public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy implements RegistrationListener {
 
+    public static final int NO_VNC_PORT_GAP = 10000;
     @VisibleForTesting
     static final int DEFAULT_AMOUNT_CHROME_CONTAINERS = 0;
     @VisibleForTesting
@@ -71,7 +72,6 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     private static final String DOCKER_SELENIUM_IMAGE = "elgalu/selenium";
     private static final int LOWER_PORT_BOUNDARY = 40000;
     private static final int UPPER_PORT_BOUNDARY = 49999;
-    private static final int NO_VNC_PORT_GAP = 10000;
     private static final int VNC_PORT_GAP = 20000;
     private static final ContainerClient defaultContainerClient = ContainerFactory.getContainerClient();
     private static final Environment defaultEnvironment = new Environment();

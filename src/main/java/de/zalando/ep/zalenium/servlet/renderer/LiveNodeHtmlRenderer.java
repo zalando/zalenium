@@ -2,6 +2,7 @@ package de.zalando.ep.zalenium.servlet.renderer;
 
 import com.google.gson.JsonObject;
 import de.zalando.ep.zalenium.proxy.DockerSeleniumRemoteProxy;
+import de.zalando.ep.zalenium.proxy.DockerSeleniumStarterRemoteProxy;
 import de.zalando.ep.zalenium.util.Environment;
 import org.openqa.grid.internal.TestSession;
 import org.openqa.grid.internal.TestSlot;
@@ -33,11 +34,6 @@ public class LiveNodeHtmlRenderer implements HtmlRenderer {
         this.templateRenderer = new TemplateRenderer(getTemplateName());
     }
 
-    private String getTemplateName() {
-        return "html_templates/live_node_tab.html";
-    }
-
-
     /**
      * Platform for docker-selenium will be always Linux.
      *
@@ -51,6 +47,10 @@ public class LiveNodeHtmlRenderer implements HtmlRenderer {
 
     private static Platform getPlatform(TestSlot slot) {
         return (Platform) slot.getCapabilities().get(CapabilityType.PLATFORM);
+    }
+
+    private String getTemplateName() {
+        return "html_templates/live_node_tab.html";
     }
 
     @Override
@@ -81,11 +81,10 @@ public class LiveNodeHtmlRenderer implements HtmlRenderer {
         }
 
         // Adding live preview
-        int vncPort = proxy.getRemoteHost().getPort() + 10000;
-        int mainVncPort = env.getIntEnvVariable("ZALENIUM_CONTAINER_LIVE_PREVIEW_PORT", 5555);
-        String vncViewBaseUrl = "http://%s:%s/proxy/%s/?nginx=%s&view_only=%s";
-        String vncReadOnlyUrl = String.format(vncViewBaseUrl, serverName, mainVncPort, vncPort, vncPort, "true");
-        String vncInteractUrl = String.format(vncViewBaseUrl, serverName, mainVncPort, vncPort, vncPort, "false");
+        int noVncPort = proxy.getRemoteHost().getPort() + DockerSeleniumStarterRemoteProxy.NO_VNC_PORT_GAP;
+        String noVncViewBaseUrl = "http://%s:%s/?view_only=%s";
+        String noVncReadOnlyUrl = String.format(noVncViewBaseUrl, serverName, noVncPort, "true");
+        String noVncInteractUrl = String.format(noVncViewBaseUrl, serverName, noVncPort, "false");
 
         Map<String, String> renderSummaryValues = new HashMap<>();
         renderSummaryValues.put("{{proxyName}}", proxy.getClass().getSimpleName());
@@ -98,8 +97,8 @@ public class LiveNodeHtmlRenderer implements HtmlRenderer {
         renderSummaryValues.put("{{slotIcon}}", icon);
         renderSummaryValues.put("{{slotClass}}", slotClass);
         renderSummaryValues.put("{{slotTitle}}", slotTitle);
-        renderSummaryValues.put("{{vncReadOnlyUrl}}", vncReadOnlyUrl);
-        renderSummaryValues.put("{{vncInteractUrl}}", vncInteractUrl);
+        renderSummaryValues.put("{{noVncReadOnlyUrl}}", noVncReadOnlyUrl);
+        renderSummaryValues.put("{{noVncInteractUrl}}", noVncInteractUrl);
         renderSummaryValues.put("{{tabConfig}}", proxy.getConfig().toString("<p>%1$s: %2$s</p>"));
         return templateRenderer.renderTemplate(renderSummaryValues);
     }
