@@ -42,7 +42,7 @@ public class DockerContainerClient implements ContainerClient {
         try {
             containerList = dockerClient.listContainers(DockerClient.ListContainersParam.allContainers());
         } catch (DockerException | InterruptedException e) {
-            logger.log(Level.WARNING, nodeId + " Error while getting containerId", e);
+            logger.log(Level.FINE, nodeId + " Error while getting containerId", e);
             ga.trackException(e);
         }
         for (Container container : containerList) {

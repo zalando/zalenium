@@ -347,7 +347,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
             Here a docker-selenium container will be started and it will register to the hub
             We check first if a node has been created for this request already. If so, we skip it
             but increment the number of times it has been received. In case something went wrong with the node
-            creation, we remove the mark after 20 times and we create a node again.
+            creation, we remove the mark after 30 times and we create a node again.
             * The mark is an added custom capability
          */
         String waitingForNode = String.format("waitingFor_%s_Node", browserName.toUpperCase());
@@ -358,8 +358,8 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
         } else {
             int attempts = (int) requestedCapability.get(waitingForNode);
             attempts++;
-            if (attempts >= 20) {
-                LOGGER.log(Level.INFO, LOGGING_PREFIX + "Request has waited 20 attempts for a node, something " +
+            if (attempts >= 30) {
+                LOGGER.log(Level.INFO, LOGGING_PREFIX + "Request has waited 30 attempts for a node, something " +
                         "went wrong with the previous attempts, creating a new node for {0}.", requestedCapability);
                 requestedCapability.put(waitingForNode, 1);
                 new Thread(() -> startDockerSeleniumContainer(browserName, true)).start();
