@@ -3,7 +3,6 @@ package de.zalando.ep.zalenium.servlet.renderer;
 import com.google.gson.JsonObject;
 import de.zalando.ep.zalenium.proxy.DockerSeleniumRemoteProxy;
 import de.zalando.ep.zalenium.proxy.DockerSeleniumStarterRemoteProxy;
-import de.zalando.ep.zalenium.util.Environment;
 import org.openqa.grid.internal.TestSession;
 import org.openqa.grid.internal.TestSlot;
 import org.openqa.grid.internal.utils.HtmlRenderer;
@@ -21,8 +20,6 @@ public class LiveNodeHtmlRenderer implements HtmlRenderer {
 
     private static final Logger LOGGER = Logger.getLogger(LiveNodeHtmlRenderer.class.getName());
 
-    private final Environment defaultEnvironment = new Environment();
-    private Environment env = defaultEnvironment;
     private DockerSeleniumRemoteProxy proxy;
     private String serverName;
     private TemplateRenderer templateRenderer;

@@ -296,7 +296,10 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     }
 
     public long getMaxTestIdleTimeSecs() {
-        return maxTestIdleTimeSecs;
+        if (maxTestIdleTimeSecs > 0) {
+            return maxTestIdleTimeSecs;
+        }
+        return DEFAULT_MAX_TEST_IDLE_TIME_SECS;
     }
 
     protected String getContainerId() {
