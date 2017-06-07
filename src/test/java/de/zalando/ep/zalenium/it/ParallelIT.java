@@ -108,23 +108,6 @@ public class ParallelIT  {
     }
 
     @Test(dataProvider = "browsersAndPlatformsForLivePreview")
-    public void checkIframeLinksForLivePreviewWithLocalhost(String browserType, Platform platform) {
-
-        // Go to the homepage
-        getWebDriver().get("http://localhost:4444/grid/admin/live");
-
-        // Get the page source to get the iFrame links
-        String pageSource = getWebDriver().getPageSource();
-
-        // Assert that the href for the iFrame has the vnc links
-        assertThat(pageSource, containsString("/?view_only=true"));
-        assertThat(pageSource, containsString("/?view_only=false"));
-
-        // Reusing test to check that the test name is displayed in the live preview
-        assertThat(pageSource, containsString("checkIframeLinksForLivePreviewWithLocalhost"));
-    }
-
-    @Test(dataProvider = "browsersAndPlatformsForLivePreview")
     public void checkIframeLinksForLivePreviewWithMachineIp(String browserType, Platform platform) {
 
         NetworkUtils networkUtils = new NetworkUtils();
