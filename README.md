@@ -19,7 +19,7 @@ Features are added often to Zalenium, we invite you to test it, to contribute, t
 have, see [contributing](CONTRIBUTING.md) for more details.
 
 ### Why?
-We know how complicated is to:
+We know how complicated it is to:
 * Have a stable grid to run UI tests with Selenium
 * Maintain it over time (keep up with new browser, Selenium and drivers versions)
 * Provide capabilities to cover all browsers and platforms
@@ -49,6 +49,7 @@ Part of the idea comes from this [Sauce Labs post](https://saucelabs.com/blog/in
 * [How it works](#how-it-works)
 * [About the project versioning](#about-the-project-versioning)
 * [Usage examples](./docs/usage_examples.md)
+* [Performance](./docs/performance.md)
 
 ## Getting Started
 
@@ -90,7 +91,7 @@ dependencies.)
 ## Additional features
 * __[BETA]__ [Dashboard](http://localhost:5555), see all the videos and aggregated logs after your tests completed
   <p align="center">
-    <img id="dashboard" height="367" width="600" src="./images/dashboard.gif" />
+    <img id="dashboard" height="337" width="600" src="./images/dashboard.gif" />
   </p>
 * Live preview of your running tests [http://localhost:4444/grid/admin/live](http://localhost:4444/grid/admin/live)
 <p align="center">
