@@ -289,6 +289,7 @@ public class DockerSeleniumRemoteProxyTest {
             DockerSeleniumStarterRemoteProxy.setScreenHeight(DockerSeleniumStarterRemoteProxy.DEFAULT_SCREEN_HEIGHT);
             DockerSeleniumStarterRemoteProxy.setScreenWidth(DockerSeleniumStarterRemoteProxy.DEFAULT_SCREEN_WIDTH);
             DockerSeleniumStarterRemoteProxy.setTimeZone(DockerSeleniumStarterRemoteProxy.DEFAULT_TZ);
+            DockerSeleniumStarterRemoteProxy.setContainerClient(containerClient);
             dsProxy.getNewSession(getCapabilitySupportedByDockerSelenium());
 
             // Creating a spy proxy to verify the invoked methods
@@ -306,7 +307,7 @@ public class DockerSeleniumRemoteProxyTest {
             HttpServletResponse response = mock(HttpServletResponse.class);
             when(webDriverRequest.getMethod()).thenReturn("POST");
             when(webDriverRequest.getRequestType()).thenReturn(RequestType.START_SESSION);
-            spyProxy.beforeCommand(newSession, webDriverRequest, response);
+            spyProxy.afterCommand(newSession, webDriverRequest, response);
 
             // Assert video recording started
             verify(spyProxy, times(1)).
@@ -345,6 +346,7 @@ public class DockerSeleniumRemoteProxyTest {
             DockerSeleniumStarterRemoteProxy.setScreenWidth(DockerSeleniumStarterRemoteProxy.DEFAULT_SCREEN_WIDTH);
             DockerSeleniumStarterRemoteProxy.setTimeZone(DockerSeleniumStarterRemoteProxy.DEFAULT_TZ);
             DockerSeleniumStarterRemoteProxy.setConfiguredTimeZone(DockerSeleniumStarterRemoteProxy.DEFAULT_TZ);
+            DockerSeleniumStarterRemoteProxy.setContainerClient(containerClient);
             dsProxy.getNewSession(getCapabilitySupportedByDockerSelenium());
 
             // Mocking the environment variable to return false for video recording enabled
@@ -369,7 +371,7 @@ public class DockerSeleniumRemoteProxyTest {
             HttpServletResponse response = mock(HttpServletResponse.class);
             when(webDriverRequest.getMethod()).thenReturn("POST");
             when(webDriverRequest.getRequestType()).thenReturn(RequestType.START_SESSION);
-            spyProxy.beforeCommand(newSession, webDriverRequest, response);
+            spyProxy.afterCommand(newSession, webDriverRequest, response);
 
             // Assert no video recording was started, videoRecording is invoked but processContainerAction should not
             verify(spyProxy, times(1))

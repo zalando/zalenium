@@ -54,15 +54,14 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     private static final Environment defaultEnvironment = new Environment();
     private static boolean videoRecordingEnabled;
     private static Environment env = defaultEnvironment;
-    private ContainerClient containerClient = ContainerFactory.getContainerClient();
     private final HtmlRenderer renderer = new WebProxyHtmlRendererBeta(this);
+    private ContainerClient containerClient = ContainerFactory.getContainerClient();
     private int amountOfExecutedTests;
     private long maxTestIdleTimeSecs;
     private String testGroup;
     private String testName;
     private String containerId = null;
     private TestInformation testInformation;
-    private boolean afterSessionEventReceived = false;
     private DockerSeleniumNodePoller dockerSeleniumNodePollerThread = null;
     private GoogleAnalyticsApi ga = new GoogleAnalyticsApi();
     private CapabilityMatcher capabilityHelper;
@@ -79,21 +78,6 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         boolean videoEnabled = env.getBooleanEnvVariable(ZALENIUM_VIDEO_RECORDING_ENABLED,
                 DEFAULT_VIDEO_RECORDING_ENABLED);
         setVideoRecordingEnabled(videoEnabled);
-    }
-
-    @VisibleForTesting
-    ContainerClient getContainerClient() {
-        return containerClient;
-    }
-
-    @VisibleForTesting
-    void setContainerClient(final ContainerClient client) {
-        containerClient = client;
-    }
-
-    @VisibleForTesting
-    void restoreContainerClient() {
-        containerClient = ContainerFactory.getContainerClient();
     }
 
     @VisibleForTesting
@@ -115,6 +99,21 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         DockerSeleniumRemoteProxy.videoRecordingEnabled = videoRecordingEnabled;
     }
 
+    @VisibleForTesting
+    ContainerClient getContainerClient() {
+        return containerClient;
+    }
+
+    @VisibleForTesting
+    void setContainerClient(final ContainerClient client) {
+        containerClient = client;
+    }
+
+    @VisibleForTesting
+    void restoreContainerClient() {
+        containerClient = ContainerFactory.getContainerClient();
+    }
+
     public HtmlRenderer getHtmlRender() {
         return this.renderer;
     }
@@ -132,6 +131,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         }
         if (increaseCounter()) {
             TestSession newSession = super.getNewSession(requestedCapability);
+            LOGGER.log(Level.FINE, getId() + " Creating session for: " + requestedCapability.toString());
             String browserName = requestedCapability.getOrDefault(CapabilityType.BROWSER_NAME, "").toString();
             testName = requestedCapability.getOrDefault("name", "").toString();
             if (testName.isEmpty()) {
@@ -180,20 +180,29 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
 
     @Override
     public void beforeCommand(TestSession session, HttpServletRequest request, HttpServletResponse response) {
+        super.beforeCommand(session, request, response);
+        LOGGER.log(Level.FINE,
+                getId() + " lastCommand: " +  request.getMethod() + " - " + request.getPathInfo() + " executing...");
+    }
+
+    @Override
+    public void afterCommand(TestSession session, HttpServletRequest request, HttpServletResponse response) {
+        super.afterCommand(session, request, response);
+        LOGGER.log(Level.FINE,
+                getId() + " lastCommand: " +  request.getMethod() + " - " + request.getPathInfo() + " executed.");
         if (request instanceof WebDriverRequest && "POST".equalsIgnoreCase(request.getMethod())) {
             WebDriverRequest seleniumRequest = (WebDriverRequest) request;
             if (RequestType.START_SESSION.equals(seleniumRequest.getRequestType())) {
                 videoRecording(DockerSeleniumContainerAction.START_RECORDING);
             }
         }
-        super.beforeCommand(session, request, response);
     }
 
     @Override
     public void afterSession(TestSession session) {
-        this.afterSessionEventReceived = true;
         String message = String.format("%s AFTER_SESSION command received. Node should shutdown soon...", getId());
         LOGGER.log(Level.INFO, message);
+        shutdownNode(false);
         long executionTime = (System.currentTimeMillis() - session.getSlot().getLastSessionStart()) / 1000;
         ga.testEvent(DockerSeleniumRemoteProxy.class.getName(), session.getRequestedCapabilities().toString(),
                 executionTime);
@@ -297,7 +306,10 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     }
 
     public long getMaxTestIdleTimeSecs() {
-        return maxTestIdleTimeSecs;
+        if (maxTestIdleTimeSecs > 0) {
+            return maxTestIdleTimeSecs;
+        }
+        return DEFAULT_MAX_TEST_IDLE_TIME_SECS;
     }
 
     protected String getContainerId() {
@@ -310,60 +322,103 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     }
 
     @VisibleForTesting
-    void processContainerAction(final DockerSeleniumContainerAction action, final String containerId) throws IOException {
+    void processContainerAction(final DockerSeleniumContainerAction action, final String containerId) {
+        boolean waitForExecution = DockerSeleniumContainerAction.STOP_RECORDING == action ||
+                DockerSeleniumContainerAction.TRANSFER_LOGS == action;
         final String[] command = {"bash", "-c", action.getContainerAction()};
-        containerClient.executeCommand(containerId, command);
+        containerClient.executeCommand(containerId, command, waitForExecution);
 
-        if (DockerSeleniumContainerAction.STOP_RECORDING == action) {
+        if (waitForExecution && DockerSeleniumContainerAction.STOP_RECORDING == action) {
             copyVideos(containerId);
         }
+        if (waitForExecution && DockerSeleniumContainerAction.TRANSFER_LOGS == action) {
+            copyLogs(containerId);
+        }
     }
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
     @VisibleForTesting
-    void copyVideos(final String containerId) throws IOException {
+    void copyVideos(final String containerId) {
         TarArchiveInputStream tarStream = new TarArchiveInputStream(containerClient.copyFiles(containerId, "/videos/"));
         TarArchiveEntry entry;
-        while ((entry = tarStream.getNextTarEntry()) != null) {
-            if (entry.isDirectory()) {
-                continue;
+        boolean videoWasCopied = false;
+        try {
+            while ((entry = tarStream.getNextTarEntry()) != null) {
+                if (entry.isDirectory()) {
+                    continue;
+                }
+                String fileExtension = entry.getName().substring(entry.getName().lastIndexOf('.'));
+                testInformation.setFileExtension(fileExtension);
+                File videoFile = new File(testInformation.getVideoFolderPath(), testInformation.getFileName());
+                File parent = videoFile.getParentFile();
+                if (!parent.exists()) {
+                    parent.mkdirs();
+                }
+                OutputStream outputStream = new FileOutputStream(videoFile);
+                IOUtils.copy(tarStream, outputStream);
+                outputStream.close();
+                videoWasCopied = true;
+                LOGGER.log(Level.INFO, "{0} Video file copied to: {1}/{2}", new Object[]{getId(),
+                        testInformation.getVideoFolderPath(), testInformation.getFileName()});
             }
-            String fileExtension = entry.getName().substring(entry.getName().lastIndexOf('.'));
-            testInformation.setFileExtension(fileExtension);
-            File videoFile = new File(testInformation.getVideoFolderPath(), testInformation.getFileName());
-            File parent = videoFile.getParentFile();
-            if (!parent.exists()) {
-                parent.mkdirs();
+        } catch (IOException e) {
+            LOGGER.log(Level.WARNING, getId() + " Error while copying the video", e);
+            ga.trackException(e);
+        } finally {
+            if (!videoWasCopied) {
+                testInformation.setVideoRecorded(false);
             }
-            OutputStream outputStream = new FileOutputStream(videoFile);
-            IOUtils.copy(tarStream, outputStream);
-            outputStream.close();
-            LOGGER.log(Level.INFO, "{0} Video file copied to: {1}/{2}", new Object[]{getId(),
-                    testInformation.getVideoFolderPath(), testInformation.getFileName()});
         }
+
     }
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
     @VisibleForTesting
-    void copyLogs(final String containerId) throws IOException {
+    void copyLogs(final String containerId) {
         TarArchiveInputStream tarStream = new TarArchiveInputStream(containerClient.copyFiles(containerId, "/var/log/cont/"));
         TarArchiveEntry entry;
-        while ((entry = tarStream.getNextTarEntry()) != null) {
-            if (entry.isDirectory()) {
-                continue;
+        try {
+            while ((entry = tarStream.getNextTarEntry()) != null) {
+                if (entry.isDirectory()) {
+                    continue;
+                }
+                String fileName = entry.getName().replace("cont/", "");
+                File logFile = new File(testInformation.getLogsFolderPath(), fileName);
+                File parent = logFile.getParentFile();
+                if (!parent.exists()) {
+                    parent.mkdirs();
+                }
+                OutputStream outputStream = new FileOutputStream(logFile);
+                IOUtils.copy(tarStream, outputStream);
+                outputStream.close();
             }
-            String fileName = entry.getName().replace("cont/", "");
-            File logFile = new File(testInformation.getLogsFolderPath(), fileName);
-            File parent = logFile.getParentFile();
-            if (!parent.exists()) {
-                parent.mkdirs();
-            }
-            OutputStream outputStream = new FileOutputStream(logFile);
-            IOUtils.copy(tarStream, outputStream);
-            outputStream.close();
+            LOGGER.log(Level.INFO, "{0} Logs copied to: {1}", new Object[]{getId(), testInformation.getLogsFolderPath()});
+        } catch (IOException e) {
+            LOGGER.log(Level.WARNING, getId() + " Error while copying the logs", e);
+            ga.trackException(e);
         }
-        LOGGER.log(Level.INFO, "{0} Logs copied to: {1}", new Object[]{getId(), testInformation.getLogsFolderPath()});
     }
+
+    private void shutdownNode(boolean isTestIdle) {
+        videoRecording(DockerSeleniumContainerAction.STOP_RECORDING);
+        processContainerAction(DockerSeleniumContainerAction.TRANSFER_LOGS, getContainerId());
+        Dashboard.updateDashboard(testInformation);
+
+        String shutdownReason = String.format("%s Marking the node as down because it was stopped after %s tests.",
+                getId(), MAX_UNIQUE_TEST_SESSIONS);
+
+        if (isTestIdle) {
+            terminateIdleTest();
+            shutdownReason = String.format("%s Marking the node as down because the test has been idle for more than %s seconds.",
+                    getId(), getMaxTestIdleTimeSecs());
+        }
+
+        getContainerClient().stopContainer(getContainerId());
+        addNewEvent(new RemoteNotReachableException(shutdownReason));
+        addNewEvent(new RemoteUnregisterException(shutdownReason));
+        teardown();
+    }
+
 
     public enum DockerSeleniumContainerAction {
         START_RECORDING("start-video"), STOP_RECORDING("stop-video"), TRANSFER_LOGS("transfer-logs.sh");
@@ -400,71 +455,23 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         public void run() {
             while (true) {
                 /*
-                    If the proxy is not busy and it can be released since the MAX_UNIQUE_TEST_SESSIONS have been executed,
-                    then the node executes its teardown.
-                    OR
                     If the current session has been idle for a while, the node shuts down
                 */
-                boolean isTestCompleted = !dockerSeleniumRemoteProxy.isBusy()
-                        && dockerSeleniumRemoteProxy.isTestSessionLimitReached()
-                        && dockerSeleniumRemoteProxy.afterSessionEventReceived;
-                boolean isTestIdle = dockerSeleniumRemoteProxy.isTestIdle();
-
-                if (isTestCompleted || isTestIdle) {
-                    dockerSeleniumRemoteProxy.videoRecording(DockerSeleniumContainerAction.STOP_RECORDING);
-                    try {
-                        dockerSeleniumRemoteProxy.processContainerAction(DockerSeleniumContainerAction.TRANSFER_LOGS,
-                                dockerSeleniumRemoteProxy.getContainerId());
-                        dockerSeleniumRemoteProxy.copyLogs(dockerSeleniumRemoteProxy.getContainerId());
-                    } catch (Exception e) {
-                        LOGGER.log(Level.FINE, dockerSeleniumRemoteProxy.getId() + " Error copying the logs.", e);
-                    }
-                    try {
-                        Dashboard.updateDashboard(dockerSeleniumRemoteProxy.testInformation);
-                    } catch (IOException e) {
-                        LOGGER.log(Level.FINE, dockerSeleniumRemoteProxy.getId() + " Error while updating the " +
-                                "dashboard.", e);
-                    }
-                    shutdownNode(isTestIdle);
+                if (dockerSeleniumRemoteProxy.isTestIdle()) {
+                    LOGGER.log(Level.INFO, dockerSeleniumRemoteProxy.getId() +
+                            " Shutting down node due to test inactivity");
+                    dockerSeleniumRemoteProxy.shutdownNode(true);
                     return;
                 }
-
                 try {
                     Thread.sleep(getSleepTimeBetweenChecks());
                 } catch (InterruptedException e) {
                     LOGGER.log(Level.FINE, dockerSeleniumRemoteProxy.getId() + " Error while sleeping the " +
                             "thread, stopping thread execution.", e);
-                    Thread.currentThread().interrupt();
-                    dockerSeleniumRemoteProxy.ga.trackException(e);
-                    dockerSeleniumRemoteProxy.stopPolling();
-                    dockerSeleniumRemoteProxy.startPolling();
                     return;
                 }
             }
         }
-
-        private void shutdownNode(boolean isTestIdle) {
-            String shutdownReason = String.format("%s Marking the node as down because it was stopped after %s tests.",
-                    dockerSeleniumRemoteProxy.getId(), MAX_UNIQUE_TEST_SESSIONS);
-
-            if (isTestIdle) {
-                dockerSeleniumRemoteProxy.terminateIdleTest();
-                shutdownReason = String.format("%s Marking the node as down because the test has been idle for more than %s seconds.",
-                        dockerSeleniumRemoteProxy.getId(), dockerSeleniumRemoteProxy.getMaxTestIdleTimeSecs());
-            }
-
-            try {
-                dockerSeleniumRemoteProxy.getContainerClient().stopContainer(dockerSeleniumRemoteProxy.getContainerId());
-            } catch (Exception e) {
-                LOGGER.log(Level.SEVERE, dockerSeleniumRemoteProxy.getId() + " " + e.getMessage(), e);
-                dockerSeleniumRemoteProxy.ga.trackException(e);
-            } finally {
-                dockerSeleniumRemoteProxy.addNewEvent(new RemoteNotReachableException(shutdownReason));
-                dockerSeleniumRemoteProxy.addNewEvent(new RemoteUnregisterException(shutdownReason));
-                dockerSeleniumRemoteProxy.teardown();
-            }
-        }
-
     }
 
 

@@ -11,22 +11,25 @@ import de.zalando.ep.zalenium.util.GoogleAnalyticsApi;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 @SuppressWarnings("ConstantConditions")
 public class DockerContainerClient implements ContainerClient {
 
-    private static final DockerClient defaultDockerClient = new DefaultDockerClient("unix:///var/run/docker.sock");
-    private static final Logger logger = Logger.getLogger(DockerContainerClient.class.getName());
-    private static final GoogleAnalyticsApi ga = new GoogleAnalyticsApi();
-    private static DockerClient dockerClient = defaultDockerClient;
+    private final Logger logger = Logger.getLogger(DockerContainerClient.class.getName());
+    private final GoogleAnalyticsApi ga = new GoogleAnalyticsApi();
+    private DockerClient dockerClient = new DefaultDockerClient("unix:///var/run/docker.sock");
     private String nodeId;
-    private ContainerMount mountedFolder;
+    private ContainerMount mntFolder;
+    private boolean mntFolderChecked = false;
 
     @VisibleForTesting
-    public static void setContainerClient(final DockerClient client) {
+    public void setContainerClient(final DockerClient client) {
         dockerClient = client;
     }
 
@@ -39,7 +42,7 @@ public class DockerContainerClient implements ContainerClient {
         try {
             containerList = dockerClient.listContainers(DockerClient.ListContainersParam.allContainers());
         } catch (DockerException | InterruptedException e) {
-            logger.log(Level.WARNING, nodeId + " Error while getting containerId", e);
+            logger.log(Level.FINE, nodeId + " Error while getting containerId", e);
             ga.trackException(e);
         }
         for (Container container : containerList) {
@@ -69,18 +72,20 @@ public class DockerContainerClient implements ContainerClient {
         }
     }
 
-    public void executeCommand(String containerId, String[] command) {
+    public void executeCommand(String containerId, String[] command, boolean waitForExecution) {
         final ExecCreation execCreation;
         try {
             execCreation = dockerClient.execCreate(containerId, command,
                     DockerClient.ExecCreateParam.attachStdout(), DockerClient.ExecCreateParam.attachStderr());
             final LogStream output = dockerClient.execStart(execCreation.id());
             logger.log(Level.INFO, () -> String.format("%s %s", nodeId, Arrays.toString(command)));
-            try {
-                logger.log(Level.INFO, () -> String.format("%s %s", nodeId, output.readFully()));
-            } catch (Exception e) {
-                logger.log(Level.FINE, nodeId + " Error while executing the output.readFully()", e);
-                ga.trackException(e);
+            if (waitForExecution) {
+                try {
+                    logger.log(Level.INFO, () -> String.format("%s %s", nodeId, output.readFully()));
+                } catch (Exception e) {
+                    logger.log(Level.FINE, nodeId + " Error while executing the output.readFully()", e);
+                    ga.trackException(e);
+                }
             }
         } catch (DockerException | InterruptedException e) {
             logger.log(Level.FINE, nodeId + " Error while executing the command", e);
@@ -114,7 +119,7 @@ public class DockerContainerClient implements ContainerClient {
         try {
             ImageInfo imageInfo = dockerClient.inspectImage(image);
             return imageInfo.config().labels().get(label);
-        } catch (DockerException | InterruptedException e) {
+        } catch (Exception e) {
             logger.log(Level.WARNING, nodeId + " Error while getting label value", e);
             ga.trackException(e);
         }
@@ -138,26 +143,44 @@ public class DockerContainerClient implements ContainerClient {
         return 0;
     }
 
-    public void createContainer(String zaleniumContainerName, String containerName, String image, List<String> envVars) {
-        String networkMode = String.format("container:%s", zaleniumContainerName);
+    public void createContainer(String zaleniumContainerName, String image, Map<String, String> envVars,
+                                String nodePort) {
+        String containerName = String.format("%s_%s", zaleniumContainerName, nodePort);
 
         List<String> binds = new ArrayList<>();
         binds.add("/dev/shm:/dev/shm");
         loadMountedFolder(zaleniumContainerName);
-        if (this.mountedFolder != null) {
-            String mountedBind = String.format("%s:%s", this.mountedFolder.source(), this.mountedFolder.destination());
+        if (this.mntFolder != null) {
+            String mountedBind = String.format("%s:%s", this.mntFolder.source(), this.mntFolder.destination());
             binds.add(mountedBind);
         }
 
+        String noVncPort = envVars.get("NOVNC_PORT");
+
+        final Map<String, List<PortBinding>> portBindings = new HashMap<>();
+        List<PortBinding> portBindingList = new ArrayList<>();
+        portBindingList.add(PortBinding.of("", nodePort));
+        portBindings.put(nodePort, portBindingList);
+        portBindingList = new ArrayList<>();
+        portBindingList.add(PortBinding.of("", noVncPort));
+        portBindings.put(noVncPort, portBindingList);
+
         HostConfig hostConfig = HostConfig.builder()
-                .networkMode(networkMode)
                 .appendBinds(binds)
+                .portBindings(portBindings)
                 .autoRemove(true)
+                .privileged(true)
                 .build();
 
+        List<String> flattenedEnvVars = envVars.entrySet().stream()
+                .map(e -> e.getKey() + "=" + e.getValue())
+                .collect(Collectors.toList());
+
+        final String[] exposedPorts = {nodePort, noVncPort};
         final ContainerConfig containerConfig = ContainerConfig.builder()
                 .image(image)
-                .env(envVars)
+                .env(flattenedEnvVars)
+                .exposedPorts(exposedPorts)
                 .hostConfig(hostConfig)
                 .build();
 
@@ -171,8 +194,12 @@ public class DockerContainerClient implements ContainerClient {
     }
 
     private void loadMountedFolder(String zaleniumContainerName) {
-        if (this.mountedFolder == null) {
+        if (this.mntFolder == null && !this.mntFolderChecked) {
+            this.mntFolderChecked = true;
             String containerId = getContainerId(String.format("/%s", zaleniumContainerName));
+            if (containerId == null) {
+                return;
+            }
             ContainerInfo containerInfo = null;
             try {
                 containerInfo = dockerClient.inspectContainer(containerId);
@@ -182,7 +209,7 @@ public class DockerContainerClient implements ContainerClient {
             }
             for (ContainerMount containerMount : containerInfo.mounts()) {
                 if ("/tmp/mounted".equalsIgnoreCase(containerMount.destination())) {
-                    this.mountedFolder = containerMount;
+                    this.mntFolder = containerMount;
                 }
             }
         }

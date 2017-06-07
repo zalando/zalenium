@@ -22,10 +22,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.Callable;
-
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -36,7 +32,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.withSettings;
-import static org.awaitility.Awaitility.await;
+import static org.mockito.Mockito.timeout;
 
 @RunWith(value = Parameterized.class)
 public class DockerSeleniumStarterRemoteProxyTest {
@@ -121,7 +117,7 @@ public class DockerSeleniumStarterRemoteProxyTest {
         TestSession testSession = spyProxy.getNewSession(supportedCapability);
 
         Assert.assertNull(testSession);
-        verify(spyProxy, times(1)).startDockerSeleniumContainer(BrowserType.CHROME);
+        verify(spyProxy, timeout(1000).times(1)).startDockerSeleniumContainer(BrowserType.CHROME);
     }
 
     @Test
@@ -135,7 +131,7 @@ public class DockerSeleniumStarterRemoteProxyTest {
         TestSession testSession = spyProxy.getNewSession(supportedCapability);
 
         Assert.assertNull(testSession);
-        verify(spyProxy, times(1)).startDockerSeleniumContainer(BrowserType.CHROME);
+        verify(spyProxy, timeout(1000).times(1)).startDockerSeleniumContainer(BrowserType.CHROME);
     }
 
     @Test
@@ -147,7 +143,7 @@ public class DockerSeleniumStarterRemoteProxyTest {
         supportedCapability.put("screenResolution", "1280x760");
         TestSession testSession = spyProxy.getNewSession(supportedCapability);
         Assert.assertNull(testSession);
-        verify(spyProxy, times(1)).startDockerSeleniumContainer(BrowserType.FIREFOX);
+        verify(spyProxy, timeout(1000).times(1)).startDockerSeleniumContainer(BrowserType.FIREFOX);
         Assert.assertEquals(1280, DockerSeleniumStarterRemoteProxy.getScreenWidth());
         Assert.assertEquals(760, DockerSeleniumStarterRemoteProxy.getScreenHeight());
     }
@@ -161,7 +157,7 @@ public class DockerSeleniumStarterRemoteProxyTest {
         supportedCapability.put("resolution", "1300x900");
         TestSession testSession = spyProxy.getNewSession(supportedCapability);
         Assert.assertNull(testSession);
-        verify(spyProxy, times(1)).startDockerSeleniumContainer(BrowserType.CHROME);
+        verify(spyProxy, timeout(1000).times(1)).startDockerSeleniumContainer(BrowserType.CHROME);
         Assert.assertEquals(1300, DockerSeleniumStarterRemoteProxy.getScreenWidth());
         Assert.assertEquals(900, DockerSeleniumStarterRemoteProxy.getScreenHeight());
     }
@@ -175,7 +171,7 @@ public class DockerSeleniumStarterRemoteProxyTest {
         supportedCapability.put("screen-resolution", "1500x1000");
         TestSession testSession = spyProxy.getNewSession(supportedCapability);
         Assert.assertNull(testSession);
-        verify(spyProxy, times(1)).startDockerSeleniumContainer(BrowserType.FIREFOX);
+        verify(spyProxy, timeout(1000).times(1)).startDockerSeleniumContainer(BrowserType.FIREFOX);
         Assert.assertEquals(1500, DockerSeleniumStarterRemoteProxy.getScreenWidth());
         Assert.assertEquals(1000, DockerSeleniumStarterRemoteProxy.getScreenHeight());
     }
@@ -189,7 +185,7 @@ public class DockerSeleniumStarterRemoteProxyTest {
         supportedCapability.put("resolution", "-1300x800");
         TestSession testSession = spyProxy.getNewSession(supportedCapability);
         Assert.assertNull(testSession);
-        verify(spyProxy, times(1)).startDockerSeleniumContainer(BrowserType.CHROME);
+        verify(spyProxy, timeout(1000).times(1)).startDockerSeleniumContainer(BrowserType.CHROME);
         Assert.assertEquals(DockerSeleniumStarterRemoteProxy.getConfiguredScreenWidth(),
                 DockerSeleniumStarterRemoteProxy.getScreenWidth());
         Assert.assertEquals(DockerSeleniumStarterRemoteProxy.getConfiguredScreenHeight(),
@@ -205,7 +201,7 @@ public class DockerSeleniumStarterRemoteProxyTest {
         supportedCapability.put("screenResolution", "notAValidScreenResolution");
         TestSession testSession = spyProxy.getNewSession(supportedCapability);
         Assert.assertNull(testSession);
-        verify(spyProxy, times(1)).startDockerSeleniumContainer(BrowserType.CHROME);
+        verify(spyProxy, timeout(1000).times(1)).startDockerSeleniumContainer(BrowserType.CHROME);
         Assert.assertEquals(DockerSeleniumStarterRemoteProxy.getConfiguredScreenWidth(),
                 DockerSeleniumStarterRemoteProxy.getScreenWidth());
         Assert.assertEquals(DockerSeleniumStarterRemoteProxy.getConfiguredScreenHeight(),
@@ -222,7 +218,7 @@ public class DockerSeleniumStarterRemoteProxyTest {
         TestSession testSession = spyProxy.getNewSession(supportedCapability);
 
         Assert.assertNull(testSession);
-        verify(spyProxy, times(1)).startDockerSeleniumContainer(BrowserType.FIREFOX);
+        verify(spyProxy, timeout(1000).times(1)).startDockerSeleniumContainer(BrowserType.FIREFOX);
     }
 
     @Test
@@ -248,14 +244,14 @@ public class DockerSeleniumStarterRemoteProxyTest {
     }
 
     @Test
-    public void containerIsStartedForRequestProcessedMoreThan20Times() {
+    public void containerIsStartedForRequestProcessedMoreThan30Times() {
         Map<String, Object> requestedCapability = new HashMap<>();
         requestedCapability.put(CapabilityType.BROWSER_NAME, BrowserType.FIREFOX);
         requestedCapability.put(CapabilityType.PLATFORM, Platform.LINUX);
-        requestedCapability.put("waitingFor_FIREFOX_Node", 21);
+        requestedCapability.put("waitingFor_FIREFOX_Node", 31);
         TestSession testSession = spyProxy.getNewSession(requestedCapability);
         Assert.assertNull(testSession);
-        verify(spyProxy, times(1)).startDockerSeleniumContainer(anyString(), eq(true));
+        verify(spyProxy, timeout(1000).times(1)).startDockerSeleniumContainer(anyString(), eq(true));
     }
 
 
@@ -361,24 +357,29 @@ public class DockerSeleniumStarterRemoteProxyTest {
     @Test
     public void amountOfCreatedContainersIsTheConfiguredOne() {
         // Mock the environment class that serves as proxy to retrieve env variables
-        Environment environment = mock(Environment.class, withSettings().useConstructor());
-        int amountOfChromeContainers = 3;
-        int amountOfFirefoxContainers = 4;
-        when(environment.getEnvVariable(DockerSeleniumStarterRemoteProxy.ZALENIUM_CHROME_CONTAINERS))
-                .thenReturn(String.valueOf(amountOfChromeContainers));
-        when(environment.getEnvVariable(DockerSeleniumStarterRemoteProxy.ZALENIUM_FIREFOX_CONTAINERS))
-                .thenReturn(String.valueOf(amountOfFirefoxContainers));
-        when(environment.getIntEnvVariable(any(String.class), any(Integer.class))).thenCallRealMethod();
-        DockerSeleniumStarterRemoteProxy.setEnv(environment);
+        try {
+            Environment environment = mock(Environment.class, withSettings().useConstructor());
+            int amountOfChromeContainers = 3;
+            int amountOfFirefoxContainers = 4;
+            when(environment.getEnvVariable(DockerSeleniumStarterRemoteProxy.ZALENIUM_CHROME_CONTAINERS))
+                    .thenReturn(String.valueOf(amountOfChromeContainers));
+            when(environment.getEnvVariable(DockerSeleniumStarterRemoteProxy.ZALENIUM_FIREFOX_CONTAINERS))
+                    .thenReturn(String.valueOf(amountOfFirefoxContainers));
+            when(environment.getIntEnvVariable(any(String.class), any(Integer.class))).thenCallRealMethod();
+            DockerSeleniumStarterRemoteProxy.setEnv(environment);
+            DockerSeleniumStarterRemoteProxy.setSleepIntervalMultiplier(0);
 
-        registry.add(spyProxy);
+            registry.add(spyProxy);
 
-        Callable<Boolean> callable = () -> spyProxy.isSetupCompleted();
-        await().atMost(1, SECONDS).pollInterval(100, MILLISECONDS).until(callable);
-        verify(spyProxy, times(amountOfChromeContainers)).startDockerSeleniumContainer(BrowserType.CHROME);
-        verify(spyProxy, times(amountOfFirefoxContainers)).startDockerSeleniumContainer(BrowserType.FIREFOX);
-        Assert.assertEquals(amountOfChromeContainers, DockerSeleniumStarterRemoteProxy.getChromeContainersOnStartup());
-        Assert.assertEquals(amountOfFirefoxContainers, DockerSeleniumStarterRemoteProxy.getFirefoxContainersOnStartup());
+            verify(spyProxy, timeout(5000).times(amountOfChromeContainers))
+                    .startDockerSeleniumContainer(BrowserType.CHROME, true);
+            verify(spyProxy, timeout(5000).times(amountOfFirefoxContainers))
+                    .startDockerSeleniumContainer(BrowserType.FIREFOX, true);
+            Assert.assertEquals(amountOfChromeContainers, DockerSeleniumStarterRemoteProxy.getChromeContainersOnStartup());
+            Assert.assertEquals(amountOfFirefoxContainers, DockerSeleniumStarterRemoteProxy.getFirefoxContainersOnStartup());
+        } finally {
+            DockerSeleniumStarterRemoteProxy.setSleepIntervalMultiplier(1000);
+        }
     }
 
     @Test

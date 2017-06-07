@@ -202,8 +202,9 @@ public class TestUtils {
             e.printStackTrace();
         }
 
-        DockerContainerClient.setContainerClient(dockerClient);
-        return new DockerContainerClient();
+        DockerContainerClient dockerContainerClient = new DockerContainerClient();
+        dockerContainerClient.setContainerClient(dockerClient);
+        return dockerContainerClient;
     }
 
 }

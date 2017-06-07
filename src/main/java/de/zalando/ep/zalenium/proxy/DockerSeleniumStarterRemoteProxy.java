@@ -6,9 +6,9 @@ import de.zalando.ep.zalenium.container.ContainerFactory;
 import de.zalando.ep.zalenium.matcher.DockerSeleniumCapabilityMatcher;
 import de.zalando.ep.zalenium.util.Environment;
 import de.zalando.ep.zalenium.util.GoogleAnalyticsApi;
+import org.apache.commons.lang3.RandomUtils;
 import org.openqa.grid.common.RegistrationRequest;
 import org.openqa.grid.internal.Registry;
-import org.openqa.grid.internal.RemoteProxy;
 import org.openqa.grid.internal.TestSession;
 import org.openqa.grid.internal.listeners.RegistrationListener;
 import org.openqa.grid.internal.utils.CapabilityMatcher;
@@ -16,6 +16,7 @@ import org.openqa.grid.internal.utils.HtmlRenderer;
 import org.openqa.grid.selenium.proxy.DefaultRemoteProxy;
 import org.openqa.grid.web.servlet.beta.WebProxyHtmlRendererBeta;
 import org.openqa.selenium.Platform;
+import org.openqa.selenium.net.NetworkUtils;
 import org.openqa.selenium.remote.BrowserType;
 import org.openqa.selenium.remote.CapabilityType;
 import org.openqa.selenium.remote.DesiredCapabilities;
@@ -38,6 +39,7 @@ import java.util.logging.Logger;
 @SuppressWarnings("WeakerAccess")
 public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy implements RegistrationListener {
 
+    public static final int NO_VNC_PORT_GAP = 10000;
     @VisibleForTesting
     static final int DEFAULT_AMOUNT_CHROME_CONTAINERS = 0;
     @VisibleForTesting
@@ -70,7 +72,6 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     private static final String DOCKER_SELENIUM_IMAGE = "elgalu/selenium";
     private static final int LOWER_PORT_BOUNDARY = 40000;
     private static final int UPPER_PORT_BOUNDARY = 49999;
-    private static final int NO_VNC_PORT_GAP = 10000;
     private static final int VNC_PORT_GAP = 20000;
     private static final ContainerClient defaultContainerClient = ContainerFactory.getContainerClient();
     private static final Environment defaultEnvironment = new Environment();
@@ -85,6 +86,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     private static int chromeContainersOnStartup;
     private static int firefoxContainersOnStartup;
     private static int maxDockerSeleniumContainers;
+    private static int sleepIntervalMultiplier = 1000;
     private static String configuredTimeZone;
     private static String timeZone;
     private static int configuredScreenWidth;
@@ -94,7 +96,6 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     private static String containerName;
     private final HtmlRenderer renderer = new WebProxyHtmlRendererBeta(this);
     private List<Integer> allocatedPorts = new ArrayList<>();
-    private boolean setupCompleted;
     private CapabilityMatcher capabilityHelper;
 
     @SuppressWarnings("WeakerAccess")
@@ -212,6 +213,11 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
 
     private static void setContainerName(String containerName) {
         DockerSeleniumStarterRemoteProxy.containerName = containerName;
+    }
+
+    @VisibleForTesting
+    public static void setSleepIntervalMultiplier(int sleepIntervalMultiplier) {
+        DockerSeleniumStarterRemoteProxy.sleepIntervalMultiplier = sleepIntervalMultiplier;
     }
 
     @VisibleForTesting
@@ -346,23 +352,22 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
             Here a docker-selenium container will be started and it will register to the hub
             We check first if a node has been created for this request already. If so, we skip it
             but increment the number of times it has been received. In case something went wrong with the node
-            creation, we remove the mark after 20 times and we create a node again.
+            creation, we remove the mark after 30 times and we create a node again.
             * The mark is an added custom capability
          */
         String waitingForNode = String.format("waitingFor_%s_Node", browserName.toUpperCase());
         if (!requestedCapability.containsKey(waitingForNode)) {
             LOGGER.log(Level.INFO, LOGGING_PREFIX + "Starting new node for {0}.", requestedCapability);
-            if (startDockerSeleniumContainer(browserName)) {
-                requestedCapability.put(waitingForNode, 1);
-            }
+            requestedCapability.put(waitingForNode, 1);
+            new Thread(() -> startDockerSeleniumContainer(browserName)).start();
         } else {
             int attempts = (int) requestedCapability.get(waitingForNode);
             attempts++;
-            if (attempts >= 20) {
-                LOGGER.log(Level.FINE, LOGGING_PREFIX + "Request has waited 20 attempts for a node, something " +
+            if (attempts >= 30) {
+                LOGGER.log(Level.INFO, LOGGING_PREFIX + "Request has waited 30 attempts for a node, something " +
                         "went wrong with the previous attempts, creating a new node for {0}.", requestedCapability);
-                startDockerSeleniumContainer(browserName, true);
                 requestedCapability.put(waitingForNode, 1);
+                new Thread(() -> startDockerSeleniumContainer(browserName, true)).start();
             } else {
                 requestedCapability.put(waitingForNode, attempts);
                 LOGGER.log(Level.FINE, LOGGING_PREFIX + "Request waiting for a node new node for {0}.", requestedCapability);
@@ -371,16 +376,10 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
         return null;
     }
 
-    /*
-        Starting a few containers (Firefox, Chrome), so they are ready when the tests come.
-        Executed in a thread so we don't wait for the containers to be created and the node
-        registration is not delayed.
-    */
     @Override
     public void beforeRegistration() {
         readConfigurationFromEnvVariables();
-        setupCompleted = false;
-        createStartupContainers();
+        createContainersOnStartup();
     }
 
     @Override
@@ -408,89 +407,92 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     @VisibleForTesting
     public boolean startDockerSeleniumContainer(String browser, boolean forceCreation) {
 
-        if (validateAmountOfDockerSeleniumContainers() || forceCreation) {
+        if (forceCreation || validateAmountOfDockerSeleniumContainers()) {
 
-            String hostIpAddress = "localhost";
+            NetworkUtils networkUtils = new NetworkUtils();
+            String hostIpAddress = networkUtils.getIp4NonLoopbackAddressOfThisMachine().getHostAddress();
 
             /*
                 Building the docker command, depending if Chrome or Firefox is requested.
                 To launch only the requested node type.
              */
+            boolean sendAnonymousUsageInfo = env.getBooleanEnvVariable("ZALENIUM_SEND_ANONYMOUS_USAGE_INFO", false);
 
             final int nodePort = findFreePortInRange(LOWER_PORT_BOUNDARY, UPPER_PORT_BOUNDARY);
             final int noVncPort = nodePort + NO_VNC_PORT_GAP;
             final int vncPort = nodePort + VNC_PORT_GAP;
 
-            List<String> envVariables = new ArrayList<>();
-            envVariables.add("ZALENIUM=true");
-            envVariables.add("SELENIUM_HUB_HOST=" + hostIpAddress);
-            envVariables.add("SELENIUM_HUB_PORT=4445");
-            envVariables.add("SELENIUM_NODE_HOST=" + hostIpAddress);
-            envVariables.add("GRID=false");
-            envVariables.add("RC_CHROME=false");
-            envVariables.add("RC_FIREFOX=false");
-            envVariables.add("USE_SELENIUM=3");
-            envVariables.add("WAIT_TIMEOUT=120s");
-            envVariables.add("PICK_ALL_RANDOM_PORTS=true");
-            envVariables.add("VIDEO_STOP_SLEEP_SECS=1");
-            envVariables.add("WAIT_TIME_OUT_VIDEO_STOP=20s");
-            boolean sendAnonymousUsageInfo = env.getBooleanEnvVariable("ZALENIUM_SEND_ANONYMOUS_USAGE_INFO", false);
-            envVariables.add("SEND_ANONYMOUS_USAGE_INFO=" + sendAnonymousUsageInfo);
-            envVariables.add("BUILD_URL=" + env.getStringEnvVariable("BUILD_URL", ""));
-            envVariables.add("NOVNC=true");
-            envVariables.add("NOVNC_PORT=" + noVncPort);
-            envVariables.add("VNC_PORT=" + vncPort);
-            envVariables.add("SCREEN_WIDTH=" + getScreenWidth());
-            envVariables.add("SCREEN_HEIGHT=" + getScreenHeight());
-            envVariables.add("TZ=" + getTimeZone());
-            envVariables.add("SELENIUM_NODE_REGISTER_CYCLE=0");
-            envVariables.add("SELENIUM_NODE_PROXY_PARAMS=de.zalando.ep.zalenium.proxy.DockerSeleniumRemoteProxy");
+            String nodePolling = String.valueOf(RandomUtils.nextInt(90, 120) * 1000);
+
+            Map<String, String> envVars = new HashMap<>();
+            envVars.put("ZALENIUM", "true");
+            envVars.put("SELENIUM_HUB_HOST", hostIpAddress);
+            envVars.put("SELENIUM_HUB_PORT", "4445");
+            envVars.put("SELENIUM_NODE_HOST", "{{CONTAINER_IP}}");
+            envVars.put("GRID", "false");
+            envVars.put("WAIT_TIMEOUT", "120s");
+            envVars.put("PICK_ALL_RANDOM_PORTS", "true");
+            envVars.put("VIDEO_STOP_SLEEP_SECS", "1");
+            envVars.put("WAIT_TIME_OUT_VIDEO_STOP", "20s");
+            envVars.put("SEND_ANONYMOUS_USAGE_INFO", String.valueOf(sendAnonymousUsageInfo));
+            envVars.put("BUILD_URL", env.getStringEnvVariable("BUILD_URL", ""));
+            envVars.put("NOVNC", "true");
+            envVars.put("NOVNC_PORT", String.valueOf(noVncPort));
+            envVars.put("VNC_PORT", String.valueOf(vncPort));
+            envVars.put("SCREEN_WIDTH", String.valueOf(getScreenWidth()));
+            envVars.put("SCREEN_HEIGHT", String.valueOf(getScreenHeight()));
+            envVars.put("TZ", getTimeZone());
+            envVars.put("SELENIUM_NODE_REGISTER_CYCLE", "0");
+            envVars.put("SEL_NODEPOLLING_MS", nodePolling);
+            envVars.put("SELENIUM_NODE_PROXY_PARAMS", "de.zalando.ep.zalenium.proxy.DockerSeleniumRemoteProxy");
             if (BrowserType.CHROME.equalsIgnoreCase(browser)) {
-                envVariables.add("SELENIUM_NODE_CH_PORT=" + nodePort);
-                envVariables.add("CHROME=true");
+                envVars.put("SELENIUM_NODE_CH_PORT", String.valueOf(nodePort));
+                envVars.put("CHROME", "true");
             } else {
-                envVariables.add("CHROME=false");
+                envVars.put("CHROME", "false");
             }
             if (BrowserType.FIREFOX.equalsIgnoreCase(browser)) {
-                envVariables.add("SELENIUM_NODE_FF_PORT=" + nodePort);
-                envVariables.add("FIREFOX=true");
+                envVars.put("SELENIUM_NODE_FF_PORT", String.valueOf(nodePort));
+                envVars.put("FIREFOX", "true");
             } else {
-                envVariables.add("FIREFOX=false");
+                envVars.put("FIREFOX", "false");
             }
 
             String latestImage = containerClient.getLatestDownloadedImage(DOCKER_SELENIUM_IMAGE);
-            String dockerSeleniumContainerName = String.format("%s_%s", getContainerName(), nodePort);
-            containerClient.createContainer(getContainerName(), dockerSeleniumContainerName, latestImage, envVariables);
+            containerClient.createContainer(getContainerName(), latestImage, envVars, String.valueOf(nodePort));
             return true;
         }
         return false;
     }
 
-    @VisibleForTesting
-    protected boolean isSetupCompleted() {
-        return setupCompleted;
-    }
-
-    private void createStartupContainers() {
+    private void createContainersOnStartup() {
         int configuredContainers = getChromeContainersOnStartup() + getFirefoxContainersOnStartup();
         int containersToCreate = configuredContainers > getMaxDockerSeleniumContainers() ?
                 getMaxDockerSeleniumContainers() : configuredContainers;
-        new Thread(() -> {
-            LOGGER.log(Level.INFO, String.format("%s Setting up %s nodes...", LOGGING_PREFIX, configuredContainers));
-            int createdContainers = 0;
-            while (createdContainers < containersToCreate &&
-                    containerClient.getRunningContainers(DOCKER_SELENIUM_IMAGE) <= getMaxDockerSeleniumContainers()) {
-                boolean wasContainerCreated;
-                if (createdContainers < getChromeContainersOnStartup()) {
-                    wasContainerCreated = startDockerSeleniumContainer(BrowserType.CHROME);
-                } else {
-                    wasContainerCreated = startDockerSeleniumContainer(BrowserType.FIREFOX);
-                }
-                createdContainers = wasContainerCreated ? createdContainers + 1 : createdContainers;
+        LOGGER.log(Level.INFO, String.format("%s Setting up %s nodes...", LOGGING_PREFIX, configuredContainers));
+        // Thread.sleep() is to avoid having containers starting at the same time
+        for (int i = 0; i < containersToCreate; i++) {
+            if (i < getChromeContainersOnStartup()) {
+                new Thread(() -> {
+                    try {
+                        Thread.sleep(RandomUtils.nextInt(1, containersToCreate) * sleepIntervalMultiplier);
+                    } catch (InterruptedException e) {
+                        LOGGER.log(Level.FINE, getId() + " Error sleeping before starting a Chrome container", e);
+                    }
+                    startDockerSeleniumContainer(BrowserType.CHROME, true);
+                }).start();
+            } else {
+                new Thread(() -> {
+                    try {
+                        Thread.sleep(RandomUtils.nextInt(1, containersToCreate) * sleepIntervalMultiplier);
+                    } catch (InterruptedException e) {
+                        LOGGER.log(Level.FINE, getId() + " Error sleeping before starting a Firefox container", e);
+                    }
+                    startDockerSeleniumContainer(BrowserType.FIREFOX, true);
+                }).start();
             }
-            LOGGER.log(Level.INFO, String.format("%s containers were created, it will take a bit more until all get registered.", createdContainers));
-            setupCompleted = true;
-        }).start();
+        }
+        LOGGER.log(Level.INFO, String.format("%s containers were created, it will take a bit more until all get registered.", containersToCreate));
     }
 
     /*
@@ -556,37 +558,13 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     private boolean validateAmountOfDockerSeleniumContainers() {
         try {
             int numberOfDockerSeleniumContainers = containerClient.getRunningContainers(DOCKER_SELENIUM_IMAGE);
-
-            /*
-                Validation to avoid the situation where 20 containers are running and only 4 proxies are registered.
-                The remaining 16 are not registered because they are all trying to do it and the hub just cannot
-                process all the registrations fast enough, causing many unexpected errors.
-            */
-            int numberOfProxies = 0;
-            for (RemoteProxy remoteProxy : getRegistry().getAllProxies()) {
-                if (remoteProxy instanceof DockerSeleniumRemoteProxy) {
-                    numberOfProxies++;
-                }
-            }
-            LOGGER.log(Level.FINE, "Number of proxies -> " + numberOfProxies);
-            int newSessionRequestCount = getRegistry().getNewSessionRequestCount();
-            LOGGER.log(Level.FINE, "(getNewSessionRequestCount()) -> " + newSessionRequestCount);
-            int proxiesAndNewSessions = numberOfProxies + newSessionRequestCount;
-            LOGGER.log(Level.FINE, "Number of proxies + new sessions requested -> " + proxiesAndNewSessions);
-            LOGGER.log(Level.FINE, "Number of DockerSelenium containers -> " + numberOfDockerSeleniumContainers);
-            if (numberOfDockerSeleniumContainers > proxiesAndNewSessions) {
-                LOGGER.log(Level.FINE, LOGGING_PREFIX + "More docker-selenium containers running than proxies, {0} vs. {1}",
-                        new Object[]{numberOfDockerSeleniumContainers, numberOfProxies});
-                return false;
-            }
-
-            LOGGER.log(Level.FINE, () -> String.format("%s %s docker-selenium containers running", LOGGING_PREFIX,
-                    numberOfDockerSeleniumContainers));
             if (numberOfDockerSeleniumContainers >= getMaxDockerSeleniumContainers()) {
                 LOGGER.log(Level.WARNING, LOGGING_PREFIX + "Max. number of docker-selenium containers has been reached, " +
                         "no more will be created until the number decreases below {0}.", getMaxDockerSeleniumContainers());
                 return false;
             }
+            LOGGER.log(Level.FINE, () -> String.format("%s %s docker-selenium containers running", LOGGING_PREFIX,
+                    numberOfDockerSeleniumContainers));
             return true;
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, LOGGING_PREFIX + e.toString(), e);
@@ -598,7 +576,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     /*
         Method adapted from https://gist.github.com/vorburger/3429822
      */
-    private int findFreePortInRange(int lowerBoundary, int upperBoundary) {
+    private synchronized int findFreePortInRange(int lowerBoundary, int upperBoundary) {
         /*
             If the list size is this big (~9800), it means that almost all ports have been used, but
             probably many have been released already. The list is cleared so ports can be reused.

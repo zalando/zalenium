@@ -404,8 +404,8 @@ StartUp()
     echo "Starting DockerSeleniumStarter node..."
 
     java -jar ${SELENIUM_ARTIFACT} -role node -hub http://localhost:4444/grid/register \
-     -proxy de.zalando.ep.zalenium.proxy.DockerSeleniumStarterRemoteProxy \
-     -port 30000 -debug ${DEBUG_ENABLED} > logs/stdout.zalenium.docker.node.log &
+     -registerCycle 0 -proxy de.zalando.ep.zalenium.proxy.DockerSeleniumStarterRemoteProxy \
+     -nodePolling 90000 -port 30000 -debug ${DEBUG_ENABLED} > logs/stdout.zalenium.docker.node.log &
     echo $! > ${PID_PATH_DOCKER_SELENIUM_NODE}
 
     if ! timeout --foreground "30s" bash -c WaitStarterProxy; then
@@ -424,16 +424,11 @@ StartUp()
         exit 7
     fi
 
-    if ! curl -sSL "http://localhost:5555/proxy/4444/" | grep Grid >/dev/null; then
-        echo "Error: Nginx is not redirecting to the grid"
-        exit 8
-    fi
-
     if [ "$SAUCE_LABS_ENABLED" = true ]; then
         echo "Starting Sauce Labs node..."
         java -jar ${SELENIUM_ARTIFACT} -role node -hub http://localhost:4444/grid/register \
-         -proxy de.zalando.ep.zalenium.proxy.SauceLabsRemoteProxy \
-         -port 30001 -debug ${DEBUG_ENABLED} > logs/stdout.zalenium.sauce.node.log &
+         -registerCycle 0 -proxy de.zalando.ep.zalenium.proxy.SauceLabsRemoteProxy \
+         -nodePolling 90000 -port 30001 -debug ${DEBUG_ENABLED} > logs/stdout.zalenium.sauce.node.log &
         echo $! > ${PID_PATH_SAUCE_LABS_NODE}
 
         if ! timeout --foreground "40s" bash -c WaitSauceLabsProxy; then
@@ -458,8 +453,8 @@ StartUp()
     if [ "$BROWSER_STACK_ENABLED" = true ]; then
         echo "Starting Browser Stack node..."
         java -jar ${SELENIUM_ARTIFACT} -role node -hub http://localhost:4444/grid/register \
-         -proxy de.zalando.ep.zalenium.proxy.BrowserStackRemoteProxy \
-         -port 30002 -debug ${DEBUG_ENABLED} > logs/stdout.zalenium.browserstack.node.log &
+         -registerCycle 0 -proxy de.zalando.ep.zalenium.proxy.BrowserStackRemoteProxy \
+         -nodePolling 90000 -port 30002 -debug ${DEBUG_ENABLED} > logs/stdout.zalenium.browserstack.node.log &
         echo $! > ${PID_PATH_BROWSER_STACK_NODE}
 
         if ! timeout --foreground "40s" bash -c WaitBrowserStackProxy; then
@@ -483,8 +478,8 @@ StartUp()
     if [ "$TESTINGBOT_ENABLED" = true ]; then
         echo "Starting TestingBot node..."
         java -jar ${SELENIUM_ARTIFACT} -role node -hub http://localhost:4444/grid/register \
-         -proxy de.zalando.ep.zalenium.proxy.TestingBotRemoteProxy \
-         -port 30003 -debug ${DEBUG_ENABLED} > logs/stdout.zalenium.testingbot.node.log &
+         -registerCycle 0 -proxy de.zalando.ep.zalenium.proxy.TestingBotRemoteProxy \
+         -nodePolling 90000 -port 30003 -debug ${DEBUG_ENABLED} > logs/stdout.zalenium.testingbot.node.log &
         echo $! > ${PID_PATH_TESTINGBOT_NODE}
 
         if ! timeout --foreground "40s" bash -c WaitTestingBotProxy; then
@@ -649,7 +644,7 @@ ShutDown()
     if [ -f /home/seluser/videos/executedTestsInfo.json ]; then
         # Wait for the dashboard and the videos, if applies
         if timeout --foreground "40s" bash -c WaitForVideosTransferred; then
-            local __total="$(</home/seluser/videos/executedTestsInfo.json | jq .executedTestsWithVideo)"
+            local __total=$(jq .executedTestsWithVideo /home/seluser/videos/executedTestsInfo.json)
             log "WaitForVideosTransferred succeeded for a total of ${__total}"
         else
             log "WaitForVideosTransferred failed after 40 seconds!"
