@@ -131,6 +131,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         }
         if (increaseCounter()) {
             TestSession newSession = super.getNewSession(requestedCapability);
+            LOGGER.log(Level.FINE, getId() + " Creating session for: " + requestedCapability.toString());
             String browserName = requestedCapability.getOrDefault(CapabilityType.BROWSER_NAME, "").toString();
             testName = requestedCapability.getOrDefault("name", "").toString();
             if (testName.isEmpty()) {
@@ -178,8 +179,17 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     }
 
     @Override
+    public void beforeCommand(TestSession session, HttpServletRequest request, HttpServletResponse response) {
+        super.beforeCommand(session, request, response);
+        LOGGER.log(Level.FINE,
+                getId() + " lastCommand: " +  request.getMethod() + " - " + request.getPathInfo() + " executing...");
+    }
+
+    @Override
     public void afterCommand(TestSession session, HttpServletRequest request, HttpServletResponse response) {
         super.afterCommand(session, request, response);
+        LOGGER.log(Level.FINE,
+                getId() + " lastCommand: " +  request.getMethod() + " - " + request.getPathInfo() + " executed.");
         if (request instanceof WebDriverRequest && "POST".equalsIgnoreCase(request.getMethod())) {
             WebDriverRequest seleniumRequest = (WebDriverRequest) request;
             if (RequestType.START_SESSION.equals(seleniumRequest.getRequestType())) {
@@ -448,6 +458,8 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                     If the current session has been idle for a while, the node shuts down
                 */
                 if (dockerSeleniumRemoteProxy.isTestIdle()) {
+                    LOGGER.log(Level.INFO, dockerSeleniumRemoteProxy.getId() +
+                            " Shutting down node due to test inactivity");
                     dockerSeleniumRemoteProxy.shutdownNode(true);
                     return;
                 }

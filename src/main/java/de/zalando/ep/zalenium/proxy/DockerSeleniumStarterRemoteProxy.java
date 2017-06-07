@@ -86,6 +86,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     private static int chromeContainersOnStartup;
     private static int firefoxContainersOnStartup;
     private static int maxDockerSeleniumContainers;
+    private static int sleepIntervalMultiplier = 1000;
     private static String configuredTimeZone;
     private static String timeZone;
     private static int configuredScreenWidth;
@@ -95,7 +96,6 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     private static String containerName;
     private final HtmlRenderer renderer = new WebProxyHtmlRendererBeta(this);
     private List<Integer> allocatedPorts = new ArrayList<>();
-    private boolean setupCompleted;
     private CapabilityMatcher capabilityHelper;
 
     @SuppressWarnings("WeakerAccess")
@@ -213,6 +213,11 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
 
     private static void setContainerName(String containerName) {
         DockerSeleniumStarterRemoteProxy.containerName = containerName;
+    }
+
+    @VisibleForTesting
+    public static void setSleepIntervalMultiplier(int sleepIntervalMultiplier) {
+        DockerSeleniumStarterRemoteProxy.sleepIntervalMultiplier = sleepIntervalMultiplier;
     }
 
     @VisibleForTesting
@@ -374,7 +379,6 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     @Override
     public void beforeRegistration() {
         readConfigurationFromEnvVariables();
-        setupCompleted = false;
         createContainersOnStartup();
     }
 
@@ -461,11 +465,6 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
         return false;
     }
 
-    @VisibleForTesting
-    protected boolean isSetupCompleted() {
-        return setupCompleted;
-    }
-
     private void createContainersOnStartup() {
         int configuredContainers = getChromeContainersOnStartup() + getFirefoxContainersOnStartup();
         int containersToCreate = configuredContainers > getMaxDockerSeleniumContainers() ?
@@ -476,7 +475,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
             if (i < getChromeContainersOnStartup()) {
                 new Thread(() -> {
                     try {
-                        Thread.sleep(RandomUtils.nextInt(1, containersToCreate) * 1000);
+                        Thread.sleep(RandomUtils.nextInt(1, containersToCreate) * sleepIntervalMultiplier);
                     } catch (InterruptedException e) {
                         LOGGER.log(Level.FINE, getId() + " Error sleeping before starting a Chrome container", e);
                     }
@@ -485,7 +484,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
             } else {
                 new Thread(() -> {
                     try {
-                        Thread.sleep(RandomUtils.nextInt(1, containersToCreate) * 1000);
+                        Thread.sleep(RandomUtils.nextInt(1, containersToCreate) * sleepIntervalMultiplier);
                     } catch (InterruptedException e) {
                         LOGGER.log(Level.FINE, getId() + " Error sleeping before starting a Firefox container", e);
                     }
@@ -493,7 +492,6 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
                 }).start();
             }
         }
-        setupCompleted = true;
         LOGGER.log(Level.INFO, String.format("%s containers were created, it will take a bit more until all get registered.", containersToCreate));
     }
 

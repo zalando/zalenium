@@ -307,7 +307,7 @@ public class DockerSeleniumRemoteProxyTest {
             HttpServletResponse response = mock(HttpServletResponse.class);
             when(webDriverRequest.getMethod()).thenReturn("POST");
             when(webDriverRequest.getRequestType()).thenReturn(RequestType.START_SESSION);
-            spyProxy.beforeCommand(newSession, webDriverRequest, response);
+            spyProxy.afterCommand(newSession, webDriverRequest, response);
 
             // Assert video recording started
             verify(spyProxy, times(1)).
@@ -371,7 +371,7 @@ public class DockerSeleniumRemoteProxyTest {
             HttpServletResponse response = mock(HttpServletResponse.class);
             when(webDriverRequest.getMethod()).thenReturn("POST");
             when(webDriverRequest.getRequestType()).thenReturn(RequestType.START_SESSION);
-            spyProxy.beforeCommand(newSession, webDriverRequest, response);
+            spyProxy.afterCommand(newSession, webDriverRequest, response);
 
             // Assert no video recording was started, videoRecording is invoked but processContainerAction should not
             verify(spyProxy, times(1))
