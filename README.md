@@ -19,7 +19,7 @@ Features are added often to Zalenium, we invite you to test it, to contribute, t
 have, see [contributing](CONTRIBUTING.md) for more details.
 
 ### Why?
-We know how complicated is to:
+We know how complicated it is to:
 * Have a stable grid to run UI tests with Selenium
 * Maintain it over time (keep up with new browser, Selenium and drivers versions)
 * Provide capabilities to cover all browsers and platforms
@@ -49,6 +49,7 @@ Part of the idea comes from this [Sauce Labs post](https://saucelabs.com/blog/in
 * [How it works](#how-it-works)
 * [About the project versioning](#about-the-project-versioning)
 * [Usage examples](./docs/usage_examples.md)
+* [Performance](./docs/performance.md)
 
 ## Getting Started
 
@@ -72,7 +73,7 @@ Zalenium uses docker to scale on-demand, therefore we need to give it the `docke
     docker run --rm -ti --name zalenium -p 4444:4444 -p 5555:5555 \
       -v /var/run/docker.sock:/var/run/docker.sock \
       -v /tmp/videos:/home/seluser/videos \
-      dosel/zalenium start
+      --privileged dosel/zalenium start
   ```
 
 * You can also try our one line installer and starter (it will check for the latest images and ask for missing
@@ -90,7 +91,7 @@ dependencies.)
 ## Additional features
 * __[BETA]__ [Dashboard](http://localhost:5555), see all the videos and aggregated logs after your tests completed
   <p align="center">
-    <img id="dashboard" height="367" width="600" src="./images/dashboard.gif" />
+    <img id="dashboard" height="337" width="600" src="./images/dashboard.gif" />
   </p>
 * Live preview of your running tests [http://localhost:4444/grid/admin/live](http://localhost:4444/grid/admin/live)
 <p align="center">
@@ -110,7 +111,7 @@ docker run --rm -ti --name zalenium -p 4444:4444 -p 5555:5555 \
   -v $(which docker):/usr/bin/docker \
   -v /var/run/docker.sock:/var/run/docker.sock \
   -v /tmp/videos:/home/seluser/videos \
-  dosel/zalenium start
+  --privileged dosel/zalenium start
 ```
 
 #### OSX
@@ -123,7 +124,7 @@ docker run --rm -ti --name zalenium -p 4444:4444 -p 5555:5555 \
   -e DOCKER=1.11 \
   -v /var/run/docker.sock:/var/run/docker.sock \
   -v /tmp/videos:/home/seluser/videos \
-  dosel/zalenium start
+  --privileged dosel/zalenium start
 ```
 
 ## Contributions
@@ -151,7 +152,7 @@ running and that you can do `docker ps`):
       docker run --rm -ti --name zalenium -p 4444:4444 -p 5555:5555 \
         -v /var/run/docker.sock:/var/run/docker.sock \
         -v /tmp/videos:/home/seluser/videos \
-        zalenium:YOUR_TAG start
+        --privileged zalenium:YOUR_TAG start
     ```
 * Running the integration tests with Sauce Labs or BrowserStack or TestingBot. You will need an account on any of those providers 
 to run them (they have free plans). Or you can just run some of our [tests](./src/test/java/de/zalando/tip/zalenium/it/ParallelIT.java)
