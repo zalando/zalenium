@@ -73,7 +73,7 @@ Zalenium uses docker to scale on-demand, therefore we need to give it the `docke
     docker run --rm -ti --name zalenium -p 4444:4444 -p 5555:5555 \
       -v /var/run/docker.sock:/var/run/docker.sock \
       -v /tmp/videos:/home/seluser/videos \
-      dosel/zalenium start
+      --privileged dosel/zalenium start
   ```
 
 * You can also try our one line installer and starter (it will check for the latest images and ask for missing
@@ -111,7 +111,7 @@ docker run --rm -ti --name zalenium -p 4444:4444 -p 5555:5555 \
   -v $(which docker):/usr/bin/docker \
   -v /var/run/docker.sock:/var/run/docker.sock \
   -v /tmp/videos:/home/seluser/videos \
-  dosel/zalenium start
+  --privileged dosel/zalenium start
 ```
 
 #### OSX
@@ -124,7 +124,7 @@ docker run --rm -ti --name zalenium -p 4444:4444 -p 5555:5555 \
   -e DOCKER=1.11 \
   -v /var/run/docker.sock:/var/run/docker.sock \
   -v /tmp/videos:/home/seluser/videos \
-  dosel/zalenium start
+  --privileged dosel/zalenium start
 ```
 
 ## Contributions
@@ -152,7 +152,7 @@ running and that you can do `docker ps`):
       docker run --rm -ti --name zalenium -p 4444:4444 -p 5555:5555 \
         -v /var/run/docker.sock:/var/run/docker.sock \
         -v /tmp/videos:/home/seluser/videos \
-        zalenium:YOUR_TAG start
+        --privileged zalenium:YOUR_TAG start
     ```
 * Running the integration tests with Sauce Labs or BrowserStack or TestingBot. You will need an account on any of those providers 
 to run them (they have free plans). Or you can just run some of our [tests](./src/test/java/de/zalando/tip/zalenium/it/ParallelIT.java)

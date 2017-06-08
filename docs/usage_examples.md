@@ -46,7 +46,7 @@ Basic usage, without any of the integrated cloud testing platforms.
     docker run --rm -ti --name zalenium -p 4444:4444 -p 5555:5555 \
       -v /var/run/docker.sock:/var/run/docker.sock \
       -v /tmp/videos:/home/seluser/videos \
-      dosel/zalenium start 
+      --privileged dosel/zalenium start 
   ```
 
 ### OSX 
@@ -58,7 +58,7 @@ explicitly tell Zalenium which major version you are using via `-e DOCKER=1.11` 
       -e DOCKER=1.11 \
       -v /var/run/docker.sock:/var/run/docker.sock \
       -v /tmp/videos:/home/seluser/videos \
-      dosel/zalenium start
+      --privileged dosel/zalenium start
   ```
 
 ### Windows 
@@ -67,7 +67,7 @@ explicitly tell Zalenium which major version you are using via `-e DOCKER=1.11` 
     docker run --rm -ti --name zalenium -p 4444:4444 -p 5555:5555 \
       -v /var/run/docker.sock:/var/run/docker.sock \
       -v /c/Users/your_user_name/temp/videos:/home/seluser/videos \
-      dosel/zalenium start      
+      --privileged dosel/zalenium start      
   ```
 
 ### with Sauce Labs enabled
@@ -79,7 +79,7 @@ explicitly tell Zalenium which major version you are using via `-e DOCKER=1.11` 
       -e SAUCE_USERNAME -e SAUCE_ACCESS_KEY \
       -v /tmp/videos:/home/seluser/videos \
       -v /var/run/docker.sock:/var/run/docker.sock \
-      dosel/zalenium start --sauceLabsEnabled true
+      --privileged dosel/zalenium start --sauceLabsEnabled true
   ```
 
 ### with BrowserStack enabled
@@ -91,7 +91,7 @@ explicitly tell Zalenium which major version you are using via `-e DOCKER=1.11` 
       -e BROWSER_STACK_USER -e BROWSER_STACK_KEY \
       -v /tmp/videos:/home/seluser/videos \
       -v /var/run/docker.sock:/var/run/docker.sock \
-      dosel/zalenium start --browserStackEnabled true
+      --privileged dosel/zalenium start --browserStackEnabled true
   ```
 
 ### with TestingBot enabled
@@ -103,7 +103,7 @@ explicitly tell Zalenium which major version you are using via `-e DOCKER=1.11` 
       -e TESTINGBOT_KEY -e TESTINGBOT_SECRET \
       -v /tmp/videos:/home/seluser/videos \
       -v /var/run/docker.sock:/var/run/docker.sock \
-      dosel/zalenium start --testingBotEnabled true
+      --privileged dosel/zalenium start --testingBotEnabled true
   ```
 
 ### with screen width and height, and time zone
@@ -112,7 +112,7 @@ explicitly tell Zalenium which major version you are using via `-e DOCKER=1.11` 
     docker run --rm -ti --name zalenium -p 4444:4444 -p 5555:5555 \
       -v /var/run/docker.sock:/var/run/docker.sock \
       -v /tmp/videos:/home/seluser/videos \
-      dosel/zalenium start --screenWidth 1440 --screenHeight 810 --timeZone "America/Montreal"
+      --privileged dosel/zalenium start --screenWidth 1440 --screenHeight 810 --timeZone "America/Montreal"
   ```
 
 ### with a multi-purpose folder mounted
@@ -125,7 +125,7 @@ starting Chrome with a specific profile.
       -v /var/run/docker.sock:/var/run/docker.sock \
       -v /tmp/videos:/home/seluser/videos \
       -v /your/local/folder:/tmp/mounted \      
-      dosel/zalenium start 
+      --privileged dosel/zalenium start 
   ```
 After starting Zalenium with this mounted volume, any file created in the host in `/your/local/folder`, will be available in
 `/tmp/mounted` across all containers. Please note that the folder name in the host can be any you want, the important part is 
@@ -182,7 +182,7 @@ For example, starting Zalenium like this
     docker run --rm -ti --name zalenium -p 4444:4444 -p 5555:5555 \
       -v /var/run/docker.sock:/var/run/docker.sock \
       -v /tmp/videos:/home/seluser/videos \
-      dosel/zalenium start 
+      --privileged dosel/zalenium start 
   ```
   
 will copy the generated videos to your local `/tmp/videos` folder. This means all videos generated from tests executed 
