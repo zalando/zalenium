@@ -1,8 +1,6 @@
-# Note this users version 2.1 which means it requires docker-compose 1.9
-#
 # Usage:
 #   docker-compose up --force-recreate
-version: '2.1'
+version: '2.2'
 
 services:
   #--------------#
@@ -20,9 +18,9 @@ services:
       - 5555:5555
     command: >
       start --chromeContainers 1
-            --firefoxContainers 0
+            --firefoxContainers 1
             --maxDockerSeleniumContainers 8
-            --screenWidth 1930 --screenHeight 1090
+            --screenWidth 800 --screenHeight 600
             --timeZone "Europe/Berlin"
             --videoRecordingEnabled true
             --sauceLabsEnabled false
@@ -30,24 +28,21 @@ services:
             --testingBotEnabled false
             --startTunnel false
     environment:
+      - HOST_UID
+      - HOST_GID
       - SAUCE_USERNAME
       - SAUCE_ACCESS_KEY
       - BROWSER_STACK_USER
       - BROWSER_STACK_KEY
       - TESTINGBOT_KEY
       - TESTINGBOT_SECRET
-      # For OSX remember to include the docker version
-      # allowed values are: 1.11 or 1.12 or 1.13
-      # - DOCKER=1.11
-      # but leave empty for latest or in general for docker >= 17.03.0
 
-  # Feel free to add your services but remember
-  # to put them on the same network as Zalenium e.g.
-  #
-  # postgres:
-  #   image: postgres:9.4
-  #   container_name: postgres
-  #   depends_on:
-  #     - zalenium
-  #   network_mode: "service:zalenium"
-  #   mem_limit: 1g
+  mock:
+    image: elgalu/google_adwords_mock
+    depends_on:
+      - zalenium
+    ports:
+      - 8080:8080
+    tty: true
+    environment:
+      - MOCK_SERVER_PORT=8080
