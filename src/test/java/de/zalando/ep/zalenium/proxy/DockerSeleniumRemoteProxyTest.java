@@ -2,6 +2,7 @@ package de.zalando.ep.zalenium.proxy;
 
 import com.spotify.docker.client.exceptions.DockerException;
 import de.zalando.ep.zalenium.container.ContainerClient;
+import de.zalando.ep.zalenium.container.ContainerFactory;
 import de.zalando.ep.zalenium.util.Environment;
 import de.zalando.ep.zalenium.util.TestUtils;
 import org.awaitility.Duration;
@@ -26,6 +27,7 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.*;
 import java.util.concurrent.Callable;
+import java.util.function.Supplier;
 
 import static org.awaitility.Awaitility.await;
 import static org.mockito.ArgumentMatchers.any;
@@ -37,9 +39,14 @@ public class DockerSeleniumRemoteProxyTest {
     private DockerSeleniumRemoteProxy proxy;
     private Registry registry;
     private ContainerClient containerClient;
+    private Supplier<ContainerClient> originalContainerClient;
 
     public DockerSeleniumRemoteProxyTest(ContainerClient containerClient) {
         this.containerClient = containerClient;
+        
+        this.originalContainerClient = ContainerFactory.getDockerContainerClientGenerator();
+        // Change the factory to return our version of the Container Client
+        ContainerFactory.setDockerContainerClientGenerator(() -> containerClient);
     }
 
     @Parameters
@@ -67,6 +74,7 @@ public class DockerSeleniumRemoteProxyTest {
 
     @After
     public void tearDown() {
+        ContainerFactory.setDockerContainerClientGenerator(originalContainerClient);
         proxy.restoreContainerClient();
     }
 

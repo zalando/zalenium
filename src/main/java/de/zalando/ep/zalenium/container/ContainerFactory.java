@@ -1,9 +1,15 @@
 package de.zalando.ep.zalenium.container;
 
 import java.io.File;
+import java.util.function.Supplier;
+
+import com.google.common.annotations.VisibleForTesting;
 
 public class ContainerFactory {
 
+    private static Supplier<ContainerClient> dockerContainerClientGenerator = () -> new DockerContainerClient();
+    private static Supplier<ContainerClient> kubernetesContainerClientGenerator = () -> KubernetesContainerClient.getInstance();
+    
     public static ContainerClient getContainerClient() {
         /*
             Here we can start writing some logic that will decide which type of client will be used to
@@ -13,11 +19,33 @@ public class ContainerFactory {
          */
         File kubernetesServiceAccountFile = new File("/var/run/secrets/kubernetes.io/serviceaccount/token");
         if (kubernetesServiceAccountFile.canRead()) {
-            return KubernetesContainerClient.getInstance();
+            return kubernetesContainerClientGenerator.get();
         }
         else {
-            return new DockerContainerClient();
+            return dockerContainerClientGenerator.get();
         }
     }
+
+    @VisibleForTesting
+    public static void setDockerContainerClientGenerator(Supplier<ContainerClient> dockerContainerClientGenerator) {
+        ContainerFactory.dockerContainerClientGenerator = dockerContainerClientGenerator;
+    }
+
+    @VisibleForTesting
+    public static void setKubernetesContainerClientGenerator(Supplier<ContainerClient> kubernetesContainerClientGenerator) {
+        ContainerFactory.kubernetesContainerClientGenerator = kubernetesContainerClientGenerator;
+    }
+
+    @VisibleForTesting
+    public static Supplier<ContainerClient> getDockerContainerClientGenerator() {
+        return dockerContainerClientGenerator;
+    }
+
+    @VisibleForTesting
+    public static Supplier<ContainerClient> getKubernetesContainerClientGenerator() {
+        return kubernetesContainerClientGenerator;
+    }
+    
+    
 
 }
