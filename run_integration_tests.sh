@@ -39,6 +39,7 @@ else
     if [ "$INTEGRATION_TO_TEST" = dockerCompose ]; then
         if [ -n "${SAUCE_USERNAME}" ]; then
             mvn clean package -DskipTests=true
+            mkdir -p "${VIDEOS_FOLDER}"
             chmod +x target/zalenium_in_docker_compose.sh
             target/zalenium_in_docker_compose.sh start
             mvn verify -Pintegration-test -DthreadCountProperty=2 -Dskip.surefire.tests=true -Dskip.failsafe.setup=true -DintegrationToTest=sauceLabs
