@@ -39,11 +39,7 @@ StartUp()
         docker rm -f $(docker ps -a -f name=zalenium -q)
     fi
 
-    IN_TRAVIS="${CI:=false}"
     VIDEOS_FOLDER=${project.build.directory}/videos
-    if [ "${IN_TRAVIS}" = "true" ]; then
-        VIDEOS_FOLDER=/tmp/videos
-    fi
     mkdir -p "${VIDEOS_FOLDER}"
 
     if [ "$INTEGRATION_TO_TEST" = sauceLabs ]; then

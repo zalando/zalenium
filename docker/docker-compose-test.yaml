@@ -1,16 +1,16 @@
 # Usage:
 #   docker-compose up --force-recreate
-version: '2.2'
+version: '2.1'
 
 services:
   #--------------#
   zalenium:
-    image: "dosel/zalenium"
+    image: "${project.artifactId}:${project.version}"
     container_name: zalenium
     hostname: zalenium
     tty: true
     volumes:
-      - /tmp/videos:/home/seluser/videos
+      - ${project.build.directory}/videos:/home/seluser/videos
       - /var/run/docker.sock:/var/run/docker.sock
       - /usr/bin/docker:/usr/bin/docker
     ports:
@@ -23,26 +23,10 @@ services:
             --screenWidth 800 --screenHeight 600
             --timeZone "Europe/Berlin"
             --videoRecordingEnabled true
-            --sauceLabsEnabled false
-            --browserStackEnabled false
-            --testingBotEnabled false
-            --startTunnel false
+            --sauceLabsEnabled true
+            --startTunnel true
     environment:
       - HOST_UID
       - HOST_GID
       - SAUCE_USERNAME
       - SAUCE_ACCESS_KEY
-      - BROWSER_STACK_USER
-      - BROWSER_STACK_KEY
-      - TESTINGBOT_KEY
-      - TESTINGBOT_SECRET
-
-  mock:
-    image: elgalu/google_adwords_mock
-    depends_on:
-      - zalenium
-    ports:
-      - 8080:8080
-    tty: true
-    environment:
-      - MOCK_SERVER_PORT=8080
