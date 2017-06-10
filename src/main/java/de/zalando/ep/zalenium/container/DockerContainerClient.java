@@ -6,7 +6,17 @@ import com.spotify.docker.client.DefaultDockerClient;
 import com.spotify.docker.client.DockerClient;
 import com.spotify.docker.client.LogStream;
 import com.spotify.docker.client.exceptions.DockerException;
-import com.spotify.docker.client.messages.*;
+import com.spotify.docker.client.messages.AttachedNetwork;
+import com.spotify.docker.client.messages.Container;
+import com.spotify.docker.client.messages.ContainerConfig;
+import com.spotify.docker.client.messages.ContainerCreation;
+import com.spotify.docker.client.messages.ContainerInfo;
+import com.spotify.docker.client.messages.ContainerMount;
+import com.spotify.docker.client.messages.ExecCreation;
+import com.spotify.docker.client.messages.HostConfig;
+import com.spotify.docker.client.messages.Image;
+import com.spotify.docker.client.messages.ImageInfo;
+import com.spotify.docker.client.messages.PortBinding;
 import de.zalando.ep.zalenium.util.GoogleAnalyticsApi;
 
 import java.io.InputStream;
@@ -22,6 +32,8 @@ import java.util.stream.Collectors;
 @SuppressWarnings("ConstantConditions")
 public class DockerContainerClient implements ContainerClient {
 
+    private static final String DEFAULT_DOCKER_NETWORK_NAME = "bridge";
+    private static final String DEFAULT_DOCKER_NETWORK_MODE = "default";
     private final Logger logger = Logger.getLogger(DockerContainerClient.class.getName());
     private final GoogleAnalyticsApi ga = new GoogleAnalyticsApi();
     private DockerClient dockerClient = new DefaultDockerClient("unix:///var/run/docker.sock");
@@ -229,7 +241,7 @@ public class DockerContainerClient implements ContainerClient {
             ContainerInfo containerInfo = dockerClient.inspectContainer(zaleniumContainerId);
             ImmutableMap<String, AttachedNetwork> networks = containerInfo.networkSettings().networks();
             for (Map.Entry<String, AttachedNetwork> networkEntry : networks.entrySet()) {
-                if (!"bridge".equalsIgnoreCase(networkEntry.getKey())) {
+                if (!DEFAULT_DOCKER_NETWORK_NAME.equalsIgnoreCase(networkEntry.getKey())) {
                     zaleniumNetwork = networkEntry.getKey();
                     return zaleniumNetwork;
                 }
@@ -238,7 +250,7 @@ public class DockerContainerClient implements ContainerClient {
             logger.log(Level.FINE, nodeId + " Error while getting Zalenium network.", e);
             ga.trackException(e);
         }
-        zaleniumNetwork = "default";
+        zaleniumNetwork = DEFAULT_DOCKER_NETWORK_MODE;
         return zaleniumNetwork;
     }
 

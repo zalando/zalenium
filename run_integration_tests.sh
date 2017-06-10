@@ -4,11 +4,7 @@ set -e
 
 INTEGRATION_TO_TEST=$1
 
-IN_TRAVIS="${CI:=false}"
 VIDEOS_FOLDER=$(pwd)/target/videos
-if [ "${IN_TRAVIS}" = "true" ]; then
-    VIDEOS_FOLDER=/tmp/videos
-fi
 echo ${VIDEOS_FOLDER}
 
 if [ "$TRAVIS_PULL_REQUEST" = "false" ] && [ -n "${TRAVIS_TAG}" ] && [ "${TRAVIS_TAG}" != "latest" ]; then
@@ -38,6 +34,18 @@ else
             # Check for generated videos
             ls -la ${VIDEOS_FOLDER}/testingbot*.mp4 || (echo "No TestingBot videos were downloaded." && exit 2)
             ls -la ${VIDEOS_FOLDER}/zalenium*.mp4 || (echo "No Zalenium videos were generated." && exit 2)
+        fi
+    fi
+    if [ "$INTEGRATION_TO_TEST" = dockerCompose ]; then
+        if [ -n "${SAUCE_USERNAME}" ]; then
+            mvn clean package -DskipTests=true
+            chmod +x target/zalenium_in_docker_compose.sh
+            target/zalenium_in_docker_compose.sh start
+            mvn verify -Pintegration-test -DthreadCountProperty=2 -Dskip.surefire.tests=true -Dskip.failsafe.setup=true -DintegrationToTest=sauceLabs
+            # Check for generated videos
+            ls -la ${VIDEOS_FOLDER}/saucelabs*.mp4 || (echo "No Sauce Labs videos were downloaded." && exit 2)
+            ls -la ${VIDEOS_FOLDER}/zalenium*.mp4 || (echo "No Zalenium videos were generated." && exit 2)
+            target/zalenium_in_docker_compose.sh stop
         fi
     fi
 fi
