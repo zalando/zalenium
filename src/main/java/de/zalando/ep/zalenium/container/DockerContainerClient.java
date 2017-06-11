@@ -1,14 +1,7 @@
 package de.zalando.ep.zalenium.container;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.spotify.docker.client.DefaultDockerClient;
-import com.spotify.docker.client.DockerClient;
-import com.spotify.docker.client.LogStream;
-import com.spotify.docker.client.exceptions.DockerException;
-import com.spotify.docker.client.messages.*;
-import de.zalando.ep.zalenium.util.GoogleAnalyticsApi;
-
 import java.io.InputStream;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -17,6 +10,25 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+
+import com.google.common.annotations.VisibleForTesting;
+import com.spotify.docker.client.DefaultDockerClient;
+import com.spotify.docker.client.DockerClient;
+import com.spotify.docker.client.LogStream;
+import com.spotify.docker.client.exceptions.DockerException;
+import com.spotify.docker.client.messages.Container;
+import com.spotify.docker.client.messages.ContainerConfig;
+import com.spotify.docker.client.messages.ContainerCreation;
+import com.spotify.docker.client.messages.ContainerInfo;
+import com.spotify.docker.client.messages.ContainerMount;
+import com.spotify.docker.client.messages.ExecCreation;
+import com.spotify.docker.client.messages.HostConfig;
+import com.spotify.docker.client.messages.Image;
+import com.spotify.docker.client.messages.ImageInfo;
+import com.spotify.docker.client.messages.PortBinding;
+
+import de.zalando.ep.zalenium.proxy.DockerSeleniumStarterRemoteProxy;
+import de.zalando.ep.zalenium.util.GoogleAnalyticsApi;
 
 @SuppressWarnings("ConstantConditions")
 public class DockerContainerClient implements ContainerClient {
@@ -37,7 +49,7 @@ public class DockerContainerClient implements ContainerClient {
         this.nodeId = nodeId;
     }
 
-    public String getContainerId(String containerName) {
+    private String getContainerId(String containerName) {
         List<Container> containerList = null;
         try {
             containerList = dockerClient.listContainers(DockerClient.ListContainersParam.allContainers());
@@ -145,7 +157,7 @@ public class DockerContainerClient implements ContainerClient {
 
     public void createContainer(String zaleniumContainerName, String image, Map<String, String> envVars,
                                 String nodePort) {
-        String containerName = String.format("%s_%s", zaleniumContainerName, nodePort);
+        String containerName = generateContainerName(zaleniumContainerName, nodePort);
 
         List<String> binds = new ArrayList<>();
         binds.add("/dev/shm:/dev/shm");
@@ -193,6 +205,11 @@ public class DockerContainerClient implements ContainerClient {
         }
     }
 
+    private String generateContainerName(String zaleniumContainerName,
+                             String nodePort) {
+        return String.format("%s_%s", zaleniumContainerName, nodePort);
+    }
+
     private void loadMountedFolder(String zaleniumContainerName) {
         if (this.mntFolder == null && !this.mntFolderChecked) {
             this.mntFolderChecked = true;
@@ -208,11 +225,29 @@ public class DockerContainerClient implements ContainerClient {
                 ga.trackException(e);
             }
             for (ContainerMount containerMount : containerInfo.mounts()) {
-                if ("/tmp/mounted".equalsIgnoreCase(containerMount.destination())) {
+                if (SHARED_FOLDER_MOUNT_POINT.equalsIgnoreCase(containerMount.destination())) {
                     this.mntFolder = containerMount;
                 }
             }
         }
+    }
+
+    @Override
+    public void initialiseContainerEnvironment() {
+        // TODO: Move cleanup code from bash to here
+        
+    }
+
+    @Override
+    public ContainerClientRegistration registerNode(String zaleniumContainerName, URL remoteHost) {
+        ContainerClientRegistration registration = new ContainerClientRegistration();
+        
+        Integer noVncPort = remoteHost.getPort() + DockerSeleniumStarterRemoteProxy.NO_VNC_PORT_GAP;
+        String containerName = generateContainerName(zaleniumContainerName, Integer.toString(remoteHost.getPort()));
+        String containerId = this.getContainerId(containerName);
+        registration.setNoVncPort(noVncPort);
+        registration.setContainerId(containerId);
+        return registration;
     }
 }
 

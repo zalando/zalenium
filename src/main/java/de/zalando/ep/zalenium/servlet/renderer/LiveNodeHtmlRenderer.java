@@ -78,7 +78,7 @@ public class LiveNodeHtmlRenderer implements HtmlRenderer {
         }
 
         // Adding live preview
-        int noVncPort = proxy.getRemoteHost().getPort() + DockerSeleniumStarterRemoteProxy.NO_VNC_PORT_GAP;
+        int noVncPort = proxy.getRegistration().getNoVncPort();
         String noVncViewBaseUrl = "http://%s:%s/?view_only=%s";
         String noVncReadOnlyUrl = String.format(noVncViewBaseUrl, serverName, noVncPort, "true");
         String noVncInteractUrl = String.format(noVncViewBaseUrl, serverName, noVncPort, "false");

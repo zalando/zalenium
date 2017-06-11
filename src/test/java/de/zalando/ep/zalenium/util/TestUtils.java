@@ -198,6 +198,7 @@ public class TestUtils {
             when(dockerClient.inspectContainer(null)).thenReturn(containerInfo);
 
             when(dockerClient.inspectImage(anyString())).thenReturn(imageInfo);
+            
         } catch (DockerException | InterruptedException | IOException e) {
             e.printStackTrace();
         }
