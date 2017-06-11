@@ -55,6 +55,9 @@ public class DockerContainerClient implements ContainerClient {
     }
 
     private String getContainerId(String containerName) {
+        final String containerNameSearch = containerName.contains("/") ?
+                containerName : String.format("/%s", containerName);
+
         List<Container> containerList = null;
         try {
             containerList = dockerClient.listContainers(DockerClient.ListContainersParam.allContainers());
@@ -62,12 +65,10 @@ public class DockerContainerClient implements ContainerClient {
             logger.log(Level.FINE, nodeId + " Error while getting containerId", e);
             ga.trackException(e);
         }
-        for (Container container : containerList) {
-            if (containerName.equalsIgnoreCase(container.names().get(0))) {
-                return container.id();
-            }
-        }
-        return null;
+
+        return containerList.stream()
+                .filter(container -> containerNameSearch.equalsIgnoreCase(container.names().get(0)))
+                .findFirst().get().id();
     }
 
     public InputStream copyFiles(String containerId, String folderName) {
@@ -221,7 +222,7 @@ public class DockerContainerClient implements ContainerClient {
     private void loadMountedFolder(String zaleniumContainerName) {
         if (this.mntFolder == null && !this.mntFolderChecked) {
             this.mntFolderChecked = true;
-            String containerId = getContainerId(String.format("/%s", zaleniumContainerName));
+            String containerId = getContainerId(zaleniumContainerName);
             if (containerId == null) {
                 return;
             }
@@ -262,7 +263,7 @@ public class DockerContainerClient implements ContainerClient {
         if (zaleniumNetwork != null) {
             return zaleniumNetwork;
         }
-        String zaleniumContainerId = getContainerId(String.format("/%s", zaleniumContainerName));
+        String zaleniumContainerId = getContainerId(zaleniumContainerName);
         try {
             ContainerInfo containerInfo = dockerClient.inspectContainer(zaleniumContainerId);
             ImmutableMap<String, AttachedNetwork> networks = containerInfo.networkSettings().networks();

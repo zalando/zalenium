@@ -61,7 +61,6 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     private long maxTestIdleTimeSecs;
     private String testGroup;
     private String testName;
-    private String containerId = null;
     private TestInformation testInformation;
     private DockerSeleniumNodePoller dockerSeleniumNodePollerThread = null;
     private GoogleAnalyticsApi ga = new GoogleAnalyticsApi();
@@ -73,11 +72,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         this.amountOfExecutedTests = 0;
         readEnvVarForVideoRecording();
         containerClient.setNodeId(getId());
-        
         registration = containerClient.registerNode(DockerSeleniumStarterRemoteProxy.getContainerName(), this.getRemoteHost());
-        if (registration != null) {
-            containerId = registration.getContainerId();
-        }
     }
 
     @VisibleForTesting
@@ -104,11 +99,6 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
 
     private static void setVideoRecordingEnabled(boolean videoRecordingEnabled) {
         DockerSeleniumRemoteProxy.videoRecordingEnabled = videoRecordingEnabled;
-    }
-
-    @VisibleForTesting
-    ContainerClient getContainerClient() {
-        return containerClient;
     }
 
     @VisibleForTesting
@@ -417,7 +407,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                     getId(), getMaxTestIdleTimeSecs());
         }
 
-        getContainerClient().stopContainer(getContainerId());
+        containerClient.stopContainer(getContainerId());
         addNewEvent(new RemoteNotReachableException(shutdownReason));
         addNewEvent(new RemoteUnregisterException(shutdownReason));
         teardown();
