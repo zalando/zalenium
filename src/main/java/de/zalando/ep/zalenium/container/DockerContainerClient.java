@@ -1,5 +1,24 @@
 package de.zalando.ep.zalenium.container;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableMap;
+import com.spotify.docker.client.DefaultDockerClient;
+import com.spotify.docker.client.DockerClient;
+import com.spotify.docker.client.LogStream;
+import com.spotify.docker.client.exceptions.DockerException;
+import com.spotify.docker.client.messages.AttachedNetwork;
+import com.spotify.docker.client.messages.Container;
+import com.spotify.docker.client.messages.ContainerConfig;
+import com.spotify.docker.client.messages.ContainerCreation;
+import com.spotify.docker.client.messages.ContainerInfo;
+import com.spotify.docker.client.messages.ContainerMount;
+import com.spotify.docker.client.messages.ExecCreation;
+import com.spotify.docker.client.messages.HostConfig;
+import com.spotify.docker.client.messages.Image;
+import com.spotify.docker.client.messages.ImageInfo;
+import com.spotify.docker.client.messages.PortBinding;
+import de.zalando.ep.zalenium.util.GoogleAnalyticsApi;
+
 import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
@@ -11,32 +30,18 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.spotify.docker.client.DefaultDockerClient;
-import com.spotify.docker.client.DockerClient;
-import com.spotify.docker.client.LogStream;
-import com.spotify.docker.client.exceptions.DockerException;
-import com.spotify.docker.client.messages.Container;
-import com.spotify.docker.client.messages.ContainerConfig;
-import com.spotify.docker.client.messages.ContainerCreation;
-import com.spotify.docker.client.messages.ContainerInfo;
-import com.spotify.docker.client.messages.ContainerMount;
-import com.spotify.docker.client.messages.ExecCreation;
-import com.spotify.docker.client.messages.HostConfig;
-import com.spotify.docker.client.messages.Image;
-import com.spotify.docker.client.messages.ImageInfo;
-import com.spotify.docker.client.messages.PortBinding;
-
 import de.zalando.ep.zalenium.proxy.DockerSeleniumStarterRemoteProxy;
-import de.zalando.ep.zalenium.util.GoogleAnalyticsApi;
 
 @SuppressWarnings("ConstantConditions")
 public class DockerContainerClient implements ContainerClient {
 
+    private static final String DEFAULT_DOCKER_NETWORK_NAME = "bridge";
+    private static final String DEFAULT_DOCKER_NETWORK_MODE = "default";
     private final Logger logger = Logger.getLogger(DockerContainerClient.class.getName());
     private final GoogleAnalyticsApi ga = new GoogleAnalyticsApi();
     private DockerClient dockerClient = new DefaultDockerClient("unix:///var/run/docker.sock");
     private String nodeId;
+    private String zaleniumNetwork;
     private ContainerMount mntFolder;
     private boolean mntFolderChecked = false;
 
@@ -177,9 +182,11 @@ public class DockerContainerClient implements ContainerClient {
         portBindingList.add(PortBinding.of("", noVncPort));
         portBindings.put(noVncPort, portBindingList);
 
+        String networkMode = getZaleniumNetwork(zaleniumContainerName);
         HostConfig hostConfig = HostConfig.builder()
                 .appendBinds(binds)
                 .portBindings(portBindings)
+                .networkMode(networkMode)
                 .autoRemove(true)
                 .privileged(true)
                 .build();
@@ -187,6 +194,7 @@ public class DockerContainerClient implements ContainerClient {
         List<String> flattenedEnvVars = envVars.entrySet().stream()
                 .map(e -> e.getKey() + "=" + e.getValue())
                 .collect(Collectors.toList());
+
 
         final String[] exposedPorts = {nodePort, noVncPort};
         final ContainerConfig containerConfig = ContainerConfig.builder()
@@ -248,6 +256,28 @@ public class DockerContainerClient implements ContainerClient {
         registration.setNoVncPort(noVncPort);
         registration.setContainerId(containerId);
         return registration;
+    }
+
+    private String getZaleniumNetwork(String zaleniumContainerName) {
+        if (zaleniumNetwork != null) {
+            return zaleniumNetwork;
+        }
+        String zaleniumContainerId = getContainerId(String.format("/%s", zaleniumContainerName));
+        try {
+            ContainerInfo containerInfo = dockerClient.inspectContainer(zaleniumContainerId);
+            ImmutableMap<String, AttachedNetwork> networks = containerInfo.networkSettings().networks();
+            for (Map.Entry<String, AttachedNetwork> networkEntry : networks.entrySet()) {
+                if (!DEFAULT_DOCKER_NETWORK_NAME.equalsIgnoreCase(networkEntry.getKey())) {
+                    zaleniumNetwork = networkEntry.getKey();
+                    return zaleniumNetwork;
+                }
+            }
+        } catch (DockerException | InterruptedException e) {
+            logger.log(Level.FINE, nodeId + " Error while getting Zalenium network.", e);
+            ga.trackException(e);
+        }
+        zaleniumNetwork = DEFAULT_DOCKER_NETWORK_MODE;
+        return zaleniumNetwork;
     }
 }
 

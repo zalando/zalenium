@@ -6,7 +6,7 @@
 
     <groupId>de.zalando.ep</groupId>
     <artifactId>zalenium</artifactId>
-    <version>3.3.1j-SNAPSHOT</version>
+    <version>3.3.1k-SNAPSHOT</version>
     <name>Zalenium</name>
     <description>An on-demand, dynamic local Selenium Grid with an extension to a cloud testing platform.</description>
 
@@ -50,7 +50,7 @@
     <properties>
         <selenium-server.major-minor.version>3.3</selenium-server.major-minor.version>
         <selenium-server.patch-level.version>1</selenium-server.patch-level.version>
-        <docker-client.version>8.6.0</docker-client.version>
+        <docker-client.version>8.6.2</docker-client.version>
         <kubernetes-client.version>2.3.1</kubernetes-client.version>
         <junit.version>4.12</junit.version>
         <mockito.version>2.8.9</mockito.version>
@@ -64,6 +64,7 @@
         <maven-shade-plugin.version>3.0.0</maven-shade-plugin.version>
         <maven-surefire-plugin.version>2.20</maven-surefire-plugin.version>
         <maven-failsafe-plugin.version>2.20</maven-failsafe-plugin.version>
+        <versions-maven-plugin.version>2.4</versions-maven-plugin.version>
         <exec-maven-plugin.version>1.6.0</exec-maven-plugin.version>
         <jacoco-maven-plugin.version>0.7.9</jacoco-maven-plugin.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -191,7 +192,7 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>versions-maven-plugin</artifactId>
-                <version>2.3</version>
+                <version>${versions-maven-plugin.version}</version>
                 <configuration>
                     <generateBackupPoms>false</generateBackupPoms>
                 </configuration>
@@ -389,7 +390,6 @@
                                     <goal>exec</goal>
                                 </goals>
                                 <configuration>
-                                    <skip>${skip.failsafe.setup}</skip>
                                     <workingDirectory>${project.build.directory}</workingDirectory>
                                     <executable>chmod</executable>
                                     <arguments>
