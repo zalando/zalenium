@@ -11,8 +11,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -20,8 +22,8 @@ import java.util.stream.Collectors;
 import io.fabric8.kubernetes.api.model.DoneablePod;
 import io.fabric8.kubernetes.api.model.EnvVar;
 import io.fabric8.kubernetes.api.model.Pod;
-import io.fabric8.kubernetes.api.model.PodFluent.SpecNested;
 import io.fabric8.kubernetes.api.model.PodList;
+import io.fabric8.kubernetes.api.model.Quantity;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.Volume;
 import io.fabric8.kubernetes.api.model.VolumeMount;
@@ -166,6 +168,10 @@ public class KubernetesContainerClient implements ContainerClient {
         // Needs bugs fixed inside kubernetes-client.
         listener.setExecWatch(exec);
         
+        // When zalenium is under high load sometimes the stdout isn't connected by the time we try to read from it.
+        // Let's wait until it is connected before proceeding.
+        listener.waitForInputStreamToConnect();
+        
         return exec.getOutput();
     }
 
@@ -201,17 +207,27 @@ public class KubernetesContainerClient implements ContainerClient {
             }
         }).exec(command);
 
-        
-        try {
-            latch.await();
+        Supplier<Void> waitForResultsAndCleanup = () -> {
+
+            try {
+                latch.await();
+            } catch (InterruptedException e) {
+            } finally {
+                exec.close();
+            }
+
+            logger.log(Level.INFO, () -> String.format("%s %s", containerId, baos.toString()));
+
+            return null;
+        };
+        if (waitForExecution) {
+            // If we're going to wait, let's use the same thread
+            waitForResultsAndCleanup.get();
         }
-        catch (InterruptedException e) {
+        else {
+            // Let the common ForkJoinPool handle waiting for the results, since we don't care when it finishes.
+            CompletableFuture.supplyAsync(waitForResultsAndCleanup);
         }
-        finally {
-            exec.close();
-        }
-        
-        logger.log(Level.INFO, () -> String.format("%s %s", containerId, baos.toString()));
     }
 
     @Override
@@ -240,7 +256,7 @@ public class KubernetesContainerClient implements ContainerClient {
     @Override
     public void createContainer(String zaleniumContainerName, String image, Map<String, String> envVars,
                                 String nodePort) {
-        String containerId = String.format("%s-%s", zaleniumContainerName, nodePort);
+        String containerIdPrefix = String.format("%s-%s-", zaleniumServiceName, nodePort);
         
         // Convert the environment variables into the kubernetes format.
         List<EnvVar> flattenedEnvVars = envVars.entrySet().stream()
@@ -255,7 +271,7 @@ public class KubernetesContainerClient implements ContainerClient {
         DoneablePod doneablePod = client.pods()
             .createNew()
             .withNewMetadata()
-                .withName(containerId)
+                .withGenerateName(containerIdPrefix)
                 .addToLabels(createdByZaleniumMap)
                 .addToLabels(appLabelMap)
                 .addToLabels(podSelector)
@@ -277,6 +293,11 @@ public class KubernetesContainerClient implements ContainerClient {
                         .withName("dshm")
                         .withMountPath("/dev/shm")
                     .endVolumeMount()
+                    .withNewResources()
+                        .addToRequests("memory", new Quantity("1Gi"))
+                        .addToRequests("cpu", new Quantity("250m"))
+                        .addToLimits("cpu", new Quantity("500m"))
+                    .endResources()
                 .endContainer()
                 .withRestartPolicy("Never")
             .endSpec();
@@ -385,6 +406,7 @@ public class KubernetesContainerClient implements ContainerClient {
         private String containerId;
         ByteArrayOutputStream stderr;
         String[] command;
+        final CountDownLatch openLatch = new CountDownLatch(1);
         
         public CopyFilesExecListener(ByteArrayOutputStream stderr, String[] command, String containerId) {
             super();
@@ -399,6 +421,7 @@ public class KubernetesContainerClient implements ContainerClient {
 
         @Override
         public void onOpen(Response response) {
+            openLatch.countDown();
         }
         
         @Override
@@ -423,6 +446,14 @@ public class KubernetesContainerClient implements ContainerClient {
                                         Arrays.toString(command),
                                         stderr.toString()));
                 this.execWatch.close();
+            }
+        }
+        
+        public void waitForInputStreamToConnect() {
+            try {
+                this.openLatch.await();
+            }
+            catch (InterruptedException e) {
             }
         }
     }
