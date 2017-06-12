@@ -21,9 +21,13 @@ import org.openqa.selenium.remote.BrowserType;
 import org.openqa.selenium.remote.CapabilityType;
 import org.openqa.selenium.remote.DesiredCapabilities;
 
-import java.io.IOException;
-import java.net.ServerSocket;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.TimeZone;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -95,7 +99,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     private static int screenHeight;
     private static String containerName;
     private final HtmlRenderer renderer = new WebProxyHtmlRendererBeta(this);
-    private List<Integer> allocatedPorts = new ArrayList<>();
+    private static final List<Integer> allocatedPorts = Collections.synchronizedList(new ArrayList<>());
     private CapabilityMatcher capabilityHelper;
 
     @SuppressWarnings("WeakerAccess")
@@ -577,47 +581,27 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     /*
         Method adapted from https://gist.github.com/vorburger/3429822
      */
-    private synchronized int findFreePortInRange(int lowerBoundary, int upperBoundary) {
+    private int findFreePortInRange(int lowerBoundary, int upperBoundary) {
         /*
             If the list size is this big (~9800), it means that almost all ports have been used, but
             probably many have been released already. The list is cleared so ports can be reused.
             If by any chance one of the first allocated ports is still used, it will be skipped by the
             existing validation.
          */
-        if (allocatedPorts.size() > (upperBoundary - lowerBoundary - 200)) {
-            allocatedPorts.clear();
-            LOGGER.log(Level.INFO, () -> LOGGING_PREFIX + "Cleaning allocated ports list.");
-        }
-        for (int portNumber = lowerBoundary; portNumber <= upperBoundary; portNumber++) {
-            if (!allocatedPorts.contains(portNumber)) {
-                int freePort = -1;
-
-                try (ServerSocket serverSocket = new ServerSocket(portNumber)) {
-                    freePort = serverSocket.getLocalPort();
-                } catch (IOException e) {
-                    LOGGER.log(Level.FINE, LOGGING_PREFIX + e.toString(), e);
-                }
-
-                int noVncFreePort = -1;
+        synchronized (allocatedPorts){
+            if (allocatedPorts.size() > (upperBoundary - lowerBoundary - 200)) {
+                allocatedPorts.clear();
+                LOGGER.log(Level.INFO, () -> LOGGING_PREFIX + "Cleaning allocated ports list.");
+            }
+            for (int portNumber = lowerBoundary; portNumber <= upperBoundary; portNumber++) {
                 int noVncPortNumber = portNumber + NO_VNC_PORT_GAP;
-                try (ServerSocket serverSocket = new ServerSocket(noVncPortNumber)) {
-                    noVncFreePort = serverSocket.getLocalPort();
-                } catch (IOException e) {
-                    LOGGER.log(Level.FINE, LOGGING_PREFIX + e.toString(), e);
-                }
-
-                int vncFreePort = -1;
                 int vncPortNumber = portNumber + VNC_PORT_GAP;
-                try (ServerSocket serverSocket = new ServerSocket(vncPortNumber)) {
-                    vncFreePort = serverSocket.getLocalPort();
-                } catch (IOException e) {
-                    LOGGER.log(Level.FINE, LOGGING_PREFIX + e.toString(), e);
-                }
-
-                if (freePort != -1 && noVncFreePort != -1 && vncFreePort != -1) {
-                    allocatedPorts.add(freePort);
-                    allocatedPorts.add(noVncFreePort);
-                    return freePort;
+                if (!allocatedPorts.contains(portNumber) && !allocatedPorts.contains(noVncPortNumber)
+                        && !allocatedPorts.contains(vncPortNumber)) {
+                    allocatedPorts.add(portNumber);
+                    allocatedPorts.add(noVncPortNumber);
+                    allocatedPorts.add(vncPortNumber);
+                    return portNumber;
                 }
             }
         }
