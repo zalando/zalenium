@@ -318,10 +318,12 @@ public class DockerSeleniumRemoteProxyTest {
             spyProxy.afterCommand(newSession, webDriverRequest, response);
 
             // Assert video recording started
+            String containerId = spyProxy.getContainerId();
             verify(spyProxy, times(1)).
                     videoRecording(DockerSeleniumRemoteProxy.DockerSeleniumContainerAction.START_RECORDING);
             verify(spyProxy, times(1)).
-                    processContainerAction(DockerSeleniumRemoteProxy.DockerSeleniumContainerAction.START_RECORDING, null);
+                    processContainerAction(DockerSeleniumRemoteProxy.DockerSeleniumContainerAction.START_RECORDING,
+                            containerId);
 
             // We release the sessions, the node should be free
             webDriverRequest = mock(WebDriverRequest.class);
@@ -337,8 +339,9 @@ public class DockerSeleniumRemoteProxyTest {
             verify(spyProxy, timeout(40000))
                     .videoRecording(DockerSeleniumRemoteProxy.DockerSeleniumContainerAction.STOP_RECORDING);
             verify(spyProxy, timeout(40000))
-                    .processContainerAction(DockerSeleniumRemoteProxy.DockerSeleniumContainerAction.STOP_RECORDING, null);
-            verify(spyProxy, timeout(40000)).copyVideos(null);
+                    .processContainerAction(DockerSeleniumRemoteProxy.DockerSeleniumContainerAction.STOP_RECORDING,
+                            containerId);
+            verify(spyProxy, timeout(40000)).copyVideos(containerId);
     }
 
     @Test

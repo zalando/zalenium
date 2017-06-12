@@ -40,7 +40,7 @@ public class LiveNodeServletTest {
         registry = Registry.newInstance();
         
         this.originalContainerClient = ContainerFactory.getDockerContainerClientGenerator();
-        ContainerFactory.setDockerContainerClientGenerator(() -> TestUtils.getMockedDockerContainerClient());
+        ContainerFactory.setDockerContainerClientGenerator(TestUtils::getMockedDockerContainerClient);
 
         // Creating the configuration and the registration request of the proxy (node)
         RegistrationRequest registrationRequest = TestUtils.getRegistrationRequestForTesting(40000,

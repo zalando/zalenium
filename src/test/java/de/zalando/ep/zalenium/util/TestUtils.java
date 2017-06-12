@@ -12,6 +12,7 @@ import com.spotify.docker.client.messages.*;
 import de.zalando.ep.zalenium.container.DockerContainerClient;
 import de.zalando.ep.zalenium.proxy.DockerSeleniumStarterRemoteProxy;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.rules.TemporaryFolder;
 import org.openqa.grid.common.RegistrationRequest;
 import org.openqa.grid.internal.utils.configuration.GridNodeConfiguration;
@@ -169,28 +170,39 @@ public class TestUtils {
         when(containerMount.source()).thenReturn("/tmp/mounted");
         when(containerInfo.mounts()).thenReturn(ImmutableList.of(containerMount));
 
+        String containerId = RandomStringUtils.randomAlphabetic(30).toLowerCase();
+        Container container_40000 = mock(Container.class);
+        when(container_40000.names()).thenReturn(ImmutableList.copyOf(Collections.singletonList("/zalenium_40000")));
+        when(container_40000.id()).thenReturn(containerId);
+        Container container_40001 = mock(Container.class);
+        when(container_40001.names()).thenReturn(ImmutableList.copyOf(Collections.singletonList("/zalenium_40001")));
+        when(container_40001.id()).thenReturn(containerId);
+
         try {
             URL logsLocation = TestUtils.class.getClassLoader().getResource("logs.tar");
             URL videosLocation = TestUtils.class.getClassLoader().getResource("videos.tar");
             File logsFile = new File(logsLocation.getPath());
             File videosFile = new File(videosLocation.getPath());
-            when(dockerClient.archiveContainer(null, "/var/log/cont/")).thenReturn(new FileInputStream(logsFile));
-            when(dockerClient.archiveContainer(null, "/videos/")).thenReturn(new FileInputStream(videosFile));
+            when(dockerClient.archiveContainer(containerId, "/var/log/cont/")).thenReturn(new FileInputStream(logsFile));
+            when(dockerClient.archiveContainer(containerId, "/videos/")).thenReturn(new FileInputStream(videosFile));
 
             String[] startVideo = {"bash", "-c", "start-video"};
             String[] stopVideo = {"bash", "-c", "stop-video"};
             String[] transferLogs = {"bash", "-c", "transfer-logs.sh"};
-            when(dockerClient.execCreate(null, startVideo, DockerClient.ExecCreateParam.attachStdout(),
+            when(dockerClient.execCreate(containerId, startVideo, DockerClient.ExecCreateParam.attachStdout(),
                     DockerClient.ExecCreateParam.attachStderr())).thenReturn(execCreation);
-            when(dockerClient.execCreate(null, stopVideo, DockerClient.ExecCreateParam.attachStdout(),
+            when(dockerClient.execCreate(containerId, stopVideo, DockerClient.ExecCreateParam.attachStdout(),
                     DockerClient.ExecCreateParam.attachStderr())).thenReturn(execCreation);
-            when(dockerClient.execCreate(null, transferLogs, DockerClient.ExecCreateParam.attachStdout(),
+            when(dockerClient.execCreate(containerId, transferLogs, DockerClient.ExecCreateParam.attachStdout(),
                     DockerClient.ExecCreateParam.attachStderr())).thenReturn(execCreation);
 
             when(dockerClient.execStart(anyString())).thenReturn(logStream);
             doNothing().when(dockerClient).stopContainer(anyString(), anyInt());
 
             when(dockerClient.createContainer(any(ContainerConfig.class), anyString())).thenReturn(containerCreation);
+
+            when(dockerClient.listContainers(DockerClient.ListContainersParam.allContainers()))
+                    .thenReturn(Arrays.asList(container_40000, container_40001));
 
             when(containerConfig.labels()).thenReturn(ImmutableMap.of("selenium_firefox_version", "52",
                     "selenium_chrome_version", "58"));
