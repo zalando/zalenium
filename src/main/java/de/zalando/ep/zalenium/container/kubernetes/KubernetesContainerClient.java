@@ -75,30 +75,17 @@ public class KubernetesContainerClient implements ContainerClient {
     private final Function<PodConfiguration, DoneablePod> createDoneablePod;
     private final Function<ServiceConfiguration, DoneableService> createDoneableService;
 
-    public static KubernetesContainerClient getInstance(Environment environment,
-                                                        Function<PodConfiguration, DoneablePod> createDoneablePod,
-                                                        Function<ServiceConfiguration, DoneableService> createDoneableService) {
-        if (instance == null) {
-            synchronized (KubernetesContainerClient.class) {
-                if (instance == null) {
-                    instance = new KubernetesContainerClient(environment, createDoneablePod, createDoneableService);
-                }
-            }
-        }
-
-        return instance;
-    }
-
-    private KubernetesContainerClient(Environment environment,
+    public KubernetesContainerClient(Environment environment,
                                       Function<PodConfiguration, DoneablePod> createDoneablePod,
-                                      Function<ServiceConfiguration, DoneableService> createDoneableService) {
+                                      Function<ServiceConfiguration, DoneableService> createDoneableService,
+                                      KubernetesClient client) {
         logger.info("Initialising Kubernetes support");
 
         this.environment = environment;
         this.createDoneablePod = createDoneablePod;
         this.createDoneableService = createDoneableService;
         
-        client = new DefaultKubernetesClient();
+        this.client = client;
         String kubernetesFlavour;
         if (client.isAdaptable(OpenShiftClient.class)) {
             oClient = client.adapt(OpenShiftClient.class);

@@ -39,12 +39,12 @@ public class DockerSeleniumRemoteProxyTest {
     private DockerSeleniumRemoteProxy proxy;
     private Registry registry;
     private ContainerClient containerClient;
-    private Supplier<ContainerClient> originalContainerClient;
+    private Supplier<ContainerClient> originalDockerContainerClient;
 
     public DockerSeleniumRemoteProxyTest(ContainerClient containerClient) {
         this.containerClient = containerClient;
         
-        this.originalContainerClient = ContainerFactory.getDockerContainerClientGenerator();
+        this.originalDockerContainerClient = ContainerFactory.getDockerContainerClientGenerator();
         // Change the factory to return our version of the Container Client
         ContainerFactory.setDockerContainerClientGenerator(() -> containerClient);
     }
@@ -74,7 +74,7 @@ public class DockerSeleniumRemoteProxyTest {
 
     @After
     public void tearDown() {
-        ContainerFactory.setDockerContainerClientGenerator(originalContainerClient);
+        ContainerFactory.setDockerContainerClientGenerator(originalDockerContainerClient);
         proxy.restoreContainerClient();
     }
 
