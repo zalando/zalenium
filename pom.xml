@@ -98,20 +98,26 @@
             </exclusions>
         </dependency>
         <dependency>
-         <groupId>io.fabric8</groupId>
-         <artifactId>openshift-client</artifactId>
-         <version>${kubernetes-client.version}</version>
-         <exclusions>
-            <exclusion>
-               <groupId>org.slf4j</groupId>
-               <artifactId>jul-to-slf4j</artifactId>
-            </exclusion>
-            <exclusion>
-               <groupId>org.slf4j</groupId>
-               <artifactId>slf4j-api</artifactId>
-            </exclusion>
-         </exclusions>
-      </dependency>
+            <groupId>io.fabric8</groupId>
+            <artifactId>openshift-client</artifactId>
+            <version>${kubernetes-client.version}</version>
+            <exclusions>
+               <exclusion>
+                  <groupId>org.slf4j</groupId>
+                  <artifactId>jul-to-slf4j</artifactId>
+               </exclusion>
+               <exclusion>
+                  <groupId>org.slf4j</groupId>
+                  <artifactId>slf4j-api</artifactId>
+               </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>io.fabric8</groupId>
+            <artifactId>openshift-server-mock</artifactId>
+            <version>${kubernetes-client.version}</version>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>

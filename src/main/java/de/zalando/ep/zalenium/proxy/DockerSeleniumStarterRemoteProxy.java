@@ -78,7 +78,8 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     @VisibleForTesting
     private static final String ZALENIUM_CONTAINER_NAME = "ZALENIUM_CONTAINER_NAME";
     private static final Logger LOGGER = Logger.getLogger(DockerSeleniumStarterRemoteProxy.class.getName());
-    private static final String DOCKER_SELENIUM_IMAGE = "elgalu/selenium";
+    private static final String DEFAULT_DOCKER_SELENIUM_IMAGE = "elgalu/selenium";
+    private static final String ZALENIUM_SELENIUM_IMAGE_NAME = "ZALENIUM_SELENIUM_IMAGE_NAME";
     private static final int LOWER_PORT_BOUNDARY = 40000;
     private static final int UPPER_PORT_BOUNDARY = 49999;
     private static final int VNC_PORT_GAP = 20000;
@@ -104,6 +105,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     private static int configuredScreenHeight;
     private static int screenHeight;
     private static String containerName;
+    private static String dockerSeleniumImageName;
     private final HtmlRenderer renderer = new WebProxyHtmlRendererBeta(this);
     private CapabilityMatcher capabilityHelper;
 
@@ -141,6 +143,9 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
 
         String containerN = env.getStringEnvVariable(ZALENIUM_CONTAINER_NAME, DEFAULT_ZALENIUM_CONTAINER_NAME);
         setContainerName(containerN);
+
+        String seleniumImageName = env.getStringEnvVariable(ZALENIUM_SELENIUM_IMAGE_NAME, DEFAULT_DOCKER_SELENIUM_IMAGE);
+        setDockerSeleniumImageName(seleniumImageName);
     }
 
     /*
@@ -215,13 +220,21 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
         DockerSeleniumStarterRemoteProxy.firefoxContainersOnStartup = firefoxContainersOnStartup < 0 ?
                 DEFAULT_AMOUNT_FIREFOX_CONTAINERS : firefoxContainersOnStartup;
     }
-
+    
     public static String getContainerName() {
         return containerName == null ? DEFAULT_ZALENIUM_CONTAINER_NAME : containerName;
     }
-
+    
     private static void setContainerName(String containerName) {
         DockerSeleniumStarterRemoteProxy.containerName = containerName;
+    }
+
+    public static String getDockerSeleniumImageName() {
+        return dockerSeleniumImageName;
+    }
+
+    public static void setDockerSeleniumImageName(String dockerSeleniumImageName) {
+        DockerSeleniumStarterRemoteProxy.dockerSeleniumImageName = dockerSeleniumImageName;
     }
 
     @VisibleForTesting
@@ -287,7 +300,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
 
     private static String getLatestDownloadedImage() {
         if (latestDownloadedImage == null) {
-            latestDownloadedImage = containerClient.getLatestDownloadedImage(DOCKER_SELENIUM_IMAGE);
+            latestDownloadedImage = containerClient.getLatestDownloadedImage(getDockerSeleniumImageName());
         }
         return latestDownloadedImage;
     }
@@ -435,7 +448,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
                 Map<String, String> envVars = buildEnvVars(browser, hostIpAddress, sendAnonymousUsageInfo, nodePolling,
                         nodePort);
 
-                String latestImage = containerClient.getLatestDownloadedImage(DOCKER_SELENIUM_IMAGE);
+                String latestImage = containerClient.getLatestDownloadedImage(getDockerSeleniumImageName());
                 boolean containerCreated = containerClient
                         .createContainer(getContainerName(), latestImage, envVars, String.valueOf(nodePort));
                 if (containerCreated && checkContainerStatus(getContainerName(), nodePort)) {
@@ -612,7 +625,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
 
     private boolean validateAmountOfDockerSeleniumContainers() {
         try {
-            int numberOfDockerSeleniumContainers = containerClient.getRunningContainers(DOCKER_SELENIUM_IMAGE);
+            int numberOfDockerSeleniumContainers = containerClient.getRunningContainers(getDockerSeleniumImageName());
             if (numberOfDockerSeleniumContainers >= getMaxDockerSeleniumContainers()) {
                 LOGGER.log(Level.WARNING, LOGGING_PREFIX + "Max. number of docker-selenium containers has been reached, " +
                         "no more will be created until the number decreases below {0}.", getMaxDockerSeleniumContainers());
