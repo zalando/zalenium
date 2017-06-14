@@ -99,7 +99,8 @@ public class DockerContainerClient implements ContainerClient {
             logger.log(Level.INFO, () -> String.format("%s %s", nodeId, Arrays.toString(command)));
             if (waitForExecution) {
                 try {
-                    logger.log(Level.INFO, () -> String.format("%s %s", nodeId, output.readFully()));
+                    String commandOutput = output.readFully();
+                    logger.log(Level.FINE, () -> String.format("%s %s", nodeId, commandOutput));
                 } catch (Exception e) {
                     logger.log(Level.FINE, nodeId + " Error while executing the output.readFully()", e);
                     ga.trackException(e);
@@ -161,7 +162,7 @@ public class DockerContainerClient implements ContainerClient {
         return 0;
     }
 
-    public void createContainer(String zaleniumContainerName, String image, Map<String, String> envVars,
+    public boolean createContainer(String zaleniumContainerName, String image, Map<String, String> envVars,
                                 String nodePort) {
         String containerName = generateContainerName(zaleniumContainerName, nodePort);
 
@@ -208,9 +209,11 @@ public class DockerContainerClient implements ContainerClient {
         try {
             final ContainerCreation container = dockerClient.createContainer(containerConfig, containerName);
             dockerClient.startContainer(container.id());
+            return true;
         } catch (DockerException | InterruptedException e) {
-            logger.log(Level.WARNING, nodeId + " Error while starting a new container", e);
+            logger.log(Level.FINE, nodeId + " Error while starting a new container", e);
             ga.trackException(e);
+            return false;
         }
     }
 
@@ -279,6 +282,19 @@ public class DockerContainerClient implements ContainerClient {
         }
         zaleniumNetwork = DEFAULT_DOCKER_NETWORK_MODE;
         return zaleniumNetwork;
+    }
+
+    @Override
+    public String getContainerIp(String containerName) {
+        String containerId = this.getContainerId(containerName);
+        try {
+            ContainerInfo containerInfo = dockerClient.inspectContainer(containerId);
+            return containerInfo.networkSettings().ipAddress();
+        } catch (DockerException | InterruptedException e) {
+            logger.log(Level.FINE, nodeId + " Error while getting the container IP.", e);
+            ga.trackException(e);
+        }
+        return null;
     }
 }
 

@@ -24,7 +24,9 @@ public interface ContainerClient {
 
     int getRunningContainers(String image);
 
-    void createContainer(String zaleniumContainerName, String image, Map<String, String> envVars, String nodePort);
+    boolean createContainer(String zaleniumContainerName, String image, Map<String, String> envVars, String nodePort);
 
     void initialiseContainerEnvironment();
+
+    String getContainerIp(String containerName);
 }

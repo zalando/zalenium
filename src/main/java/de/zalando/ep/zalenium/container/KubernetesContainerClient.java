@@ -238,7 +238,7 @@ public class KubernetesContainerClient implements ContainerClient {
     }
 
     @Override
-    public void createContainer(String zaleniumContainerName, String image, Map<String, String> envVars,
+    public boolean createContainer(String zaleniumContainerName, String image, Map<String, String> envVars,
                                 String nodePort) {
         String containerId = String.format("%s-%s", zaleniumContainerName, nodePort);
         
@@ -297,6 +297,7 @@ public class KubernetesContainerClient implements ContainerClient {
         
         // Create the container
         doneablePod.done();
+        return true;
     }
 
     @Override
@@ -308,6 +309,11 @@ public class KubernetesContainerClient implements ContainerClient {
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             this.deleteSeleniumPods();
          }));
+    }
+
+    @Override
+    public String getContainerIp(String containerName) {
+        return null;
     }
 
     private void deleteSeleniumPods() {

@@ -6,6 +6,7 @@ import de.zalando.ep.zalenium.container.ContainerFactory;
 import de.zalando.ep.zalenium.matcher.DockerSeleniumCapabilityMatcher;
 import de.zalando.ep.zalenium.util.Environment;
 import de.zalando.ep.zalenium.util.GoogleAnalyticsApi;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.RandomUtils;
 import org.openqa.grid.common.RegistrationRequest;
 import org.openqa.grid.internal.Registry;
@@ -21,6 +22,10 @@ import org.openqa.selenium.remote.BrowserType;
 import org.openqa.selenium.remote.CapabilityType;
 import org.openqa.selenium.remote.DesiredCapabilities;
 
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -80,6 +85,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     private static final ContainerClient defaultContainerClient = ContainerFactory.getContainerClient();
     private static final Environment defaultEnvironment = new Environment();
     private static final String LOGGING_PREFIX = "[DS] ";
+    private static final List<Integer> allocatedPorts = Collections.synchronizedList(new ArrayList<>());
     private static List<DesiredCapabilities> dockerSeleniumCapabilities = new ArrayList<>();
     private static ContainerClient containerClient = defaultContainerClient;
     private static Environment env = defaultEnvironment;
@@ -99,7 +105,6 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     private static int screenHeight;
     private static String containerName;
     private final HtmlRenderer renderer = new WebProxyHtmlRendererBeta(this);
-    private static final List<Integer> allocatedPorts = Collections.synchronizedList(new ArrayList<>());
     private CapabilityMatcher capabilityHelper;
 
     @SuppressWarnings("WeakerAccess")
@@ -417,57 +422,102 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
             NetworkUtils networkUtils = new NetworkUtils();
             String hostIpAddress = networkUtils.getIp4NonLoopbackAddressOfThisMachine().getHostAddress();
 
-            /*
-                Building the docker command, depending if Chrome or Firefox is requested.
-                To launch only the requested node type.
-             */
             boolean sendAnonymousUsageInfo = env.getBooleanEnvVariable("ZALENIUM_SEND_ANONYMOUS_USAGE_INFO", false);
-
-            final int nodePort = findFreePortInRange(LOWER_PORT_BOUNDARY, UPPER_PORT_BOUNDARY);
-            final int noVncPort = nodePort + NO_VNC_PORT_GAP;
-            final int vncPort = nodePort + VNC_PORT_GAP;
-
             String nodePolling = String.valueOf(RandomUtils.nextInt(90, 120) * 1000);
 
-            Map<String, String> envVars = new HashMap<>();
-            envVars.put("ZALENIUM", "true");
-            envVars.put("SELENIUM_HUB_HOST", hostIpAddress);
-            envVars.put("SELENIUM_HUB_PORT", "4445");
-            envVars.put("SELENIUM_NODE_HOST", "{{CONTAINER_IP}}");
-            envVars.put("GRID", "false");
-            envVars.put("WAIT_TIMEOUT", "120s");
-            envVars.put("PICK_ALL_RANDOM_PORTS", "true");
-            envVars.put("VIDEO_STOP_SLEEP_SECS", "1");
-            envVars.put("WAIT_TIME_OUT_VIDEO_STOP", "20s");
-            envVars.put("SEND_ANONYMOUS_USAGE_INFO", String.valueOf(sendAnonymousUsageInfo));
-            envVars.put("BUILD_URL", env.getStringEnvVariable("BUILD_URL", ""));
-            envVars.put("NOVNC", "true");
-            envVars.put("NOVNC_PORT", String.valueOf(noVncPort));
-            envVars.put("VNC_PORT", String.valueOf(vncPort));
-            envVars.put("SCREEN_WIDTH", String.valueOf(getScreenWidth()));
-            envVars.put("SCREEN_HEIGHT", String.valueOf(getScreenHeight()));
-            envVars.put("TZ", getTimeZone());
-            envVars.put("SELENIUM_NODE_REGISTER_CYCLE", "0");
-            envVars.put("SEL_NODEPOLLING_MS", nodePolling);
-            envVars.put("SELENIUM_NODE_PROXY_PARAMS", "de.zalando.ep.zalenium.proxy.DockerSeleniumRemoteProxy");
-            if (BrowserType.CHROME.equalsIgnoreCase(browser)) {
-                envVars.put("SELENIUM_NODE_CH_PORT", String.valueOf(nodePort));
-                envVars.put("CHROME", "true");
-            } else {
-                envVars.put("CHROME", "false");
-            }
-            if (BrowserType.FIREFOX.equalsIgnoreCase(browser)) {
-                envVars.put("SELENIUM_NODE_FF_PORT", String.valueOf(nodePort));
-                envVars.put("FIREFOX", "true");
-            } else {
-                envVars.put("FIREFOX", "false");
-            }
 
-            String latestImage = containerClient.getLatestDownloadedImage(DOCKER_SELENIUM_IMAGE);
-            containerClient.createContainer(getContainerName(), latestImage, envVars, String.valueOf(nodePort));
-            return true;
+            int attempts = 0;
+            int maxAttempts = 2;
+            while (attempts < maxAttempts) {
+                attempts++;
+                final int nodePort = findFreePortInRange(LOWER_PORT_BOUNDARY, UPPER_PORT_BOUNDARY);
+
+                Map<String, String> envVars = buildEnvVars(browser, hostIpAddress, sendAnonymousUsageInfo, nodePolling,
+                        nodePort);
+
+                String latestImage = containerClient.getLatestDownloadedImage(DOCKER_SELENIUM_IMAGE);
+                boolean containerCreated = containerClient
+                        .createContainer(getContainerName(), latestImage, envVars, String.valueOf(nodePort));
+                if (containerCreated && checkContainerStatus(getContainerName(), nodePort)) {
+                    return true;
+                } else {
+                    LOGGER.log(Level.INFO, String.format("%sContainer creation failed, retrying...", LOGGING_PREFIX));
+                }
+            }
         }
+        LOGGER.log(Level.INFO, String.format("%sNo container was created for a request...", LOGGING_PREFIX));
         return false;
+    }
+
+    private boolean checkContainerStatus(String containerName, int nodePort) {
+        String createdContainerName = String.format("%s_%s", containerName, nodePort);
+        String containerIp = containerClient.getContainerIp(createdContainerName);
+        for (int i = 1; i <= 60; i++) {
+            try {
+                Thread.sleep(1000);
+                if (containerIp == null || containerIp.trim().isEmpty()) {
+                    containerIp = containerClient.getContainerIp(createdContainerName);
+                }
+                URL statusUrl = new URL(String.format("http://%s:%s/wd/hub/status", containerIp, nodePort));
+                try {
+                    String status = IOUtils.toString(statusUrl, StandardCharsets.UTF_8);
+                    if (status.contains("success")) {
+                        LOGGER.log(Level.INFO, String.format("%sContainer %s is up after ~%s seconds...",
+                                LOGGING_PREFIX, createdContainerName, i));
+                        return true;
+                    }
+                } catch (IOException e) {
+                    LOGGER.log(Level.FINE, "Error while getting node status.", e);
+                }
+            } catch (MalformedURLException | InterruptedException e) {
+                LOGGER.log(Level.WARNING, "Malformed status url.", e);
+            }
+        }
+        String message = String.format("%sContainer %s took longer than 60 seconds to be up and ready, this might be " +
+                        "a signal that you have reached the hardware limits for the number of concurrent threads " +
+                        "that you want to execute.", LOGGING_PREFIX, createdContainerName);
+        LOGGER.log(Level.INFO, message);
+        return false;
+    }
+
+    private Map<String, String> buildEnvVars(String browser, String hostIpAddress, boolean sendAnonymousUsageInfo,
+                                             String nodePolling, int nodePort) {
+        final int noVncPort = nodePort + NO_VNC_PORT_GAP;
+        final int vncPort = nodePort + VNC_PORT_GAP;
+        Map<String, String> envVars = new HashMap<>();
+        envVars.put("ZALENIUM", "true");
+        envVars.put("SELENIUM_HUB_HOST", hostIpAddress);
+        envVars.put("SELENIUM_HUB_PORT", "4445");
+        envVars.put("SELENIUM_NODE_HOST", "{{CONTAINER_IP}}");
+        envVars.put("GRID", "false");
+        envVars.put("WAIT_TIMEOUT", "120s");
+        envVars.put("PICK_ALL_RANDOM_PORTS", "false");
+        envVars.put("VIDEO_STOP_SLEEP_SECS", "1");
+        envVars.put("WAIT_TIME_OUT_VIDEO_STOP", "20s");
+        envVars.put("SEND_ANONYMOUS_USAGE_INFO", String.valueOf(sendAnonymousUsageInfo));
+        envVars.put("BUILD_URL", env.getStringEnvVariable("BUILD_URL", ""));
+        envVars.put("NOVNC", "true");
+        envVars.put("NOVNC_PORT", String.valueOf(noVncPort));
+        envVars.put("VNC_PORT", String.valueOf(vncPort));
+        envVars.put("SCREEN_WIDTH", String.valueOf(getScreenWidth()));
+        envVars.put("SCREEN_HEIGHT", String.valueOf(getScreenHeight()));
+        envVars.put("TZ", getTimeZone());
+        envVars.put("SELENIUM_NODE_REGISTER_CYCLE", "0");
+        envVars.put("SEL_NODEPOLLING_MS", nodePolling);
+        envVars.put("SELENIUM_NODE_PROXY_PARAMS", "de.zalando.ep.zalenium.proxy.DockerSeleniumRemoteProxy");
+        if (BrowserType.CHROME.equalsIgnoreCase(browser)) {
+            envVars.put("SELENIUM_NODE_CH_PORT", String.valueOf(nodePort));
+            envVars.put("CHROME", "true");
+        } else {
+            envVars.put("CHROME", "false");
+        }
+        if (BrowserType.FIREFOX.equalsIgnoreCase(browser)) {
+            envVars.put("SELENIUM_NODE_FF_PORT", String.valueOf(nodePort));
+            envVars.put("FIREFOX", "true");
+        } else {
+            envVars.put("FIREFOX", "false");
+        }
+        return envVars;
     }
 
     private void createContainersOnStartup() {
@@ -480,7 +530,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
             if (i < getChromeContainersOnStartup()) {
                 new Thread(() -> {
                     try {
-                        Thread.sleep(RandomUtils.nextInt(1, containersToCreate) * sleepIntervalMultiplier);
+                        Thread.sleep(RandomUtils.nextInt(1, (containersToCreate / 2) + 1) * sleepIntervalMultiplier);
                     } catch (InterruptedException e) {
                         LOGGER.log(Level.FINE, getId() + " Error sleeping before starting a Chrome container", e);
                     }
@@ -489,7 +539,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
             } else {
                 new Thread(() -> {
                     try {
-                        Thread.sleep(RandomUtils.nextInt(1, containersToCreate) * sleepIntervalMultiplier);
+                        Thread.sleep(RandomUtils.nextInt(1, (containersToCreate / 2) + 1) * sleepIntervalMultiplier);
                     } catch (InterruptedException e) {
                         LOGGER.log(Level.FINE, getId() + " Error sleeping before starting a Firefox container", e);
                     }
