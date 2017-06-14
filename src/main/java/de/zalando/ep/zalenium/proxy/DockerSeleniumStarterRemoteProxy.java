@@ -154,6 +154,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
      */
     @VisibleForTesting
     protected static RegistrationRequest updateDSCapabilities(RegistrationRequest registrationRequest) {
+        readConfigurationFromEnvVariables();
         containerClient.setNodeId(LOGGING_PREFIX);
         registrationRequest.getConfiguration().capabilities.clear();
         registrationRequest.getConfiguration().capabilities.addAll(getCapabilities());
@@ -230,7 +231,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     }
 
     public static String getDockerSeleniumImageName() {
-        return dockerSeleniumImageName;
+        return dockerSeleniumImageName == null ? DEFAULT_DOCKER_SELENIUM_IMAGE : dockerSeleniumImageName;
     }
 
     public static void setDockerSeleniumImageName(String dockerSeleniumImageName) {
@@ -400,7 +401,6 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
 
     @Override
     public void beforeRegistration() {
-        readConfigurationFromEnvVariables();
         containerClient.initialiseContainerEnvironment();
         createContainersOnStartup();
     }
