@@ -76,9 +76,9 @@ public class KubernetesContainerClient implements ContainerClient {
     private final Function<ServiceConfiguration, DoneableService> createDoneableService;
 
     public KubernetesContainerClient(Environment environment,
-                                      Function<PodConfiguration, DoneablePod> createDoneablePod,
-                                      Function<ServiceConfiguration, DoneableService> createDoneableService,
-                                      KubernetesClient client) {
+                                     Function<PodConfiguration, DoneablePod> createDoneablePod,
+                                     Function<ServiceConfiguration, DoneableService> createDoneableService,
+                                     KubernetesClient client) {
         logger.info("Initialising Kubernetes support");
 
         this.environment = environment;
