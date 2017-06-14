@@ -336,7 +336,8 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     @VisibleForTesting
     void copyVideos(final String containerId) {
         boolean videoWasCopied = false;
-        try (TarArchiveInputStream tarStream = new TarArchiveInputStream(containerClient.copyFiles(containerId, "/videos/"))) {
+        TarArchiveInputStream tarStream = new TarArchiveInputStream(containerClient.copyFiles(containerId, "/videos/"));
+        try {
             TarArchiveEntry entry;
             while ((entry = tarStream.getNextTarEntry()) != null) {
                 if (entry.isDirectory()) {
@@ -370,7 +371,8 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     @SuppressWarnings("ResultOfMethodCallIgnored")
     @VisibleForTesting
     void copyLogs(final String containerId) {
-        try (TarArchiveInputStream tarStream = new TarArchiveInputStream(containerClient.copyFiles(containerId, "/var/log/cont/"))) {
+        TarArchiveInputStream tarStream = new TarArchiveInputStream(containerClient.copyFiles(containerId, "/var/log/cont/"));
+        try {
             TarArchiveEntry entry;
             while ((entry = tarStream.getNextTarEntry()) != null) {
                 if (entry.isDirectory()) {
