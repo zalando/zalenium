@@ -5,10 +5,16 @@ import java.util.function.Supplier;
 
 import com.google.common.annotations.VisibleForTesting;
 
+import de.zalando.ep.zalenium.container.kubernetes.KubernetesContainerClient;
+import de.zalando.ep.zalenium.util.Environment;
+
 public class ContainerFactory {
 
     private static Supplier<ContainerClient> dockerContainerClientGenerator = () -> new DockerContainerClient();
-    private static Supplier<ContainerClient> kubernetesContainerClientGenerator = () -> KubernetesContainerClient.getInstance();
+    private static Supplier<ContainerClient> kubernetesContainerClientGenerator =
+            () -> KubernetesContainerClient.getInstance(new Environment(),
+                                                        KubernetesContainerClient::createDoneablePodDefaultImpl,
+                                                        KubernetesContainerClient::createDonableServiceDefaultImpl);
     
     public static ContainerClient getContainerClient() {
         /*

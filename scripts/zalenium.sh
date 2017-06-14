@@ -2,6 +2,7 @@
 
 CONTAINER_NAME="zalenium"
 CONTAINER_LIVE_PREVIEW_PORT="5555"
+SELENIUM_IMAGE_NAME="elgalu/selenium"
 CHROME_CONTAINERS=1
 FIREFOX_CONTAINERS=1
 MAX_DOCKER_SELENIUM_CONTAINERS=10
@@ -358,6 +359,7 @@ StartUp()
     export ZALENIUM_SCREEN_HEIGHT=${SCREEN_HEIGHT}
     export ZALENIUM_CONTAINER_NAME=${CONTAINER_NAME}
     export ZALENIUM_CONTAINER_LIVE_PREVIEW_PORT=${CONTAINER_LIVE_PREVIEW_PORT}
+    export ZALENIUM_SELENIUM_IMAGE_NAME=${SELENIUM_IMAGE_NAME}
 
     # Random ID used for Google Analytics
     # If it is running inside the Zalando Jenkins env, we pick the team name from the $BUILD_URL
@@ -398,7 +400,7 @@ StartUp()
 
     mkdir -p logs
 
-    java -cp ${SELENIUM_ARTIFACT}:${ZALENIUM_ARTIFACT} org.openqa.grid.selenium.GridLauncherV3 \
+    java ${ZALENIUM_EXTRA_JVM_PARAMS} -cp ${SELENIUM_ARTIFACT}:${ZALENIUM_ARTIFACT} org.openqa.grid.selenium.GridLauncherV3 \
     -role hub -port 4445 -servlet de.zalando.ep.zalenium.servlet.LivePreviewServlet \
     -servlet de.zalando.ep.zalenium.servlet.ZaleniumConsoleServlet \
     -servlet de.zalando.ep.zalenium.servlet.ZaleniumResourceServlet \
@@ -420,12 +422,12 @@ StartUp()
      -nodePolling 90000 -port 30000 -debug ${DEBUG_ENABLED} > logs/stdout.zalenium.docker.node.log &
     echo $! > ${PID_PATH_DOCKER_SELENIUM_NODE}
 
-    if ! timeout --foreground "30s" bash -c WaitStarterProxy; then
+    if ! timeout --foreground "${OVERRIDE_WAIT_TIME:-30s}" bash -c WaitStarterProxy; then
         echo "StarterRemoteProxy failed to start after 30 seconds, failing..."
         exit 12
     fi
 
-    if ! timeout --foreground "30s" bash -c WaitStarterProxyToRegister; then
+    if ! timeout --foreground "${OVERRIDE_WAIT_TIME:-30s}" bash -c WaitStarterProxyToRegister; then
         echo "StarterRemoteProxy failed to register to the hub after 30 seconds, failing..."
         exit 13
     fi
@@ -712,6 +714,7 @@ function usage()
     echo -e "\t --timeZone -> Sets the time zone in the containers. Defaults to \"Europe/Berlin\""
     echo -e "\t --sendAnonymousUsageInfo -> Collects anonymous usage of the tool. Defaults to 'true'"
     echo -e "\t --debugEnabled -> enables LogLevel.FINE. Defaults to 'false'"
+    echo -e "\t --seleniumImageName -> enables overriding of the Docker selenium image to use. Defaults to \"elgalu/selenium\""
     echo ""
     echo -e "\t stop"
     echo ""
@@ -782,6 +785,9 @@ case ${SCRIPT_ACTION} in
                     ;;
                 --debugEnabled)
                     DEBUG_ENABLED=${VALUE}
+                    ;;
+                --seleniumImageName)
+                    SELENIUM_IMAGE_NAME=${VALUE}
                     ;;
                 *)
                     echo "ERROR: unknown parameter \"$PARAM\""

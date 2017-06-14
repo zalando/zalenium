@@ -1,4 +1,4 @@
-package de.zalando.ep.zalenium.container;
+package de.zalando.ep.zalenium.container.kubernetes;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
@@ -14,12 +14,19 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang.StringUtils;
+
+import de.zalando.ep.zalenium.container.ContainerClient;
+import de.zalando.ep.zalenium.container.ContainerClientRegistration;
+import de.zalando.ep.zalenium.util.Environment;
 import io.fabric8.kubernetes.api.model.DoneablePod;
+import io.fabric8.kubernetes.api.model.DoneableService;
 import io.fabric8.kubernetes.api.model.EnvVar;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodList;
@@ -48,7 +55,7 @@ public class KubernetesContainerClient implements ContainerClient {
     
     private String hostname;
     
-    private String zaleniumServiceName;
+    private String zaleniumAppName;
     
     private final Pod zaleniumPod;
 
@@ -60,21 +67,36 @@ public class KubernetesContainerClient implements ContainerClient {
 
     private Volume sharedFolderVolume;
     
-    public static KubernetesContainerClient getInstance() {
+    private final Map<String, Quantity> seleniumPodLimits = new HashMap<>();
+    private final Map<String, Quantity> seleniumPodRequests = new HashMap<>();
+    
+    private final Environment environment;
+    
+    private final Function<PodConfiguration, DoneablePod> createDoneablePod;
+    private final Function<ServiceConfiguration, DoneableService> createDoneableService;
+
+    public static KubernetesContainerClient getInstance(Environment environment,
+                                                        Function<PodConfiguration, DoneablePod> createDoneablePod,
+                                                        Function<ServiceConfiguration, DoneableService> createDoneableService) {
         if (instance == null) {
             synchronized (KubernetesContainerClient.class) {
-                if(instance == null){
-                    instance = new KubernetesContainerClient();
+                if (instance == null) {
+                    instance = new KubernetesContainerClient(environment, createDoneablePod, createDoneableService);
                 }
             }
         }
-        
+
         return instance;
     }
-    
-    private KubernetesContainerClient() {
+
+    private KubernetesContainerClient(Environment environment,
+                                      Function<PodConfiguration, DoneablePod> createDoneablePod,
+                                      Function<ServiceConfiguration, DoneableService> createDoneableService) {
         logger.info("Initialising Kubernetes support");
-        
+
+        this.environment = environment;
+        this.createDoneablePod = createDoneablePod;
+        this.createDoneableService = createDoneableService;
         
         client = new DefaultKubernetesClient();
         String kubernetesFlavour;
@@ -103,16 +125,47 @@ public class KubernetesContainerClient implements ContainerClient {
         
         createdByZaleniumMap = new HashMap<>();
         createdByZaleniumMap.put("createdBy", appName);
+        zaleniumAppName = appName;
         
         discoverSharedFolderMount();
         
-        // Lets assume that the zalenium service name is the same as the app name.
-        zaleniumServiceName = appName;
+        buildResourceMaps();
         
         logger.log(Level.INFO,
-                   "Kubernetes support initialised.\n\tPod name: {0}\n\tapp label: {1}\n\tzalenium service name: {2}\n\tKubernetes flavour: {3}",
-                   new Object[] { hostname, appName, zaleniumServiceName, kubernetesFlavour });
-        
+                   "Kubernetes support initialised.\n"
+                   + "\tPod name: {0}\n"
+                   + "\tapp label: {1}\n"
+                   + "\tzalenium service name: {2}\n"
+                   + "\tKubernetes flavour: {3}\n"
+                   + "\tSelenium Pod Resource Limits: {4}\n"
+                   + "\tSelenium Pod Resource Requests: {5}",
+                   new Object[] { hostname, appName, zaleniumAppName, kubernetesFlavour,
+                           seleniumPodLimits.toString(), seleniumPodRequests.toString() });
+    }
+    
+    private void buildResourceMaps() {
+        for (Resources resource : Resources.values()) {
+            String envValue = environment.getStringEnvVariable(resource.getEnvVar(), null);
+            if (StringUtils.isNotBlank(envValue)) {
+                Map<String, Quantity> resourceMap = null;
+                switch (resource.getResourceType()) {
+                    case REQUEST:
+                        resourceMap = seleniumPodRequests;
+                        break;
+                        
+                    case LIMIT:
+                        resourceMap = seleniumPodLimits;
+
+                    default:
+                        break;
+                }
+                if (resourceMap != null) {
+                    Quantity quantity = new Quantity(envValue);
+                    resourceMap.put(resource.getRequestType(), quantity);
+                }
+            }
+            resource.getEnvVar();
+        }
     }
 
     private void discoverSharedFolderMount() {
@@ -232,17 +285,19 @@ public class KubernetesContainerClient implements ContainerClient {
 
     @Override
     public String getLatestDownloadedImage(String imageName) {
-        // TODO Maybe do something here later, try and get an updated version
-        // but lets just pass through at the moment
+        // Nothing to do here, this is managed by the ImagePullPolicy when creating a container.
+        // Currently the kuberentes API can't manage images, the OpenShift API has some extra hooks though, which we could potential use.
         return imageName;
     }
 
     @Override
     public String getLabelValue(String image,
                                 String label) {
+        // FIXME: This might be possible with the OpenShift API, but not the Kubernetes API at the moment.
+        // Although with the OpenShift API it will be pretty slow as you can't lookup an image by its docker name, only its hash value.
+        // So with the OpenShift API you'd end up listing all images in the registry and looping through them one by one, which is not ideal.
         /*ImageStreamTag imageStreamTag = oClient.imageStreamTags().withName(image).get();
         imageStreamTag.getImage().getDockerImageConfig()*/
-        // TODO Auto-generated method stub
         return null;
     }
 
@@ -256,7 +311,7 @@ public class KubernetesContainerClient implements ContainerClient {
     @Override
     public void createContainer(String zaleniumContainerName, String image, Map<String, String> envVars,
                                 String nodePort) {
-        String containerIdPrefix = String.format("%s-%s-", zaleniumServiceName, nodePort);
+        String containerIdPrefix = String.format("%s-%s-", zaleniumAppName, nodePort);
         
         // Convert the environment variables into the kubernetes format.
         List<EnvVar> flattenedEnvVars = envVars.entrySet().stream()
@@ -268,53 +323,22 @@ public class KubernetesContainerClient implements ContainerClient {
         // alternately on registration of the node, the label could be updated to the hostname.  But a bug in Openshift/Kubernetes v1.4.0 seems to prevent this
         podSelector.put(SELENIUM_NODE_NAME, UUID.randomUUID().toString());
         
-        DoneablePod doneablePod = client.pods()
-            .createNew()
-            .withNewMetadata()
-                .withGenerateName(containerIdPrefix)
-                .addToLabels(createdByZaleniumMap)
-                .addToLabels(appLabelMap)
-                .addToLabels(podSelector)
-            .endMetadata()
-            .withNewSpec()
-                // Add a memory volume that we can use for /dev/shm
-                .addNewVolume()
-                    .withName("dshm")
-                    .withNewEmptyDir()
-                        .withMedium("Memory")
-                    .endEmptyDir()
-                .endVolume()
-                .addNewContainer()
-                    .withName("selenium-node")
-                    .withImage(image)
-                    .withImagePullPolicy("Always")
-                    .addAllToEnv(flattenedEnvVars)
-                    .addNewVolumeMount()
-                        .withName("dshm")
-                        .withMountPath("/dev/shm")
-                    .endVolumeMount()
-                    .withNewResources()
-                        .addToRequests("memory", new Quantity("1Gi"))
-                        .addToRequests("cpu", new Quantity("250m"))
-                        .addToLimits("cpu", new Quantity("500m"))
-                    .endResources()
-                .endContainer()
-                .withRestartPolicy("Never")
-            .endSpec();
+        PodConfiguration config = new PodConfiguration();
+        config.setClient(client);
+        config.setContainerIdPrefix(containerIdPrefix);
+        config.setImage(image);
+        config.setEnvVars(flattenedEnvVars);
+        Map<String, String> labels = new HashMap<String, String>();
+        labels.putAll(createdByZaleniumMap);
+        labels.putAll(appLabelMap);
+        labels.putAll(podSelector);
+        config.setLabels(labels);
+        config.setSharedFolderVolumeMount(sharedFolderVolumeMount);
+        config.setSharedFolderVolume(sharedFolderVolume);
+        config.setPodLimits(seleniumPodLimits);
+        config.setPodRequests(seleniumPodRequests);
         
-        
-        // Add the shared folder if it is available
-        if (sharedFolderVolumeMount.isPresent()) {
-            doneablePod = doneablePod
-                .editSpec()
-                    .addNewVolumeLike(sharedFolderVolume)
-                .and()
-                    .editFirstContainer()
-                        .addNewVolumeMountLike(sharedFolderVolumeMount.get())
-                        .endVolumeMount()
-                    .endContainer()
-                .endSpec();
-        }
+        DoneablePod doneablePod = createDoneablePod.apply(config);
         
         // Create the container
         doneablePod.done();
@@ -369,24 +393,20 @@ public class KubernetesContainerClient implements ContainerClient {
             String seleniumNodeNameValue = currentPod.getMetadata().getLabels().get(SELENIUM_NODE_NAME);
             
             // Create a service so that we locate novnc
-            Service service = client.services()
-                .createNew()
-                .withNewMetadata()
-                    .withName(containerId)
-                    .withLabels(appLabelMap)
-                    .withLabels(createdByZaleniumMap)
-                .endMetadata()
-                .withNewSpec()
-                    .withType("NodePort")
-                    .addNewPort()
-                        .withName("novnc")
-                        .withProtocol("TCP")
-                        .withPort(noVncPortInt)
-                        .withNewTargetPort(noVncPortInt)
-                    .endPort()
-                    .addToSelector(SELENIUM_NODE_NAME, seleniumNodeNameValue)
-                .endSpec()
-                .done();
+            Map<String, String> labels = new HashMap<>();
+            labels.putAll(appLabelMap);
+            labels.putAll(createdByZaleniumMap);
+            Map<String, String> selectors = new HashMap<>();
+            selectors.put(SELENIUM_NODE_NAME, seleniumNodeNameValue);
+            ServiceConfiguration config = new ServiceConfiguration();
+            config.setClient(client);
+            config.setLabels(labels);
+            config.setName(containerId);
+            config.setNoVncPort(noVncPortInt);
+            config.setSelectors(selectors);
+            
+            DoneableService doneableService = createDoneableService.apply(config);
+            Service service = doneableService.done();
             
             Integer nodePort = service.getSpec().getPorts().get(0).getNodePort();
             registration.setNoVncPort(nodePort);
@@ -456,6 +476,109 @@ public class KubernetesContainerClient implements ContainerClient {
             catch (InterruptedException e) {
             }
         }
+    }
+    
+    private static enum Resources {
+        
+        CPU_REQUEST(ResourceType.REQUEST, "cpu", "ZALENIUM_KUBERNETES_CPU_REQUEST"),
+        CPU_LIMIT(ResourceType.LIMIT, "cpu", "ZALENIUM_KUBERNETES_CPU_LIMIT"),
+        MEMORY_REQUEST(ResourceType.REQUEST, "memory", "ZALENIUM_KUBERNETES_MEMORY_REQUEST"),
+        MEMORY_LIMIT(ResourceType.LIMIT, "memory", "ZALENIUM_KUBERNETES_MEMORY_LIMIT");
+        
+        private ResourceType resourceType;
+        private String requestType;
+        private String envVar;
+        
+        private Resources(ResourceType resourceType, String requestType, String envVar) {
+            this.resourceType = resourceType;
+            this.requestType = requestType;
+            this.envVar = envVar;
+        }
+
+        public String getRequestType() {
+            return requestType;
+        }
+
+        public ResourceType getResourceType() {
+            return resourceType;
+        }
+
+        public String getEnvVar() {
+            return envVar;
+        }
+    }
+    
+    private static enum ResourceType {
+        REQUEST, LIMIT;
+    }
+    
+    public static DoneablePod createDoneablePodDefaultImpl(PodConfiguration config) {
+        DoneablePod doneablePod = config.getClient().pods()
+                .createNew()
+                .withNewMetadata()
+                    .withGenerateName(config.getContainerIdPrefix())
+                    .addToLabels(config.getLabels())
+                .endMetadata()
+                .withNewSpec()
+                    // Add a memory volume that we can use for /dev/shm
+                    .addNewVolume()
+                        .withName("dshm")
+                        .withNewEmptyDir()
+                            .withMedium("Memory")
+                        .endEmptyDir()
+                    .endVolume()
+                    .addNewContainer()
+                        .withName("selenium-node")
+                        .withImage(config.getImage())
+                        .withImagePullPolicy("Always")
+                        .addAllToEnv(config.getEnvVars())
+                        .addNewVolumeMount()
+                            .withName("dshm")
+                            .withMountPath("/dev/shm")
+                        .endVolumeMount()
+                        .withNewResources()
+                            .addToLimits(config.getPodLimits())
+                            .addToRequests(config.getPodRequests())
+                        .endResources()
+                    .endContainer()
+                    .withRestartPolicy("Never")
+                .endSpec();
+            
+            // Add the shared folder if it is available
+            if (config.getSharedFolderVolumeMount().isPresent()) {
+                doneablePod = doneablePod
+                    .editSpec()
+                        .addNewVolumeLike(config.getSharedFolderVolume())
+                    .and()
+                        .editFirstContainer()
+                            .addNewVolumeMountLike(config.getSharedFolderVolumeMount().get())
+                            .endVolumeMount()
+                        .endContainer()
+                    .endSpec();
+            }
+            
+            return doneablePod;
+    }
+    
+    public static DoneableService createDonableServiceDefaultImpl(ServiceConfiguration config) {
+        DoneableService doneableService = config.getClient().services()
+                .createNew()
+                .withNewMetadata()
+                    .withName(config.getName())
+                    .withLabels(config.getLabels())
+                .endMetadata()
+                .withNewSpec()
+                    .withType("NodePort")
+                    .addNewPort()
+                        .withName("novnc")
+                        .withProtocol("TCP")
+                        .withPort(config.getNoVncPort())
+                        .withNewTargetPort(config.getNoVncPort())
+                    .endPort()
+                    .addToSelector(config.getSelectors())
+                .endSpec();
+        
+        return doneableService;
     }
 
 }
