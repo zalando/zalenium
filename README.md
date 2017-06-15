@@ -44,7 +44,7 @@ Part of the idea comes from this [Sauce Labs post](https://saucelabs.com/blog/in
 * [Docker version](#docker-version)
   * [Linux](#linux)
   * [OSX](#osx)
-* [Kubernetes version](#kubernetes-version)
+* [__[BETA]__ Kubernetes version](./docs/kubernetes.md)
 * [Contributions](#contributions)
   * [Building and Testing](#building-and-testing)
 * [How it works](#how-it-works)
@@ -127,10 +127,6 @@ docker run --rm -ti --name zalenium -p 4444:4444 -p 5555:5555 \
   -v /tmp/videos:/home/seluser/videos \
   --privileged dosel/zalenium start
 ```
-
-## Kubernetes version
-
-See [Kubernetes support](./docs/kubernetes.md).
 
 ## Contributions
 Any feedback or contributions are welcome! Please check our [guidelines](CONTRIBUTING.md), they just follow the general
