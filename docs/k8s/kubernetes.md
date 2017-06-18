@@ -1,7 +1,8 @@
 # Kubernetes Support
 
 Zalenium has beta support for [Kubernetes](https://kubernetes.io/), these instructions will give you an 
-overview of how to get it running.
+overview of how to get it running. Be aware that this is work in progress and some things could be missing, both in
+code and documentation.
 
 Zalenium integrates with Kubernetes using the [fabric8 kubernetes-client and openshift-client](https://github.com/fabric8io/kubernetes-client/)
  and the initial support was developed on OpenShift, but should be backwards compatible with vanilla Kubernetes and

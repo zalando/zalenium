@@ -44,7 +44,7 @@ Part of the idea comes from this [Sauce Labs post](https://saucelabs.com/blog/in
 * [Docker version](#docker-version)
   * [Linux](#linux)
   * [OSX](#osx)
-* [__[BETA]__ Kubernetes version](./docs/kubernetes.md)
+* [__[BETA]__ Kubernetes version](./docs/k8s/kubernetes.md)
 * [Contributions](#contributions)
   * [Building and Testing](#building-and-testing)
 * [How it works](#how-it-works)
