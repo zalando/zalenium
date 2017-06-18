@@ -3,6 +3,7 @@ package de.zalando.ep.zalenium.proxy;
 import com.google.common.annotations.VisibleForTesting;
 import de.zalando.ep.zalenium.container.ContainerClient;
 import de.zalando.ep.zalenium.container.ContainerFactory;
+import de.zalando.ep.zalenium.container.kubernetes.KubernetesContainerClient;
 import de.zalando.ep.zalenium.matcher.DockerSeleniumCapabilityMatcher;
 import de.zalando.ep.zalenium.util.Environment;
 import de.zalando.ep.zalenium.util.GoogleAnalyticsApi;
@@ -463,6 +464,10 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     }
 
     private boolean checkContainerStatus(String containerName, int nodePort) {
+        // TODO: Check how to get the IP from Kubernetes
+        if (containerClient instanceof KubernetesContainerClient) {
+            return true;
+        }
         String createdContainerName = String.format("%s_%s", containerName, nodePort);
         String containerIp = containerClient.getContainerIp(createdContainerName);
         for (int i = 1; i <= 60; i++) {
