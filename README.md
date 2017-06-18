@@ -79,11 +79,10 @@ Zalenium uses docker to scale on-demand, therefore we need to give it the `docke
       --privileged dosel/zalenium start
   ```
 
-
-  * Why `--privileged`? We suggest you run Zalenium as `--priviledged` to speed up the node registration process by increasing 
-      the entropy level with [Haveged](http://www.issihosts.com/haveged/). For more information, check this 
+  * Why `--privileged`? We suggest you run Zalenium as `--priviledged` to speed up the node registration process by increasing
+      the entropy level with [Haveged](http://www.issihosts.com/haveged/). Using `--privileged` is optional since it is just meant to
+      improve its performance. For more information, check this
       [tutorial](https://www.digitalocean.com/community/tutorials/how-to-setup-additional-entropy-for-cloud-servers-using-haveged).
-
 
 * You can also try our one line installer and starter (it will check for the latest images and ask for missing
 dependencies.)
@@ -94,7 +93,7 @@ dependencies.)
 
 * More usage examples, more parameters, configurations, video usage and one line starters can be seen [here](./docs/usage_examples.md)
 * After the output, you should see the DockerSeleniumStarter node in the [grid](http://localhost:4444/grid/console)
-* Now you can point your Selenium tests to [http://localhost:4444/wd/hub](http://localhost:4444/wd/hub).
+* Now you can point your Selenium tests to [http://localhost:4444/wd/hub](http://localhost:4444/wd/hub)
 * Stop it: `docker stop zalenium`
 
 ## Additional features
