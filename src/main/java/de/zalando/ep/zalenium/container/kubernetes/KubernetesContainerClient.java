@@ -34,7 +34,6 @@ import io.fabric8.kubernetes.api.model.Quantity;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.Volume;
 import io.fabric8.kubernetes.api.model.VolumeMount;
-import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.ExecListener;
 import io.fabric8.kubernetes.client.dsl.ExecWatch;
@@ -45,8 +44,6 @@ public class KubernetesContainerClient implements ContainerClient {
     
     private static final String SELENIUM_NODE_NAME = "seleniumNodeName";
 
-    private static KubernetesContainerClient instance;
-    
     private static final Logger logger = Logger.getLogger(KubernetesContainerClient.class.getName());
     
     private final KubernetesClient client;
