@@ -20,6 +20,7 @@ import com.spotify.docker.client.messages.PortBinding;
 import de.zalando.ep.zalenium.util.GoogleAnalyticsApi;
 
 import java.io.InputStream;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -28,6 +29,8 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+
+import de.zalando.ep.zalenium.proxy.DockerSeleniumStarterRemoteProxy;
 
 @SuppressWarnings("ConstantConditions")
 public class DockerContainerClient implements ContainerClient {
@@ -51,7 +54,10 @@ public class DockerContainerClient implements ContainerClient {
         this.nodeId = nodeId;
     }
 
-    public String getContainerId(String containerName) {
+    private String getContainerId(String containerName) {
+        final String containerNameSearch = containerName.contains("/") ?
+                containerName : String.format("/%s", containerName);
+
         List<Container> containerList = null;
         try {
             containerList = dockerClient.listContainers(DockerClient.ListContainersParam.allContainers());
@@ -59,12 +65,10 @@ public class DockerContainerClient implements ContainerClient {
             logger.log(Level.FINE, nodeId + " Error while getting containerId", e);
             ga.trackException(e);
         }
-        for (Container container : containerList) {
-            if (containerName.equalsIgnoreCase(container.names().get(0))) {
-                return container.id();
-            }
-        }
-        return null;
+
+        return containerList.stream()
+                .filter(container -> containerNameSearch.equalsIgnoreCase(container.names().get(0)))
+                .findFirst().get().id();
     }
 
     public InputStream copyFiles(String containerId, String folderName) {
@@ -95,7 +99,8 @@ public class DockerContainerClient implements ContainerClient {
             logger.log(Level.INFO, () -> String.format("%s %s", nodeId, Arrays.toString(command)));
             if (waitForExecution) {
                 try {
-                    logger.log(Level.INFO, () -> String.format("%s %s", nodeId, output.readFully()));
+                    String commandOutput = output.readFully();
+                    logger.log(Level.FINE, () -> String.format("%s %s", nodeId, commandOutput));
                 } catch (Exception e) {
                     logger.log(Level.FINE, nodeId + " Error while executing the output.readFully()", e);
                     ga.trackException(e);
@@ -157,9 +162,9 @@ public class DockerContainerClient implements ContainerClient {
         return 0;
     }
 
-    public void createContainer(String zaleniumContainerName, String image, Map<String, String> envVars,
+    public boolean createContainer(String zaleniumContainerName, String image, Map<String, String> envVars,
                                 String nodePort) {
-        String containerName = String.format("%s_%s", zaleniumContainerName, nodePort);
+        String containerName = generateContainerName(zaleniumContainerName, nodePort);
 
         List<String> binds = new ArrayList<>();
         binds.add("/dev/shm:/dev/shm");
@@ -204,16 +209,23 @@ public class DockerContainerClient implements ContainerClient {
         try {
             final ContainerCreation container = dockerClient.createContainer(containerConfig, containerName);
             dockerClient.startContainer(container.id());
+            return true;
         } catch (DockerException | InterruptedException e) {
-            logger.log(Level.WARNING, nodeId + " Error while starting a new container", e);
+            logger.log(Level.FINE, nodeId + " Error while starting a new container", e);
             ga.trackException(e);
+            return false;
         }
+    }
+
+    private String generateContainerName(String zaleniumContainerName,
+                             String nodePort) {
+        return String.format("%s_%s", zaleniumContainerName, nodePort);
     }
 
     private void loadMountedFolder(String zaleniumContainerName) {
         if (this.mntFolder == null && !this.mntFolderChecked) {
             this.mntFolderChecked = true;
-            String containerId = getContainerId(String.format("/%s", zaleniumContainerName));
+            String containerId = getContainerId(zaleniumContainerName);
             if (containerId == null) {
                 return;
             }
@@ -225,18 +237,36 @@ public class DockerContainerClient implements ContainerClient {
                 ga.trackException(e);
             }
             for (ContainerMount containerMount : containerInfo.mounts()) {
-                if ("/tmp/mounted".equalsIgnoreCase(containerMount.destination())) {
+                if (SHARED_FOLDER_MOUNT_POINT.equalsIgnoreCase(containerMount.destination())) {
                     this.mntFolder = containerMount;
                 }
             }
         }
     }
 
+    @Override
+    public void initialiseContainerEnvironment() {
+        // TODO: Move cleanup code from bash to here
+        
+    }
+
+    @Override
+    public ContainerClientRegistration registerNode(String zaleniumContainerName, URL remoteHost) {
+        ContainerClientRegistration registration = new ContainerClientRegistration();
+        
+        Integer noVncPort = remoteHost.getPort() + DockerSeleniumStarterRemoteProxy.NO_VNC_PORT_GAP;
+        String containerName = generateContainerName(zaleniumContainerName, Integer.toString(remoteHost.getPort()));
+        String containerId = this.getContainerId(containerName);
+        registration.setNoVncPort(noVncPort);
+        registration.setContainerId(containerId);
+        return registration;
+    }
+
     private String getZaleniumNetwork(String zaleniumContainerName) {
         if (zaleniumNetwork != null) {
             return zaleniumNetwork;
         }
-        String zaleniumContainerId = getContainerId(String.format("/%s", zaleniumContainerName));
+        String zaleniumContainerId = getContainerId(zaleniumContainerName);
         try {
             ContainerInfo containerInfo = dockerClient.inspectContainer(zaleniumContainerId);
             ImmutableMap<String, AttachedNetwork> networks = containerInfo.networkSettings().networks();
@@ -254,5 +284,17 @@ public class DockerContainerClient implements ContainerClient {
         return zaleniumNetwork;
     }
 
+    @Override
+    public String getContainerIp(String containerName) {
+        String containerId = this.getContainerId(containerName);
+        try {
+            ContainerInfo containerInfo = dockerClient.inspectContainer(containerId);
+            return containerInfo.networkSettings().ipAddress();
+        } catch (DockerException | InterruptedException e) {
+            logger.log(Level.FINE, nodeId + " Error while getting the container IP.", e);
+            ga.trackException(e);
+        }
+        return null;
+    }
 }
 

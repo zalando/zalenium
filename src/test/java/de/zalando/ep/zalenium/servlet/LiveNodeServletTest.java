@@ -2,8 +2,12 @@ package de.zalando.ep.zalenium.servlet;
 
 
 import de.zalando.ep.zalenium.util.TestUtils;
+import de.zalando.ep.zalenium.container.ContainerClient;
+import de.zalando.ep.zalenium.container.ContainerFactory;
 import de.zalando.ep.zalenium.proxy.DockerSeleniumRemoteProxy;
 import de.zalando.ep.zalenium.proxy.DockerSeleniumStarterRemoteProxy;
+
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.openqa.grid.common.RegistrationRequest;
@@ -17,6 +21,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.function.Supplier;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -28,10 +33,14 @@ public class LiveNodeServletTest {
     private Registry registry;
     private HttpServletRequest request;
     private HttpServletResponse response;
+    private Supplier<ContainerClient> originalContainerClient;
 
     @Before
     public void setUp() throws IOException {
         registry = Registry.newInstance();
+        
+        this.originalContainerClient = ContainerFactory.getDockerContainerClientGenerator();
+        ContainerFactory.setDockerContainerClientGenerator(TestUtils::getMockedDockerContainerClient);
 
         // Creating the configuration and the registration request of the proxy (node)
         RegistrationRequest registrationRequest = TestUtils.getRegistrationRequestForTesting(40000,
@@ -49,6 +58,7 @@ public class LiveNodeServletTest {
         desiredCapabilities.setCapability(RegistrationRequest.MAX_INSTANCES, 1);
         capabilities.add(desiredCapabilities);
         registrationRequest.getConfiguration().capabilities.addAll(capabilities);
+        
         DockerSeleniumRemoteProxy proxyTwo = DockerSeleniumRemoteProxy.getNewInstance(registrationRequest, registry);
 
         registry.add(proxyOne);
@@ -102,6 +112,11 @@ public class LiveNodeServletTest {
         String postResponseContent = response.getOutputStream().toString();
         // content='-1' means that the page won't refresh
         assertThat(postResponseContent, containsString("<meta http-equiv='refresh' content='-1' />"));
+    }
+    
+    @After
+    public void tearDown() {
+        ContainerFactory.setDockerContainerClientGenerator(originalContainerClient);
     }
 
 }

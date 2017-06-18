@@ -40,6 +40,7 @@ public class DockerSeleniumStarterRemoteProxyTest {
     private DockerSeleniumStarterRemoteProxy spyProxy;
     private Registry registry;
     private ContainerClient containerClient;
+    private RegistrationRequest request;
 
     public DockerSeleniumStarterRemoteProxyTest(ContainerClient containerClient) {
         this.containerClient = containerClient;
@@ -59,7 +60,7 @@ public class DockerSeleniumStarterRemoteProxyTest {
         registry = Registry.newInstance();
 
         // Creating the configuration and the registration request of the proxy (node)
-        RegistrationRequest request = TestUtils.getRegistrationRequestForTesting(30000,
+        request = TestUtils.getRegistrationRequestForTesting(30000,
                 DockerSeleniumStarterRemoteProxy.class.getCanonicalName());
 
         // Creating the proxy
@@ -304,7 +305,7 @@ public class DockerSeleniumStarterRemoteProxyTest {
         when(environment.getStringEnvVariable(any(String.class), any(String.class))).thenCallRealMethod();
         DockerSeleniumStarterRemoteProxy.setEnv(environment);
 
-        registry.add(spyProxy);
+        DockerSeleniumStarterRemoteProxy.getNewInstance(request, registry);
 
         Assert.assertEquals(DockerSeleniumStarterRemoteProxy.DEFAULT_AMOUNT_CHROME_CONTAINERS,
                 DockerSeleniumStarterRemoteProxy.getChromeContainersOnStartup());
@@ -344,7 +345,7 @@ public class DockerSeleniumStarterRemoteProxyTest {
         when(environment.getStringEnvVariable(any(String.class), any(String.class))).thenCallRealMethod();
         DockerSeleniumStarterRemoteProxy.setEnv(environment);
 
-        registry.add(spyProxy);
+        DockerSeleniumStarterRemoteProxy.getNewInstance(request, registry);
 
         Assert.assertEquals(amountOfChromeContainers, DockerSeleniumStarterRemoteProxy.getChromeContainersOnStartup());
         Assert.assertEquals(amountOfFirefoxContainers, DockerSeleniumStarterRemoteProxy.getFirefoxContainersOnStartup());
@@ -369,6 +370,7 @@ public class DockerSeleniumStarterRemoteProxyTest {
             DockerSeleniumStarterRemoteProxy.setEnv(environment);
             DockerSeleniumStarterRemoteProxy.setSleepIntervalMultiplier(0);
 
+            DockerSeleniumStarterRemoteProxy.getNewInstance(request, registry);
             registry.add(spyProxy);
 
             verify(spyProxy, timeout(5000).times(amountOfChromeContainers))

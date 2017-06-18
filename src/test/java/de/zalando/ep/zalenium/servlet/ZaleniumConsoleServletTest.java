@@ -1,8 +1,12 @@
 package de.zalando.ep.zalenium.servlet;
 
+import de.zalando.ep.zalenium.container.ContainerClient;
+import de.zalando.ep.zalenium.container.ContainerFactory;
 import de.zalando.ep.zalenium.proxy.*;
 import de.zalando.ep.zalenium.util.CommonProxyUtilities;
 import de.zalando.ep.zalenium.util.TestUtils;
+
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.openqa.grid.common.RegistrationRequest;
@@ -15,6 +19,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.List;
+import java.util.function.Supplier;
 
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -26,10 +31,14 @@ public class ZaleniumConsoleServletTest {
     private Registry registry;
     private HttpServletRequest request;
     private HttpServletResponse response;
+    private Supplier<ContainerClient> originalContainerClient;
 
     @Before
     public void setUp() throws IOException {
         registry = Registry.newInstance();
+        
+        this.originalContainerClient = ContainerFactory.getDockerContainerClientGenerator();
+        ContainerFactory.setDockerContainerClientGenerator(() -> TestUtils.getMockedDockerContainerClient());
 
         // Creating the configuration and the registration request of the proxy (node)
         RegistrationRequest registrationRequest = TestUtils.getRegistrationRequestForTesting(30000,
@@ -130,5 +139,10 @@ public class ZaleniumConsoleServletTest {
 
         zaleniumResourceServlet.doGet(httpServletRequest, httpServletResponse);
         assertThat(httpServletResponse.getOutputStream().toString(), containsString("PNG"));
+    }
+    
+    @After
+    public void tearDown() {
+        ContainerFactory.setDockerContainerClientGenerator(originalContainerClient);
     }
 }

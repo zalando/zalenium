@@ -1,15 +1,73 @@
 package de.zalando.ep.zalenium.container;
 
+import java.io.File;
+import java.util.function.Supplier;
+
+import com.google.common.annotations.VisibleForTesting;
+
+import de.zalando.ep.zalenium.container.kubernetes.KubernetesContainerClient;
+import de.zalando.ep.zalenium.util.Environment;
+import io.fabric8.kubernetes.client.DefaultKubernetesClient;
+
 public class ContainerFactory {
 
+    private static Supplier<ContainerClient> dockerContainerClientGenerator = () -> new DockerContainerClient();
+    private static Supplier<Boolean> isKubernetes = () -> new File("/var/run/secrets/kubernetes.io/serviceaccount/token").canRead();
+    
+    private static KubernetesContainerClient kubernetesContainerClient;
+    
     public static ContainerClient getContainerClient() {
-        /*
-            Here we can start writing some logic that will decide which type of client will be used to
-            create more docker-selenium containers.
-            When the KubernetesClient is implemented, some IFs need to be added and then just an invocation to
-            something like: "return new KubernetesClient();"
-         */
-        return new DockerContainerClient();
+
+        if (isKubernetes.get()) {
+            return createKubernetesContainerClient();
+        }
+        else {
+            return dockerContainerClientGenerator.get();
+        }
+    }
+    
+    private static KubernetesContainerClient createKubernetesContainerClient() {
+        // We only want one kubernetes client because it creates lots of thread pools and such things
+        // so lets cache a copy of it in this factory.
+        if (kubernetesContainerClient == null) {
+            synchronized (ContainerFactory.class) {
+                if (kubernetesContainerClient == null) {
+                    kubernetesContainerClient = new KubernetesContainerClient(new Environment(),
+                            KubernetesContainerClient::createDoneablePodDefaultImpl,
+                            KubernetesContainerClient::createDonableServiceDefaultImpl, new DefaultKubernetesClient());
+                }
+            }
+        }
+        return kubernetesContainerClient;
     }
 
+    @VisibleForTesting
+    public static void setDockerContainerClientGenerator(Supplier<ContainerClient> dockerContainerClientGenerator) {
+        ContainerFactory.dockerContainerClientGenerator = dockerContainerClientGenerator;
+    }
+
+    @VisibleForTesting
+    public static Supplier<ContainerClient> getDockerContainerClientGenerator() {
+        return dockerContainerClientGenerator;
+    }
+
+    @VisibleForTesting
+    public static KubernetesContainerClient getKubernetesContainerClient() {
+        return kubernetesContainerClient;
+    }
+
+    @VisibleForTesting
+    public static void setKubernetesContainerClient(KubernetesContainerClient kubernetesContainerClient) {
+        ContainerFactory.kubernetesContainerClient = kubernetesContainerClient;
+    }
+
+    @VisibleForTesting
+    public static Supplier<Boolean> getIsKubernetes() {
+        return isKubernetes;
+    }
+
+    @VisibleForTesting
+    public static void setIsKubernetes(Supplier<Boolean> isKubernetes) {
+        ContainerFactory.isKubernetes = isKubernetes;
+    }
 }

@@ -2,6 +2,7 @@ package de.zalando.ep.zalenium.proxy;
 
 import com.google.common.annotations.VisibleForTesting;
 import de.zalando.ep.zalenium.container.ContainerClient;
+import de.zalando.ep.zalenium.container.ContainerClientRegistration;
 import de.zalando.ep.zalenium.container.ContainerFactory;
 import de.zalando.ep.zalenium.dashboard.Dashboard;
 import de.zalando.ep.zalenium.dashboard.TestInformation;
@@ -60,17 +61,18 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     private long maxTestIdleTimeSecs;
     private String testGroup;
     private String testName;
-    private String containerId = null;
     private TestInformation testInformation;
     private DockerSeleniumNodePoller dockerSeleniumNodePollerThread = null;
     private GoogleAnalyticsApi ga = new GoogleAnalyticsApi();
     private CapabilityMatcher capabilityHelper;
+    private final ContainerClientRegistration registration;
 
     public DockerSeleniumRemoteProxy(RegistrationRequest request, Registry registry) {
         super(request, registry);
         this.amountOfExecutedTests = 0;
         readEnvVarForVideoRecording();
         containerClient.setNodeId(getId());
+        registration = containerClient.registerNode(DockerSeleniumStarterRemoteProxy.getContainerName(), this.getRemoteHost());
     }
 
     @VisibleForTesting
@@ -97,11 +99,6 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
 
     private static void setVideoRecordingEnabled(boolean videoRecordingEnabled) {
         DockerSeleniumRemoteProxy.videoRecordingEnabled = videoRecordingEnabled;
-    }
-
-    @VisibleForTesting
-    ContainerClient getContainerClient() {
-        return containerClient;
     }
 
     @VisibleForTesting
@@ -313,12 +310,11 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     }
 
     protected String getContainerId() {
-        if (containerId == null) {
-            String containerName = String.format("/%s_%s", DockerSeleniumStarterRemoteProxy.getContainerName(),
-                    getRemoteHost().getPort());
-            containerId = containerClient.getContainerId(containerName);
-        }
-        return containerId;
+        return registration.getContainerId();
+    }
+    
+    public ContainerClientRegistration getRegistration() {
+        return registration;
     }
 
     @VisibleForTesting
@@ -339,10 +335,10 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     @SuppressWarnings("ResultOfMethodCallIgnored")
     @VisibleForTesting
     void copyVideos(final String containerId) {
-        TarArchiveInputStream tarStream = new TarArchiveInputStream(containerClient.copyFiles(containerId, "/videos/"));
-        TarArchiveEntry entry;
         boolean videoWasCopied = false;
+        TarArchiveInputStream tarStream = new TarArchiveInputStream(containerClient.copyFiles(containerId, "/videos/"));
         try {
+            TarArchiveEntry entry;
             while ((entry = tarStream.getNextTarEntry()) != null) {
                 if (entry.isDirectory()) {
                     continue;
@@ -376,8 +372,8 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     @VisibleForTesting
     void copyLogs(final String containerId) {
         TarArchiveInputStream tarStream = new TarArchiveInputStream(containerClient.copyFiles(containerId, "/var/log/cont/"));
-        TarArchiveEntry entry;
         try {
+            TarArchiveEntry entry;
             while ((entry = tarStream.getNextTarEntry()) != null) {
                 if (entry.isDirectory()) {
                     continue;
@@ -413,7 +409,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                     getId(), getMaxTestIdleTimeSecs());
         }
 
-        getContainerClient().stopContainer(getContainerId());
+        containerClient.stopContainer(getContainerId());
         addNewEvent(new RemoteNotReachableException(shutdownReason));
         addNewEvent(new RemoteUnregisterException(shutdownReason));
         teardown();

@@ -2,7 +2,6 @@ package de.zalando.ep.zalenium.servlet.renderer;
 
 import com.google.gson.JsonObject;
 import de.zalando.ep.zalenium.proxy.DockerSeleniumRemoteProxy;
-import de.zalando.ep.zalenium.proxy.DockerSeleniumStarterRemoteProxy;
 import org.openqa.grid.internal.TestSession;
 import org.openqa.grid.internal.TestSlot;
 import org.openqa.grid.internal.utils.HtmlRenderer;
@@ -78,7 +77,7 @@ public class LiveNodeHtmlRenderer implements HtmlRenderer {
         }
 
         // Adding live preview
-        int noVncPort = proxy.getRemoteHost().getPort() + DockerSeleniumStarterRemoteProxy.NO_VNC_PORT_GAP;
+        int noVncPort = proxy.getRegistration().getNoVncPort();
         String noVncViewBaseUrl = "http://%s:%s/?view_only=%s";
         String noVncReadOnlyUrl = String.format(noVncViewBaseUrl, serverName, noVncPort, "true");
         String noVncInteractUrl = String.format(noVncViewBaseUrl, serverName, noVncPort, "false");

@@ -2,6 +2,7 @@ package de.zalando.ep.zalenium.proxy;
 
 import com.spotify.docker.client.exceptions.DockerException;
 import de.zalando.ep.zalenium.container.ContainerClient;
+import de.zalando.ep.zalenium.container.ContainerFactory;
 import de.zalando.ep.zalenium.util.Environment;
 import de.zalando.ep.zalenium.util.TestUtils;
 import org.awaitility.Duration;
@@ -26,6 +27,7 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.*;
 import java.util.concurrent.Callable;
+import java.util.function.Supplier;
 
 import static org.awaitility.Awaitility.await;
 import static org.mockito.ArgumentMatchers.any;
@@ -37,9 +39,14 @@ public class DockerSeleniumRemoteProxyTest {
     private DockerSeleniumRemoteProxy proxy;
     private Registry registry;
     private ContainerClient containerClient;
+    private Supplier<ContainerClient> originalDockerContainerClient;
 
     public DockerSeleniumRemoteProxyTest(ContainerClient containerClient) {
         this.containerClient = containerClient;
+        
+        this.originalDockerContainerClient = ContainerFactory.getDockerContainerClientGenerator();
+        // Change the factory to return our version of the Container Client
+        ContainerFactory.setDockerContainerClientGenerator(() -> containerClient);
     }
 
     @Parameters
@@ -67,6 +74,7 @@ public class DockerSeleniumRemoteProxyTest {
 
     @After
     public void tearDown() {
+        ContainerFactory.setDockerContainerClientGenerator(originalDockerContainerClient);
         proxy.restoreContainerClient();
     }
 
@@ -310,10 +318,12 @@ public class DockerSeleniumRemoteProxyTest {
             spyProxy.afterCommand(newSession, webDriverRequest, response);
 
             // Assert video recording started
+            String containerId = spyProxy.getContainerId();
             verify(spyProxy, times(1)).
                     videoRecording(DockerSeleniumRemoteProxy.DockerSeleniumContainerAction.START_RECORDING);
             verify(spyProxy, times(1)).
-                    processContainerAction(DockerSeleniumRemoteProxy.DockerSeleniumContainerAction.START_RECORDING, null);
+                    processContainerAction(DockerSeleniumRemoteProxy.DockerSeleniumContainerAction.START_RECORDING,
+                            containerId);
 
             // We release the sessions, the node should be free
             webDriverRequest = mock(WebDriverRequest.class);
@@ -329,8 +339,9 @@ public class DockerSeleniumRemoteProxyTest {
             verify(spyProxy, timeout(40000))
                     .videoRecording(DockerSeleniumRemoteProxy.DockerSeleniumContainerAction.STOP_RECORDING);
             verify(spyProxy, timeout(40000))
-                    .processContainerAction(DockerSeleniumRemoteProxy.DockerSeleniumContainerAction.STOP_RECORDING, null);
-            verify(spyProxy, timeout(40000)).copyVideos(null);
+                    .processContainerAction(DockerSeleniumRemoteProxy.DockerSeleniumContainerAction.STOP_RECORDING,
+                            containerId);
+            verify(spyProxy, timeout(40000)).copyVideos(containerId);
     }
 
     @Test

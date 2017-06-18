@@ -1,0 +1,53 @@
+{
+    "kind": "ClusterRole",
+    "apiVersion": "v1",
+    "metadata": {
+        "name": "zalenium-role"
+    },
+    "rules": [
+        {
+            "verbs": [
+                "create",
+                "list",
+                "get",
+                "delete",
+                "exec"
+            ],
+            "attributeRestrictions": null,
+            "apiGroups": [
+                ""
+            ],
+            "resources": [
+                "pods"
+            ]
+        },
+        {
+            "verbs": [
+                "list",
+                "create",
+                "delete",
+                "get"
+            ],
+            "attributeRestrictions": null,
+            "apiGroups": [
+                ""
+            ],
+            "resources": [
+                "services"
+            ]
+        },
+        {
+            "verbs": [
+                "create",
+                "get"
+            ],
+            "attributeRestrictions": null,
+            "apiGroups": [
+                ""
+            ],
+            "resources": [
+                "pods/exec"
+            ]
+        }
+     ]
+}
