@@ -13,7 +13,9 @@
 # Zalenium
 This is a Selenium Grid extension to scale your local grid dynamically with docker containers. It uses
 [docker-selenium](https://github.com/elgalu/docker-selenium) to run your tests in Firefox and Chrome locally, and when
-you need a different browser, your tests can get redirected to a cloud testing provider ([Sauce Labs](https://saucelabs.com/), [BrowserStack](https://www.browserstack.com/), [TestingBot](https://testingbot.com/)).
+you need a different browser, your tests can get redirected to a cloud testing provider ([Sauce Labs](https://saucelabs.com/), 
+[BrowserStack](https://www.browserstack.com/), [TestingBot](https://testingbot.com/)). Zalenium has also **BETA** support for
+[Kubernetes](./docs/k8s/kubernetes.md).
 
 Features are added often to Zalenium, we invite you to test it, to contribute, to report bugs, and suggest any ideas you may
 have, see [contributing](CONTRIBUTING.md) for more details.
@@ -77,6 +79,11 @@ Zalenium uses docker to scale on-demand, therefore we need to give it the `docke
       --privileged dosel/zalenium start
   ```
 
+  * Why `--privileged`? We suggest you run Zalenium as `--priviledged` to speed up the node registration process by increasing
+      the entropy level with [Haveged](http://www.issihosts.com/haveged/). Using `--privileged` is optional since it is just meant to
+      improve its performance. For more information, check this
+      [tutorial](https://www.digitalocean.com/community/tutorials/how-to-setup-additional-entropy-for-cloud-servers-using-haveged).
+
 * You can also try our one line installer and starter (it will check for the latest images and ask for missing
 dependencies.)
 
@@ -86,7 +93,7 @@ dependencies.)
 
 * More usage examples, more parameters, configurations, video usage and one line starters can be seen [here](./docs/usage_examples.md)
 * After the output, you should see the DockerSeleniumStarter node in the [grid](http://localhost:4444/grid/console)
-* Now you can point your Selenium tests to [http://localhost:4444/wd/hub](http://localhost:4444/wd/hub).
+* Now you can point your Selenium tests to [http://localhost:4444/wd/hub](http://localhost:4444/wd/hub)
 * Stop it: `docker stop zalenium`
 
 ## Additional features
