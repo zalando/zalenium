@@ -137,7 +137,11 @@ docker run --rm -ti --name zalenium -p 4444:4444 -p 5555:5555 \
 
 ## Contributions
 Any feedback or contributions are welcome! Please check our [guidelines](CONTRIBUTING.md), they just follow the general
-GitHub issue/PR flow.
+GitHub issue/PR flow. 
+
+Also, we have adopted the Contributor Covenant as the code of conduct for this project:
+
+http://contributor-covenant.org/version/1/4/
 
 #### Building and Testing
 
@@ -210,3 +214,9 @@ License
 ===================
 
 See [License](LICENSE.md)
+
+
+Security
+===================
+
+See [Security](SECURITY.md)
