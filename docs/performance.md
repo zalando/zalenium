@@ -56,7 +56,7 @@ are created).
 
 So far we were measuring tests time. In below table, the time it takes to start and stop Zalenium is also included as is relevant when using Zalenium in a CI. Docker pull time is around 1 minute and is not included in below stats.
 
-These tests were run in Google Chrome and were run several times our Jenkins.
+These tests were run in Google Chrome and were run several times in our Jenkins.
 
 The machine used for this 3rd environment is an AWS c3.4xlarge
 
