@@ -41,7 +41,9 @@ import io.fabric8.openshift.client.OpenShiftClient;
 import okhttp3.Response;
 
 public class KubernetesContainerClient implements ContainerClient {
-    
+
+    private static final String SHARED_FOLDER_MOUNT_POINT = "/tmp/mounted";
+
     private static final String SELENIUM_NODE_NAME = "seleniumNodeName";
 
     private static final Logger logger = Logger.getLogger(KubernetesContainerClient.class.getName());
