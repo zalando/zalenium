@@ -18,6 +18,7 @@ else
             # Check for generated videos
             ls -la ${VIDEOS_FOLDER}/saucelabs*.mp4 || (echo "No Sauce Labs videos were downloaded." && exit 2)
             ls -la ${VIDEOS_FOLDER}/zalenium*.mp4 || (echo "No Zalenium videos were generated." && exit 2)
+            ls -lah ${VIDEOS_FOLDER}/logs/**/**
         fi
     fi
     if [ "$INTEGRATION_TO_TEST" = browserStack ]; then
