@@ -79,7 +79,7 @@ Zalenium uses docker to scale on-demand, therefore we need to give it the `docke
       --privileged dosel/zalenium start
   ```
 
-  * Why `--privileged`? We suggest you run Zalenium as `--priviledged` to speed up the node registration process by increasing
+  * Why `--privileged`? We suggest you run Zalenium as `--privileged` to speed up the node registration process by increasing
       the entropy level with [Haveged](http://www.issihosts.com/haveged/). Using `--privileged` is optional since it is just meant to
       improve its performance. For more information, check this
       [tutorial](https://www.digitalocean.com/community/tutorials/how-to-setup-additional-entropy-for-cloud-servers-using-haveged).
