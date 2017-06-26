@@ -52,6 +52,21 @@ new containers need to be created when the first ones are disposed. It would onl
 you want to run 10 tests in parallel and start Zalenium with 10 containers (tests would get executed right away and no more containers
 are created).
 
+### Jenkins on c3.4xlarge
+
+So far we were measuring tests time. In below table, the time it takes to start and stop Zalenium is also included as is relevant when using Zalenium in a CI. Docker pull time is around 1 minute and is not included in below stats.
+
+These tests were run in Google Chrome and were run several times in our Jenkins.
+
+The machine used for this 3rd environment is an AWS c3.4xlarge
+
+| Environment |   # of Tests   |   Threads  |   Avg. Time VR** OFF  |
+|:-----------:|:--------------:|:----------:|:---------------------:|
+|      3      |        20      |      4     |       ~2min 10sec     |
+|      3      |        30      |      6     |       ~2min 22sec     |
+|      3      |        40      |      8     |       ~2min 40sec     |
+|      3      |        50      |      10    |       ~3min 30sec     |
+
 ### General considerations
 These come from our findings and input from this [comment](https://github.com/zalando/zalenium/issues/116#issuecomment-304790225)
 

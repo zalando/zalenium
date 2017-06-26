@@ -14,30 +14,37 @@ else
     # If the environment var exists, then we run the integration tests. This is to allow external PRs ro tun
     if [ "$INTEGRATION_TO_TEST" = sauceLabs ]; then
         if [ -n "${SAUCE_USERNAME}" ]; then
+            sudo mvn clean
             mvn clean verify -Pintegration-test -DthreadCountProperty=2 -Dskip.surefire.tests=true -DintegrationToTest=${INTEGRATION_TO_TEST}
             # Check for generated videos
             ls -la ${VIDEOS_FOLDER}/saucelabs*.mp4 || (echo "No Sauce Labs videos were downloaded." && exit 2)
             ls -la ${VIDEOS_FOLDER}/zalenium*.mp4 || (echo "No Zalenium videos were generated." && exit 2)
+            sudo mvn clean
         fi
     fi
     if [ "$INTEGRATION_TO_TEST" = browserStack ]; then
         if [ -n "${BROWSER_STACK_USER}" ]; then
+            sudo mvn clean
             mvn clean verify -Pintegration-test -DthreadCountProperty=2 -Dskip.surefire.tests=true -DintegrationToTest=${INTEGRATION_TO_TEST}
             # Check for generated videos
             ls -la ${VIDEOS_FOLDER}/browserstack*.mp4 || (echo "No BrowserStack videos were downloaded." && exit 2)
             ls -la ${VIDEOS_FOLDER}/zalenium*.mp4 || (echo "No Zalenium videos were generated." && exit 2)
+            sudo mvn clean
         fi
     fi
     if [ "$INTEGRATION_TO_TEST" = testingBot ]; then
         if [ -n "${TESTINGBOT_KEY}" ]; then
+            sudo mvn clean
             mvn clean verify -Pintegration-test -DthreadCountProperty=2 -Dskip.surefire.tests=true -DintegrationToTest=${INTEGRATION_TO_TEST}
             # Check for generated videos
             ls -la ${VIDEOS_FOLDER}/testingbot*.mp4 || (echo "No TestingBot videos were downloaded." && exit 2)
             ls -la ${VIDEOS_FOLDER}/zalenium*.mp4 || (echo "No Zalenium videos were generated." && exit 2)
+            sudo mvn clean
         fi
     fi
     if [ "$INTEGRATION_TO_TEST" = dockerCompose ]; then
         if [ -n "${SAUCE_USERNAME}" ]; then
+            sudo mvn clean
             mvn clean package -DskipTests=true
             mkdir -p "${VIDEOS_FOLDER}"
             chmod +x target/zalenium_in_docker_compose.sh
@@ -47,6 +54,7 @@ else
             ls -la ${VIDEOS_FOLDER}/saucelabs*.mp4 || (echo "No Sauce Labs videos were downloaded." && exit 2)
             ls -la ${VIDEOS_FOLDER}/zalenium*.mp4 || (echo "No Zalenium videos were generated." && exit 2)
             target/zalenium_in_docker_compose.sh stop
+            sudo mvn clean
         fi
     fi
 fi
