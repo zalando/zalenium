@@ -42,6 +42,7 @@ else
     if [ "$INTEGRATION_TO_TEST" = dockerCompose ]; then
         if [ -n "${SAUCE_USERNAME}" ]; then
             sudo mvn clean
+            mvn clean package -DskipTests=true
             mkdir -p "${VIDEOS_FOLDER}"
             chmod +x target/zalenium_in_docker_compose.sh
             target/zalenium_in_docker_compose.sh start
