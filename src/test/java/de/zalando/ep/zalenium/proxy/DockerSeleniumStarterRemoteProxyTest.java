@@ -64,9 +64,8 @@ public class DockerSeleniumStarterRemoteProxyTest {
                 DockerSeleniumStarterRemoteProxy.class.getCanonicalName());
 
         // Creating the proxy
-        DockerSeleniumStarterRemoteProxy proxy = DockerSeleniumStarterRemoteProxy.getNewInstance(request, registry);
-
         DockerSeleniumStarterRemoteProxy.setContainerClient(containerClient);
+        DockerSeleniumStarterRemoteProxy proxy = DockerSeleniumStarterRemoteProxy.getNewInstance(request, registry);
 
         // Spying on the proxy to see if methods are invoked or not
         spyProxy = spy(proxy);
