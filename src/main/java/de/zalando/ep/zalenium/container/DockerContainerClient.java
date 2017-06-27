@@ -289,6 +289,10 @@ public class DockerContainerClient implements ContainerClient {
         String containerId = this.getContainerId(containerName);
         try {
             ContainerInfo containerInfo = dockerClient.inspectContainer(containerId);
+            if (containerInfo.networkSettings().ipAddress().trim().isEmpty()) {
+                ImmutableMap<String, AttachedNetwork> networks = containerInfo.networkSettings().networks();
+                return networks.entrySet().stream().findFirst().get().getValue().ipAddress();
+            }
             return containerInfo.networkSettings().ipAddress();
         } catch (DockerException | InterruptedException e) {
             logger.log(Level.FINE, nodeId + " Error while getting the container IP.", e);
