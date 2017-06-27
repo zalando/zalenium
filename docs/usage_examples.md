@@ -115,21 +115,27 @@ explicitly tell Zalenium which major version you are using via `-e DOCKER=1.11` 
       --privileged dosel/zalenium start --screenWidth 1440 --screenHeight 810 --timeZone "America/Montreal"
   ```
 
-### with a multi-purpose folder mounted
-This is a folder that you can mount as a volume when starting Zalenium, and it will be mapped across all the docker-selenium containers. 
-It could be used to provide files needed to run your tests, such as filed that need to be open from the browser or folders to use when 
-starting Chrome with a specific profile.
+### with node folders mounted
+
+This is a collection of folders that you can mount as volumes when starting Zalenium by prefixing the destination with `/tmp/node/`, and it will be mapped across 
+all the docker-selenium containers from the root folder after stripping the `/tmp/node` prefix. 
+So `-v /your/local/folder:/tmp/node/home/seluser/folder` will map to `/home/seluser/folder` on the node. 
+It can be used to provide further customization to your nodes, such as adding client certificates 
+for your browser, or mimicking prior multi-purpose folder, both shown below.
 
   ```sh
     docker run --rm -ti --name zalenium -p 4444:4444 -p 5555:5555 \
       -v /var/run/docker.sock:/var/run/docker.sock \
       -v /tmp/videos:/home/seluser/videos \
-      -v /your/local/folder:/tmp/mounted \      
+      -v /your/local/folder/with/certStore:/tmp/node/home/seluser/.pki/nssdb \      
+      -v /your/local/folderB:/tmp/node/home/seluser/folderB \      
+      -v /tmp/mounted:/tmp/node/tmp/mounted \
       --privileged dosel/zalenium start 
   ```
-After starting Zalenium with this mounted volume, any file created in the host in `/your/local/folder`, will be available in
-`/tmp/mounted` across all containers. Please note that the folder name in the host can be any you want, the important part is 
-to map properly.
+
+Please take caution in mounting system folders such as `/etc`, as this behavior has not been tested with such configuration.
+
+**NOTE:** There are certain protected points which cannot be mounted via `/tmp/node`. See `DockerContainerClient#PROTECTED_NODE_MOUNT_POINTS`.
 
 ### More configuration parameters
 

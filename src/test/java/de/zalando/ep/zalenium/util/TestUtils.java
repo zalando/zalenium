@@ -165,10 +165,13 @@ public class TestUtils {
         ImageInfo imageInfo = mock(ImageInfo.class);
         ContainerConfig containerConfig = mock(ContainerConfig.class);
         ContainerInfo containerInfo = mock(ContainerInfo.class);
-        ContainerMount containerMount = mock(ContainerMount.class);
-        when(containerMount.destination()).thenReturn("/tmp/mounted");
-        when(containerMount.source()).thenReturn("/tmp/mounted");
-        when(containerInfo.mounts()).thenReturn(ImmutableList.of(containerMount));
+        ContainerMount tmpMountedMount = mock(ContainerMount.class);
+        when(tmpMountedMount.destination()).thenReturn("/tmp/node/tmp/mounted");
+        when(tmpMountedMount.source()).thenReturn("/tmp/mounted");
+        ContainerMount homeFolderMount = mock(ContainerMount.class);
+        when(homeFolderMount.destination()).thenReturn("/tmp/node/home/seluser/folder");
+        when(homeFolderMount.source()).thenReturn("/tmp/folder");
+        when(containerInfo.mounts()).thenReturn(ImmutableList.of(tmpMountedMount, homeFolderMount));
 
         String containerId = RandomStringUtils.randomAlphabetic(30).toLowerCase();
         Container container_40000 = mock(Container.class);

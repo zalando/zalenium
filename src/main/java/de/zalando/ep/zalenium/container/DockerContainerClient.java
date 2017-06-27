@@ -21,11 +21,7 @@ import de.zalando.ep.zalenium.util.GoogleAnalyticsApi;
 
 import java.io.InputStream;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -37,13 +33,19 @@ public class DockerContainerClient implements ContainerClient {
 
     private static final String DEFAULT_DOCKER_NETWORK_NAME = "bridge";
     private static final String DEFAULT_DOCKER_NETWORK_MODE = "default";
+    private static final String NODE_MOUNT_POINT = "/tmp/node";
+    private static final String[] PROTECTED_NODE_MOUNT_POINTS = {
+            "/var/run/docker.sock",
+            "/home/seluser/videos",
+            "/dev/shm"
+    };
     private final Logger logger = Logger.getLogger(DockerContainerClient.class.getName());
     private final GoogleAnalyticsApi ga = new GoogleAnalyticsApi();
     private DockerClient dockerClient = new DefaultDockerClient("unix:///var/run/docker.sock");
     private String nodeId;
     private String zaleniumNetwork;
-    private ContainerMount mntFolder;
-    private boolean mntFolderChecked = false;
+    private List<ContainerMount> mntFolders = new ArrayList<>();
+    private boolean mntFoldersChecked = false;
 
     @VisibleForTesting
     public void setContainerClient(final DockerClient client) {
@@ -166,13 +168,11 @@ public class DockerContainerClient implements ContainerClient {
                                 String nodePort) {
         String containerName = generateContainerName(zaleniumContainerName, nodePort);
 
-        List<String> binds = new ArrayList<>();
-        binds.add("/dev/shm:/dev/shm");
-        loadMountedFolder(zaleniumContainerName);
-        if (this.mntFolder != null) {
-            String mountedBind = String.format("%s:%s", this.mntFolder.source(), this.mntFolder.destination());
-            binds.add(mountedBind);
-        }
+        loadMountedFolders(zaleniumContainerName);
+
+        List<
+            String > binds = generateMountedFolderBinds();
+            binds.add("/dev/shm:/dev/shm");
 
         String noVncPort = envVars.get("NOVNC_PORT");
 
@@ -222,9 +222,9 @@ public class DockerContainerClient implements ContainerClient {
         return String.format("%s_%s", zaleniumContainerName, nodePort);
     }
 
-    private void loadMountedFolder(String zaleniumContainerName) {
-        if (this.mntFolder == null && !this.mntFolderChecked) {
-            this.mntFolderChecked = true;
+    private void loadMountedFolders(String zaleniumContainerName) {
+        if (this.mntFolders.size() == 0 && !this.mntFoldersChecked) {
+            this.mntFoldersChecked = true;
             String containerId = getContainerId(zaleniumContainerName);
             if (containerId == null) {
                 return;
@@ -237,23 +237,41 @@ public class DockerContainerClient implements ContainerClient {
                 ga.trackException(e);
             }
             for (ContainerMount containerMount : containerInfo.mounts()) {
-                if (SHARED_FOLDER_MOUNT_POINT.equalsIgnoreCase(containerMount.destination())) {
-                    this.mntFolder = containerMount;
+                if (containerMount.destination().startsWith(NODE_MOUNT_POINT)) {
+                    this.mntFolders.add(containerMount);
                 }
             }
         }
     }
 
+    private List<String> generateMountedFolderBinds() {
+        List<String> result = new ArrayList<>();
+
+        this.mntFolders.stream().filter(mount -> mount.destination().startsWith(NODE_MOUNT_POINT)).forEach(
+                containerMount -> {
+                    String destination = containerMount.destination().substring(NODE_MOUNT_POINT.length());
+
+                    if (Arrays.stream(PROTECTED_NODE_MOUNT_POINTS).anyMatch(item -> item.equalsIgnoreCase(destination))) {
+                        throw new IllegalArgumentException("The following points may not be mounted via node mounting: " + String.join(",", PROTECTED_NODE_MOUNT_POINTS));
+                    }
+                    String mountedBind = String.format("%s:%s", containerMount.source(), destination);
+                    result.add(mountedBind);
+                }
+        );
+
+        return result;
+    }
+
     @Override
     public void initialiseContainerEnvironment() {
         // TODO: Move cleanup code from bash to here
-        
+
     }
 
     @Override
     public ContainerClientRegistration registerNode(String zaleniumContainerName, URL remoteHost) {
         ContainerClientRegistration registration = new ContainerClientRegistration();
-        
+
         Integer noVncPort = remoteHost.getPort() + DockerSeleniumStarterRemoteProxy.NO_VNC_PORT_GAP;
         String containerName = generateContainerName(zaleniumContainerName, Integer.toString(remoteHost.getPort()));
         String containerId = this.getContainerId(containerName);

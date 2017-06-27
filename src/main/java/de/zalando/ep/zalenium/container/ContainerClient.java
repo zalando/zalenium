@@ -6,7 +6,7 @@ import java.util.Map;
 
 public interface ContainerClient {
     
-    public static final String SHARED_FOLDER_MOUNT_POINT = "/tmp/mounted";
+    String NODE_MOUNT_POINT = "/tmp/node";
 
     void setNodeId(String nodeId);
 
