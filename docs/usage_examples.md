@@ -6,7 +6,7 @@
   * [with BrowserStack enabled](#with-browserstack-enabled)
   * [with TestingBot enabled](#with-testingbot-enabled)
   * [with screen width and height, and time zone](#with-screen-width-and-height-and-time-zone)
-  * [with a multi-purpose folder mounted](#with-a-multi-purpose-folder-mounted)
+  * [with node folders mounted](#with-node-folders-mounted)
   * [More configuration parameters](#more-configuration-parameters)
 * [One line starters](#one-line-starters)
   * [Zalenium one-liner installer](#zalenium-one-liner-installer)
@@ -117,11 +117,11 @@ explicitly tell Zalenium which major version you are using via `-e DOCKER=1.11` 
 
 ### with node folders mounted
 
-This is a collection of folders that you can mount as volumes when starting Zalenium by prefixing the destination with `/tmp/node/`, and it will be mapped across 
-all the docker-selenium containers from the root folder after stripping the `/tmp/node` prefix. 
-So `-v /your/local/folder:/tmp/node/home/seluser/folder` will map to `/home/seluser/folder` on the node. 
-It can be used to provide further customization to your nodes, such as adding client certificates 
-for your browser, or mimicking prior multi-purpose folder, both shown below.
+This is a collection of folders that you can mount as volumes when starting Zalenium by prefixing the destination
+with `/tmp/node/`, and it will be mapped across all the docker-selenium containers from the root folder after
+stripping the `/tmp/node` prefix. So `-v /your/local/folder:/tmp/node/home/seluser/folder` will map to
+`/home/seluser/folder` on the node. It can be used to provide further customization to your nodes, such as adding
+client certificates for your browser, or mimicking prior multi-purpose folder, both shown below.
 
   ```sh
     docker run --rm -ti --name zalenium -p 4444:4444 -p 5555:5555 \
@@ -135,7 +135,8 @@ for your browser, or mimicking prior multi-purpose folder, both shown below.
 
 Please take caution in mounting system folders such as `/etc`, as this behavior has not been tested with such configuration.
 
-**NOTE:** There are certain protected points which cannot be mounted via `/tmp/node`. See `DockerContainerClient#PROTECTED_NODE_MOUNT_POINTS`.
+**NOTE:** There are certain protected points which cannot be mounted via `/tmp/node`. See
+[PROTECTED_NODE_MOUNT_POINTS at DockerContainerClient](../src/main/java/de/zalando/ep/zalenium/container/DockerContainerClient.java).
 
 ### More configuration parameters
 

@@ -21,7 +21,11 @@ import de.zalando.ep.zalenium.util.GoogleAnalyticsApi;
 
 import java.io.InputStream;
 import java.net.URL;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -170,9 +174,8 @@ public class DockerContainerClient implements ContainerClient {
 
         loadMountedFolders(zaleniumContainerName);
 
-        List<
-            String > binds = generateMountedFolderBinds();
-            binds.add("/dev/shm:/dev/shm");
+        List<String> binds = generateMountedFolderBinds();
+        binds.add("/dev/shm:/dev/shm");
 
         String noVncPort = envVars.get("NOVNC_PORT");
 
@@ -252,7 +255,8 @@ public class DockerContainerClient implements ContainerClient {
                     String destination = containerMount.destination().substring(NODE_MOUNT_POINT.length());
 
                     if (Arrays.stream(PROTECTED_NODE_MOUNT_POINTS).anyMatch(item -> item.equalsIgnoreCase(destination))) {
-                        throw new IllegalArgumentException("The following points may not be mounted via node mounting: " + String.join(",", PROTECTED_NODE_MOUNT_POINTS));
+                        throw new IllegalArgumentException("The following points may not be mounted via node mounting: "
+                                + String.join(",", PROTECTED_NODE_MOUNT_POINTS));
                     }
                     String mountedBind = String.format("%s:%s", containerMount.source(), destination);
                     result.add(mountedBind);
