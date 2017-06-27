@@ -119,9 +119,14 @@ explicitly tell Zalenium which major version you are using via `-e DOCKER=1.11` 
 
 This is a collection of folders that you can mount as volumes when starting Zalenium by prefixing the destination
 with `/tmp/node/`, and it will be mapped across all the docker-selenium containers from the root folder after
-stripping the `/tmp/node` prefix. So `-v /your/local/folder:/tmp/node/home/seluser/folder` will map to
-`/home/seluser/folder` on the node. It can be used to provide further customization to your nodes, such as adding
-client certificates for your browser, or mimicking prior multi-purpose folder, both shown below.
+stripping the `/tmp/node` prefix. 
+
+For example, mounting:
+
+`-v /your/local/folder:/tmp/node/home/seluser/folder` will map to `/home/seluser/folder` on the node. 
+ 
+It can be used to provide further customization to your nodes, such as adding client certificates for your browser,
+or mimicking prior multi-purpose folder, both shown below.
 
   ```sh
     docker run --rm -ti --name zalenium -p 4444:4444 -p 5555:5555 \
