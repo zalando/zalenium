@@ -314,7 +314,7 @@ capability and no video will be recorded. Example code in Java for the capabilit
 
 ### Time zone
 Run your test in a different time zone from the default one `Europe/Berlin`, just pass a capability `tz` with the 
-desired value. E.g. `tz=America/Montreal`.Example code in Java for the capability `tz`
+desired value. E.g. `tz=America/Montreal`. Example code in Java for the capability `tz`
 
   ```java
     DesiredCapabilities desiredCapabilities = new DesiredCapabilities();
@@ -323,3 +323,14 @@ desired value. E.g. `tz=America/Montreal`.Example code in Java for the capabilit
     desiredCapabilities.setCapability("tz", "America/Montreal");
   ```
 
+
+### Set browser language (works only with Chrome)
+You can set the browser language when using Google Chrome, just pass the `ChromeOptions` variable with the language
+argument. Example code in Java :
+
+  ```java
+    DesiredCapabilities desiredCapabilities = DesiredCapabilities.chrome();
+    ChromeOptions options = new ChromeOptions();
+    options.addArguments("lang=en_GB");
+    desiredCapabilities.setCapability(ChromeOptions.CAPABILITY, options);
+```
