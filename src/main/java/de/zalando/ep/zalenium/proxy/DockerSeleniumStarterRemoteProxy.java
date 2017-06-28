@@ -472,7 +472,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
         String containerIp = containerClient.getContainerIp(createdContainerName);
         for (int i = 1; i <= 60; i++) {
             try {
-                Thread.sleep(1000);
+                Thread.sleep(sleepIntervalMultiplier);
                 if (containerIp == null || containerIp.trim().isEmpty()) {
                     containerIp = containerClient.getContainerIp(createdContainerName);
                 }

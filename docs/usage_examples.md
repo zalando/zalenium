@@ -6,7 +6,7 @@
   * [with BrowserStack enabled](#with-browserstack-enabled)
   * [with TestingBot enabled](#with-testingbot-enabled)
   * [with screen width and height, and time zone](#with-screen-width-and-height-and-time-zone)
-  * [with a multi-purpose folder mounted](#with-a-multi-purpose-folder-mounted)
+  * [with node folders mounted](#with-node-folders-mounted)
   * [More configuration parameters](#more-configuration-parameters)
 * [One line starters](#one-line-starters)
   * [Zalenium one-liner installer](#zalenium-one-liner-installer)
@@ -115,21 +115,33 @@ explicitly tell Zalenium which major version you are using via `-e DOCKER=1.11` 
       --privileged dosel/zalenium start --screenWidth 1440 --screenHeight 810 --timeZone "America/Montreal"
   ```
 
-### with a multi-purpose folder mounted
-This is a folder that you can mount as a volume when starting Zalenium, and it will be mapped across all the docker-selenium containers. 
-It could be used to provide files needed to run your tests, such as filed that need to be open from the browser or folders to use when 
-starting Chrome with a specific profile.
+### with node folders mounted
+
+This is a collection of folders that you can mount as volumes when starting Zalenium by prefixing the destination
+with `/tmp/node/`, and it will be mapped across all the docker-selenium containers from the root folder after
+stripping the `/tmp/node` prefix. 
+
+For example, mounting:
+
+`-v /your/local/folder:/tmp/node/home/seluser/folder` will map to `/home/seluser/folder` on the node. 
+ 
+It can be used to provide further customization to your nodes, such as adding client certificates for your browser,
+or mimicking prior multi-purpose folder, both shown below.
 
   ```sh
     docker run --rm -ti --name zalenium -p 4444:4444 -p 5555:5555 \
       -v /var/run/docker.sock:/var/run/docker.sock \
       -v /tmp/videos:/home/seluser/videos \
-      -v /your/local/folder:/tmp/mounted \      
+      -v /your/local/folder/with/certStore:/tmp/node/home/seluser/.pki/nssdb \      
+      -v /your/local/folderB:/tmp/node/home/seluser/folderB \      
+      -v /tmp/mounted:/tmp/node/tmp/mounted \
       --privileged dosel/zalenium start 
   ```
-After starting Zalenium with this mounted volume, any file created in the host in `/your/local/folder`, will be available in
-`/tmp/mounted` across all containers. Please note that the folder name in the host can be any you want, the important part is 
-to map properly.
+
+Please take caution in mounting system folders such as `/etc`, as this behavior has not been tested with such configuration.
+
+**NOTE:** There are certain protected points which cannot be mounted via `/tmp/node`. See
+[PROTECTED_NODE_MOUNT_POINTS at DockerContainerClient](../src/main/java/de/zalando/ep/zalenium/container/DockerContainerClient.java).
 
 ### More configuration parameters
 
@@ -302,7 +314,7 @@ capability and no video will be recorded. Example code in Java for the capabilit
 
 ### Time zone
 Run your test in a different time zone from the default one `Europe/Berlin`, just pass a capability `tz` with the 
-desired value. E.g. `tz=America/Montreal`.Example code in Java for the capability `tz`
+desired value. E.g. `tz=America/Montreal`. Example code in Java for the capability `tz`
 
   ```java
     DesiredCapabilities desiredCapabilities = new DesiredCapabilities();
@@ -311,3 +323,14 @@ desired value. E.g. `tz=America/Montreal`.Example code in Java for the capabilit
     desiredCapabilities.setCapability("tz", "America/Montreal");
   ```
 
+
+### Set browser language (works only with Chrome)
+You can set the browser language when using Google Chrome, just pass the `ChromeOptions` variable with the language
+argument. Example code in Java :
+
+  ```java
+    DesiredCapabilities desiredCapabilities = DesiredCapabilities.chrome();
+    ChromeOptions options = new ChromeOptions();
+    options.addArguments("lang=en_GB");
+    desiredCapabilities.setCapability(ChromeOptions.CAPABILITY, options);
+```

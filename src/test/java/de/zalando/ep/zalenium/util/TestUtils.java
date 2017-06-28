@@ -162,21 +162,43 @@ public class TestUtils {
         ContainerCreation containerCreation = mock(ContainerCreation.class);
         when(containerCreation.id()).thenReturn("ANY_CONTAINER_ID");
 
+        AttachedNetwork attachedNetwork = mock(AttachedNetwork.class);
+        NetworkSettings networkSettings = mock(NetworkSettings.class);
+
         ImageInfo imageInfo = mock(ImageInfo.class);
         ContainerConfig containerConfig = mock(ContainerConfig.class);
         ContainerInfo containerInfo = mock(ContainerInfo.class);
-        ContainerMount containerMount = mock(ContainerMount.class);
-        when(containerMount.destination()).thenReturn("/tmp/mounted");
-        when(containerMount.source()).thenReturn("/tmp/mounted");
-        when(containerInfo.mounts()).thenReturn(ImmutableList.of(containerMount));
+        ContainerMount tmpMountedMount = mock(ContainerMount.class);
+        when(tmpMountedMount.destination()).thenReturn("/tmp/node/tmp/mounted");
+        when(tmpMountedMount.source()).thenReturn("/tmp/mounted");
+        ContainerMount homeFolderMount = mock(ContainerMount.class);
+        when(homeFolderMount.destination()).thenReturn("/tmp/node/home/seluser/folder");
+        when(homeFolderMount.source()).thenReturn("/tmp/folder");
+        when(containerInfo.mounts()).thenReturn(ImmutableList.of(tmpMountedMount, homeFolderMount));
+        when(attachedNetwork.ipAddress()).thenReturn("127.0.0.1");
+        when(networkSettings.networks()).thenReturn(ImmutableMap.of("default", attachedNetwork));
+        when(networkSettings.ipAddress()).thenReturn("");
+        when(containerInfo.networkSettings()).thenReturn(networkSettings);
+
 
         String containerId = RandomStringUtils.randomAlphabetic(30).toLowerCase();
         Container container_40000 = mock(Container.class);
         when(container_40000.names()).thenReturn(ImmutableList.copyOf(Collections.singletonList("/zalenium_40000")));
         when(container_40000.id()).thenReturn(containerId);
+        when(container_40000.status()).thenReturn("running");
+        when(container_40000.image()).thenReturn("elgalu/selenium");
         Container container_40001 = mock(Container.class);
         when(container_40001.names()).thenReturn(ImmutableList.copyOf(Collections.singletonList("/zalenium_40001")));
         when(container_40001.id()).thenReturn(containerId);
+        when(container_40001.status()).thenReturn("running");
+        when(container_40001.image()).thenReturn("elgalu/selenium");
+        String zaleniumContainerId = RandomStringUtils.randomAlphabetic(30).toLowerCase();
+        Container zalenium = mock(Container.class);
+        when(zalenium.names()).thenReturn(ImmutableList.copyOf(Collections.singletonList("/zalenium")));
+        when(zalenium.id()).thenReturn(zaleniumContainerId);
+        when(zalenium.status()).thenReturn("running");
+        when(zalenium.image()).thenReturn("dosel/zalenium");
+
 
         try {
             URL logsLocation = TestUtils.class.getClassLoader().getResource("logs.tar");
@@ -202,14 +224,19 @@ public class TestUtils {
             when(dockerClient.createContainer(any(ContainerConfig.class), anyString())).thenReturn(containerCreation);
 
             when(dockerClient.listContainers(DockerClient.ListContainersParam.allContainers()))
-                    .thenReturn(Arrays.asList(container_40000, container_40001));
+                    .thenReturn(Arrays.asList(container_40000, container_40001, zalenium));
 
             when(containerConfig.labels()).thenReturn(ImmutableMap.of("selenium_firefox_version", "52",
                     "selenium_chrome_version", "58"));
             when(imageInfo.config()).thenReturn(containerConfig);
             when(dockerClient.inspectContainer(null)).thenReturn(containerInfo);
+            when(dockerClient.inspectContainer(zaleniumContainerId)).thenReturn(containerInfo);
+            when(dockerClient.inspectContainer(containerId)).thenReturn(containerInfo);
 
             when(dockerClient.inspectImage(anyString())).thenReturn(imageInfo);
+
+            when(dockerClient.listImages(DockerClient.ListImagesParam.byName("elgalu/selenium")))
+                    .thenReturn(Collections.emptyList());
             
         } catch (DockerException | InterruptedException | IOException e) {
             e.printStackTrace();
