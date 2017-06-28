@@ -175,7 +175,9 @@ public class TestUtils {
         when(homeFolderMount.destination()).thenReturn("/tmp/node/home/seluser/folder");
         when(homeFolderMount.source()).thenReturn("/tmp/folder");
         when(containerInfo.mounts()).thenReturn(ImmutableList.of(tmpMountedMount, homeFolderMount));
+        when(attachedNetwork.ipAddress()).thenReturn("127.0.0.1");
         when(networkSettings.networks()).thenReturn(ImmutableMap.of("default", attachedNetwork));
+        when(networkSettings.ipAddress()).thenReturn("");
         when(containerInfo.networkSettings()).thenReturn(networkSettings);
 
 
@@ -229,6 +231,7 @@ public class TestUtils {
             when(imageInfo.config()).thenReturn(containerConfig);
             when(dockerClient.inspectContainer(null)).thenReturn(containerInfo);
             when(dockerClient.inspectContainer(zaleniumContainerId)).thenReturn(containerInfo);
+            when(dockerClient.inspectContainer(containerId)).thenReturn(containerInfo);
 
             when(dockerClient.inspectImage(anyString())).thenReturn(imageInfo);
 

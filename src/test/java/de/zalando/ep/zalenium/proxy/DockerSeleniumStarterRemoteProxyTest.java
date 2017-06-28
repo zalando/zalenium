@@ -65,6 +65,7 @@ public class DockerSeleniumStarterRemoteProxyTest {
 
         // Creating the proxy
         DockerSeleniumStarterRemoteProxy.setContainerClient(containerClient);
+        DockerSeleniumStarterRemoteProxy.setSleepIntervalMultiplier(0);
         DockerSeleniumStarterRemoteProxy proxy = DockerSeleniumStarterRemoteProxy.getNewInstance(request, registry);
 
         // Spying on the proxy to see if methods are invoked or not
@@ -74,6 +75,7 @@ public class DockerSeleniumStarterRemoteProxyTest {
     @After
     public void afterMethod() {
         registry.removeIfPresent(spyProxy);
+        DockerSeleniumStarterRemoteProxy.setSleepIntervalMultiplier(1000);
     }
 
     @AfterClass
@@ -357,30 +359,26 @@ public class DockerSeleniumStarterRemoteProxyTest {
     @Test
     public void amountOfCreatedContainersIsTheConfiguredOne() {
         // Mock the environment class that serves as proxy to retrieve env variables
-        try {
-            Environment environment = mock(Environment.class, withSettings().useConstructor());
-            int amountOfChromeContainers = 3;
-            int amountOfFirefoxContainers = 4;
-            when(environment.getEnvVariable(DockerSeleniumStarterRemoteProxy.ZALENIUM_CHROME_CONTAINERS))
-                    .thenReturn(String.valueOf(amountOfChromeContainers));
-            when(environment.getEnvVariable(DockerSeleniumStarterRemoteProxy.ZALENIUM_FIREFOX_CONTAINERS))
-                    .thenReturn(String.valueOf(amountOfFirefoxContainers));
-            when(environment.getIntEnvVariable(any(String.class), any(Integer.class))).thenCallRealMethod();
-            DockerSeleniumStarterRemoteProxy.setEnv(environment);
-            DockerSeleniumStarterRemoteProxy.setSleepIntervalMultiplier(0);
+        Environment environment = mock(Environment.class, withSettings().useConstructor());
+        int amountOfChromeContainers = 3;
+        int amountOfFirefoxContainers = 4;
+        when(environment.getEnvVariable(DockerSeleniumStarterRemoteProxy.ZALENIUM_CHROME_CONTAINERS))
+                .thenReturn(String.valueOf(amountOfChromeContainers));
+        when(environment.getEnvVariable(DockerSeleniumStarterRemoteProxy.ZALENIUM_FIREFOX_CONTAINERS))
+                .thenReturn(String.valueOf(amountOfFirefoxContainers));
+        when(environment.getIntEnvVariable(any(String.class), any(Integer.class))).thenCallRealMethod();
+        DockerSeleniumStarterRemoteProxy.setEnv(environment);
+        DockerSeleniumStarterRemoteProxy.setSleepIntervalMultiplier(0);
 
-            DockerSeleniumStarterRemoteProxy.getNewInstance(request, registry);
-            registry.add(spyProxy);
+        DockerSeleniumStarterRemoteProxy.getNewInstance(request, registry);
+        registry.add(spyProxy);
 
-            verify(spyProxy, timeout(5000).times(amountOfChromeContainers))
-                    .startDockerSeleniumContainer(BrowserType.CHROME, true);
-            verify(spyProxy, timeout(5000).times(amountOfFirefoxContainers))
-                    .startDockerSeleniumContainer(BrowserType.FIREFOX, true);
-            Assert.assertEquals(amountOfChromeContainers, DockerSeleniumStarterRemoteProxy.getChromeContainersOnStartup());
-            Assert.assertEquals(amountOfFirefoxContainers, DockerSeleniumStarterRemoteProxy.getFirefoxContainersOnStartup());
-        } finally {
-            DockerSeleniumStarterRemoteProxy.setSleepIntervalMultiplier(1000);
-        }
+        verify(spyProxy, timeout(5000).times(amountOfChromeContainers))
+                .startDockerSeleniumContainer(BrowserType.CHROME, true);
+        verify(spyProxy, timeout(5000).times(amountOfFirefoxContainers))
+                .startDockerSeleniumContainer(BrowserType.FIREFOX, true);
+        Assert.assertEquals(amountOfChromeContainers, DockerSeleniumStarterRemoteProxy.getChromeContainersOnStartup());
+        Assert.assertEquals(amountOfFirefoxContainers, DockerSeleniumStarterRemoteProxy.getFirefoxContainersOnStartup());
     }
 
     @Test
