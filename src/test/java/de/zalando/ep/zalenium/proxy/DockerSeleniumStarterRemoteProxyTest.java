@@ -24,7 +24,6 @@ import java.util.HashMap;
 import java.util.Map;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.times;
@@ -253,7 +252,7 @@ public class DockerSeleniumStarterRemoteProxyTest {
         requestedCapability.put("waitingFor_FIREFOX_Node", 31);
         TestSession testSession = spyProxy.getNewSession(requestedCapability);
         Assert.assertNull(testSession);
-        verify(spyProxy, timeout(1000).times(1)).startDockerSeleniumContainer(anyString(), eq(true));
+        verify(spyProxy, timeout(1000).times(1)).startDockerSeleniumContainer(anyString());
     }
 
 

@@ -391,7 +391,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
                 LOGGER.log(Level.INFO, LOGGING_PREFIX + "Request has waited 30 attempts for a node, something " +
                         "went wrong with the previous attempts, creating a new node for {0}.", requestedCapability);
                 requestedCapability.put(waitingForNode, 1);
-                new Thread(() -> startDockerSeleniumContainer(browserName, true)).start();
+                new Thread(() -> startDockerSeleniumContainer(browserName)).start();
             } else {
                 requestedCapability.put(waitingForNode, attempts);
                 LOGGER.log(Level.FINE, LOGGING_PREFIX + "Request waiting for a node new node for {0}.", requestedCapability);
