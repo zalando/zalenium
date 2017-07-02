@@ -34,6 +34,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -107,6 +110,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     private static int screenHeight;
     private static String containerName;
     private static String dockerSeleniumImageName;
+    private static ThreadPoolExecutor poolExecutor;
     private final HtmlRenderer renderer = new WebProxyHtmlRendererBeta(this);
     private CapabilityMatcher capabilityHelper;
 
@@ -129,6 +133,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
         int maxDSContainers = env.getIntEnvVariable(ZALENIUM_MAX_DOCKER_SELENIUM_CONTAINERS,
                 DEFAULT_AMOUNT_DOCKER_SELENIUM_CONTAINERS_RUNNING);
         setMaxDockerSeleniumContainers(maxDSContainers);
+        poolExecutor = new ThreadPoolExecutor(maxDSContainers, maxDSContainers, 20, TimeUnit.SECONDS, new LinkedBlockingQueue<>());
 
         int sWidth = env.getIntEnvVariable(ZALENIUM_SCREEN_WIDTH, DEFAULT_SCREEN_WIDTH);
         setScreenWidth(sWidth);
@@ -147,6 +152,12 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
 
         String seleniumImageName = env.getStringEnvVariable(ZALENIUM_SELENIUM_IMAGE_NAME, DEFAULT_DOCKER_SELENIUM_IMAGE);
         setDockerSeleniumImageName(seleniumImageName);
+    }
+
+    @Override
+    public void teardown() {
+        super.teardown();
+        poolExecutor.shutdown();
     }
 
     /*
@@ -383,15 +394,15 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
         if (!requestedCapability.containsKey(waitingForNode)) {
             LOGGER.log(Level.INFO, LOGGING_PREFIX + "Starting new node for {0}.", requestedCapability);
             requestedCapability.put(waitingForNode, 1);
-            new Thread(() -> startDockerSeleniumContainer(browserName)).start();
+            poolExecutor.execute(() -> startDockerSeleniumContainer(browserName));
         } else {
             int attempts = (int) requestedCapability.get(waitingForNode);
             attempts++;
-            if (attempts >= 30) {
-                LOGGER.log(Level.INFO, LOGGING_PREFIX + "Request has waited 30 attempts for a node, something " +
+            if (attempts >= 50) {
+                LOGGER.log(Level.INFO, LOGGING_PREFIX + "Request has waited 50 attempts for a node, something " +
                         "went wrong with the previous attempts, creating a new node for {0}.", requestedCapability);
                 requestedCapability.put(waitingForNode, 1);
-                new Thread(() -> startDockerSeleniumContainer(browserName)).start();
+                poolExecutor.execute(() -> startDockerSeleniumContainer(browserName));
             } else {
                 requestedCapability.put(waitingForNode, attempts);
                 LOGGER.log(Level.FINE, LOGGING_PREFIX + "Request waiting for a node new node for {0}.", requestedCapability);
@@ -439,7 +450,6 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
             boolean sendAnonymousUsageInfo = env.getBooleanEnvVariable("ZALENIUM_SEND_ANONYMOUS_USAGE_INFO", false);
             String nodePolling = String.valueOf(RandomUtils.nextInt(90, 120) * 1000);
 
-
             int attempts = 0;
             int maxAttempts = 2;
             while (attempts < maxAttempts) {
@@ -455,11 +465,19 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
                 if (containerCreated && checkContainerStatus(getContainerName(), nodePort)) {
                     return true;
                 } else {
-                    LOGGER.log(Level.INFO, String.format("%sContainer creation failed, retrying...", LOGGING_PREFIX));
+                    LOGGER.log(Level.FINE, String.format("%sContainer creation failed, retrying...", LOGGING_PREFIX));
                 }
             }
         }
-        LOGGER.log(Level.INFO, String.format("%sNo container was created for a request...", LOGGING_PREFIX));
+        LOGGER.log(Level.FINE, String.format("%sNo container was created, putting the request back to the queue...",
+                LOGGING_PREFIX));
+        // Pause before putting the request back in the queue, to avoid querying the container manager intensively
+        try {
+            Thread.sleep(10 * sleepIntervalMultiplier);
+        } catch (InterruptedException e) {
+            LOGGER.log(Level.FINE, String.format("%sError while sleeping...", LOGGING_PREFIX));
+        }
+        poolExecutor.execute(() -> startDockerSeleniumContainer(browser, forceCreation));
         return false;
     }
 
@@ -485,7 +503,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
                         return true;
                     }
                 } catch (IOException e) {
-                    LOGGER.log(Level.FINE, "Error while getting node status.", e);
+                    LOGGER.log(Level.FINE, "Error while getting node status, probably the node is still starting up...");
                 }
             } catch (MalformedURLException | InterruptedException e) {
                 LOGGER.log(Level.WARNING, "Malformed status url.", e);
