@@ -398,14 +398,23 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
         } else {
             int attempts = (int) requestedCapability.get(waitingForNode);
             attempts++;
-            if (attempts >= 50) {
-                LOGGER.log(Level.INFO, LOGGING_PREFIX + "Request has waited 50 attempts for a node, something " +
+            long pendingTasks = poolExecutor.getTaskCount() - poolExecutor.getCompletedTaskCount();
+            if (pendingTasks == 0) {
+                poolExecutor.execute(() -> startDockerSeleniumContainer(browserName));
+            }
+            requestedCapability.put(waitingForNode, attempts);
+            if (attempts >= 30) {
+                // Leaving this 3 lines for debugging purposes, pendingTasks does not get a zero value sometimes
+                // but it is hard to reproduce. TODO: Remove in version 3.3.1n
+                LOGGER.log(Level.FINE, LOGGING_PREFIX + "pendingTasks -> " + pendingTasks);
+                LOGGER.log(Level.FINE, LOGGING_PREFIX + "poolExecutor.getQueue().size() -> " + poolExecutor.getQueue().size());
+                LOGGER.log(Level.FINE, LOGGING_PREFIX + "poolExecutor.getActiveCount() -> " + poolExecutor.getActiveCount());
+                // TODO: Remove in version 3.3.1n
+                
+                LOGGER.log(Level.INFO, LOGGING_PREFIX + "Request has waited 30 attempts for a node, something " +
                         "went wrong with the previous attempts, creating a new node for {0}.", requestedCapability);
                 requestedCapability.put(waitingForNode, 1);
                 poolExecutor.execute(() -> startDockerSeleniumContainer(browserName));
-            } else {
-                requestedCapability.put(waitingForNode, attempts);
-                LOGGER.log(Level.FINE, LOGGING_PREFIX + "Request waiting for a node new node for {0}.", requestedCapability);
             }
         }
         return null;
@@ -469,15 +478,8 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
                 }
             }
         }
-        LOGGER.log(Level.FINE, String.format("%sNo container was created, putting the request back to the queue...",
+        LOGGER.log(Level.INFO, String.format("%sNo container was created, will try again in a moment...",
                 LOGGING_PREFIX));
-        // Pause before putting the request back in the queue, to avoid querying the container manager intensively
-        try {
-            Thread.sleep(10 * sleepIntervalMultiplier);
-        } catch (InterruptedException e) {
-            LOGGER.log(Level.FINE, String.format("%sError while sleeping...", LOGGING_PREFIX));
-        }
-        poolExecutor.execute(() -> startDockerSeleniumContainer(browser, forceCreation));
         return false;
     }
 
