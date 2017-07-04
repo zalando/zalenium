@@ -364,13 +364,6 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
             }
             requestedCapability.put(waitingForNode, attempts);
             if (attempts >= 30) {
-                // Leaving this 3 lines for debugging purposes, pendingTasks does not get a zero value sometimes
-                // but it is hard to reproduce. TODO: Remove in version 3.3.1n
-                LOGGER.log(Level.FINE, LOGGING_PREFIX + "pendingTasks -> " + pendingTasks);
-                LOGGER.log(Level.FINE, LOGGING_PREFIX + "poolExecutor.getQueue().size() -> " + poolExecutor.getQueue().size());
-                LOGGER.log(Level.FINE, LOGGING_PREFIX + "poolExecutor.getActiveCount() -> " + poolExecutor.getActiveCount());
-                // TODO: Remove in version 3.3.1n
-
                 LOGGER.log(Level.INFO, LOGGING_PREFIX + "Request has waited 30 attempts for a node, something " +
                         "went wrong with the previous attempts, creating a new node for {0}.", requestedCapability);
                 requestedCapability.put(waitingForNode, 1);

@@ -38,6 +38,8 @@ public class ParallelIT  {
     @DataProvider(name = "browsersAndPlatforms")
     public static Object[][] browsersAndPlatformsProvider() {
         return new Object[][] {
+                new Object[]{BrowserType.SAFARI, Platform.MAC},
+                new Object[]{BrowserType.IE, Platform.WIN8},
                 new Object[]{BrowserType.CHROME, Platform.LINUX},
                 new Object[]{BrowserType.FIREFOX, Platform.ANY}
         };
@@ -75,7 +77,6 @@ public class ParallelIT  {
         desiredCapabilities.setCapability(CapabilityType.BROWSER_NAME, browserType);
         desiredCapabilities.setCapability(CapabilityType.PLATFORM, platform);
         desiredCapabilities.setCapability("name", method.getName());
-        desiredCapabilities.setCapability("screenResolution", "1280x720");
         if (localTesting) {
             desiredCapabilities.setCapability("tunnel", "true");
             desiredCapabilities.setCapability("browserstack.local", "true");
