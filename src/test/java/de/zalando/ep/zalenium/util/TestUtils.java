@@ -73,22 +73,23 @@ public class TestUtils {
     }
 
     public static List<DesiredCapabilities> getDockerSeleniumCapabilitiesForTesting() {
-        String screenResolution = String.format("%sx%s", DockerSeleniumStarterRemoteProxy.getConfiguredScreenWidth(),
-                DockerSeleniumStarterRemoteProxy.getConfiguredScreenHeight());
+        String screenResolution = String.format("%sx%s",
+                DockerSeleniumStarterRemoteProxy.getConfiguredScreenSize().getWidth(),
+                DockerSeleniumStarterRemoteProxy.getConfiguredScreenSize().getHeight());
         List<DesiredCapabilities> dsCapabilities = new ArrayList<>();
         DesiredCapabilities firefoxCapabilities = new DesiredCapabilities();
         firefoxCapabilities.setBrowserName(BrowserType.FIREFOX);
         firefoxCapabilities.setPlatform(Platform.LINUX);
         firefoxCapabilities.setCapability(RegistrationRequest.MAX_INSTANCES, 1);
         firefoxCapabilities.setCapability("screenResolution", screenResolution);
-        firefoxCapabilities.setCapability("tz", DockerSeleniumStarterRemoteProxy.getConfiguredTimeZone());
+        firefoxCapabilities.setCapability("tz", DockerSeleniumStarterRemoteProxy.getConfiguredTimeZone().getID());
         dsCapabilities.add(firefoxCapabilities);
         DesiredCapabilities chromeCapabilities = new DesiredCapabilities();
         chromeCapabilities.setBrowserName(BrowserType.CHROME);
         chromeCapabilities.setPlatform(Platform.LINUX);
         chromeCapabilities.setCapability(RegistrationRequest.MAX_INSTANCES, 1);
         chromeCapabilities.setCapability("screenResolution", screenResolution);
-        chromeCapabilities.setCapability("tz", DockerSeleniumStarterRemoteProxy.getConfiguredTimeZone());
+        chromeCapabilities.setCapability("tz", DockerSeleniumStarterRemoteProxy.getConfiguredTimeZone().getID());
         dsCapabilities.add(chromeCapabilities);
         return dsCapabilities;
     }

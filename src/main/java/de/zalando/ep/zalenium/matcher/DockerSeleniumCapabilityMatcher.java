@@ -60,8 +60,9 @@ public class DockerSeleniumCapabilityMatcher extends DefaultCapabilityMatcher {
             // This is done to avoid having the test run on a node with a configured screen resolution different from
             // the global configured one. But not putting it to tests that should go to a cloud provider.
             if (!containsScreenResolutionCapability && super.matches(nodeCapability, requestedCapability)) {
-                String screenResolution = String.format("%sx%s", DockerSeleniumStarterRemoteProxy.getConfiguredScreenWidth(),
-                        DockerSeleniumStarterRemoteProxy.getConfiguredScreenHeight());
+                String screenResolution = String.format("%sx%s",
+                        DockerSeleniumStarterRemoteProxy.getConfiguredScreenSize().getWidth(),
+                        DockerSeleniumStarterRemoteProxy.getConfiguredScreenSize().getHeight());
                 requestedCapability.put(screenResolutionNames[0], screenResolution);
             }
         }
@@ -79,7 +80,7 @@ public class DockerSeleniumCapabilityMatcher extends DefaultCapabilityMatcher {
             // This is done to avoid having the test run on a node with a configured time zone different from
             // the global configured one. But not putting it to tests that should go to a cloud provider.
             if (!containsTimeZoneCapability && super.matches(nodeCapability, requestedCapability)) {
-                requestedCapability.put(timeZoneName, DockerSeleniumStarterRemoteProxy.getConfiguredTimeZone());
+                requestedCapability.put(timeZoneName, DockerSeleniumStarterRemoteProxy.getConfiguredTimeZone().getID());
             }
         }
 
