@@ -17,6 +17,7 @@ import org.openqa.grid.internal.utils.CapabilityMatcher;
 import org.openqa.grid.internal.utils.HtmlRenderer;
 import org.openqa.grid.selenium.proxy.DefaultRemoteProxy;
 import org.openqa.grid.web.servlet.beta.WebProxyHtmlRendererBeta;
+import org.openqa.selenium.Dimension;
 import org.openqa.selenium.Platform;
 import org.openqa.selenium.net.NetworkUtils;
 import org.openqa.selenium.remote.BrowserType;
@@ -62,9 +63,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     @VisibleForTesting
     static final TimeZone DEFAULT_TZ = TimeZone.getTimeZone("Europe/Berlin");
     @VisibleForTesting
-    static final int DEFAULT_SCREEN_WIDTH = 1900;
-    @VisibleForTesting
-    static final int DEFAULT_SCREEN_HEIGHT = 1880;
+    static final Dimension DEFAULT_SCREEN_SIZE = new Dimension(1900, 1880);
     @VisibleForTesting
     static final String ZALENIUM_CHROME_CONTAINERS = "ZALENIUM_CHROME_CONTAINERS";
     @VisibleForTesting
@@ -103,10 +102,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     private static int maxDockerSeleniumContainers;
     private static int sleepIntervalMultiplier = 1000;
     private static TimeZone configuredTimeZone;
-    private static int configuredScreenWidth;
-    private static int screenWidth;
-    private static int configuredScreenHeight;
-    private static int screenHeight;
+    private static Dimension configuredScreenSize;
     private static String containerName;
     private static String dockerSeleniumImageName;
     private static ThreadPoolExecutor poolExecutor;
@@ -134,13 +130,9 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
         setMaxDockerSeleniumContainers(maxDSContainers);
         poolExecutor = new ThreadPoolExecutor(maxDSContainers, maxDSContainers, 20, TimeUnit.SECONDS, new LinkedBlockingQueue<>());
 
-        int sWidth = env.getIntEnvVariable(ZALENIUM_SCREEN_WIDTH, DEFAULT_SCREEN_WIDTH);
-        setScreenWidth(sWidth);
-        setConfiguredScreenWidth(sWidth);
-
-        int sHeight = env.getIntEnvVariable(ZALENIUM_SCREEN_HEIGHT, DEFAULT_SCREEN_HEIGHT);
-        setScreenHeight(sHeight);
-        setConfiguredScreenHeight(sHeight);
+        int sWidth = env.getIntEnvVariable(ZALENIUM_SCREEN_WIDTH, DEFAULT_SCREEN_SIZE.getWidth());
+        int sHeight = env.getIntEnvVariable(ZALENIUM_SCREEN_HEIGHT, DEFAULT_SCREEN_SIZE.getHeight());
+        setConfiguredScreenSize(new Dimension(sWidth, sHeight));
 
         String tz = env.getStringEnvVariable(ZALENIUM_TZ, DEFAULT_TZ.getID());
         setConfiguredTimeZone(tz);
@@ -275,26 +267,6 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
                 DEFAULT_AMOUNT_DOCKER_SELENIUM_CONTAINERS_RUNNING : maxDockerSeleniumContainers;
     }
 
-    @VisibleForTesting
-    protected static int getScreenWidth() {
-        return screenWidth;
-    }
-
-    @VisibleForTesting
-    protected static void setScreenWidth(int screenWidth) {
-        DockerSeleniumStarterRemoteProxy.screenWidth = screenWidth <= 0 ? DEFAULT_SCREEN_WIDTH : screenWidth;
-    }
-
-    @VisibleForTesting
-    protected static int getScreenHeight() {
-        return screenHeight;
-    }
-
-    @VisibleForTesting
-    protected static void setScreenHeight(int screenHeight) {
-        DockerSeleniumStarterRemoteProxy.screenHeight = screenHeight <= 0 ? DEFAULT_SCREEN_HEIGHT : screenHeight;
-    }
-
     private static String getLatestDownloadedImage() {
         if (latestDownloadedImage == null) {
             latestDownloadedImage = containerClient.getLatestDownloadedImage(getDockerSeleniumImageName());
@@ -302,20 +274,19 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
         return latestDownloadedImage;
     }
 
-    public static int getConfiguredScreenWidth() {
-        return configuredScreenWidth <= 0 ? DEFAULT_SCREEN_WIDTH : configuredScreenWidth;
+    public static Dimension getConfiguredScreenSize() {
+        if (configuredScreenSize.getWidth() <= 0 || configuredScreenSize.getHeight() <= 0) {
+            return DEFAULT_SCREEN_SIZE;
+        }
+        return DockerSeleniumStarterRemoteProxy.configuredScreenSize;
     }
 
-    public static void setConfiguredScreenWidth(int configuredScreenWidth) {
-        DockerSeleniumStarterRemoteProxy.configuredScreenWidth = configuredScreenWidth;
-    }
-
-    public static int getConfiguredScreenHeight() {
-        return configuredScreenHeight <= 0 ? DEFAULT_SCREEN_HEIGHT : configuredScreenHeight;
-    }
-
-    public static void setConfiguredScreenHeight(int configuredScreenHeight) {
-        DockerSeleniumStarterRemoteProxy.configuredScreenHeight = configuredScreenHeight;
+    public static void setConfiguredScreenSize(Dimension configuredScreenSize) {
+        if (configuredScreenSize.getWidth() <= 0 || configuredScreenSize.getHeight() <= 0) {
+            DockerSeleniumStarterRemoteProxy.configuredScreenSize = DEFAULT_SCREEN_SIZE;
+        } else {
+            DockerSeleniumStarterRemoteProxy.configuredScreenSize = configuredScreenSize;
+        }
     }
 
     public static TimeZone getConfiguredTimeZone() {
@@ -365,10 +336,10 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
         }
 
         // Check and configure specific screen resolution capabilities when they have been passed in the test config.
-        configureScreenResolutionFromCapabilities(requestedCapability);
+        Dimension screenSize = getConfiguredScreenResolutionFromCapabilities(requestedCapability);
 
         // Check and configure time zone capabilities when they have been passed in the test config.
-        TimeZone timeZone = getConfigureTimeZoneFromCapabilities(requestedCapability);
+        TimeZone timeZone = getConfiguredTimeZoneFromCapabilities(requestedCapability);
 
         String browserName = requestedCapability.get(CapabilityType.BROWSER_NAME).toString();
 
@@ -383,13 +354,13 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
         if (!requestedCapability.containsKey(waitingForNode)) {
             LOGGER.log(Level.INFO, LOGGING_PREFIX + "Starting new node for {0}.", requestedCapability);
             requestedCapability.put(waitingForNode, 1);
-            poolExecutor.execute(() -> startDockerSeleniumContainer(browserName, timeZone));
+            poolExecutor.execute(() -> startDockerSeleniumContainer(browserName, timeZone, screenSize));
         } else {
             int attempts = (int) requestedCapability.get(waitingForNode);
             attempts++;
             long pendingTasks = poolExecutor.getTaskCount() - poolExecutor.getCompletedTaskCount();
             if (pendingTasks == 0) {
-                poolExecutor.execute(() -> startDockerSeleniumContainer(browserName, timeZone));
+                poolExecutor.execute(() -> startDockerSeleniumContainer(browserName, timeZone, screenSize));
             }
             requestedCapability.put(waitingForNode, attempts);
             if (attempts >= 30) {
@@ -403,7 +374,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
                 LOGGER.log(Level.INFO, LOGGING_PREFIX + "Request has waited 30 attempts for a node, something " +
                         "went wrong with the previous attempts, creating a new node for {0}.", requestedCapability);
                 requestedCapability.put(waitingForNode, 1);
-                poolExecutor.execute(() -> startDockerSeleniumContainer(browserName, timeZone));
+                poolExecutor.execute(() -> startDockerSeleniumContainer(browserName, timeZone, screenSize));
             }
         }
         return null;
@@ -433,12 +404,13 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     }
 
     @VisibleForTesting
-    public boolean startDockerSeleniumContainer(String browser, TimeZone timeZone) {
-        return startDockerSeleniumContainer(browser, timeZone, false);
+    public boolean startDockerSeleniumContainer(String browser, TimeZone timeZone, Dimension screenSize) {
+        return startDockerSeleniumContainer(browser, timeZone, screenSize, false);
     }
 
     @VisibleForTesting
-    public boolean startDockerSeleniumContainer(String browser, TimeZone timeZone, boolean forceCreation) {
+    public boolean startDockerSeleniumContainer(String browser, TimeZone timeZone, Dimension screenSize,
+                                                boolean forceCreation) {
 
         if (forceCreation || validateAmountOfDockerSeleniumContainers()) {
 
@@ -454,8 +426,8 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
                 attempts++;
                 final int nodePort = findFreePortInRange(LOWER_PORT_BOUNDARY, UPPER_PORT_BOUNDARY);
 
-                Map<String, String> envVars = buildEnvVars(browser, timeZone, hostIpAddress, sendAnonymousUsageInfo,
-                        nodePolling, nodePort);
+                Map<String, String> envVars = buildEnvVars(browser, timeZone, screenSize, hostIpAddress,
+                        sendAnonymousUsageInfo, nodePolling, nodePort);
 
                 String latestImage = containerClient.getLatestDownloadedImage(getDockerSeleniumImageName());
                 boolean containerCreated = containerClient
@@ -507,8 +479,9 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
         return false;
     }
 
-    private Map<String, String> buildEnvVars(String browser, TimeZone timeZone, String hostIpAddress,
-                                             boolean sendAnonymousUsageInfo, String nodePolling, int nodePort) {
+    private Map<String, String> buildEnvVars(String browser, TimeZone timeZone, Dimension screenSize,
+                                             String hostIpAddress, boolean sendAnonymousUsageInfo, String nodePolling,
+                                             int nodePort) {
         final int noVncPort = nodePort + NO_VNC_PORT_GAP;
         final int vncPort = nodePort + VNC_PORT_GAP;
         Map<String, String> envVars = new HashMap<>();
@@ -526,8 +499,8 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
         envVars.put("NOVNC", "true");
         envVars.put("NOVNC_PORT", String.valueOf(noVncPort));
         envVars.put("VNC_PORT", String.valueOf(vncPort));
-        envVars.put("SCREEN_WIDTH", String.valueOf(getScreenWidth()));
-        envVars.put("SCREEN_HEIGHT", String.valueOf(getScreenHeight()));
+        envVars.put("SCREEN_WIDTH", String.valueOf(screenSize.getWidth()));
+        envVars.put("SCREEN_HEIGHT", String.valueOf(screenSize.getHeight()));
         envVars.put("TZ", timeZone.getID());
         envVars.put("SELENIUM_NODE_REGISTER_CYCLE", "0");
         envVars.put("SEL_NODEPOLLING_MS", nodePolling);
@@ -561,7 +534,8 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
                     } catch (InterruptedException e) {
                         LOGGER.log(Level.FINE, getId() + " Error sleeping before starting a Chrome container", e);
                     }
-                    startDockerSeleniumContainer(BrowserType.CHROME, getConfiguredTimeZone(), true);
+                    startDockerSeleniumContainer(BrowserType.CHROME, getConfiguredTimeZone(), getConfiguredScreenSize(),
+                            true);
                 }).start();
             } else {
                 new Thread(() -> {
@@ -570,7 +544,8 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
                     } catch (InterruptedException e) {
                         LOGGER.log(Level.FINE, getId() + " Error sleeping before starting a Firefox container", e);
                     }
-                    startDockerSeleniumContainer(BrowserType.FIREFOX, getConfiguredTimeZone(), true);
+                    startDockerSeleniumContainer(BrowserType.FIREFOX, getConfiguredTimeZone(), getConfiguredScreenSize(),
+                            true);
                 }).start();
             }
         }
@@ -580,8 +555,9 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     /*
         This method will search for a screenResolution capability to be passed when creating a docker-selenium node.
     */
-    private void configureScreenResolutionFromCapabilities(Map<String, Object> requestedCapability) {
+    private Dimension getConfiguredScreenResolutionFromCapabilities(Map<String, Object> requestedCapability) {
         boolean wasConfiguredScreenWidthAndHeightChanged = false;
+        Dimension screenSize = getConfiguredScreenSize();
         String[] screenResolutionNames = {"screenResolution", "resolution", "screen-resolution"};
         for (String screenResolutionName : screenResolutionNames) {
             if (requestedCapability.containsKey(screenResolutionName)) {
@@ -590,18 +566,13 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
                     int screenWidth = Integer.parseInt(screenResolution.split("x")[0]);
                     int screenHeight = Integer.parseInt(screenResolution.split("x")[1]);
                     if (screenWidth > 0 && screenHeight > 0) {
-                        setScreenHeight(screenHeight);
-                        setScreenWidth(screenWidth);
+                        screenSize = new Dimension(screenWidth, screenHeight);
                         wasConfiguredScreenWidthAndHeightChanged = true;
                     } else {
-                        setScreenWidth(getConfiguredScreenWidth());
-                        setScreenHeight(getConfiguredScreenHeight());
                         LOGGER.log(Level.FINE, "One of the values provided for screenResolution is negative, " +
                                 "defaults will be used. Passed value -> " + screenResolution);
                     }
                 } catch (Exception e) {
-                    setScreenWidth(getConfiguredScreenWidth());
-                    setScreenHeight(getConfiguredScreenHeight());
                     LOGGER.log(Level.FINE, "Values provided for screenResolution are not valid integers or " +
                             "either the width or the height is missing, defaults will be used. Passed value -> "
                             + screenResolution);
@@ -612,17 +583,16 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
         // Also in the capabilities, to avoid the situation where a request grabs the node from other request
         // just because the platform, version, and browser match.
         if (!wasConfiguredScreenWidthAndHeightChanged) {
-            setScreenWidth(getConfiguredScreenWidth());
-            setScreenHeight(getConfiguredScreenHeight());
-            String screenResolution = String.format("%sx%s", getScreenWidth(), getScreenHeight());
+            String screenResolution = String.format("%sx%s", screenSize.getWidth(), screenSize.getHeight());
             requestedCapability.put("screenResolution", screenResolution);
         }
+        return screenSize;
     }
 
     /*
     This method will search for a tz capability to be passed when creating a docker-selenium node.
     */
-    private TimeZone getConfigureTimeZoneFromCapabilities(Map<String, Object> requestedCapability) {
+    private TimeZone getConfiguredTimeZoneFromCapabilities(Map<String, Object> requestedCapability) {
         boolean wasConfiguredTimeZoneChanged = false;
         String timeZoneName = "tz";
         TimeZone timeZone = getConfiguredTimeZone();

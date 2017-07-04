@@ -73,8 +73,9 @@ public class TestUtils {
     }
 
     public static List<DesiredCapabilities> getDockerSeleniumCapabilitiesForTesting() {
-        String screenResolution = String.format("%sx%s", DockerSeleniumStarterRemoteProxy.getConfiguredScreenWidth(),
-                DockerSeleniumStarterRemoteProxy.getConfiguredScreenHeight());
+        String screenResolution = String.format("%sx%s",
+                DockerSeleniumStarterRemoteProxy.getConfiguredScreenSize().getWidth(),
+                DockerSeleniumStarterRemoteProxy.getConfiguredScreenSize().getHeight());
         List<DesiredCapabilities> dsCapabilities = new ArrayList<>();
         DesiredCapabilities firefoxCapabilities = new DesiredCapabilities();
         firefoxCapabilities.setBrowserName(BrowserType.FIREFOX);
