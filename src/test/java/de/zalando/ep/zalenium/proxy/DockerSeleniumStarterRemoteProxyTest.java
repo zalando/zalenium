@@ -188,6 +188,20 @@ public class DockerSeleniumStarterRemoteProxyTest {
     }
 
     @Test
+    public void containerIsStartedWhenCustomTimeZoneIsProvided() {
+        // Supported desired capability for the test session
+        TimeZone timeZone = TimeZone.getTimeZone("America/Montreal");
+        Map<String, Object> supportedCapability = new HashMap<>();
+        supportedCapability.put(CapabilityType.BROWSER_NAME, BrowserType.FIREFOX);
+        supportedCapability.put(CapabilityType.PLATFORM, Platform.ANY);
+        supportedCapability.put("tz", timeZone.getID());
+        TestSession testSession = spyProxy.getNewSession(supportedCapability);
+        Assert.assertNull(testSession);
+        verify(spyProxy, timeout(1000).times(1)).startDockerSeleniumContainer(BrowserType.FIREFOX, timeZone,
+                screenSize);
+    }
+
+    @Test
     public void containerIsStartedWhenNegativeResolutionIsProvidedUsingDefaults() {
         // Supported desired capability for the test session
         Map<String, Object> supportedCapability = new HashMap<>();

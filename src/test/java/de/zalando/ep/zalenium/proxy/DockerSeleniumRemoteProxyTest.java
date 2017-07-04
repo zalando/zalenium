@@ -295,7 +295,6 @@ public class DockerSeleniumRemoteProxyTest {
             DockerSeleniumStarterRemoteProxy dsProxy = new DockerSeleniumStarterRemoteProxy(request, registry);
             DockerSeleniumStarterRemoteProxy.setMaxDockerSeleniumContainers(1);
             DockerSeleniumStarterRemoteProxy.setConfiguredScreenSize(DockerSeleniumStarterRemoteProxy.DEFAULT_SCREEN_SIZE);
-            // DockerSeleniumStarterRemoteProxy.setTimeZone(DockerSeleniumStarterRemoteProxy.DEFAULT_TZ);
             DockerSeleniumStarterRemoteProxy.setContainerClient(containerClient);
             dsProxy.getNewSession(getCapabilitySupportedByDockerSelenium());
 
