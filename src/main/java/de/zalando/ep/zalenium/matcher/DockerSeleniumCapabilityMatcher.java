@@ -79,7 +79,7 @@ public class DockerSeleniumCapabilityMatcher extends DefaultCapabilityMatcher {
             // This is done to avoid having the test run on a node with a configured time zone different from
             // the global configured one. But not putting it to tests that should go to a cloud provider.
             if (!containsTimeZoneCapability && super.matches(nodeCapability, requestedCapability)) {
-                requestedCapability.put(timeZoneName, DockerSeleniumStarterRemoteProxy.getConfiguredTimeZone());
+                requestedCapability.put(timeZoneName, DockerSeleniumStarterRemoteProxy.getConfiguredTimeZone().getID());
             }
         }
 

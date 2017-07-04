@@ -296,7 +296,7 @@ public class DockerSeleniumRemoteProxyTest {
             DockerSeleniumStarterRemoteProxy.setMaxDockerSeleniumContainers(1);
             DockerSeleniumStarterRemoteProxy.setScreenHeight(DockerSeleniumStarterRemoteProxy.DEFAULT_SCREEN_HEIGHT);
             DockerSeleniumStarterRemoteProxy.setScreenWidth(DockerSeleniumStarterRemoteProxy.DEFAULT_SCREEN_WIDTH);
-            DockerSeleniumStarterRemoteProxy.setTimeZone(DockerSeleniumStarterRemoteProxy.DEFAULT_TZ);
+            // DockerSeleniumStarterRemoteProxy.setTimeZone(DockerSeleniumStarterRemoteProxy.DEFAULT_TZ);
             DockerSeleniumStarterRemoteProxy.setContainerClient(containerClient);
             dsProxy.getNewSession(getCapabilitySupportedByDockerSelenium());
 
@@ -355,8 +355,7 @@ public class DockerSeleniumRemoteProxyTest {
             DockerSeleniumStarterRemoteProxy.setMaxDockerSeleniumContainers(1);
             DockerSeleniumStarterRemoteProxy.setScreenHeight(DockerSeleniumStarterRemoteProxy.DEFAULT_SCREEN_HEIGHT);
             DockerSeleniumStarterRemoteProxy.setScreenWidth(DockerSeleniumStarterRemoteProxy.DEFAULT_SCREEN_WIDTH);
-            DockerSeleniumStarterRemoteProxy.setTimeZone(DockerSeleniumStarterRemoteProxy.DEFAULT_TZ);
-            DockerSeleniumStarterRemoteProxy.setConfiguredTimeZone(DockerSeleniumStarterRemoteProxy.DEFAULT_TZ);
+            DockerSeleniumStarterRemoteProxy.setConfiguredTimeZone(DockerSeleniumStarterRemoteProxy.DEFAULT_TZ.getID());
             DockerSeleniumStarterRemoteProxy.setContainerClient(containerClient);
             dsProxy.getNewSession(getCapabilitySupportedByDockerSelenium());
 

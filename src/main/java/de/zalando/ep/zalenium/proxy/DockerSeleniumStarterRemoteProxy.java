@@ -60,7 +60,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     @VisibleForTesting
     static final int DEFAULT_AMOUNT_DOCKER_SELENIUM_CONTAINERS_RUNNING = 10;
     @VisibleForTesting
-    static final String DEFAULT_TZ = "Europe/Berlin";
+    static final TimeZone DEFAULT_TZ = TimeZone.getTimeZone("Europe/Berlin");
     @VisibleForTesting
     static final int DEFAULT_SCREEN_WIDTH = 1900;
     @VisibleForTesting
@@ -102,8 +102,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     private static int firefoxContainersOnStartup;
     private static int maxDockerSeleniumContainers;
     private static int sleepIntervalMultiplier = 1000;
-    private static String configuredTimeZone;
-    private static String timeZone;
+    private static TimeZone configuredTimeZone;
     private static int configuredScreenWidth;
     private static int screenWidth;
     private static int configuredScreenHeight;
@@ -143,8 +142,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
         setScreenHeight(sHeight);
         setConfiguredScreenHeight(sHeight);
 
-        String tz = env.getStringEnvVariable(ZALENIUM_TZ, DEFAULT_TZ);
-        setTimeZone(tz);
+        String tz = env.getStringEnvVariable(ZALENIUM_TZ, DEFAULT_TZ.getID());
         setConfiguredTimeZone(tz);
 
         String containerN = env.getStringEnvVariable(ZALENIUM_CONTAINER_NAME, DEFAULT_ZALENIUM_CONTAINER_NAME);
@@ -278,20 +276,6 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     }
 
     @VisibleForTesting
-    protected static String getTimeZone() {
-        return timeZone;
-    }
-
-    @VisibleForTesting
-    protected static void setTimeZone(String timeZone) {
-        if (!Arrays.asList(TimeZone.getAvailableIDs()).contains(timeZone)) {
-            LOGGER.log(Level.WARNING, () -> String.format("%s is not a real time zone.", timeZone));
-        }
-        DockerSeleniumStarterRemoteProxy.timeZone = Arrays.asList(TimeZone.getAvailableIDs()).contains(timeZone) ?
-                timeZone : DEFAULT_TZ;
-    }
-
-    @VisibleForTesting
     protected static int getScreenWidth() {
         return screenWidth;
     }
@@ -334,12 +318,17 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
         DockerSeleniumStarterRemoteProxy.configuredScreenHeight = configuredScreenHeight;
     }
 
-    public static String getConfiguredTimeZone() {
+    public static TimeZone getConfiguredTimeZone() {
         return configuredTimeZone == null ? DEFAULT_TZ : configuredTimeZone;
     }
 
     public static void setConfiguredTimeZone(String configuredTimeZone) {
-        DockerSeleniumStarterRemoteProxy.configuredTimeZone = configuredTimeZone;
+        if (!Arrays.asList(TimeZone.getAvailableIDs()).contains(configuredTimeZone)) {
+            LOGGER.log(Level.WARNING, () -> String.format("%s is not a real time zone.", configuredTimeZone));
+            DockerSeleniumStarterRemoteProxy.configuredTimeZone = DEFAULT_TZ;
+        } else {
+            DockerSeleniumStarterRemoteProxy.configuredTimeZone = TimeZone.getTimeZone(configuredTimeZone);
+        }
     }
 
     @VisibleForTesting
@@ -379,7 +368,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
         configureScreenResolutionFromCapabilities(requestedCapability);
 
         // Check and configure time zone capabilities when they have been passed in the test config.
-        configureTimeZoneFromCapabilities(requestedCapability);
+        TimeZone timeZone = getConfigureTimeZoneFromCapabilities(requestedCapability);
 
         String browserName = requestedCapability.get(CapabilityType.BROWSER_NAME).toString();
 
@@ -394,13 +383,13 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
         if (!requestedCapability.containsKey(waitingForNode)) {
             LOGGER.log(Level.INFO, LOGGING_PREFIX + "Starting new node for {0}.", requestedCapability);
             requestedCapability.put(waitingForNode, 1);
-            poolExecutor.execute(() -> startDockerSeleniumContainer(browserName));
+            poolExecutor.execute(() -> startDockerSeleniumContainer(browserName, timeZone));
         } else {
             int attempts = (int) requestedCapability.get(waitingForNode);
             attempts++;
             long pendingTasks = poolExecutor.getTaskCount() - poolExecutor.getCompletedTaskCount();
             if (pendingTasks == 0) {
-                poolExecutor.execute(() -> startDockerSeleniumContainer(browserName));
+                poolExecutor.execute(() -> startDockerSeleniumContainer(browserName, timeZone));
             }
             requestedCapability.put(waitingForNode, attempts);
             if (attempts >= 30) {
@@ -410,11 +399,11 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
                 LOGGER.log(Level.FINE, LOGGING_PREFIX + "poolExecutor.getQueue().size() -> " + poolExecutor.getQueue().size());
                 LOGGER.log(Level.FINE, LOGGING_PREFIX + "poolExecutor.getActiveCount() -> " + poolExecutor.getActiveCount());
                 // TODO: Remove in version 3.3.1n
-                
+
                 LOGGER.log(Level.INFO, LOGGING_PREFIX + "Request has waited 30 attempts for a node, something " +
                         "went wrong with the previous attempts, creating a new node for {0}.", requestedCapability);
                 requestedCapability.put(waitingForNode, 1);
-                poolExecutor.execute(() -> startDockerSeleniumContainer(browserName));
+                poolExecutor.execute(() -> startDockerSeleniumContainer(browserName, timeZone));
             }
         }
         return null;
@@ -444,12 +433,12 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     }
 
     @VisibleForTesting
-    public boolean startDockerSeleniumContainer(String browser) {
-        return startDockerSeleniumContainer(browser, false);
+    public boolean startDockerSeleniumContainer(String browser, TimeZone timeZone) {
+        return startDockerSeleniumContainer(browser, timeZone, false);
     }
 
     @VisibleForTesting
-    public boolean startDockerSeleniumContainer(String browser, boolean forceCreation) {
+    public boolean startDockerSeleniumContainer(String browser, TimeZone timeZone, boolean forceCreation) {
 
         if (forceCreation || validateAmountOfDockerSeleniumContainers()) {
 
@@ -465,8 +454,8 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
                 attempts++;
                 final int nodePort = findFreePortInRange(LOWER_PORT_BOUNDARY, UPPER_PORT_BOUNDARY);
 
-                Map<String, String> envVars = buildEnvVars(browser, hostIpAddress, sendAnonymousUsageInfo, nodePolling,
-                        nodePort);
+                Map<String, String> envVars = buildEnvVars(browser, timeZone, hostIpAddress, sendAnonymousUsageInfo,
+                        nodePolling, nodePort);
 
                 String latestImage = containerClient.getLatestDownloadedImage(getDockerSeleniumImageName());
                 boolean containerCreated = containerClient
@@ -518,8 +507,8 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
         return false;
     }
 
-    private Map<String, String> buildEnvVars(String browser, String hostIpAddress, boolean sendAnonymousUsageInfo,
-                                             String nodePolling, int nodePort) {
+    private Map<String, String> buildEnvVars(String browser, TimeZone timeZone, String hostIpAddress,
+                                             boolean sendAnonymousUsageInfo, String nodePolling, int nodePort) {
         final int noVncPort = nodePort + NO_VNC_PORT_GAP;
         final int vncPort = nodePort + VNC_PORT_GAP;
         Map<String, String> envVars = new HashMap<>();
@@ -539,7 +528,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
         envVars.put("VNC_PORT", String.valueOf(vncPort));
         envVars.put("SCREEN_WIDTH", String.valueOf(getScreenWidth()));
         envVars.put("SCREEN_HEIGHT", String.valueOf(getScreenHeight()));
-        envVars.put("TZ", getTimeZone());
+        envVars.put("TZ", timeZone.getID());
         envVars.put("SELENIUM_NODE_REGISTER_CYCLE", "0");
         envVars.put("SEL_NODEPOLLING_MS", nodePolling);
         envVars.put("SELENIUM_NODE_PROXY_PARAMS", "de.zalando.ep.zalenium.proxy.DockerSeleniumRemoteProxy");
@@ -572,7 +561,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
                     } catch (InterruptedException e) {
                         LOGGER.log(Level.FINE, getId() + " Error sleeping before starting a Chrome container", e);
                     }
-                    startDockerSeleniumContainer(BrowserType.CHROME, true);
+                    startDockerSeleniumContainer(BrowserType.CHROME, getConfiguredTimeZone(), true);
                 }).start();
             } else {
                 new Thread(() -> {
@@ -581,7 +570,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
                     } catch (InterruptedException e) {
                         LOGGER.log(Level.FINE, getId() + " Error sleeping before starting a Firefox container", e);
                     }
-                    startDockerSeleniumContainer(BrowserType.FIREFOX, true);
+                    startDockerSeleniumContainer(BrowserType.FIREFOX, getConfiguredTimeZone(), true);
                 }).start();
             }
         }
@@ -633,19 +622,22 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     /*
     This method will search for a tz capability to be passed when creating a docker-selenium node.
     */
-    private void configureTimeZoneFromCapabilities(Map<String, Object> requestedCapability) {
+    private TimeZone getConfigureTimeZoneFromCapabilities(Map<String, Object> requestedCapability) {
         boolean wasConfiguredTimeZoneChanged = false;
         String timeZoneName = "tz";
+        TimeZone timeZone = getConfiguredTimeZone();
         if (requestedCapability.containsKey(timeZoneName)) {
-            String timeZone = requestedCapability.get(timeZoneName).toString();
-            setTimeZone(timeZone);
-            wasConfiguredTimeZoneChanged = true;
+            String timeZoneFromCapabilities = requestedCapability.get(timeZoneName).toString();
+            if (Arrays.asList(TimeZone.getAvailableIDs()).contains(timeZoneFromCapabilities)) {
+                timeZone = TimeZone.getTimeZone(timeZoneFromCapabilities);
+                wasConfiguredTimeZoneChanged = true;
+            }
         }
         // If the time zone parameter was not changed, we just set the defaults again.
         if (!wasConfiguredTimeZoneChanged) {
-            setTimeZone(getConfiguredTimeZone());
-            requestedCapability.put(timeZoneName, getConfiguredTimeZone());
+            requestedCapability.put(timeZoneName, timeZone.getID());
         }
+        return timeZone;
     }
 
     private boolean validateAmountOfDockerSeleniumContainers() {
