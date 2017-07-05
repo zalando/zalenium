@@ -16,7 +16,9 @@ import de.zalando.ep.zalenium.util.*;
 import org.apache.commons.io.FileUtils;
 import org.openqa.grid.common.RegistrationRequest;
 import org.openqa.grid.internal.Registry;
+import org.openqa.grid.internal.SessionTerminationReason;
 import org.openqa.grid.internal.TestSession;
+import org.openqa.grid.internal.TestSlot;
 import org.openqa.grid.internal.utils.CapabilityMatcher;
 import org.openqa.grid.internal.utils.HtmlRenderer;
 import org.openqa.grid.selenium.proxy.DefaultRemoteProxy;
@@ -40,6 +42,8 @@ import java.util.logging.Logger;
 @SuppressWarnings("WeakerAccess")
 public class CloudTestingRemoteProxy extends DefaultRemoteProxy {
 
+    @VisibleForTesting
+    public static final long DEFAULT_MAX_TEST_IDLE_TIME_SECS = 90L;
     private static final Logger logger = Logger.getLogger(CloudTestingRemoteProxy.class.getName());
     private static final GoogleAnalyticsApi defaultGA = new GoogleAnalyticsApi();
     private static final CommonProxyUtilities defaultCommonProxyUtilities = new CommonProxyUtilities();
@@ -48,7 +52,9 @@ public class CloudTestingRemoteProxy extends DefaultRemoteProxy {
     private static CommonProxyUtilities commonProxyUtilities = defaultCommonProxyUtilities;
     private static Environment env = defaultEnvironment;
     private final HtmlRenderer renderer = new CloudProxyHtmlRenderer(this);
+    private CloudProxyNodePoller cloudProxyNodePoller = null;
     private CapabilityMatcher capabilityHelper;
+    private long maxTestIdleTime = DEFAULT_MAX_TEST_IDLE_TIME_SECS;
 
     @SuppressWarnings("WeakerAccess")
     public CloudTestingRemoteProxy(RegistrationRequest request, Registry registry) {
@@ -100,6 +106,16 @@ public class CloudTestingRemoteProxy extends DefaultRemoteProxy {
         desiredCapabilities.setPlatform(Platform.ANY);
         registrationRequest.getConfiguration().capabilities.add(desiredCapabilities);
         return registrationRequest;
+    }
+
+    public long getMaxTestIdleTime() {
+        return maxTestIdleTime;
+    }
+
+    @SuppressWarnings("SameParameterValue")
+    @VisibleForTesting
+    public void setMaxTestIdleTime(long maxTestIdleTime) {
+        this.maxTestIdleTime = maxTestIdleTime;
     }
 
     @Override
@@ -263,4 +279,77 @@ public class CloudTestingRemoteProxy extends DefaultRemoteProxy {
         }
 
     }
+
+    @Override
+    public void startPolling() {
+        super.startPolling();
+        cloudProxyNodePoller = new CloudProxyNodePoller(this);
+        cloudProxyNodePoller.start();
+    }
+
+    @Override
+    public void stopPolling() {
+        super.stopPolling();
+        cloudProxyNodePoller.interrupt();
+    }
+
+    @Override
+    public void teardown() {
+        super.teardown();
+        stopPolling();
+    }
+
+    /*
+        Method to check for test inactivity, and terminate idle sessions
+     */
+    @VisibleForTesting
+    public void terminateIdleSessions() {
+        for (TestSlot testSlot : getTestSlots()) {
+            if (testSlot.getSession() != null &&
+                    (testSlot.getSession().getInactivityTime() >= (getMaxTestIdleTime() * 1000L))) {
+                long executionTime = (System.currentTimeMillis() - testSlot.getLastSessionStart()) / 1000;
+                getGa().testEvent(getProxyClassName(), testSlot.getSession().getRequestedCapabilities().toString(),
+                        executionTime);
+                addTestToDashboard(testSlot.getSession().getExternalKey().getKey());
+                getRegistry().forceRelease(testSlot, SessionTerminationReason.ORPHAN);
+                logger.log(Level.INFO, getProxyName() + " Releasing slot and terminating session due to inactivity.");
+            }
+        }
+    }
+
+    /*
+        Class to poll continuously the slots status to check if there is an idle test. It could happen that the test
+        did not finish properly so we need to release the slot as well.
+    */
+    static class CloudProxyNodePoller extends Thread {
+
+        private static long sleepTimeBetweenChecks = 500;
+        private CloudTestingRemoteProxy cloudProxy = null;
+
+        CloudProxyNodePoller(CloudTestingRemoteProxy cloudProxy) {
+            this.cloudProxy = cloudProxy;
+        }
+
+        protected long getSleepTimeBetweenChecks() {
+            return sleepTimeBetweenChecks;
+        }
+
+        @Override
+        public void run() {
+            while (true) {
+                /*
+                    Checking continuously for idle sessions. It may happen that the session is terminated abnormally
+                    remotely and the slot needs to be released locally as well.
+                */
+                cloudProxy.terminateIdleSessions();
+                try {
+                    Thread.sleep(getSleepTimeBetweenChecks());
+                } catch (InterruptedException e) {
+                    logger.log(Level.FINE, cloudProxy.getProxyName() + " Error while sleeping the thread.", e);
+                    return;
+                }
+            }
+        }
+    }
+
 }
