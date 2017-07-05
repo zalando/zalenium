@@ -52,7 +52,7 @@ public class TestUtils {
         return RegistrationRequest.build(nodeConfiguration);
     }
 
-    public static WebDriverRequest getMockedWebDriverRequestStartSession() {
+    public static WebDriverRequest getMockedWebDriverRequestStartSession(String browser, Platform platform) {
         WebDriverRequest request = mock(WebDriverRequest.class);
         when(request.getRequestURI()).thenReturn("session");
         when(request.getServletPath()).thenReturn("session");
@@ -61,8 +61,8 @@ public class TestUtils {
         when(request.getRequestType()).thenReturn(RequestType.START_SESSION);
         JsonObject jsonObject = new JsonObject();
         JsonObject desiredCapabilities = new JsonObject();
-        desiredCapabilities.addProperty(CapabilityType.BROWSER_NAME, BrowserType.IE);
-        desiredCapabilities.addProperty(CapabilityType.PLATFORM, Platform.WIN8.name());
+        desiredCapabilities.addProperty(CapabilityType.BROWSER_NAME, browser);
+        desiredCapabilities.addProperty(CapabilityType.PLATFORM, platform.name());
         jsonObject.add("desiredCapabilities", desiredCapabilities);
         when(request.getBody()).thenReturn(jsonObject.toString());
 
