@@ -35,8 +35,12 @@ import de.zalando.ep.zalenium.proxy.DockerSeleniumStarterRemoteProxy;
 @SuppressWarnings("ConstantConditions")
 public class DockerContainerClient implements ContainerClient {
 
-    private static final String DEFAULT_DOCKER_NETWORK_NAME = "bridge";
+    // Allows access from the docker-selenium containers to a Mac host. Fix until docker for mac supports it natively.
+    // See https://github.com/moby/moby/issues/22753
     private static final String DEFAULT_DOCKER_NETWORK_MODE = "default";
+    private static final String DOCKER_FOR_MAC_LOCALHOST_IP = "192.168.65.1";
+    private static final String DEFAULT_DOCKER_NETWORK_NAME = "bridge";
+    private static final String DOCKER_FOR_MAC_LOCALHOST_NAME = "mac.host.local";
     private static final String NODE_MOUNT_POINT = "/tmp/node";
     private static final String[] PROTECTED_NODE_MOUNT_POINTS = {
             "/var/run/docker.sock",
@@ -74,7 +78,7 @@ public class DockerContainerClient implements ContainerClient {
 
         return containerList.stream()
                 .filter(container -> containerNameSearch.equalsIgnoreCase(container.names().get(0)))
-                .findFirst().get().id();
+                .findFirst().map(Container::id).orElse(null);
     }
 
     public InputStream copyFiles(String containerId, String folderName) {
@@ -192,6 +196,7 @@ public class DockerContainerClient implements ContainerClient {
                 .appendBinds(binds)
                 .portBindings(portBindings)
                 .networkMode(networkMode)
+                .extraHosts(String.format("%s:%s", DOCKER_FOR_MAC_LOCALHOST_NAME, DOCKER_FOR_MAC_LOCALHOST_IP))
                 .autoRemove(true)
                 .privileged(true)
                 .build();
@@ -309,6 +314,9 @@ public class DockerContainerClient implements ContainerClient {
     @Override
     public String getContainerIp(String containerName) {
         String containerId = this.getContainerId(containerName);
+        if (containerId == null) {
+            return null;
+        }
         try {
             ContainerInfo containerInfo = dockerClient.inspectContainer(containerId);
             if (containerInfo.networkSettings().ipAddress().trim().isEmpty()) {
