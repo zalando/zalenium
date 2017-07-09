@@ -206,7 +206,7 @@ public class DockerContainerClient implements ContainerClient {
                 String hostName = dockerClient.info().name();
                 extraHosts.add(String.format("%s:%s", hostName, "127.0.1.0"));
             } catch (DockerException | InterruptedException e) {
-                logger.log(Level.FINE, nodeId + " Error while starting getting host name", e);
+                logger.log(Level.FINE, nodeId + " Error while getting host name", e);
             }
         }
 
