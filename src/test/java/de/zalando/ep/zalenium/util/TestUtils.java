@@ -204,6 +204,8 @@ public class TestUtils {
         when(zalenium.status()).thenReturn("running");
         when(zalenium.image()).thenReturn("dosel/zalenium");
 
+        Info dockerInfo = mock(Info.class);
+        when(dockerInfo.name()).thenReturn("ubuntu_vm");
 
         try {
             URL logsLocation = TestUtils.class.getClassLoader().getResource("logs.tar");
@@ -225,6 +227,8 @@ public class TestUtils {
 
             when(dockerClient.execStart(anyString())).thenReturn(logStream);
             doNothing().when(dockerClient).stopContainer(anyString(), anyInt());
+
+            when(dockerClient.info()).thenReturn(dockerInfo);
 
             when(dockerClient.createContainer(any(ContainerConfig.class), anyString())).thenReturn(containerCreation);
 
