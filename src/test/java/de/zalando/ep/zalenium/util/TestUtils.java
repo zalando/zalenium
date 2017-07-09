@@ -152,8 +152,12 @@ public class TestUtils {
         temporaryFolder.newFile("videos/dashboard.html");
     }
 
-    @SuppressWarnings("ConstantConditions")
     public static DockerContainerClient getMockedDockerContainerClient() {
+        return getMockedDockerContainerClient("default");
+    }
+
+    @SuppressWarnings("ConstantConditions")
+    public static DockerContainerClient getMockedDockerContainerClient(String networkName) {
         DockerClient dockerClient = mock(DockerClient.class);
         ExecCreation execCreation = mock(ExecCreation.class);
         LogStream logStream = mock(LogStream.class);
@@ -177,7 +181,7 @@ public class TestUtils {
         when(homeFolderMount.source()).thenReturn("/tmp/folder");
         when(containerInfo.mounts()).thenReturn(ImmutableList.of(tmpMountedMount, homeFolderMount));
         when(attachedNetwork.ipAddress()).thenReturn("127.0.0.1");
-        when(networkSettings.networks()).thenReturn(ImmutableMap.of("default", attachedNetwork));
+        when(networkSettings.networks()).thenReturn(ImmutableMap.of(networkName, attachedNetwork));
         when(networkSettings.ipAddress()).thenReturn("");
         when(containerInfo.networkSettings()).thenReturn(networkSettings);
 

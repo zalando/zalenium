@@ -52,7 +52,8 @@ public class DockerSeleniumRemoteProxyTest {
     @Parameters
     public static Collection<Object[]> data() {
         return Arrays.asList(new Object[][] {
-                {TestUtils.getMockedDockerContainerClient()}
+                {TestUtils.getMockedDockerContainerClient()},
+                {TestUtils.getMockedDockerContainerClient("host")}
         });
     }
 
