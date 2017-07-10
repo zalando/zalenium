@@ -38,6 +38,17 @@ Zalenium's main goal is: to allow anyone to have a disposable and flexible Selen
 
 Part of the idea comes from this [Sauce Labs post](https://saucelabs.com/blog/introducing-the-sauce-plugin-for-selenium-grid).
 
+### What does **Zalenium** mean?
+As you can imagine, it is the result of mixing _[Zalando](https://tech.zalando.com)_ and _[Selenium](http://www.seleniumhq.org/)_. As
+mentioned before, this project's aim is to provide a simple way to create a grid and contribute to the Selenium community.
+Nevertheless, this is _**not**_ an official [Selenium](http://www.seleniumhq.org/) project.
+We kindly ask you to post [issues](https://github.com/zalando/zalenium/issues/new) or
+[questions](https://gitter.im/zalando/zalenium) through the channels we created for that.
+
+***
+
+## Contents
+
 * [Getting Started](#getting-started)
   * [Prerequisites](#prerequisites)
   * [Set it up](#set-it-up)
