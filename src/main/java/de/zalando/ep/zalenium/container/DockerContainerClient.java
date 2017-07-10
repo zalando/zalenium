@@ -35,8 +35,13 @@ import de.zalando.ep.zalenium.proxy.DockerSeleniumStarterRemoteProxy;
 @SuppressWarnings("ConstantConditions")
 public class DockerContainerClient implements ContainerClient {
 
-    private static final String DEFAULT_DOCKER_NETWORK_NAME = "bridge";
+    // Allows access from the docker-selenium containers to a Mac host. Fix until docker for mac supports it natively.
+    // See https://github.com/moby/moby/issues/22753
+    private static final String DOCKER_FOR_MAC_LOCALHOST_IP = "192.168.65.1";
+    private static final String DOCKER_FOR_MAC_LOCALHOST_NAME = "mac.host.local";
     private static final String DEFAULT_DOCKER_NETWORK_MODE = "default";
+    private static final String DEFAULT_DOCKER_NETWORK_NAME = "bridge";
+    private static final String DOCKER_NETWORK_HOST_MODE_NAME = "host";
     private static final String NODE_MOUNT_POINT = "/tmp/node";
     private static final String[] PROTECTED_NODE_MOUNT_POINTS = {
             "/var/run/docker.sock",
@@ -74,7 +79,7 @@ public class DockerContainerClient implements ContainerClient {
 
         return containerList.stream()
                 .filter(container -> containerNameSearch.equalsIgnoreCase(container.names().get(0)))
-                .findFirst().get().id();
+                .findFirst().map(Container::id).orElse(null);
     }
 
     public InputStream copyFiles(String containerId, String folderName) {
@@ -188,13 +193,32 @@ public class DockerContainerClient implements ContainerClient {
         portBindings.put(noVncPort, portBindingList);
 
         String networkMode = getZaleniumNetwork(zaleniumContainerName);
+
+        List<String> extraHosts = new ArrayList<>();
+        extraHosts.add(String.format("%s:%s", DOCKER_FOR_MAC_LOCALHOST_NAME, DOCKER_FOR_MAC_LOCALHOST_IP));
+
+        // Allows "--net=host" work. Only supported for Linux.
+        if (DOCKER_NETWORK_HOST_MODE_NAME.equalsIgnoreCase(networkMode)) {
+            envVars.put("SELENIUM_HUB_HOST", "localhost");
+            envVars.put("SELENIUM_NODE_HOST", "localhost");
+            envVars.put("PICK_ALL_RANDOM_PORTS", "true");
+            try {
+                String hostName = dockerClient.info().name();
+                extraHosts.add(String.format("%s:%s", hostName, "127.0.1.0"));
+            } catch (DockerException | InterruptedException e) {
+                logger.log(Level.FINE, nodeId + " Error while getting host name", e);
+            }
+        }
+
         HostConfig hostConfig = HostConfig.builder()
                 .appendBinds(binds)
                 .portBindings(portBindings)
                 .networkMode(networkMode)
+                .extraHosts(extraHosts)
                 .autoRemove(true)
                 .privileged(true)
                 .build();
+
 
         List<String> flattenedEnvVars = envVars.entrySet().stream()
                 .map(e -> e.getKey() + "=" + e.getValue())
@@ -309,6 +333,9 @@ public class DockerContainerClient implements ContainerClient {
     @Override
     public String getContainerIp(String containerName) {
         String containerId = this.getContainerId(containerName);
+        if (containerId == null) {
+            return null;
+        }
         try {
             ContainerInfo containerInfo = dockerClient.inspectContainer(containerId);
             if (containerInfo.networkSettings().ipAddress().trim().isEmpty()) {
