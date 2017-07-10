@@ -27,7 +27,9 @@
   * [Screen resolution](#screen-resolution)
   * [Disable video recording](#disable-video-recording)
   * [Time zone](#time-zone)
-
+* [Accessing the host](#accessing-the-host)
+  * [Linux](#linux)
+  * [OSX](#osx)
 
 ## Initial setup
 
@@ -334,3 +336,30 @@ argument. Example code in Java :
     options.addArguments("lang=en_GB");
     desiredCapabilities.setCapability(ChromeOptions.CAPABILITY, options);
 ```
+
+## Accessing the host
+This is the scenario where you are running some tests with Zalenium, and the SUT (system under test) is running on your host machine.
+Therefore, you want your tests to access your SUT.
+
+### Linux
+It is quite simple to access the host machine from Zalenium in a Linux environment. Just add the flag `--net=host` and it just works.
+If your SUT is running on your machine on port 8080, you can do `http://localhost:8080` from inside the containers or in your tests.
+Example:
+
+With `docker run`:
+  ```sh
+    docker run --rm -ti --name zalenium --net=host \
+      -v /var/run/docker.sock:/var/run/docker.sock \
+      -v /tmp/videos:/home/seluser/videos \
+      --privileged dosel/zalenium start 
+  ```
+
+With the one line starter:
+  ```sh
+    curl -sSL https://raw.githubusercontent.com/dosel/t/i/p | bash -s start --docker-opt '--net=host'
+  ```
+
+### OSX
+In OSX environments the `--net=host` flag is not suported yet. For that, we have a workaround, which is to use `mac.host.local` to access
+the host machine. So if the SUT is running on port 8080, you can do `http://mac.host.local:8080` to access it.
+
