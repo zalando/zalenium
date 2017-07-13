@@ -153,7 +153,7 @@ Please take caution in mounting system folders such as `/etc`, as this behavior 
   * `--sauceLabsEnabled` -> Start Sauce Labs node or not. Defaults to 'false'.
   * `--browserStackEnabled` -> Start BrowserStack node or not. Defaults to 'false'.
   * `--testingbotEnabled` -> Start TestingBot node or not. Defaults to 'false'.
-  * `--startTunnel` -> When using a cloud testing platform is enabled, starts the tunnel to allow local testing. Defaults to 'false'.
+  * `--startTunnel` -> When a cloud testing platform is enabled, starts the tunnel to allow local testing. Defaults to 'false'. See the documentation on each provider on usage and any necessary Selenium capabilities. The local identifier used when creating the tunnel is `zalenium`. [Sauce Labs](https://wiki.saucelabs.com/display/DOCS/Using+Multiple+Sauce+Connect+Tunnels), [BrowserStack](https://www.browserstack.com/local-testing), [TestingBot](https://testingbot.com/support/other/tunnel)
   * `--videoRecordingEnabled` -> Sets if video is recorded in every test. Defaults to 'true'.
   * `--screenWidth` -> Sets the screen width. Defaults to 1900.
   * `--screenHeight` -> Sets the screen height. Defaults to 1880.
