@@ -2,6 +2,7 @@ package de.zalando.ep.zalenium.container;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableList;
 import com.spotify.docker.client.DefaultDockerClient;
 import com.spotify.docker.client.DockerClient;
 import com.spotify.docker.client.LogStream;
@@ -42,6 +43,7 @@ public class DockerContainerClient implements ContainerClient {
     private static final String DEFAULT_DOCKER_NETWORK_MODE = "default";
     private static final String DEFAULT_DOCKER_NETWORK_NAME = "bridge";
     private static final String DOCKER_NETWORK_HOST_MODE_NAME = "host";
+    private static final List<String> DEFAULT_DOCKER_EXTRA_HOSTS = new ArrayList<>();
     private static final String NODE_MOUNT_POINT = "/tmp/node";
     private static final String[] PROTECTED_NODE_MOUNT_POINTS = {
             "/var/run/docker.sock",
@@ -53,6 +55,7 @@ public class DockerContainerClient implements ContainerClient {
     private DockerClient dockerClient = new DefaultDockerClient("unix:///var/run/docker.sock");
     private String nodeId;
     private String zaleniumNetwork;
+    private List<String> zaleniumExtraHosts;
     private List<ContainerMount> mntFolders = new ArrayList<>();
     private boolean mntFoldersChecked = false;
 
@@ -210,6 +213,10 @@ public class DockerContainerClient implements ContainerClient {
             }
         }
 
+        // Reflect extra hosts of the hub container
+        final List<String> hubExtraHosts = getContainerExtraHosts(zaleniumContainerName);
+        hubExtraHosts.stream().forEach(host -> extraHosts.add(host));
+
         HostConfig hostConfig = HostConfig.builder()
                 .appendBinds(binds)
                 .portBindings(portBindings)
@@ -288,6 +295,27 @@ public class DockerContainerClient implements ContainerClient {
         );
 
         return result;
+    }
+
+    private List<String> getContainerExtraHosts(String zaleniumContainerName) {
+        if (zaleniumExtraHosts != null) {
+            return zaleniumExtraHosts;
+        }
+        String containerId = getContainerId(zaleniumContainerName);
+        ContainerInfo containerInfo = null;
+        try {
+            containerInfo = dockerClient.inspectContainer(containerId);
+            zaleniumExtraHosts = containerInfo.hostConfig().extraHosts();
+            if (zaleniumExtraHosts == null) {
+                zaleniumExtraHosts = DEFAULT_DOCKER_EXTRA_HOSTS;
+            }
+            return zaleniumExtraHosts;
+        } catch (DockerException | InterruptedException e) {
+            logger.log(Level.WARNING, nodeId + " Error while getting Zalenium extra hosts.", e);
+            ga.trackException(e);
+        }
+        zaleniumExtraHosts = DEFAULT_DOCKER_EXTRA_HOSTS;
+        return zaleniumExtraHosts;
     }
 
     @Override
