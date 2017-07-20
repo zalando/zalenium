@@ -21,6 +21,9 @@ Features are added often to Zalenium, we invite you to test it, to contribute, t
 have, see [contributing](CONTRIBUTING.md) for more details.
 
 ### Why?
+
+> Thanks for open sourcing this. Our test suite run time has dropped from more than an hour to six minutes. — [@TKueck](https://twitter.com/Tkueck/status/887425829273088000)
+
 We know how complicated it is to:
 * Have a stable grid to run UI tests with Selenium
 * Maintain it over time (keep up with new browser, Selenium and drivers versions)
