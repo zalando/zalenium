@@ -306,15 +306,13 @@ public class DockerContainerClient implements ContainerClient {
         try {
             containerInfo = dockerClient.inspectContainer(containerId);
             zaleniumExtraHosts = containerInfo.hostConfig().extraHosts();
-            if (zaleniumExtraHosts == null) {
-                zaleniumExtraHosts = DEFAULT_DOCKER_EXTRA_HOSTS;
-            }
-            return zaleniumExtraHosts;
         } catch (DockerException | InterruptedException e) {
             logger.log(Level.WARNING, nodeId + " Error while getting Zalenium extra hosts.", e);
             ga.trackException(e);
         }
-        zaleniumExtraHosts = DEFAULT_DOCKER_EXTRA_HOSTS;
+        if (zaleniumExtraHosts == null) {
+            zaleniumExtraHosts = DEFAULT_DOCKER_EXTRA_HOSTS;
+        }
         return zaleniumExtraHosts;
     }
 
