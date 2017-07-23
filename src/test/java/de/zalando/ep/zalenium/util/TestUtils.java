@@ -169,6 +169,7 @@ public class TestUtils {
 
         AttachedNetwork attachedNetwork = mock(AttachedNetwork.class);
         NetworkSettings networkSettings = mock(NetworkSettings.class);
+        HostConfig hostConfig = mock(HostConfig.class);
 
         ImageInfo imageInfo = mock(ImageInfo.class);
         ContainerConfig containerConfig = mock(ContainerConfig.class);
@@ -184,7 +185,8 @@ public class TestUtils {
         when(networkSettings.networks()).thenReturn(ImmutableMap.of(networkName, attachedNetwork));
         when(networkSettings.ipAddress()).thenReturn("");
         when(containerInfo.networkSettings()).thenReturn(networkSettings);
-
+        when(hostConfig.extraHosts()).thenReturn(null);
+        when(containerInfo.hostConfig()).thenReturn(hostConfig);
 
         String containerId = RandomStringUtils.randomAlphabetic(30).toLowerCase();
         Container container_40000 = mock(Container.class);
