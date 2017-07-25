@@ -28,8 +28,8 @@
   * [Disable video recording](#disable-video-recording)
   * [Time zone](#time-zone)
 * [Accessing the host](#accessing-the-host)
-  * [Linux](#linux)
-  * [OSX](#osx)
+  * [Linux](#linux-env)
+  * [OSX](#osx-env)
 
 ## Initial setup
 
@@ -153,7 +153,10 @@ Please take caution in mounting system folders such as `/etc`, as this behavior 
   * `--sauceLabsEnabled` -> Start Sauce Labs node or not. Defaults to 'false'.
   * `--browserStackEnabled` -> Start BrowserStack node or not. Defaults to 'false'.
   * `--testingbotEnabled` -> Start TestingBot node or not. Defaults to 'false'.
-  * `--startTunnel` -> When a cloud testing platform is enabled, starts the tunnel to allow local testing. Defaults to 'false'. See the documentation on each provider on usage and any necessary Selenium capabilities. The local identifier used when creating the tunnel is `zalenium`. [Sauce Labs](https://wiki.saucelabs.com/display/DOCS/Using+Multiple+Sauce+Connect+Tunnels), [BrowserStack](https://www.browserstack.com/local-testing), [TestingBot](https://testingbot.com/support/other/tunnel)
+  * `--startTunnel` -> When a cloud testing platform is enabled, starts the tunnel to allow local testing. Defaults to 'false'.
+  See the documentation on each provider on usage and any necessary Selenium capabilities. The local identifier used when creating
+  the tunnel is `zalenium`. [Sauce Labs](https://wiki.saucelabs.com/display/DOCS/Using+Multiple+Sauce+Connect+Tunnels),
+  [BrowserStack](https://www.browserstack.com/local-testing), [TestingBot](https://testingbot.com/support/other/tunnel)
   * `--videoRecordingEnabled` -> Sets if video is recorded in every test. Defaults to 'true'.
   * `--screenWidth` -> Sets the screen width. Defaults to 1900.
   * `--screenHeight` -> Sets the screen height. Defaults to 1880.
@@ -341,7 +344,7 @@ argument. Example code in Java :
 This is the scenario where you are running some tests with Zalenium, and the SUT (system under test) is running on your host machine.
 Therefore, you want your tests to access your SUT.
 
-### Linux
+### Linux Env
 It is quite simple to access the host machine from Zalenium in a Linux environment. Just add the flag `--net=host` and it just works.
 If your SUT is running on your machine on port 8080, you can do `http://localhost:8080` from inside the containers or in your tests.
 Example:
@@ -359,7 +362,13 @@ With the one line starter:
     curl -sSL https://raw.githubusercontent.com/dosel/t/i/p | bash -s start --docker-opt '--net=host'
   ```
 
-### OSX
+### OSX Env
 In OSX environments the `--net=host` flag is not suported yet. For that, we have a workaround, which is to use `mac.host.local` to access
 the host machine. So if the SUT is running on port 8080, you can do `http://mac.host.local:8080` to access it.
+
+
+## Adding hosts to the containers
+Sometimes you need to add host entries to the `/etc/hosts` file in order to mock dependencies, reach parts of your test infrastructure,
+or just to simplify your test code. Zalenium supports the `--add-host` flag in `docker run ...` and the `extra_hosts` option in
+docker-compose. You can see an example [here](./docker/docker-compose-extra-hosts.yaml)
 
