@@ -2,7 +2,6 @@ package de.zalando.ep.zalenium.container;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableList;
 import com.spotify.docker.client.DefaultDockerClient;
 import com.spotify.docker.client.DockerClient;
 import com.spotify.docker.client.LogStream;
@@ -215,7 +214,7 @@ public class DockerContainerClient implements ContainerClient {
 
         // Reflect extra hosts of the hub container
         final List<String> hubExtraHosts = getContainerExtraHosts(zaleniumContainerName);
-        hubExtraHosts.stream().forEach(host -> extraHosts.add(host));
+        extraHosts.addAll(hubExtraHosts);
 
         HostConfig hostConfig = HostConfig.builder()
                 .appendBinds(binds)
@@ -302,7 +301,7 @@ public class DockerContainerClient implements ContainerClient {
             return zaleniumExtraHosts;
         }
         String containerId = getContainerId(zaleniumContainerName);
-        ContainerInfo containerInfo = null;
+        ContainerInfo containerInfo;
         try {
             containerInfo = dockerClient.inspectContainer(containerId);
             zaleniumExtraHosts = containerInfo.hostConfig().extraHosts();

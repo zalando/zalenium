@@ -86,7 +86,6 @@ public class ParallelIT  {
 
         try {
             webDriver.set(new RemoteWebDriver(new URL(DOCKER_SELENIUM_URL), desiredCapabilities));
-            webDriver.get().manage().window().maximize();
         } catch (Exception e) {
             LOGGER.warn("FAILED {} on {} - {}", method.getName(), browserType, platform.name());
             throw e;
