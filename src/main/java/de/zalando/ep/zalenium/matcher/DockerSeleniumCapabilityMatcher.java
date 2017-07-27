@@ -33,7 +33,8 @@ public class DockerSeleniumCapabilityMatcher extends DefaultCapabilityMatcher {
             can be matched by any of the Cloud Testing Providers.
          */
         boolean browserVersionCapabilityMatches = false;
-        if (requestedCapability.containsKey(CapabilityType.VERSION)) {
+        if (requestedCapability.containsKey(CapabilityType.VERSION) &&
+                requestedCapability.get(CapabilityType.VERSION) != null) {
             String requestedVersion = requestedCapability.get(CapabilityType.VERSION).toString();
             if ("latest".equalsIgnoreCase(requestedVersion)) {
                 requestedCapability.remove(CapabilityType.VERSION);

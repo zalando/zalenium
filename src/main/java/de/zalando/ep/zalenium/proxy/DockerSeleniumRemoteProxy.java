@@ -56,6 +56,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     private static boolean videoRecordingEnabled;
     private static Environment env = defaultEnvironment;
     private final HtmlRenderer renderer = new WebProxyHtmlRendererBeta(this);
+    private final ContainerClientRegistration registration;
     private ContainerClient containerClient = ContainerFactory.getContainerClient();
     private int amountOfExecutedTests;
     private long maxTestIdleTimeSecs;
@@ -65,7 +66,6 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     private DockerSeleniumNodePoller dockerSeleniumNodePollerThread = null;
     private GoogleAnalyticsApi ga = new GoogleAnalyticsApi();
     private CapabilityMatcher capabilityHelper;
-    private final ContainerClientRegistration registration;
 
     public DockerSeleniumRemoteProxy(RegistrationRequest request, Registry registry) {
         super(request, registry);
@@ -129,19 +129,17 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         if (increaseCounter()) {
             TestSession newSession = super.getNewSession(requestedCapability);
             LOGGER.log(Level.FINE, getId() + " Creating session for: " + requestedCapability.toString());
-            String browserName = requestedCapability.getOrDefault(CapabilityType.BROWSER_NAME, "").toString();
-            testName = requestedCapability.getOrDefault("name", "").toString();
+            String browserName = requestedCapability.get(CapabilityType.BROWSER_NAME).toString();
+            testName = getCapability(requestedCapability, "name", "");
             if (testName.isEmpty()) {
                 testName = newSession.getExternalKey() != null ?
                         newSession.getExternalKey().getKey() :
                         newSession.getInternalKey();
             }
-            testGroup = requestedCapability.getOrDefault("group", "").toString();
-            if (requestedCapability.containsKey("recordVideo")) {
-                boolean videoRecording = Boolean.parseBoolean(requestedCapability.get("recordVideo").toString());
-                setVideoRecordingEnabled(videoRecording);
-            }
-            String browserVersion = newSession.getSlot().getCapabilities().getOrDefault("version", "").toString();
+            testGroup = getCapability(requestedCapability, "group", "");
+            boolean videoRecording = Boolean.parseBoolean(getCapability(requestedCapability, "recordVideo", "true"));
+            setVideoRecordingEnabled(videoRecording);
+            String browserVersion = getCapability(newSession.getSlot().getCapabilities(), "version", "");
             testInformation = new TestInformation(testName, testName, "Zalenium", browserName, browserVersion,
                     Platform.LINUX.name());
             testInformation.setVideoRecorded(isVideoRecordingEnabled());
@@ -235,6 +233,13 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         }
         amountOfExecutedTests++;
         return true;
+    }
+
+    private String getCapability(Map<String, Object> requestedCapability, String capabilityName, String defaultValue) {
+        if (requestedCapability.containsKey(capabilityName) && requestedCapability.get(capabilityName) != null) {
+            return requestedCapability.get(capabilityName).toString();
+        }
+        return defaultValue;
     }
 
     /*
