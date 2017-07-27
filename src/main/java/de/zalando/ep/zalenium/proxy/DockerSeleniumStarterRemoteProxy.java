@@ -275,7 +275,8 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     }
 
     public static Dimension getConfiguredScreenSize() {
-        if (configuredScreenSize.getWidth() <= 0 || configuredScreenSize.getHeight() <= 0) {
+        if (configuredScreenSize == null ||
+                configuredScreenSize.getWidth() <= 0 || configuredScreenSize.getHeight() <= 0) {
             return DEFAULT_SCREEN_SIZE;
         }
         return DockerSeleniumStarterRemoteProxy.configuredScreenSize;

@@ -232,7 +232,6 @@ DockerTerminate()
         else
             RANDOM_USER_GA_ID=$(docker info 2>&1 | grep -Po '(?<=^ID: )(\w{4}:.+)')
         fi
-        echo $RANDOM_USER_GA_ID
 
         # Gathering the options used to start Zalenium, in order to learn about the used options
         ZALENIUM_STOP_COMMAND="zalenium.sh stop"
@@ -378,7 +377,6 @@ StartUp()
     else
         RANDOM_USER_GA_ID=$(docker info 2>&1 | grep -Po '(?<=^ID: )(\w{4}:.+)')
     fi
-    echo $RANDOM_USER_GA_ID
 
     export ZALENIUM_GA_API_VERSION=${GA_API_VERSION}
     export ZALENIUM_GA_TRACKING_ID=${GA_TRACKING_ID}

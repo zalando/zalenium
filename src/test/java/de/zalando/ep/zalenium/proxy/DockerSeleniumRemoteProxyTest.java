@@ -119,6 +119,21 @@ public class DockerSeleniumRemoteProxyTest {
     }
 
     @Test
+    public void sessionGetsCreatedEvenIfCapabilitiesAreNull() {
+        // Supported desired capability for the test session
+        Map<String, Object> requestedCapability = getCapabilitySupportedByDockerSelenium();
+        requestedCapability.put("name", null);
+        requestedCapability.put("group", null);
+        requestedCapability.put("version", null);
+
+        TestSession newSession = proxy.getNewSession(requestedCapability);
+        Assert.assertNotNull(newSession);
+
+        Assert.assertTrue(proxy.getTestGroup().isEmpty());
+        Assert.assertEquals(newSession.getInternalKey(), proxy.getTestName());
+    }
+
+    @Test
     public void noSessionIsCreatedWhenCapabilitiesAreNotSupported() {
         // Non supported capabilities
         Map<String, Object> requestedCapability = new HashMap<>();
