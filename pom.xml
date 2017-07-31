@@ -178,6 +178,7 @@
                                     <includes>
                                         <include>LICENSE.md</include>
                                         <include>Analytics.md</include>
+                                        <include>scm-source.json</include>
                                     </includes>
                                 </resource>
                                 <resource>

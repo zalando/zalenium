@@ -403,6 +403,7 @@ COPY zalando.ico /home/seluser/
 COPY css/ /home/seluser/css/
 COPY js/ /home/seluser/js/
 COPY index.html /home/seluser/index.html
+COPY scm-source.json /
 COPY ${ZAL_VER}.jar /home/seluser/${ZAL_VER}.jar
 
 #-----------------#

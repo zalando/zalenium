@@ -8,6 +8,8 @@ set -e
 
 echo "TRAVIS_TAG=${TRAVIS_TAG}"
 
+cat scm-source.json
+
 if [ "$TRAVIS_PULL_REQUEST" = "false" ] && [ -n "${TRAVIS_TAG}" ] && [ "${TRAVIS_TAG}" != "latest" ]; then
 	echo "Building image..."
 	mvn clean package -Pbuild-docker-image -DskipTests=true
