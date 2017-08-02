@@ -48,19 +48,17 @@ public class KubernetesContainerClient implements ContainerClient {
 
     private static final Logger logger = Logger.getLogger(KubernetesContainerClient.class.getName());
     
-    private final KubernetesClient client;
+    private KubernetesClient client;
     @SuppressWarnings("unused")
-    private final OpenShiftClient oClient;
-    
-    private String hostname;
-    
+    private OpenShiftClient oClient;
+
     private String zaleniumAppName;
     
-    private final Pod zaleniumPod;
+    private Pod zaleniumPod;
 
-    private final Map<String, String> createdByZaleniumMap;
-    private final Map<String, String> appLabelMap;
-    private final Map<String, String> deploymentConfigLabelMap;
+    private Map<String, String> createdByZaleniumMap;
+    private Map<String, String> appLabelMap;
+    private Map<String, String> deploymentConfigLabelMap;
 
     private Optional<VolumeMount> sharedFolderVolumeMount;
 
@@ -83,50 +81,53 @@ public class KubernetesContainerClient implements ContainerClient {
         this.environment = environment;
         this.createDoneablePod = createDoneablePod;
         this.createDoneableService = createDoneableService;
-        
-        this.client = client;
-        String kubernetesFlavour;
-        if (client.isAdaptable(OpenShiftClient.class)) {
-            oClient = client.adapt(OpenShiftClient.class);
-            kubernetesFlavour = "OpenShift";
+        try {
+            this.client = client;
+            String kubernetesFlavour;
+            if (client.isAdaptable(OpenShiftClient.class)) {
+                oClient = client.adapt(OpenShiftClient.class);
+                kubernetesFlavour = "OpenShift";
+            }
+            else {
+                kubernetesFlavour = "Vanilla Kubernetes";
+                oClient = null;
+            }
+
+            // Lookup our current hostname, this lets us lookup ourselves via the kubernetes api
+            String hostname = findHostname();
+
+            zaleniumPod = client.pods().withName(hostname).get();
+
+            String appName = zaleniumPod.getMetadata().getLabels().get("app");
+            String deploymentConfig = zaleniumPod.getMetadata().getLabels().get("deploymentconfig");
+
+            appLabelMap = new HashMap<>();
+            appLabelMap.put("app", appName);
+
+            deploymentConfigLabelMap = new HashMap<>();
+            deploymentConfigLabelMap.put("deploymentconfig", deploymentConfig);
+
+            createdByZaleniumMap = new HashMap<>();
+            createdByZaleniumMap.put("createdBy", appName);
+            zaleniumAppName = appName;
+
+            discoverSharedFolderMount();
+
+            buildResourceMaps();
+
+            logger.log(Level.INFO,
+                    "Kubernetes support initialised.\n"
+                            + "\tPod name: {0}\n"
+                            + "\tapp label: {1}\n"
+                            + "\tzalenium service name: {2}\n"
+                            + "\tKubernetes flavour: {3}\n"
+                            + "\tSelenium Pod Resource Limits: {4}\n"
+                            + "\tSelenium Pod Resource Requests: {5}",
+                    new Object[] {hostname, appName, zaleniumAppName, kubernetesFlavour,
+                            seleniumPodLimits.toString(), seleniumPodRequests.toString() });
+        } catch (Exception e) {
+            logger.log(Level.WARNING, "Error initialising Kubernetes support.", e);
         }
-        else {
-            kubernetesFlavour = "Vanilla Kubernetes";
-            oClient = null;
-        }
-        
-        // Lookup our current hostname, this lets us lookup ourselves via the kubernetes api
-        hostname = findHostname();
-        
-        zaleniumPod = client.pods().withName(hostname).get();
-        
-        String appName = zaleniumPod.getMetadata().getLabels().get("app");
-        String deploymentConfig = zaleniumPod.getMetadata().getLabels().get("deploymentconfig");
-        
-        appLabelMap = new HashMap<>();
-        appLabelMap.put("app", appName);
-        
-        deploymentConfigLabelMap = new HashMap<>();
-        deploymentConfigLabelMap.put("deploymentconfig", deploymentConfig);
-        
-        createdByZaleniumMap = new HashMap<>();
-        createdByZaleniumMap.put("createdBy", appName);
-        zaleniumAppName = appName;
-        
-        discoverSharedFolderMount();
-        
-        buildResourceMaps();
-        
-        logger.log(Level.INFO,
-                   "Kubernetes support initialised.\n"
-                   + "\tPod name: {0}\n"
-                   + "\tapp label: {1}\n"
-                   + "\tzalenium service name: {2}\n"
-                   + "\tKubernetes flavour: {3}\n"
-                   + "\tSelenium Pod Resource Limits: {4}\n"
-                   + "\tSelenium Pod Resource Requests: {5}",
-                   new Object[] { hostname, appName, zaleniumAppName, kubernetesFlavour,
-                           seleniumPodLimits.toString(), seleniumPodRequests.toString() });
     }
     
     private void buildResourceMaps() {

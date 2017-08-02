@@ -428,12 +428,12 @@ StartUp()
     echo $! > ${PID_PATH_DOCKER_SELENIUM_NODE}
 
     if ! timeout --foreground "${OVERRIDE_WAIT_TIME:-30s}" bash -c WaitStarterProxy; then
-        echo "StarterRemoteProxy failed to start after 30 seconds, failing..."
+        echo "StarterRemoteProxy failed to start after $OVERRIDE_WAIT_TIME seconds, failing..."
         exit 12
     fi
 
     if ! timeout --foreground "${OVERRIDE_WAIT_TIME:-30s}" bash -c WaitStarterProxyToRegister; then
-        echo "StarterRemoteProxy failed to register to the hub after 30 seconds, failing..."
+        echo "StarterRemoteProxy failed to register to the hub after $OVERRIDE_WAIT_TIME seconds, failing..."
         exit 13
     fi
     echo "DockerSeleniumStarter node started!"
