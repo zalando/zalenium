@@ -17,8 +17,8 @@ you need a different browser, your tests can get redirected to a cloud testing p
 [BrowserStack](https://www.browserstack.com/), [TestingBot](https://testingbot.com/)). Zalenium has also **BETA** support for
 [Kubernetes](./docs/k8s/kubernetes.md).
 
-Features are added often to Zalenium, we invite you to test it, to contribute, to report bugs, and suggest any ideas you may
-have, see [contributing](CONTRIBUTING.md) for more details.
+Zalenium's maintainers add new features regularly. We invite you to test it, report bugs, suggest any ideas you may
+have, and contribute. See our [contributing guidelines](CONTRIBUTING.md) for more details.
 
 ### Why?
 
