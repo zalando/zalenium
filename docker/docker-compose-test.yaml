@@ -15,7 +15,6 @@ services:
       - /usr/bin/docker:/usr/bin/docker
     ports:
       - 4444:4444
-      - 5555:5555
     command: >
       start --chromeContainers 1
             --firefoxContainers 1

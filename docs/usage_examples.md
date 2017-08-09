@@ -45,7 +45,7 @@ Basic usage, without any of the integrated cloud testing platforms.
 ### Linux 
 
   ```sh
-    docker run --rm -ti --name zalenium -p 4444:4444 -p 5555:5555 \
+    docker run --rm -ti --name zalenium -p 4444:4444 \
       -v /var/run/docker.sock:/var/run/docker.sock \
       -v /tmp/videos:/home/seluser/videos \
       --privileged dosel/zalenium start 
@@ -56,7 +56,7 @@ Zalenium for OSX is currently compatible with Docker 1.11, 1.12 default and 1.13
 explicitly tell Zalenium which major version you are using via `-e DOCKER=1.11` due to API compatibility issues. 
 
   ```sh
-    docker run --rm -ti --name zalenium -p 4444:4444 -p 5555:5555 \
+    docker run --rm -ti --name zalenium -p 4444:4444 \
       -e DOCKER=1.11 \
       -v /var/run/docker.sock:/var/run/docker.sock \
       -v /tmp/videos:/home/seluser/videos \
@@ -66,7 +66,7 @@ explicitly tell Zalenium which major version you are using via `-e DOCKER=1.11` 
 ### Windows 
 
   ```sh
-    docker run --rm -ti --name zalenium -p 4444:4444 -p 5555:5555 \
+    docker run --rm -ti --name zalenium -p 4444:4444 \
       -v /var/run/docker.sock:/var/run/docker.sock \
       -v /c/Users/your_user_name/temp/videos:/home/seluser/videos \
       --privileged dosel/zalenium start      
@@ -77,7 +77,7 @@ explicitly tell Zalenium which major version you are using via `-e DOCKER=1.11` 
   ```sh
     export SAUCE_USERNAME=<your Sauce Labs username>
     export SAUCE_ACCESS_KEY=<your Sauce Labs access key>
-    docker run --rm -ti --name zalenium -p 4444:4444 -p 5555:5555 \
+    docker run --rm -ti --name zalenium -p 4444:4444 \
       -e SAUCE_USERNAME -e SAUCE_ACCESS_KEY \
       -v /tmp/videos:/home/seluser/videos \
       -v /var/run/docker.sock:/var/run/docker.sock \
@@ -89,7 +89,7 @@ explicitly tell Zalenium which major version you are using via `-e DOCKER=1.11` 
   ```sh
     export BROWSER_STACK_USER=<your BrowserStack username>
     export BROWSER_STACK_KEY=<your BrowserStack access key>
-    docker run --rm -ti --name zalenium -p 4444:4444 -p 5555:5555 \
+    docker run --rm -ti --name zalenium -p 4444:4444 \
       -e BROWSER_STACK_USER -e BROWSER_STACK_KEY \
       -v /tmp/videos:/home/seluser/videos \
       -v /var/run/docker.sock:/var/run/docker.sock \
@@ -101,7 +101,7 @@ explicitly tell Zalenium which major version you are using via `-e DOCKER=1.11` 
   ```sh
     export TESTINGBOT_KEY=<your TestingBot access key>
     export TESTINGBOT_SECRET=<your TestingBot secret>
-    docker run --rm -ti --name zalenium -p 4444:4444 -p 5555:5555 \
+    docker run --rm -ti --name zalenium -p 4444:4444 \
       -e TESTINGBOT_KEY -e TESTINGBOT_SECRET \
       -v /tmp/videos:/home/seluser/videos \
       -v /var/run/docker.sock:/var/run/docker.sock \
@@ -111,7 +111,7 @@ explicitly tell Zalenium which major version you are using via `-e DOCKER=1.11` 
 ### with screen width and height, and time zone
 
   ```sh
-    docker run --rm -ti --name zalenium -p 4444:4444 -p 5555:5555 \
+    docker run --rm -ti --name zalenium -p 4444:4444 \
       -v /var/run/docker.sock:/var/run/docker.sock \
       -v /tmp/videos:/home/seluser/videos \
       --privileged dosel/zalenium start --screenWidth 1440 --screenHeight 810 --timeZone "America/Montreal"
@@ -131,7 +131,7 @@ It can be used to provide further customization to your nodes, such as adding cl
 or mimicking prior multi-purpose folder, both shown below.
 
   ```sh
-    docker run --rm -ti --name zalenium -p 4444:4444 -p 5555:5555 \
+    docker run --rm -ti --name zalenium -p 4444:4444 \
       -v /var/run/docker.sock:/var/run/docker.sock \
       -v /tmp/videos:/home/seluser/videos \
       -v /your/local/folder/with/certStore:/tmp/node/home/seluser/.pki/nssdb \      
@@ -196,7 +196,7 @@ from the executed tests into your host mapped folder.
 For example, starting Zalenium like this
 
   ```sh
-    docker run --rm -ti --name zalenium -p 4444:4444 -p 5555:5555 \
+    docker run --rm -ti --name zalenium -p 4444:4444 \
       -v /var/run/docker.sock:/var/run/docker.sock \
       -v /tmp/videos:/home/seluser/videos \
       --privileged dosel/zalenium start 
@@ -251,11 +251,11 @@ See more details at [group name](#group-name).
   <img id="dashboard" src="../images/dashboard.gif" />
 </p>
 
-* Go to [http://localhost:5555](http://localhost:5555)
+* Go to [http://localhost:4444/dashboard](http://localhost:4444/dashboard)
   * You can also replace `localhost` for the IP/machine name where Zalenium is running
 * Check all the recorded videos and aggregated logs after your tests completed
 * Click on Cleanup to remove all videos and logs from the local drive and the dashboard
-  * You can also cleanup the dashboard via `http://localhost:5555/cleanup?action=doCleanupAll`
+  * You can also cleanup the dashboard via `http://localhost:4444/dashboard/cleanup?action=doCleanupAll`
 
 ## Test Configuration Options
 

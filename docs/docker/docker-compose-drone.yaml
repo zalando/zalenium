@@ -27,7 +27,6 @@ services:
       - /usr/lib/x86_64-linux-gnu/libltdl.so.7:/usr/lib/x86_64-linux-gnu/libltdl.so.7:ro
     ports:
       - 4444:4444
-      - 5555:5555
     command: >
       start --chromeContainers 1
             --firefoxContainers 0

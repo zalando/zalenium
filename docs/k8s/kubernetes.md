@@ -153,19 +153,12 @@ kubectl create service nodeport zalenium-grid --tcp=4444:4444 --dry-run -o yaml 
     | grep -v "running in local/dry-run mode" \
     | kubectl create -f -
     
-    
-kubectl create service nodeport zalenium-videos --tcp=5555:5555 --dry-run -o yaml \
-    | kubectl label --local -f - app=zalenium --overwrite -o yaml \
-    | kubectl set selector --local -f - app=zalenium,role=grid -o yaml \
-    | grep -v "running in local/dry-run mode" \
-    | kubectl create -f -
 ```
 
-Then you can open the grid and video in minishift by running
+Then you can open the grid in minikube by running
 
 ```sh
 minikube service zalenium-grid
-minikube service zalenium-videos
 ```
 
 For videos to work you need to mount in `/home/seluser/videos`.
@@ -223,8 +216,6 @@ spec:
         - '172.23.192.79:5000/delivery/selenium:latest'
       ports:
         - containerPort: 4444
-          protocol: TCP
-        - containerPort: 5555
           protocol: TCP
       env:
         - name: ZALENIUM_KUBERNETES_CPU_REQUEST

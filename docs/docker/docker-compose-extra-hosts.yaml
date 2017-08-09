@@ -14,7 +14,6 @@ services:
       - /usr/bin/docker:/usr/bin/docker
     ports:
       - 4444:4444
-      - 555:5555
     command: >
       start --screenWidth 1930 --screenHeight 1090
             --timeZone "Asia/Tokyo"
