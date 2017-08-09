@@ -57,7 +57,7 @@ StartUp()
             exit 3
         fi
 
-        docker run -d -ti --name zalenium -p 4444:4444 -p 5555:5555 \
+        docker run -d -ti --name zalenium -p 4444:4444 \
               -e HOST_UID="$(id -u)" \
               -e HOST_GID="$(id -g)" \
               -e SAUCE_USERNAME -e SAUCE_ACCESS_KEY \
@@ -81,7 +81,7 @@ StartUp()
             exit 5
         fi
 
-        docker run -d -ti --name zalenium -p 4444:4444 -p 5555:5555 \
+        docker run -d -ti --name zalenium -p 4444:4444 \
               -e HOST_UID="$(id -u)" \
               -e HOST_GID="$(id -g)" \
               -e BROWSER_STACK_USER -e BROWSER_STACK_KEY \
@@ -105,7 +105,7 @@ StartUp()
             exit 7
         fi
 
-        docker run -d -ti --name zalenium -p 4444:4444 -p 5555:5555 \
+        docker run -d -ti --name zalenium -p 4444:4444 \
               -e HOST_UID="$(id -u)" \
               -e HOST_GID="$(id -g)" \
               -e TESTINGBOT_KEY -e TESTINGBOT_SECRET \

@@ -87,7 +87,7 @@ Zalenium uses docker to scale on-demand, therefore we need to give it the `docke
 * Basic usage, without any of the integrated cloud testing platforms enabled:
 
   ```sh
-    docker run --rm -ti --name zalenium -p 4444:4444 -p 5555:5555 \
+    docker run --rm -ti --name zalenium -p 4444:4444 \
       -v /var/run/docker.sock:/var/run/docker.sock \
       -v /tmp/videos:/home/seluser/videos \
       --privileged dosel/zalenium start
@@ -111,7 +111,7 @@ dependencies.)
 * Stop it: `docker stop zalenium`
 
 ## Additional features
-* __[BETA]__ [Dashboard](http://localhost:5555), see all the videos and aggregated logs after your tests completed
+* __[BETA]__ [Dashboard](http://localhost:4444/dashboard), see all the videos and aggregated logs after your tests completed
   <p align="center">
     <img id="dashboard" height="337" width="600" src="./images/dashboard.gif" />
   </p>
@@ -129,7 +129,7 @@ dependencies.)
 For Linux systems you can simply share the docker binary via `-v $(which docker):/usr/bin/docker`
 
 ```sh
-docker run --rm -ti --name zalenium -p 4444:4444 -p 5555:5555 \
+docker run --rm -ti --name zalenium -p 4444:4444 \
   -v $(which docker):/usr/bin/docker \
   -v /var/run/docker.sock:/var/run/docker.sock \
   -v /tmp/videos:/home/seluser/videos \
@@ -142,7 +142,7 @@ you explicitly tell Zalenium which major version you are using via `-e DOCKER=1.
 In the future this will be automated on our side as it is with Linux (read above)
 
 ```sh
-docker run --rm -ti --name zalenium -p 4444:4444 -p 5555:5555 \
+docker run --rm -ti --name zalenium -p 4444:4444 \
   -e DOCKER=1.11 \
   -v /var/run/docker.sock:/var/run/docker.sock \
   -v /tmp/videos:/home/seluser/videos \
@@ -175,7 +175,7 @@ running and that you can do `docker ps`):
     ```
 * Running the image you just built
     ```sh
-      docker run --rm -ti --name zalenium -p 4444:4444 -p 5555:5555 \
+      docker run --rm -ti --name zalenium -p 4444:4444 \
         -v /var/run/docker.sock:/var/run/docker.sock \
         -v /tmp/videos:/home/seluser/videos \
         --privileged zalenium:YOUR_TAG start

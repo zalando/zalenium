@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 
 CONTAINER_NAME="zalenium"
-CONTAINER_LIVE_PREVIEW_PORT="5555"
 SELENIUM_IMAGE_NAME="elgalu/selenium"
 CHROME_CONTAINERS=1
 FIREFOX_CONTAINERS=1
@@ -271,7 +270,6 @@ StartUp()
         EnsureDockerWorks
         CONTAINER_ID=$(grep docker /proc/self/cgroup | grep -o -E '[0-9a-f]{64}$' | head -n 1)
         CONTAINER_NAME=$(docker inspect ${CONTAINER_ID} | jq -r '.[0].Name' | sed 's/\///g')
-        CONTAINER_LIVE_PREVIEW_PORT=$(docker inspect ${CONTAINER_ID} | jq -r '.[0].NetworkSettings.Ports."5555/tcp"' | jq -r '.[0].HostPort')
         EnsureCleanEnv
     
         log "Ensuring docker-selenium is available..."
@@ -361,7 +359,6 @@ StartUp()
     export ZALENIUM_SCREEN_WIDTH=${SCREEN_WIDTH}
     export ZALENIUM_SCREEN_HEIGHT=${SCREEN_HEIGHT}
     export ZALENIUM_CONTAINER_NAME=${CONTAINER_NAME}
-    export ZALENIUM_CONTAINER_LIVE_PREVIEW_PORT=${CONTAINER_LIVE_PREVIEW_PORT}
     export ZALENIUM_SELENIUM_IMAGE_NAME=${SELENIUM_IMAGE_NAME}
 
     # Random ID used for Google Analytics
@@ -428,12 +425,12 @@ StartUp()
     echo $! > ${PID_PATH_DOCKER_SELENIUM_NODE}
 
     if ! timeout --foreground "${OVERRIDE_WAIT_TIME:-30s}" bash -c WaitStarterProxy; then
-        echo "StarterRemoteProxy failed to start after 30 seconds, failing..."
+        echo "StarterRemoteProxy failed to start after $OVERRIDE_WAIT_TIME seconds, failing..."
         exit 12
     fi
 
     if ! timeout --foreground "${OVERRIDE_WAIT_TIME:-30s}" bash -c WaitStarterProxyToRegister; then
-        echo "StarterRemoteProxy failed to register to the hub after 30 seconds, failing..."
+        echo "StarterRemoteProxy failed to register to the hub after $OVERRIDE_WAIT_TIME seconds, failing..."
         exit 13
     fi
     echo "DockerSeleniumStarter node started!"
