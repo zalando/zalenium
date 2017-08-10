@@ -70,9 +70,12 @@ RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys A2F683C52980AECF \
 #   The non-interactive network downloader
 # curl             17 MB (real +diff when with wget: 7 MB)
 #   transfer URL data using various Internet protocols
+# apache2-utils
+#   utility programs for webservers, needed to use htpasswd when the grid
+#   should be protected
 #
-# Layer size: medium: 29.8 MB
-# Layer size: medium: 27.9 MB (with --no-install-recommends)
+# Layer size: medium: 33.3 MB
+# Layer size: medium: 31.4 MB (with --no-install-recommends)
 RUN apt-get -qqy update \
   && apt-get -qqy install \
     libltdl7 \
@@ -91,6 +94,7 @@ RUN apt-get -qqy update \
     dbus-x11 \
     wget \
     curl \
+    apache2-utils \
   && apt-get -qyy autoremove \
   && rm -rf /var/lib/apt/lists/*
 
