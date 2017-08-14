@@ -395,6 +395,11 @@ StartUp()
     cp -r /home/seluser/css /home/seluser/videos
     cp -r /home/seluser/js /home/seluser/videos
 
+    if [ ! -z ${GRID_USER} ] && [ ! -z ${GRID_PASSWORD} ]; then
+        echo "Enabling basic auth via startup script..."
+        htpasswd -bc /etc/nginx/.htpasswd ${GRID_USER} ${GRID_PASSWORD}
+    fi
+
     echo "Starting Nginx reverse proxy..."
     nginx
 
@@ -790,6 +795,12 @@ case ${SCRIPT_ACTION} in
                     ;;
                 --seleniumImageName)
                     SELENIUM_IMAGE_NAME=${VALUE}
+                    ;;
+                --gridUser)
+                    GRID_USER=${VALUE}
+                    ;;
+                --gridPassword)
+                    GRID_PASSWORD=${VALUE}
                     ;;
                 *)
                     echo "ERROR: unknown parameter \"$PARAM\""

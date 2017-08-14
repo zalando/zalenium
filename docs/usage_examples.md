@@ -30,6 +30,8 @@
 * [Accessing the host](#accessing-the-host)
   * [Linux](#linux-env)
   * [OSX](#osx-env)
+* [Adding hosts to the containers](#adding-hosts-to-the-containers)    
+* [Enabling basic auth in Zalenium](#enabling-basic-auth-in-zalenium)  
 
 ## Initial setup
 
@@ -162,6 +164,11 @@ Please take caution in mounting system folders such as `/etc`, as this behavior 
   * `--screenHeight` -> Sets the screen height. Defaults to 1880.
   * `--timeZone` -> Sets the time zone in the containers. Defaults to "Europe/Berlin".
   * `--debugEnabled` -> enables LogLevel.FINE. Defaults to 'false'.
+  * `--seleniumImageName` -> enables overriding of the Docker selenium image to use. Defaults to 'elgalu/selenium'.
+  * `--gridUser` -> allows you to specify a user to enable basic auth protection, `--gridPassword` must be provided also.
+  * `--gridPassword` -> allows you to specify a user to enable basic auth protection, `--gridUser` must be provided also.
+
+
 
 ## One line starters
 
@@ -371,4 +378,64 @@ the host machine. So if the SUT is running on port 8080, you can do `http://mac.
 Sometimes you need to add host entries to the `/etc/hosts` file in order to mock dependencies, reach parts of your test infrastructure,
 or just to simplify your test code. Zalenium supports the `--add-host` flag in `docker run ...` and the `extra_hosts` option in
 docker-compose. You can see an example [here](./docker/docker-compose-extra-hosts.yaml)
+
+## Enabling basic auth in Zalenium
+Deploying Zalenium to a cloud provider (AWS, GCP, etc...)? You can enable the basich auth feature built in Nginx to protect Zalenium
+when deploying it to the open internet. You can enable it in two different ways; providing a file with user(s) and password(s) or
+using the parameters `--gridUser` and `--gridPassword`. Here are the detailed instructions:
+
+### Providing a file with user(s) and password(s)
+To create a file with that information, please follow the steps for "Creating a Password File"
+[described in the Nginx documentation](https://www.nginx.com/resources/admin-guide/restricting-access-auth-basic/). After that, map the
+created file to the container when you start Zalenium, e.g.:
+
+  ```sh
+    docker run --rm -ti --name zalenium -p 4444:4444 \
+      -v /var/run/docker.sock:/var/run/docker.sock \
+      -v /tmp/videos:/home/seluser/videos \
+      -v $(pwd)/.htpasswd:/etc/nginx/.htpasswd
+      --privileged dosel/zalenium start 
+  ```
+
+### Using the `--gridUser` and `--gridPassword` parameters
+
+  ```sh
+    docker run --rm -ti --name zalenium -p 4444:4444 \
+      -v /var/run/docker.sock:/var/run/docker.sock \
+      -v /tmp/videos:/home/seluser/videos \
+      --privileged dosel/zalenium start --gridUser yourUser --gridPassword yourPassword
+  ```
+ 
+### Using Zalenium when the basic auth is enabled
+You will need to provide the user and the password stated in the file or in the parameters at the moment of running your tests. Here is
+and example that shows you how to do it (the user will be `yourUser` and the password `yourPassword`).
+
+```java
+
+    @Test
+    public void simpleGoogleTest() throws Exception {    
+        /*
+           NOTE THE USE OF "yourUser" and "yourPassword" in the RemoteWebDriver url.
+        */
+        String URL = "http://yourUser:yourPassword@localhost:4444/wd/hub";
+        DesiredCapabilities desiredCapabilities = DesiredCapabilities.chrome();
+        desiredCapabilities.setCapability(CapabilityType.PLATFORM, Platform.LINUX);
+
+        // Create a new instance of the remote web driver
+        WebDriver driver = new RemoteWebDriver(new URL(URL), desiredCapabilities);
+
+        // Maximize the window
+        driver.manage().window().maximize();
+
+        // Go to Google
+        driver.get("https://www.google.com");
+
+        // Assert that the title is the expected one
+        Assert.assertEquals(driver.getTitle(), "Google", "Page title is not the expected one");
+
+        // Close the browser
+        driver.quit();
+    }
+```
+
 

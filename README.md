@@ -122,6 +122,7 @@ dependencies.)
 
 * Video recording, check them in the `/tmp/videos` folder (or the one you mapped when starting Zalenium)
 * Customise video file naming via capabilities and [more](./docs/usage_examples.md)
+* Basic auth to protect the grid when deployed to the open internet, instructions to enable basic auth [here](./docs/usage_examples.md#enabling-basic-auth-in-zalenium)
 
 ## Docker version
 
