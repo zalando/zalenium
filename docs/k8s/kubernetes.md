@@ -170,8 +170,13 @@ oc run zalenium --image=dosel/zalenium \
     --env="ZALENIUM_KUBERNETES_CPU_LIMIT=500m" \
     --env="ZALENIUM_KUBERNETES_MEMORY_REQUEST=1Gi" \
     --overrides='{"spec": {"template": {"spec": {"serviceAccount": "zalenium"}}}}' \
-    -l app=zalenium --port=4444 -- \
+    -l app=zalenium,role=hub --port=4444 -- \
     start --firefoxContainers 0 --chromeContainers 2 --seleniumImageName [registry ip address]:5000/[kubernetes namespace]/selenium:latest
+```
+
+Create the service
+```sh
+oc create -f ./zalenium-service.yaml
 ```
 
 In the Openshift console you should then probably create a route
