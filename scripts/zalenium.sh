@@ -407,12 +407,14 @@ StartUp()
 
     mkdir -p logs
 
-    java ${ZALENIUM_EXTRA_JVM_PARAMS} -cp ${SELENIUM_ARTIFACT}:${ZALENIUM_ARTIFACT} org.openqa.grid.selenium.GridLauncherV3 \
+    java ${ZALENIUM_EXTRA_JVM_PARAMS} -Djava.util.logging.config.file=logging.properties \
+    -Dlogback.configurationFile=logback.xml \
+    -cp ${SELENIUM_ARTIFACT}:${ZALENIUM_ARTIFACT} org.openqa.grid.selenium.GridLauncherV3 \
     -role hub -port 4445 -servlet de.zalando.ep.zalenium.servlet.LivePreviewServlet \
     -servlet de.zalando.ep.zalenium.servlet.ZaleniumConsoleServlet \
     -servlet de.zalando.ep.zalenium.servlet.ZaleniumResourceServlet \
-    -servlet de.zalando.ep.zalenium.dashboard.DashboardCleanupServlet \
-    -debug ${DEBUG_ENABLED} > logs/stdout.zalenium.hub.log &
+    -servlet de.zalando.ep.zalenium.dashboard.DashboardCleanupServlet -debug ${DEBUG_ENABLED} &
+
     echo $! > ${PID_PATH_SELENIUM}
 
     if ! timeout --foreground "1m" bash -c WaitSeleniumHub; then
@@ -424,9 +426,11 @@ StartUp()
 
     echo "Starting DockerSeleniumStarter node..."
 
-    java -jar ${SELENIUM_ARTIFACT} -role node -hub http://localhost:4444/grid/register \
+    java -Djava.util.logging.config.file=logging.properties \
+     -Dlogback.configurationFile=logback.xml \
+     -jar ${SELENIUM_ARTIFACT} -role node -hub http://localhost:4444/grid/register \
      -registerCycle 0 -proxy de.zalando.ep.zalenium.proxy.DockerSeleniumStarterRemoteProxy \
-     -nodePolling 90000 -port 30000 -debug ${DEBUG_ENABLED} > logs/stdout.zalenium.docker.node.log &
+     -nodePolling 90000 -port 30000 -debug ${DEBUG_ENABLED} &
     echo $! > ${PID_PATH_DOCKER_SELENIUM_NODE}
 
     if ! timeout --foreground "${OVERRIDE_WAIT_TIME:-30s}" bash -c WaitStarterProxy; then
@@ -447,9 +451,11 @@ StartUp()
 
     if [ "$SAUCE_LABS_ENABLED" = true ]; then
         echo "Starting Sauce Labs node..."
-        java -jar ${SELENIUM_ARTIFACT} -role node -hub http://localhost:4444/grid/register \
+        java -Djava.util.logging.config.file=logging.properties \
+         -Dlogback.configurationFile=logback.xml \
+         -jar ${SELENIUM_ARTIFACT} -role node -hub http://localhost:4444/grid/register \
          -registerCycle 0 -proxy de.zalando.ep.zalenium.proxy.SauceLabsRemoteProxy \
-         -nodePolling 90000 -port 30001 -debug ${DEBUG_ENABLED} > logs/stdout.zalenium.sauce.node.log &
+         -nodePolling 90000 -port 30001 -debug ${DEBUG_ENABLED} &
         echo $! > ${PID_PATH_SAUCE_LABS_NODE}
 
         if ! timeout --foreground "40s" bash -c WaitSauceLabsProxy; then
@@ -473,9 +479,11 @@ StartUp()
 
     if [ "$BROWSER_STACK_ENABLED" = true ]; then
         echo "Starting Browser Stack node..."
-        java -jar ${SELENIUM_ARTIFACT} -role node -hub http://localhost:4444/grid/register \
+        java -Djava.util.logging.config.file=logging.properties \
+         -Dlogback.configurationFile=logback.xml \
+         -jar ${SELENIUM_ARTIFACT} -role node -hub http://localhost:4444/grid/register \
          -registerCycle 0 -proxy de.zalando.ep.zalenium.proxy.BrowserStackRemoteProxy \
-         -nodePolling 90000 -port 30002 -debug ${DEBUG_ENABLED} > logs/stdout.zalenium.browserstack.node.log &
+         -nodePolling 90000 -port 30002 -debug ${DEBUG_ENABLED} &
         echo $! > ${PID_PATH_BROWSER_STACK_NODE}
 
         if ! timeout --foreground "40s" bash -c WaitBrowserStackProxy; then
@@ -498,9 +506,11 @@ StartUp()
 
     if [ "$TESTINGBOT_ENABLED" = true ]; then
         echo "Starting TestingBot node..."
-        java -jar ${SELENIUM_ARTIFACT} -role node -hub http://localhost:4444/grid/register \
+        java -Djava.util.logging.config.file=logging.properties \
+
+         -jar ${SELENIUM_ARTIFACT} -role node -hub http://localhost:4444/grid/register \
          -registerCycle 0 -proxy de.zalando.ep.zalenium.proxy.TestingBotRemoteProxy \
-         -nodePolling 90000 -port 30003 -debug ${DEBUG_ENABLED} > logs/stdout.zalenium.testingbot.node.log &
+         -nodePolling 90000 -port 30003 -debug ${DEBUG_ENABLED} &
         echo $! > ${PID_PATH_TESTINGBOT_NODE}
 
         if ! timeout --foreground "40s" bash -c WaitTestingBotProxy; then

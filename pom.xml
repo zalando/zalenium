@@ -50,10 +50,10 @@
     <properties>
         <selenium-server.major-minor.version>3.3</selenium-server.major-minor.version>
         <selenium-server.patch-level.version>1</selenium-server.patch-level.version>
-        <docker-client.version>8.7.3</docker-client.version>
+        <docker-client.version>8.9.0</docker-client.version>
         <kubernetes-client.version>2.3.1</kubernetes-client.version>
         <junit.version>4.12</junit.version>
-        <mockito.version>2.8.47</mockito.version>
+        <mockito.version>2.9.0</mockito.version>
         <awaitility.version>3.0.0</awaitility.version>
         <testng.version>6.11</testng.version>
         <slf4j.version>1.7.25</slf4j.version>
@@ -186,6 +186,13 @@
                                     <includes>
                                         <include>browserstack_capabilities.json</include>
                                         <include>testingbot_capabilities.json</include>
+                                    </includes>
+                                </resource>
+                                <resource>
+                                    <directory>src/main/resources</directory>
+                                    <includes>
+                                        <include>logging.properties</include>
+                                        <include>logback.xml</include>
                                     </includes>
                                 </resource>
                                 <resource>

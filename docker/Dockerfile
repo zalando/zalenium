@@ -408,6 +408,8 @@ COPY css/ /home/seluser/css/
 COPY js/ /home/seluser/js/
 COPY index.html /home/seluser/index.html
 COPY scm-source.json /
+COPY logging.properties /home/seluser/logging.properties
+COPY logback.xml /home/seluser/logback.xml
 COPY ${ZAL_VER}.jar /home/seluser/${ZAL_VER}.jar
 
 #-----------------#
