@@ -191,7 +191,8 @@
                                 <resource>
                                     <directory>src/main/resources</directory>
                                     <includes>
-                                        <include>logging.properties</include>
+                                        <include>logging_info.properties</include>
+                                        <include>logging_fine.properties</include>
                                         <include>logback.xml</include>
                                     </includes>
                                 </resource>

@@ -407,13 +407,19 @@ StartUp()
 
     mkdir -p logs
 
-    java ${ZALENIUM_EXTRA_JVM_PARAMS} -Djava.util.logging.config.file=logging.properties \
+    DEBUG_MODE=info
+    if [ "$DEBUG_ENABLED" = true ]; then
+        DEBUG_MODE=fine
+    fi
+
+    java ${ZALENIUM_EXTRA_JVM_PARAMS} -Djava.util.logging.config.file=logging_${DEBUG_MODE}.properties \
     -Dlogback.configurationFile=logback.xml \
     -cp ${SELENIUM_ARTIFACT}:${ZALENIUM_ARTIFACT} org.openqa.grid.selenium.GridLauncherV3 \
     -role hub -port 4445 -servlet de.zalando.ep.zalenium.servlet.LivePreviewServlet \
     -servlet de.zalando.ep.zalenium.servlet.ZaleniumConsoleServlet \
     -servlet de.zalando.ep.zalenium.servlet.ZaleniumResourceServlet \
-    -servlet de.zalando.ep.zalenium.dashboard.DashboardCleanupServlet -debug ${DEBUG_ENABLED} &
+    -servlet de.zalando.ep.zalenium.dashboard.DashboardCleanupServlet \
+    -debug ${DEBUG_ENABLED} &
 
     echo $! > ${PID_PATH_SELENIUM}
 
@@ -426,8 +432,7 @@ StartUp()
 
     echo "Starting DockerSeleniumStarter node..."
 
-    java -Djava.util.logging.config.file=logging.properties \
-     -Dlogback.configurationFile=logback.xml \
+    java -Djava.util.logging.config.file=logging_${DEBUG_MODE}.properties \
      -jar ${SELENIUM_ARTIFACT} -role node -hub http://localhost:4444/grid/register \
      -registerCycle 0 -proxy de.zalando.ep.zalenium.proxy.DockerSeleniumStarterRemoteProxy \
      -nodePolling 90000 -port 30000 -debug ${DEBUG_ENABLED} &
@@ -451,8 +456,7 @@ StartUp()
 
     if [ "$SAUCE_LABS_ENABLED" = true ]; then
         echo "Starting Sauce Labs node..."
-        java -Djava.util.logging.config.file=logging.properties \
-         -Dlogback.configurationFile=logback.xml \
+        java -Djava.util.logging.config.file=logging_${DEBUG_MODE}.properties \
          -jar ${SELENIUM_ARTIFACT} -role node -hub http://localhost:4444/grid/register \
          -registerCycle 0 -proxy de.zalando.ep.zalenium.proxy.SauceLabsRemoteProxy \
          -nodePolling 90000 -port 30001 -debug ${DEBUG_ENABLED} &
@@ -479,8 +483,7 @@ StartUp()
 
     if [ "$BROWSER_STACK_ENABLED" = true ]; then
         echo "Starting Browser Stack node..."
-        java -Djava.util.logging.config.file=logging.properties \
-         -Dlogback.configurationFile=logback.xml \
+        java -Djava.util.logging.config.file=logging_${DEBUG_MODE}.properties \
          -jar ${SELENIUM_ARTIFACT} -role node -hub http://localhost:4444/grid/register \
          -registerCycle 0 -proxy de.zalando.ep.zalenium.proxy.BrowserStackRemoteProxy \
          -nodePolling 90000 -port 30002 -debug ${DEBUG_ENABLED} &
@@ -506,8 +509,7 @@ StartUp()
 
     if [ "$TESTINGBOT_ENABLED" = true ]; then
         echo "Starting TestingBot node..."
-        java -Djava.util.logging.config.file=logging.properties \
-
+        java -Djava.util.logging.config.file=logging_${DEBUG_MODE}.properties \
          -jar ${SELENIUM_ARTIFACT} -role node -hub http://localhost:4444/grid/register \
          -registerCycle 0 -proxy de.zalando.ep.zalenium.proxy.TestingBotRemoteProxy \
          -nodePolling 90000 -port 30003 -debug ${DEBUG_ENABLED} &
