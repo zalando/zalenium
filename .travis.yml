@@ -19,7 +19,8 @@ script:
   - ./gen-scm-source.sh
   - travis_retry ./run_integration_tests.sh sauceLabs
   - travis_retry ./run_integration_tests.sh browserStack
-  - travis_retry ./run_integration_tests.sh testingBot
+# Removing testingBot from tests since it has low usage and it is unstable every now and then
+#  - travis_retry ./run_integration_tests.sh testingBot
   - travis_retry ./run_integration_tests.sh dockerCompose
   # Run unit tests for coverage
   - mvn clean package -Pcoverage-report
