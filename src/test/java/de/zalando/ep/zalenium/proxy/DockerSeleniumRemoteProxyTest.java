@@ -295,7 +295,7 @@ public class DockerSeleniumRemoteProxyTest {
             DockerSeleniumRemoteProxy.readEnvVarForVideoRecording();
 
             Assert.assertEquals(DockerSeleniumRemoteProxy.DEFAULT_VIDEO_RECORDING_ENABLED,
-                    DockerSeleniumRemoteProxy.isVideoRecordingEnabled());
+                    proxy.isVideoRecordingEnabled());
         } finally {
             DockerSeleniumRemoteProxy.restoreEnvironment();
         }
@@ -431,7 +431,7 @@ public class DockerSeleniumRemoteProxyTest {
 
         TestSession newSession = proxy.getNewSession(requestedCapability);
         Assert.assertNotNull(newSession);
-        Assert.assertEquals(DockerSeleniumRemoteProxy.isVideoRecordingEnabled(), false);
+        Assert.assertEquals(proxy.isVideoRecordingEnabled(), false);
     }
 
     private Map<String, Object> getCapabilitySupportedByDockerSelenium() {

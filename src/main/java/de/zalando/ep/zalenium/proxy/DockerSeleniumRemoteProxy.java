@@ -53,10 +53,12 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     private static final Logger LOGGER = Logger.getLogger(DockerSeleniumRemoteProxy.class.getName());
     private static final int MAX_UNIQUE_TEST_SESSIONS = 1;
     private static final Environment defaultEnvironment = new Environment();
-    private static boolean videoRecordingEnabled;
+    private static boolean videoRecordingEnabledGlobal;
     private static Environment env = defaultEnvironment;
     private final HtmlRenderer renderer = new WebProxyHtmlRendererBeta(this);
     private final ContainerClientRegistration registration;
+    private boolean videoRecordingEnabledSession;
+    private boolean videoRecordingEnabledConfigured = false;
     private ContainerClient containerClient = ContainerFactory.getContainerClient();
     private int amountOfExecutedTests;
     private long maxTestIdleTimeSecs;
@@ -79,7 +81,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     static void readEnvVarForVideoRecording() {
         boolean videoEnabled = env.getBooleanEnvVariable(ZALENIUM_VIDEO_RECORDING_ENABLED,
                 DEFAULT_VIDEO_RECORDING_ENABLED);
-        setVideoRecordingEnabled(videoEnabled);
+        setVideoRecordingEnabledGlobal(videoEnabled);
     }
 
     @VisibleForTesting
@@ -93,12 +95,20 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     }
 
     @VisibleForTesting
-    protected static boolean isVideoRecordingEnabled() {
-        return videoRecordingEnabled;
+    protected boolean isVideoRecordingEnabled() {
+        if (this.videoRecordingEnabledConfigured) {
+            return this.videoRecordingEnabledSession;
+        }
+        return DockerSeleniumRemoteProxy.videoRecordingEnabledGlobal;
     }
 
-    private static void setVideoRecordingEnabled(boolean videoRecordingEnabled) {
-        DockerSeleniumRemoteProxy.videoRecordingEnabled = videoRecordingEnabled;
+    private static void setVideoRecordingEnabledGlobal(boolean videoRecordingEnabled) {
+        DockerSeleniumRemoteProxy.videoRecordingEnabledGlobal = videoRecordingEnabled;
+    }
+
+    private void setVideoRecordingEnabledSession(boolean videoRecordingEnabled) {
+        this.videoRecordingEnabledSession = videoRecordingEnabled;
+        this.videoRecordingEnabledConfigured = true;
     }
 
     @VisibleForTesting
@@ -137,8 +147,10 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                         newSession.getInternalKey();
             }
             testGroup = getCapability(requestedCapability, "group", "");
-            boolean videoRecording = Boolean.parseBoolean(getCapability(requestedCapability, "recordVideo", "true"));
-            setVideoRecordingEnabled(videoRecording);
+            if (requestedCapability.containsKey("recordVideo")) {
+                boolean videoRecording = Boolean.parseBoolean(getCapability(requestedCapability, "recordVideo", "true"));
+                setVideoRecordingEnabledSession(videoRecording);
+            }
             String browserVersion = getCapability(newSession.getSlot().getCapabilities(), "version", "");
             testInformation = new TestInformation(testName, testName, "Zalenium", browserName, browserVersion,
                     Platform.LINUX.name());
