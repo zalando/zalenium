@@ -159,6 +159,9 @@ public class KubernetesContainerMock {
                 .done()
                 .once();
 
+        server.expect()
+                .withPath("/api/v1/namespaces/test/pods")
+                .andReturn(201, new PodBuilder().build());
 
         KubernetesClient client = server.getClient();
 
