@@ -51,7 +51,7 @@
         <selenium-server.major-minor.version>3.3</selenium-server.major-minor.version>
         <selenium-server.patch-level.version>1</selenium-server.patch-level.version>
         <docker-client.version>8.9.0</docker-client.version>
-        <kubernetes-client.version>2.3.1</kubernetes-client.version>
+        <kubernetes-client.version>2.6.1</kubernetes-client.version>
         <junit.version>4.12</junit.version>
         <mockito.version>2.9.0</mockito.version>
         <awaitility.version>3.0.0</awaitility.version>
@@ -59,9 +59,9 @@
         <slf4j.version>1.7.25</slf4j.version>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
-        <maven.compiler.plugin>3.6.1</maven.compiler.plugin>
+        <maven.compiler.plugin>3.6.2</maven.compiler.plugin>
         <maven-resources-plugin.version>3.0.2</maven-resources-plugin.version>
-        <maven-shade-plugin.version>3.0.0</maven-shade-plugin.version>
+        <maven-shade-plugin.version>3.1.0</maven-shade-plugin.version>
         <maven-surefire-plugin.version>2.20</maven-surefire-plugin.version>
         <maven-failsafe-plugin.version>2.20</maven-failsafe-plugin.version>
         <versions-maven-plugin.version>2.4</versions-maven-plugin.version>

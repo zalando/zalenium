@@ -3,7 +3,10 @@ package de.zalando.ep.zalenium.proxy;
 import com.spotify.docker.client.exceptions.DockerException;
 import de.zalando.ep.zalenium.container.ContainerClient;
 import de.zalando.ep.zalenium.container.ContainerFactory;
+import de.zalando.ep.zalenium.container.kubernetes.KubernetesContainerClient;
+import de.zalando.ep.zalenium.util.DockerContainerMock;
 import de.zalando.ep.zalenium.util.Environment;
+import de.zalando.ep.zalenium.util.KubernetesContainerMock;
 import de.zalando.ep.zalenium.util.TestUtils;
 import org.awaitility.Duration;
 import org.junit.After;
@@ -25,7 +28,10 @@ import org.openqa.selenium.remote.CapabilityType;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.function.Supplier;
 
@@ -40,25 +46,42 @@ public class DockerSeleniumRemoteProxyTest {
     private Registry registry;
     private ContainerClient containerClient;
     private Supplier<ContainerClient> originalDockerContainerClient;
+    private KubernetesContainerClient originalKubernetesContainerClient;
+    private Supplier<Boolean> originalIsKubernetesValue;
+    private Supplier<Boolean> currentIsKubernetesValue;
 
-    public DockerSeleniumRemoteProxyTest(ContainerClient containerClient) {
+    public DockerSeleniumRemoteProxyTest(ContainerClient containerClient, Supplier<Boolean> isKubernetes) {
         this.containerClient = containerClient;
-        
-        this.originalDockerContainerClient = ContainerFactory.getDockerContainerClientGenerator();
-        // Change the factory to return our version of the Container Client
-        ContainerFactory.setDockerContainerClientGenerator(() -> containerClient);
+        this.currentIsKubernetesValue = isKubernetes;
+        this.originalDockerContainerClient = ContainerFactory.getContainerClientGenerator();
+        this.originalIsKubernetesValue = ContainerFactory.getIsKubernetes();
+        this.originalKubernetesContainerClient = ContainerFactory.getKubernetesContainerClient();
     }
 
     @Parameters
     public static Collection<Object[]> data() {
+        Supplier<Boolean> bsFalse = () -> false;
+        Supplier<Boolean> bsTrue = () -> true;
         return Arrays.asList(new Object[][] {
-                {TestUtils.getMockedDockerContainerClient()},
-                {TestUtils.getMockedDockerContainerClient("host")}
+                {DockerContainerMock.getMockedDockerContainerClient(), bsFalse},
+                {DockerContainerMock.getMockedDockerContainerClient("host"), bsFalse},
+                {KubernetesContainerMock.getMockedKubernetesContainerClient(), bsTrue}
         });
     }
 
     @Before
     public void setUp() throws DockerException, InterruptedException, IOException {
+        // Change the factory to return our version of the Container Client
+        if (this.currentIsKubernetesValue.get()) {
+            // This is needed in order to use a fresh version of the mock, otherwise the return values
+            // are gone, and returning them always is not the normal behaviour.
+            this.containerClient = KubernetesContainerMock.getMockedKubernetesContainerClient();
+            ContainerFactory.setKubernetesContainerClient((KubernetesContainerClient) containerClient);
+        } else {
+            ContainerFactory.setContainerClientGenerator(() -> containerClient);
+        }
+        ContainerFactory.setIsKubernetes(this.currentIsKubernetesValue);
+
         registry = Registry.newInstance();
 
         // Creating the configuration and the registration request of the proxy (node)
@@ -75,7 +98,9 @@ public class DockerSeleniumRemoteProxyTest {
 
     @After
     public void tearDown() {
-        ContainerFactory.setDockerContainerClientGenerator(originalDockerContainerClient);
+        ContainerFactory.setContainerClientGenerator(originalDockerContainerClient);
+        ContainerFactory.setIsKubernetes(originalIsKubernetesValue);
+        ContainerFactory.setKubernetesContainerClient(originalKubernetesContainerClient);
         proxy.restoreContainerClient();
     }
 
