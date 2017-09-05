@@ -1,0 +1,143 @@
+package de.zalando.ep.zalenium.util;
+
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.spotify.docker.client.DockerClient;
+import com.spotify.docker.client.LogStream;
+import com.spotify.docker.client.exceptions.DockerException;
+import com.spotify.docker.client.messages.AttachedNetwork;
+import com.spotify.docker.client.messages.Container;
+import com.spotify.docker.client.messages.ContainerConfig;
+import com.spotify.docker.client.messages.ContainerCreation;
+import com.spotify.docker.client.messages.ContainerInfo;
+import com.spotify.docker.client.messages.ContainerMount;
+import com.spotify.docker.client.messages.ExecCreation;
+import com.spotify.docker.client.messages.HostConfig;
+import com.spotify.docker.client.messages.ImageInfo;
+import com.spotify.docker.client.messages.Info;
+import com.spotify.docker.client.messages.NetworkSettings;
+import de.zalando.ep.zalenium.container.DockerContainerClient;
+import org.apache.commons.lang3.RandomStringUtils;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.net.URL;
+import java.util.Arrays;
+import java.util.Collections;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+public class DockerContainerMock {
+
+    public static DockerContainerClient getMockedDockerContainerClient() {
+        return getMockedDockerContainerClient("default");
+    }
+
+    @SuppressWarnings("ConstantConditions")
+    public static DockerContainerClient getMockedDockerContainerClient(String networkName) {
+        DockerClient dockerClient = mock(DockerClient.class);
+        ExecCreation execCreation = mock(ExecCreation.class);
+        LogStream logStream = mock(LogStream.class);
+        when(logStream.readFully()).thenReturn("ANY_STRING");
+        when(execCreation.id()).thenReturn("ANY_ID");
+
+        ContainerCreation containerCreation = mock(ContainerCreation.class);
+        when(containerCreation.id()).thenReturn("ANY_CONTAINER_ID");
+
+        AttachedNetwork attachedNetwork = mock(AttachedNetwork.class);
+        NetworkSettings networkSettings = mock(NetworkSettings.class);
+        HostConfig hostConfig = mock(HostConfig.class);
+
+        ImageInfo imageInfo = mock(ImageInfo.class);
+        ContainerConfig containerConfig = mock(ContainerConfig.class);
+        ContainerInfo containerInfo = mock(ContainerInfo.class);
+        ContainerMount tmpMountedMount = mock(ContainerMount.class);
+        when(tmpMountedMount.destination()).thenReturn("/tmp/node/tmp/mounted");
+        when(tmpMountedMount.source()).thenReturn("/tmp/mounted");
+        ContainerMount homeFolderMount = mock(ContainerMount.class);
+        when(homeFolderMount.destination()).thenReturn("/tmp/node/home/seluser/folder");
+        when(homeFolderMount.source()).thenReturn("/tmp/folder");
+        when(containerInfo.mounts()).thenReturn(ImmutableList.of(tmpMountedMount, homeFolderMount));
+        when(attachedNetwork.ipAddress()).thenReturn("127.0.0.1");
+        when(networkSettings.networks()).thenReturn(ImmutableMap.of(networkName, attachedNetwork));
+        when(networkSettings.ipAddress()).thenReturn("");
+        when(containerInfo.networkSettings()).thenReturn(networkSettings);
+        when(hostConfig.extraHosts()).thenReturn(null);
+        when(containerInfo.hostConfig()).thenReturn(hostConfig);
+
+        String containerId = RandomStringUtils.randomAlphabetic(30).toLowerCase();
+        Container container_40000 = mock(Container.class);
+        when(container_40000.names()).thenReturn(ImmutableList.copyOf(Collections.singletonList("/zalenium_40000")));
+        when(container_40000.id()).thenReturn(containerId);
+        when(container_40000.status()).thenReturn("running");
+        when(container_40000.image()).thenReturn("elgalu/selenium");
+        Container container_40001 = mock(Container.class);
+        when(container_40001.names()).thenReturn(ImmutableList.copyOf(Collections.singletonList("/zalenium_40001")));
+        when(container_40001.id()).thenReturn(containerId);
+        when(container_40001.status()).thenReturn("running");
+        when(container_40001.image()).thenReturn("elgalu/selenium");
+        String zaleniumContainerId = RandomStringUtils.randomAlphabetic(30).toLowerCase();
+        Container zalenium = mock(Container.class);
+        when(zalenium.names()).thenReturn(ImmutableList.copyOf(Collections.singletonList("/zalenium")));
+        when(zalenium.id()).thenReturn(zaleniumContainerId);
+        when(zalenium.status()).thenReturn("running");
+        when(zalenium.image()).thenReturn("dosel/zalenium");
+
+        Info dockerInfo = mock(Info.class);
+        when(dockerInfo.name()).thenReturn("ubuntu_vm");
+
+        try {
+            URL logsLocation = TestUtils.class.getClassLoader().getResource("logs.tar");
+            URL videosLocation = TestUtils.class.getClassLoader().getResource("videos.tar");
+            File logsFile = new File(logsLocation.getPath());
+            File videosFile = new File(videosLocation.getPath());
+            when(dockerClient.archiveContainer(containerId, "/var/log/cont/")).thenReturn(new FileInputStream(logsFile));
+            when(dockerClient.archiveContainer(containerId, "/videos/")).thenReturn(new FileInputStream(videosFile));
+
+            String[] startVideo = {"bash", "-c", "start-video"};
+            String[] stopVideo = {"bash", "-c", "stop-video"};
+            String[] transferLogs = {"bash", "-c", "transfer-logs.sh"};
+            when(dockerClient.execCreate(containerId, startVideo, DockerClient.ExecCreateParam.attachStdout(),
+                    DockerClient.ExecCreateParam.attachStderr())).thenReturn(execCreation);
+            when(dockerClient.execCreate(containerId, stopVideo, DockerClient.ExecCreateParam.attachStdout(),
+                    DockerClient.ExecCreateParam.attachStderr())).thenReturn(execCreation);
+            when(dockerClient.execCreate(containerId, transferLogs, DockerClient.ExecCreateParam.attachStdout(),
+                    DockerClient.ExecCreateParam.attachStderr())).thenReturn(execCreation);
+
+            when(dockerClient.execStart(anyString())).thenReturn(logStream);
+            doNothing().when(dockerClient).stopContainer(anyString(), anyInt());
+
+            when(dockerClient.info()).thenReturn(dockerInfo);
+
+            when(dockerClient.createContainer(any(ContainerConfig.class), anyString())).thenReturn(containerCreation);
+
+            when(dockerClient.listContainers(DockerClient.ListContainersParam.allContainers()))
+                    .thenReturn(Arrays.asList(container_40000, container_40001, zalenium));
+
+            when(containerConfig.labels()).thenReturn(ImmutableMap.of("selenium_firefox_version", "52",
+                    "selenium_chrome_version", "58"));
+            when(imageInfo.config()).thenReturn(containerConfig);
+            when(dockerClient.inspectContainer(null)).thenReturn(containerInfo);
+            when(dockerClient.inspectContainer(zaleniumContainerId)).thenReturn(containerInfo);
+            when(dockerClient.inspectContainer(containerId)).thenReturn(containerInfo);
+
+            when(dockerClient.inspectImage(anyString())).thenReturn(imageInfo);
+
+            when(dockerClient.listImages(DockerClient.ListImagesParam.byName("elgalu/selenium")))
+                    .thenReturn(Collections.emptyList());
+
+        } catch (DockerException | InterruptedException | IOException e) {
+            e.printStackTrace();
+        }
+
+        DockerContainerClient dockerContainerClient = new DockerContainerClient();
+        dockerContainerClient.setContainerClient(dockerClient);
+        return dockerContainerClient;
+    }
+}

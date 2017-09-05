@@ -1,6 +1,7 @@
 package de.zalando.ep.zalenium.servlet;
 
 
+import de.zalando.ep.zalenium.util.DockerContainerMock;
 import de.zalando.ep.zalenium.util.TestUtils;
 import de.zalando.ep.zalenium.container.ContainerClient;
 import de.zalando.ep.zalenium.container.ContainerFactory;
@@ -39,8 +40,8 @@ public class LiveNodeServletTest {
     public void setUp() throws IOException {
         registry = Registry.newInstance();
         
-        this.originalContainerClient = ContainerFactory.getDockerContainerClientGenerator();
-        ContainerFactory.setDockerContainerClientGenerator(TestUtils::getMockedDockerContainerClient);
+        this.originalContainerClient = ContainerFactory.getContainerClientGenerator();
+        ContainerFactory.setContainerClientGenerator(DockerContainerMock::getMockedDockerContainerClient);
 
         // Creating the configuration and the registration request of the proxy (node)
         RegistrationRequest registrationRequest = TestUtils.getRegistrationRequestForTesting(40000,
@@ -116,7 +117,7 @@ public class LiveNodeServletTest {
     
     @After
     public void tearDown() {
-        ContainerFactory.setDockerContainerClientGenerator(originalContainerClient);
+        ContainerFactory.setContainerClientGenerator(originalContainerClient);
     }
 
 }

@@ -11,9 +11,9 @@ import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 
 public class ContainerFactory {
 
-    private static Supplier<ContainerClient> dockerContainerClientGenerator = () -> new DockerContainerClient();
+    private static Supplier<ContainerClient> containerClientGenerator = DockerContainerClient::new;
     private static Supplier<Boolean> isKubernetes = () -> new File("/var/run/secrets/kubernetes.io/serviceaccount/token").canRead();
-    
+
     private static KubernetesContainerClient kubernetesContainerClient;
     
     public static ContainerClient getContainerClient() {
@@ -22,7 +22,7 @@ public class ContainerFactory {
             return createKubernetesContainerClient();
         }
         else {
-            return dockerContainerClientGenerator.get();
+            return containerClientGenerator.get();
         }
     }
     
@@ -42,13 +42,23 @@ public class ContainerFactory {
     }
 
     @VisibleForTesting
-    public static void setDockerContainerClientGenerator(Supplier<ContainerClient> dockerContainerClientGenerator) {
-        ContainerFactory.dockerContainerClientGenerator = dockerContainerClientGenerator;
+    public static void setContainerClientGenerator(Supplier<ContainerClient> containerClientGenerator) {
+        ContainerFactory.containerClientGenerator = containerClientGenerator;
     }
 
     @VisibleForTesting
-    public static Supplier<ContainerClient> getDockerContainerClientGenerator() {
-        return dockerContainerClientGenerator;
+    public static Supplier<ContainerClient> getContainerClientGenerator() {
+        return containerClientGenerator;
+    }
+
+    @VisibleForTesting
+    public static Supplier<Boolean> getIsKubernetes() {
+        return isKubernetes;
+    }
+
+    @VisibleForTesting
+    public static void setIsKubernetes(Supplier<Boolean> isKubernetes) {
+        ContainerFactory.isKubernetes = isKubernetes;
     }
 
     @VisibleForTesting
@@ -61,13 +71,4 @@ public class ContainerFactory {
         ContainerFactory.kubernetesContainerClient = kubernetesContainerClient;
     }
 
-    @VisibleForTesting
-    public static Supplier<Boolean> getIsKubernetes() {
-        return isKubernetes;
-    }
-
-    @VisibleForTesting
-    public static void setIsKubernetes(Supplier<Boolean> isKubernetes) {
-        ContainerFactory.isKubernetes = isKubernetes;
-    }
 }

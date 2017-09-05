@@ -2,8 +2,13 @@ package de.zalando.ep.zalenium.servlet;
 
 import de.zalando.ep.zalenium.container.ContainerClient;
 import de.zalando.ep.zalenium.container.ContainerFactory;
-import de.zalando.ep.zalenium.proxy.*;
+import de.zalando.ep.zalenium.proxy.BrowserStackRemoteProxy;
+import de.zalando.ep.zalenium.proxy.DockerSeleniumRemoteProxy;
+import de.zalando.ep.zalenium.proxy.DockerSeleniumStarterRemoteProxy;
+import de.zalando.ep.zalenium.proxy.SauceLabsRemoteProxy;
+import de.zalando.ep.zalenium.proxy.TestingBotRemoteProxy;
 import de.zalando.ep.zalenium.util.CommonProxyUtilities;
+import de.zalando.ep.zalenium.util.DockerContainerMock;
 import de.zalando.ep.zalenium.util.TestUtils;
 
 import org.junit.After;
@@ -37,8 +42,8 @@ public class ZaleniumConsoleServletTest {
     public void setUp() throws IOException {
         registry = Registry.newInstance();
         
-        this.originalContainerClient = ContainerFactory.getDockerContainerClientGenerator();
-        ContainerFactory.setDockerContainerClientGenerator(() -> TestUtils.getMockedDockerContainerClient());
+        this.originalContainerClient = ContainerFactory.getContainerClientGenerator();
+        ContainerFactory.setContainerClientGenerator(DockerContainerMock::getMockedDockerContainerClient);
 
         // Creating the configuration and the registration request of the proxy (node)
         RegistrationRequest registrationRequest = TestUtils.getRegistrationRequestForTesting(30000,
@@ -143,6 +148,6 @@ public class ZaleniumConsoleServletTest {
     
     @After
     public void tearDown() {
-        ContainerFactory.setDockerContainerClientGenerator(originalContainerClient);
+        ContainerFactory.setContainerClientGenerator(originalContainerClient);
     }
 }
