@@ -2,6 +2,7 @@
 
 CONTAINER_NAME="zalenium"
 SELENIUM_IMAGE_NAME="elgalu/selenium"
+MAX_UNIQUE_TEST_SESSIONS=1
 CHROME_CONTAINERS=1
 FIREFOX_CONTAINERS=1
 MAX_DOCKER_SELENIUM_CONTAINERS=10
@@ -360,6 +361,7 @@ StartUp()
     export ZALENIUM_SCREEN_HEIGHT=${SCREEN_HEIGHT}
     export ZALENIUM_CONTAINER_NAME=${CONTAINER_NAME}
     export ZALENIUM_SELENIUM_IMAGE_NAME=${SELENIUM_IMAGE_NAME}
+    export ZALENIUM_MAX_UNIQUE_TEST_SESSIONS=${MAX_UNIQUE_TEST_SESSIONS}
 
     # Random ID used for Google Analytics
     # If it is running inside the Zalando Jenkins env, we pick the team name from the $BUILD_URL
@@ -815,6 +817,9 @@ case ${SCRIPT_ACTION} in
                     ;;
                 --gridPassword)
                     GRID_PASSWORD=${VALUE}
+                    ;;
+                --maxUniqueTestSessions)
+                    MAX_UNIQUE_TEST_SESSIONS=${VALUE}
                     ;;
                 *)
                     echo "ERROR: unknown parameter \"$PARAM\""

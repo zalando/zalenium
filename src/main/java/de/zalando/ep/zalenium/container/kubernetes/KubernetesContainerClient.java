@@ -292,7 +292,18 @@ public class KubernetesContainerClient implements ContainerClient {
     public int getRunningContainers(String image) {
         PodList list = client.pods().withLabels(createdByZaleniumMap).list();
         
-        return list.getItems().size();
+        int count=0;
+        for (Pod pod : list.getItems()) {
+            
+            // It seems it isn't safe to only count running containers, otherwise zalenium will try to 
+            // start more and more containers, when it isn't counting the containers that are trying to start.
+            String phase = pod.getStatus().getPhase();
+            if (phase.equals("Running") || phase.equals("Pending")) {
+                count++;
+            }
+        }
+        
+        return count;
     }
 
     @Override
