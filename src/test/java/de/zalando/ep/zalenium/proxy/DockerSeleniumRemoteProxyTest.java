@@ -317,7 +317,7 @@ public class DockerSeleniumRemoteProxyTest {
                     .thenReturn("any_nonsense_value");
             when(environment.getBooleanEnvVariable(any(String.class), any(Boolean.class))).thenCallRealMethod();
             DockerSeleniumRemoteProxy.setEnv(environment);
-            DockerSeleniumRemoteProxy.readEnvVarForVideoRecording();
+            DockerSeleniumRemoteProxy.readEnvVars();
 
             Assert.assertEquals(DockerSeleniumRemoteProxy.DEFAULT_VIDEO_RECORDING_ENABLED,
                     proxy.isVideoRecordingEnabled());
@@ -405,7 +405,7 @@ public class DockerSeleniumRemoteProxyTest {
             // Creating a spy proxy to verify the invoked methods
             DockerSeleniumRemoteProxy spyProxy = spy(proxy);
             DockerSeleniumRemoteProxy.setEnv(environment);
-            DockerSeleniumRemoteProxy.readEnvVarForVideoRecording();
+            DockerSeleniumRemoteProxy.readEnvVars();
 
             // Start poller thread
             spyProxy.startPolling();

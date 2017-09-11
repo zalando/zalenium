@@ -2,7 +2,7 @@
 
 CONTAINER_NAME="zalenium"
 SELENIUM_IMAGE_NAME="elgalu/selenium"
-MAX_UNIQUE_TEST_SESSIONS=1
+MAX_TEST_SESSIONS=1
 CHROME_CONTAINERS=1
 FIREFOX_CONTAINERS=1
 MAX_DOCKER_SELENIUM_CONTAINERS=10
@@ -361,7 +361,7 @@ StartUp()
     export ZALENIUM_SCREEN_HEIGHT=${SCREEN_HEIGHT}
     export ZALENIUM_CONTAINER_NAME=${CONTAINER_NAME}
     export ZALENIUM_SELENIUM_IMAGE_NAME=${SELENIUM_IMAGE_NAME}
-    export ZALENIUM_MAX_UNIQUE_TEST_SESSIONS=${MAX_UNIQUE_TEST_SESSIONS}
+    export ZALENIUM_MAX_TEST_SESSIONS=${MAX_TEST_SESSIONS}
 
     # Random ID used for Google Analytics
     # If it is running inside the Zalando Jenkins env, we pick the team name from the $BUILD_URL
@@ -722,14 +722,14 @@ function usage()
     echo "zalenium"
     echo -e "\t -h --help"
     echo -e "\t start <options, see below>"
-    echo -e "\t --chromeContainers -> Number of Chrome containers created on startup. Default is 1 when parameter is absent."
-    echo -e "\t --firefoxContainers -> Number of Firefox containers created on startup. Default is 1 when parameter is absent."
-    echo -e "\t --maxDockerSeleniumContainers -> Max number of docker-selenium containers running at the same time. Default is 10 when parameter is absent."
-    echo -e "\t --sauceLabsEnabled -> Determines if the Sauce Labs node is started. Defaults to 'false' when parameter absent."
-    echo -e "\t --browserStackEnabled -> Determines if the Browser Stack node is started. Defaults to 'false' when parameter absent."
-    echo -e "\t --testingBotEnabled -> Determines if the TestingBot node is started. Defaults to 'false' when parameter absent."
+    echo -e "\t --chromeContainers -> Number of Chrome containers created on startup. Default is 1."
+    echo -e "\t --firefoxContainers -> Number of Firefox containers created on startup. Default is 1."
+    echo -e "\t --maxDockerSeleniumContainers -> Max number of docker-selenium containers running at the same time. Default is 10."
+    echo -e "\t --sauceLabsEnabled -> Determines if the Sauce Labs node is started. Defaults to 'false'."
+    echo -e "\t --browserStackEnabled -> Determines if the Browser Stack node is started. Defaults to 'false'."
+    echo -e "\t --testingBotEnabled -> Determines if the TestingBot node is started. Defaults to 'false'."
     echo -e "\t --startTunnel -> When using a cloud testing platform is enabled, starts the tunnel to allow local testing. Defaults to 'false'."
-    echo -e "\t --videoRecordingEnabled -> Sets if video is recorded in every test. Defaults to 'true' when parameter absent."
+    echo -e "\t --videoRecordingEnabled -> Sets if video is recorded in every test. Defaults to 'true'."
     echo -e "\t --screenWidth -> Sets the screen width. Defaults to 1900"
     echo -e "\t --screenHeight -> Sets the screen height. Defaults to 1880"
     echo -e "\t --timeZone -> Sets the time zone in the containers. Defaults to \"Europe/Berlin\""
@@ -738,6 +738,7 @@ function usage()
     echo -e "\t --seleniumImageName -> enables overriding of the Docker selenium image to use. Defaults to \"elgalu/selenium\""
     echo -e "\t --gridUser -> allows you to specify a user to enable basic auth protection, --gridPassword must be provided also."
     echo -e "\t --gridPassword -> allows you to specify a password to enable basic auth protection, --gridUser must be provided also."
+    echo -e "\t --maxTestSessions -> max amount of tests executed per container, defaults to '1'."
     echo ""
     echo -e "\t stop"
     echo ""
@@ -818,8 +819,8 @@ case ${SCRIPT_ACTION} in
                 --gridPassword)
                     GRID_PASSWORD=${VALUE}
                     ;;
-                --maxUniqueTestSessions)
-                    MAX_UNIQUE_TEST_SESSIONS=${VALUE}
+                --maxTestSessions)
+                    MAX_TEST_SESSIONS=${VALUE}
                     ;;
                 *)
                     echo "ERROR: unknown parameter \"$PARAM\""

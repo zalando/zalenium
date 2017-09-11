@@ -11,6 +11,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.RandomUtils;
 import org.openqa.grid.common.RegistrationRequest;
 import org.openqa.grid.internal.Registry;
+import org.openqa.grid.internal.RemoteProxy;
 import org.openqa.grid.internal.TestSession;
 import org.openqa.grid.internal.listeners.RegistrationListener;
 import org.openqa.grid.internal.utils.CapabilityMatcher;
@@ -345,25 +346,39 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
         String browserName = requestedCapability.get(CapabilityType.BROWSER_NAME).toString();
 
         /*
+            Reusing nodes, rejecting requests when test sessions are still available in the existing nodes.
+         */
+        String waitingForNode = String.format("waitingFor_%s_Node", browserName.toUpperCase());
+        if (testSessionsAvailable(requestedCapability)) {
+            requestedCapability.put(waitingForNode, 1);
+            LOGGER.log(Level.FINE, LOGGING_PREFIX + "There are sessions available for {0}, won't start a new node yet.",
+                    requestedCapability);
+            return null;
+        }
+
+        /*
             Here a docker-selenium container will be started and it will register to the hub
             We check first if a node has been created for this request already. If so, we skip it
             but increment the number of times it has been received. In case something went wrong with the node
             creation, we remove the mark after 30 times and we create a node again.
             * The mark is an added custom capability
          */
-        String waitingForNode = String.format("waitingFor_%s_Node", browserName.toUpperCase());
         if (!requestedCapability.containsKey(waitingForNode)) {
             LOGGER.log(Level.INFO, LOGGING_PREFIX + "Starting new node for {0}.", requestedCapability);
             requestedCapability.put(waitingForNode, 1);
+            LOGGER.info(LOGGING_PREFIX + "Container created here ONE.");
             poolExecutor.execute(() -> startDockerSeleniumContainer(browserName, timeZone, screenSize));
         } else {
-            int attempts = (int) requestedCapability.get(waitingForNode);
+            int attempts = requestedCapability.get(waitingForNode) == null ?
+                    1 : (int) requestedCapability.get(waitingForNode);
             attempts++;
+            requestedCapability.put(waitingForNode, attempts);
             long pendingTasks = poolExecutor.getTaskCount() - poolExecutor.getCompletedTaskCount();
             if (pendingTasks == 0) {
+                LOGGER.log(Level.INFO, LOGGING_PREFIX + "No pending tasks, starting new node for {0}.", requestedCapability);
                 poolExecutor.execute(() -> startDockerSeleniumContainer(browserName, timeZone, screenSize));
+                return null;
             }
-            requestedCapability.put(waitingForNode, attempts);
             if (attempts >= 30) {
                 LOGGER.log(Level.INFO, LOGGING_PREFIX + "Request has waited 30 attempts for a node, something " +
                         "went wrong with the previous attempts, creating a new node for {0}.", requestedCapability);
@@ -372,6 +387,21 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
             }
         }
         return null;
+    }
+
+    private boolean testSessionsAvailable(Map<String, Object> requestedCapability) {
+        for (RemoteProxy remoteProxy : this.getRegistry().getAllProxies()) {
+            if (remoteProxy instanceof DockerSeleniumRemoteProxy) {
+                DockerSeleniumRemoteProxy proxy = (DockerSeleniumRemoteProxy) remoteProxy;
+                // If there are still available sessions to be used
+                if (!proxy.isTestSessionLimitReached() && proxy.hasCapability(requestedCapability)) {
+                    LOGGER.log(Level.INFO, LOGGING_PREFIX + "Sessions still available.");
+                    return true;
+                }
+            }
+        }
+        LOGGER.log(Level.INFO, LOGGING_PREFIX + "No sessions available.");
+        return false;
     }
 
     @Override
