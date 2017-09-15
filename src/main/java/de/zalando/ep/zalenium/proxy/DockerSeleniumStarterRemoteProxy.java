@@ -468,15 +468,15 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     }
 
     private boolean checkContainerStatus(String containerName, int nodePort) {
-        // TODO: Check how to get the IP from Kubernetes
+        long sleepInterval = sleepIntervalMultiplier;
         if (containerClient instanceof KubernetesContainerClient) {
-            return true;
+            sleepInterval = sleepInterval * 3;
         }
         String createdContainerName = String.format("%s_%s", containerName, nodePort);
         String containerIp = containerClient.getContainerIp(createdContainerName);
         for (int i = 1; i <= 60; i++) {
             try {
-                Thread.sleep(sleepIntervalMultiplier);
+                Thread.sleep(sleepInterval);
                 if (containerIp == null || containerIp.trim().isEmpty()) {
                     containerIp = containerClient.getContainerIp(createdContainerName);
                 }

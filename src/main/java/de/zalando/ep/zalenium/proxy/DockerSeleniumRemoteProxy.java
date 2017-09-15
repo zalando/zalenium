@@ -394,7 +394,6 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                 testInformation.setVideoRecorded(false);
             }
         }
-
     }
 
     @SuppressWarnings("ResultOfMethodCallIgnored")

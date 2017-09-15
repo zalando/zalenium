@@ -76,7 +76,7 @@ public class KubernetesContainerClient implements ContainerClient {
                                      Function<PodConfiguration, DoneablePod> createDoneablePod,
                                      Function<ServiceConfiguration, DoneableService> createDoneableService,
                                      KubernetesClient client) {
-        logger.info("Initialising Kubernetes support");
+        logger.log(Level.INFO, "Initialising Kubernetes support");
 
         this.environment = environment;
         this.createDoneablePod = createDoneablePod;
@@ -151,7 +151,6 @@ public class KubernetesContainerClient implements ContainerClient {
                     resourceMap.put(resource.getRequestType(), quantity);
                 }
             }
-            resource.getEnvVar();
         }
     }
 
@@ -195,8 +194,7 @@ public class KubernetesContainerClient implements ContainerClient {
      * InputStream.
      */
     @Override
-    public InputStream copyFiles(String containerId,
-                                 String folderName) {
+    public InputStream copyFiles(String containerId, String folderName) {
 
         ByteArrayOutputStream stderr = new ByteArrayOutputStream();
         String[] command = new String[] { "tar", "-C", folderName, "-c", "." };
@@ -228,18 +226,18 @@ public class KubernetesContainerClient implements ContainerClient {
         
         logger.log(Level.INFO, () -> String.format("%s %s", containerId, Arrays.toString(command)));
         ExecWatch exec = client.pods().withName(containerId).writingOutput(baos).writingError(baos).usingListener(new ExecListener() {
-            
+
             @Override
             public void onOpen(Response response) {
             }
-            
+
             @Override
             public void onFailure(Throwable t,
                                   Response response) {
                 logger.log(Level.SEVERE, t, () -> String.format("%s Failed to execute command %s", containerId, Arrays.toString(command)));
                 latch.countDown();
             }
-            
+
             @Override
             public void onClose(int code,
                                 String reason) {
@@ -278,8 +276,7 @@ public class KubernetesContainerClient implements ContainerClient {
     }
 
     @Override
-    public String getLabelValue(String image,
-                                String label) {
+    public String getLabelValue(String image, String label) {
         // FIXME: This might be possible with the OpenShift API, but not the Kubernetes API at the moment.
         // Although with the OpenShift API it will be pretty slow as you can't lookup an image by its docker name, only its hash value.
         // So with the OpenShift API you'd end up listing all images in the registry and looping through them one by one, which is not ideal.
@@ -291,14 +288,11 @@ public class KubernetesContainerClient implements ContainerClient {
     @Override
     public int getRunningContainers(String image) {
         PodList list = client.pods().withLabels(createdByZaleniumMap).list();
-        
+        logger.log(Level.INFO, "Pods in the list " + list.getItems().size());
         int count=0;
         for (Pod pod : list.getItems()) {
-            
-            // It seems it isn't safe to only count running containers, otherwise zalenium will try to 
-            // start more and more containers, when it isn't counting the containers that are trying to start.
             String phase = pod.getStatus().getPhase();
-            if (phase.equals("Running") || phase.equals("Pending")) {
+            if ("Running".equalsIgnoreCase(phase) || "Pending".equalsIgnoreCase(phase)) {
                 count++;
             }
         }
@@ -349,18 +343,24 @@ public class KubernetesContainerClient implements ContainerClient {
         deleteSeleniumPods();
         
         // Register a shutdown hook to cleanup pods
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            this.deleteSeleniumPods();
-         }));
+        Runtime.getRuntime().addShutdownHook(new Thread(this::deleteSeleniumPods));
     }
 
     @Override
     public String getContainerIp(String containerName) {
+        String kubernetesContainerName = containerName.replace("_", "-");
+        for (Pod pod : client.pods().list().getItems()) {
+            if (pod.getMetadata().getName().startsWith(kubernetesContainerName)) {
+                logger.log(Level.FINE, String.format("Pod %s, IP -> %s", pod.getMetadata().getName(),
+                        pod.getStatus().getPodIP()));
+                return pod.getStatus().getPodIP();
+            }
+        }
         return null;
     }
 
     private void deleteSeleniumPods() {
-        logger.info("About to clean up any left over selenium pods created by zalenium");
+        logger.log(Level.INFO, "About to clean up any left over selenium pods created by Zalenium");
         client.pods().withLabels(createdByZaleniumMap).delete();
         client.services().withLabels(createdByZaleniumMap).delete();
     }
