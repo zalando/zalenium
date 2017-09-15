@@ -50,9 +50,11 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     static final boolean DEFAULT_VIDEO_RECORDING_ENABLED = true;
     @VisibleForTesting
     static final long DEFAULT_MAX_TEST_IDLE_TIME_SECS = 90L;
+    static final String ZALENIUM_MAX_TEST_SESSIONS = "ZALENIUM_MAX_TEST_SESSIONS";
     private static final Logger LOGGER = Logger.getLogger(DockerSeleniumRemoteProxy.class.getName());
-    private static final int MAX_UNIQUE_TEST_SESSIONS = 1;
+    private static final int DEFAULT_MAX_TEST_SESSIONS = 1;
     private static final Environment defaultEnvironment = new Environment();
+    private static int MAX_TEST_SESSIONS;
     private static boolean videoRecordingEnabledGlobal;
     private static Environment env = defaultEnvironment;
     private final HtmlRenderer renderer = new WebProxyHtmlRendererBeta(this);
@@ -72,16 +74,19 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     public DockerSeleniumRemoteProxy(RegistrationRequest request, Registry registry) {
         super(request, registry);
         this.amountOfExecutedTests = 0;
-        readEnvVarForVideoRecording();
+        readEnvVars();
         containerClient.setNodeId(getId());
         registration = containerClient.registerNode(DockerSeleniumStarterRemoteProxy.getContainerName(), this.getRemoteHost());
     }
 
     @VisibleForTesting
-    static void readEnvVarForVideoRecording() {
+    static void readEnvVars() {
         boolean videoEnabled = env.getBooleanEnvVariable(ZALENIUM_VIDEO_RECORDING_ENABLED,
                 DEFAULT_VIDEO_RECORDING_ENABLED);
         setVideoRecordingEnabledGlobal(videoEnabled);
+
+        MAX_TEST_SESSIONS = env.getIntEnvVariable(ZALENIUM_MAX_TEST_SESSIONS,
+                DEFAULT_MAX_TEST_SESSIONS);
     }
 
     @VisibleForTesting
@@ -94,16 +99,16 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         env = defaultEnvironment;
     }
 
+    private static void setVideoRecordingEnabledGlobal(boolean videoRecordingEnabled) {
+        DockerSeleniumRemoteProxy.videoRecordingEnabledGlobal = videoRecordingEnabled;
+    }
+
     @VisibleForTesting
     protected boolean isVideoRecordingEnabled() {
         if (this.videoRecordingEnabledConfigured) {
             return this.videoRecordingEnabledSession;
         }
         return DockerSeleniumRemoteProxy.videoRecordingEnabledGlobal;
-    }
-
-    private static void setVideoRecordingEnabledGlobal(boolean videoRecordingEnabled) {
-        DockerSeleniumRemoteProxy.videoRecordingEnabledGlobal = videoRecordingEnabled;
     }
 
     private void setVideoRecordingEnabledSession(boolean videoRecordingEnabled) {
@@ -136,7 +141,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         if (!hasCapability(requestedCapability)) {
             return null;
         }
-        if (increaseCounter()) {
+        if (!this.isBusy() && increaseCounter()) {
             TestSession newSession = super.getNewSession(requestedCapability);
             LOGGER.log(Level.FINE, getId() + " Creating session for: " + requestedCapability.toString());
             String browserName = requestedCapability.get(CapabilityType.BROWSER_NAME).toString();
@@ -207,9 +212,18 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
 
     @Override
     public void afterSession(TestSession session) {
-        String message = String.format("%s AFTER_SESSION command received. Node should shutdown soon...", getId());
-        LOGGER.log(Level.INFO, message);
-        shutdownNode(false);
+        if (isTestSessionLimitReached()) {
+            String message = String.format("%s AFTER_SESSION command received. Node should shutdown soon...", getId());
+            LOGGER.log(Level.INFO, message);
+            shutdownNode(false);
+        }
+        else {
+            String message = String.format(
+                    "%s AFTER_SESSION command received. Cleaning up node for reuse, used %s of max %s", getId(),
+                    getAmountOfExecutedTests(), MAX_TEST_SESSIONS);
+            LOGGER.log(Level.INFO, message);
+            cleanupNode();
+        }
         long executionTime = (System.currentTimeMillis() - session.getSlot().getLastSessionStart()) / 1000;
         ga.testEvent(DockerSeleniumRemoteProxy.class.getName(), session.getRequestedCapabilities().toString(),
                 executionTime);
@@ -258,8 +272,8 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         Method to decide if the node can be removed based on the amount of executed tests.
      */
     @VisibleForTesting
-    protected synchronized boolean isTestSessionLimitReached() {
-        return getAmountOfExecutedTests() >= MAX_UNIQUE_TEST_SESSIONS;
+    public synchronized boolean isTestSessionLimitReached() {
+        return getAmountOfExecutedTests() >= MAX_TEST_SESSIONS;
     }
 
     /*
@@ -336,15 +350,13 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
 
     @VisibleForTesting
     void processContainerAction(final DockerSeleniumContainerAction action, final String containerId) {
-        boolean waitForExecution = DockerSeleniumContainerAction.STOP_RECORDING == action ||
-                DockerSeleniumContainerAction.TRANSFER_LOGS == action;
-        final String[] command = {"bash", "-c", action.getContainerAction()};
-        containerClient.executeCommand(containerId, command, waitForExecution);
+        final String[] command = { "bash", "-c", action.getContainerAction() };
+        containerClient.executeCommand(containerId, command, action.isWaitForExecution());
 
-        if (waitForExecution && DockerSeleniumContainerAction.STOP_RECORDING == action) {
+        if (DockerSeleniumContainerAction.STOP_RECORDING == action) {
             copyVideos(containerId);
         }
-        if (waitForExecution && DockerSeleniumContainerAction.TRANSFER_LOGS == action) {
+        if (DockerSeleniumContainerAction.TRANSFER_LOGS == action) {
             copyLogs(containerId);
         }
     }
@@ -382,7 +394,6 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                 testInformation.setVideoRecorded(false);
             }
         }
-
     }
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
@@ -412,13 +423,18 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         }
     }
 
-    private void shutdownNode(boolean isTestIdle) {
+    private void cleanupNode() {
         videoRecording(DockerSeleniumContainerAction.STOP_RECORDING);
         processContainerAction(DockerSeleniumContainerAction.TRANSFER_LOGS, getContainerId());
+        processContainerAction(DockerSeleniumContainerAction.CLEANUP_CONTAINER, getContainerId());
         Dashboard.updateDashboard(testInformation);
+    }
+    
+    private void shutdownNode(boolean isTestIdle) {
+        cleanupNode();
 
         String shutdownReason = String.format("%s Marking the node as down because it was stopped after %s tests.",
-                getId(), MAX_UNIQUE_TEST_SESSIONS);
+                getId(), MAX_TEST_SESSIONS);
 
         if (isTestIdle) {
             terminateIdleTest();
@@ -434,21 +450,30 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
 
 
     public enum DockerSeleniumContainerAction {
-        START_RECORDING("start-video"), STOP_RECORDING("stop-video"), TRANSFER_LOGS("transfer-logs.sh");
+        START_RECORDING("start-video", false),
+        STOP_RECORDING("stop-video", true),
+        TRANSFER_LOGS("transfer-logs.sh", true),
+        CLEANUP_CONTAINER("cleanup-container.sh", true);
 
         private String containerAction;
+        private boolean waitForExecution;
 
-        DockerSeleniumContainerAction(String action) {
+        DockerSeleniumContainerAction(String action, boolean waitForExecution) {
             containerAction = action;
+            this.waitForExecution = waitForExecution;
         }
 
         public String getContainerAction() {
             return containerAction;
         }
+
+        public boolean isWaitForExecution() {
+            return waitForExecution;
+        }
     }
 
     /*
-        Class to poll continuously the node status regarding the amount of tests executed. If MAX_UNIQUE_TEST_SESSIONS
+        Class to poll continuously the node status regarding the amount of tests executed. If MAX_TEST_SESSIONS
         have been executed, then the node is removed from the grid (this should trigger the docker container to stop).
      */
     static class DockerSeleniumNodePoller extends Thread {

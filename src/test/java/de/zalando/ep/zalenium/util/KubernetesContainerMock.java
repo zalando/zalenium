@@ -27,7 +27,9 @@ import org.apache.commons.lang3.RandomStringUtils;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static org.mockito.Mockito.mock;
@@ -130,38 +132,27 @@ public class KubernetesContainerMock {
                 .andReturn(201, service).always();
 
         String expectedOutput = "test";
-        String execPath = String.format("/api/v1/namespaces/test/pods/%s/exec?command=bash&command=-c&command=transfer-logs.sh&stdout=true&stderr=true", hostName);
-        server.expect()
-                .withPath(execPath)
-                .andUpgradeToWebSocket()
-                .open(new OutputStreamMessage(expectedOutput))
-                .done()
-                .once();
-        execPath = String.format("/api/v1/namespaces/test/pods/%s/exec?command=tar&command=-C&command=/var/log/cont/&command=-c&command=.&stdout=true&stderr=true", hostName);
-        server.expect()
-                .withPath(execPath)
-                .andUpgradeToWebSocket()
-                .open(new OutputStreamMessage(expectedOutput))
-                .done()
-                .once();
-        execPath = String.format("/api/v1/namespaces/test/pods/%s/exec?command=tar&command=-C&command=/videos/&command=-c&command=.&stdout=true&stderr=true", hostName);
-        server.expect()
-                .withPath(execPath)
-                .andUpgradeToWebSocket()
-                .open(new OutputStreamMessage(expectedOutput))
-                .done()
-                .once();
-        execPath = String.format("/api/v1/namespaces/test/pods/%s/exec?command=bash&command=-c&command=stop-video&stdout=true&stderr=true", hostName);
-        server.expect()
-                .withPath(execPath)
-                .andUpgradeToWebSocket()
-                .open(new OutputStreamMessage(expectedOutput))
-                .done()
-                .once();
+        List<String> execPaths = new ArrayList<>();
+        execPaths.add(String.format("/api/v1/namespaces/test/pods/%s/exec?command=bash&command=-c&command=transfer-logs.sh&stdout=true&stderr=true", hostName));
+        execPaths.add(String.format("/api/v1/namespaces/test/pods/%s/exec?command=tar&command=-C&command=/var/log/cont/&command=-c&command=.&stdout=true&stderr=true", hostName));
+        execPaths.add(String.format("/api/v1/namespaces/test/pods/%s/exec?command=tar&command=-C&command=/videos/&command=-c&command=.&stdout=true&stderr=true", hostName));
+        execPaths.add(String.format("/api/v1/namespaces/test/pods/%s/exec?command=bash&command=-c&command=stop-video&stdout=true&stderr=true", hostName));
+        execPaths.add(String.format("/api/v1/namespaces/test/pods/%s/exec?command=bash&command=-c&command=transfer-logs.sh&stdout=true&stderr=true", hostName));
+        execPaths.add(String.format("/api/v1/namespaces/test/pods/%s/exec?command=bash&command=-c&command=cleanup-container.sh&stdout=true&stderr=true", hostName));
+
+        for (String execPath : execPaths) {
+            server.expect()
+                    .withPath(execPath)
+                    .andUpgradeToWebSocket()
+                    .open(new OutputStreamMessage(expectedOutput))
+                    .done()
+                    .once();
+        }
 
         server.expect()
                 .withPath("/api/v1/namespaces/test/pods")
-                .andReturn(201, new PodBuilder().build());
+                .andReturn(201, new PodBuilder().build())
+                .always();
 
         KubernetesClient client = server.getClient();
 

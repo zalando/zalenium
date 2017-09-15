@@ -315,7 +315,7 @@ RUN set -x \
 # ------------------------#
 # https://docs.saucelabs.com/reference/sauce-connect/
 # Layer size: medium: ~13 MB
-ENV SAUCE_CONN_VER="sc-4.4.8-linux" \
+ENV SAUCE_CONN_VER="sc-4.4.9-linux" \
     SAUCE_CONN_DOWN_URL="https://saucelabs.com/downloads"
 RUN cd /tmp \
   && wget -nv "${SAUCE_CONN_DOWN_URL}/${SAUCE_CONN_VER}.tar.gz" \
@@ -388,29 +388,28 @@ ENV ZAL_VER="${project.build.finalName}" \
     TESTINGBOT_TUNNEL="false" \
     TESTINGBOT_WAIT_TIMEOUT="2m"
 
-COPY entry.sh /usr/bin/
-COPY log /usr/bin/
-COPY error /usr/bin/
-COPY zalenium.sh /home/seluser/
-COPY LICENSE.md /home/seluser/
-COPY Analytics.md /home/seluser/
+COPY entry.sh log error /usr/bin/
 COPY nginx.conf /etc/nginx/
-COPY start-browserstack.sh /home/seluser/
-COPY wait-browserstack.sh /home/seluser/
-COPY start-saucelabs.sh /home/seluser/
-COPY wait-saucelabs.sh /home/seluser/
-COPY start-testingbot.sh /home/seluser/
-COPY wait-testingbot.sh /home/seluser/
-COPY list_template.html /home/seluser/
-COPY dashboard_template.html /home/seluser/
-COPY zalando.ico /home/seluser/
 COPY css/ /home/seluser/css/
 COPY js/ /home/seluser/js/
-COPY index.html /home/seluser/index.html
+COPY zalenium.sh \
+ LICENSE.md \
+ Analytics.md \
+ start-browserstack.sh \
+ wait-browserstack.sh \
+ start-saucelabs.sh \
+ wait-saucelabs.sh \
+ start-testingbot.sh \
+ wait-testingbot.sh \
+ list_template.html \
+ dashboard_template.html \
+ index.html \
+ zalando.ico \
+ logging_info.properties \
+ logging_fine.properties \
+ logback.xml \
+ /home/seluser/
 COPY scm-source.json /
-COPY logging_info.properties /home/seluser/logging_info.properties
-COPY logging_fine.properties /home/seluser/logging_fine.properties
-COPY logback.xml /home/seluser/logback.xml
 COPY ${ZAL_VER}.jar /home/seluser/${ZAL_VER}.jar
 
 #-----------------#

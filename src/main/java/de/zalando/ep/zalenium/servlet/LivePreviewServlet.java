@@ -69,7 +69,7 @@ public class LivePreviewServlet extends RegistryBasedServlet {
         int refresh = -1;
         String testGroup = "";
         try {
-            refresh = Integer.parseInt(request.getParameter("refresh"));
+            refresh = request.getParameter("refresh") == null ? -1 : Integer.parseInt(request.getParameter("refresh"));
             testGroup = request.getParameter("group") == null ? "" : request.getParameter("group");
         } catch (Exception e) {
             LOGGER.log(Level.FINE, e.toString(), e);
