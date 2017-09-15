@@ -103,11 +103,14 @@ public class DockerContainerMock {
             String[] startVideo = {"bash", "-c", "start-video"};
             String[] stopVideo = {"bash", "-c", "stop-video"};
             String[] transferLogs = {"bash", "-c", "transfer-logs.sh"};
+            String[] cleanupContainer = {"bash", "-c", "cleanup-container.sh"};
             when(dockerClient.execCreate(containerId, startVideo, DockerClient.ExecCreateParam.attachStdout(),
                     DockerClient.ExecCreateParam.attachStderr())).thenReturn(execCreation);
             when(dockerClient.execCreate(containerId, stopVideo, DockerClient.ExecCreateParam.attachStdout(),
                     DockerClient.ExecCreateParam.attachStderr())).thenReturn(execCreation);
             when(dockerClient.execCreate(containerId, transferLogs, DockerClient.ExecCreateParam.attachStdout(),
+                    DockerClient.ExecCreateParam.attachStderr())).thenReturn(execCreation);
+            when(dockerClient.execCreate(containerId, cleanupContainer, DockerClient.ExecCreateParam.attachStdout(),
                     DockerClient.ExecCreateParam.attachStderr())).thenReturn(execCreation);
 
             when(dockerClient.execStart(anyString())).thenReturn(logStream);

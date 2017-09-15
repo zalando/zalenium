@@ -366,7 +366,6 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
         if (!requestedCapability.containsKey(waitingForNode)) {
             LOGGER.log(Level.INFO, LOGGING_PREFIX + "Starting new node for {0}.", requestedCapability);
             requestedCapability.put(waitingForNode, 1);
-            LOGGER.info(LOGGING_PREFIX + "Container created here ONE.");
             poolExecutor.execute(() -> startDockerSeleniumContainer(browserName, timeZone, screenSize));
         } else {
             int attempts = requestedCapability.get(waitingForNode) == null ?
@@ -395,12 +394,12 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
                 DockerSeleniumRemoteProxy proxy = (DockerSeleniumRemoteProxy) remoteProxy;
                 // If there are still available sessions to be used
                 if (!proxy.isTestSessionLimitReached() && proxy.hasCapability(requestedCapability)) {
-                    LOGGER.log(Level.INFO, LOGGING_PREFIX + "Sessions still available.");
+                    LOGGER.log(Level.FINE, LOGGING_PREFIX + "Sessions still available.");
                     return true;
                 }
             }
         }
-        LOGGER.log(Level.INFO, LOGGING_PREFIX + "No sessions available.");
+        LOGGER.log(Level.FINE, LOGGING_PREFIX + "No sessions available, a new node should be created.");
         return false;
     }
 

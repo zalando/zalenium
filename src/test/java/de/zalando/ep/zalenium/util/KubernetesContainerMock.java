@@ -158,10 +158,25 @@ public class KubernetesContainerMock {
                 .open(new OutputStreamMessage(expectedOutput))
                 .done()
                 .once();
+        execPath = String.format("/api/v1/namespaces/test/pods/%s/exec?command=bash&command=-c&command=transfer-logs.sh&stdout=true&stderr=true", hostName);
+        server.expect()
+                .withPath(execPath)
+                .andUpgradeToWebSocket()
+                .open(new OutputStreamMessage(expectedOutput))
+                .done()
+                .once();
+        execPath = String.format("/api/v1/namespaces/test/pods/%s/exec?command=bash&command=-c&command=cleanup-container.sh&stdout=true&stderr=true", hostName);
+        server.expect()
+                .withPath(execPath)
+                .andUpgradeToWebSocket()
+                .open(new OutputStreamMessage(expectedOutput))
+                .done()
+                .once();
 
         server.expect()
                 .withPath("/api/v1/namespaces/test/pods")
-                .andReturn(201, new PodBuilder().build());
+                .andReturn(201, new PodBuilder().build())
+                .always();
 
         KubernetesClient client = server.getClient();
 

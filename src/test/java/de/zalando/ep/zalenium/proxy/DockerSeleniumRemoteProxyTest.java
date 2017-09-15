@@ -401,6 +401,8 @@ public class DockerSeleniumRemoteProxyTest {
             Environment environment = mock(Environment.class);
             when(environment.getEnvVariable(DockerSeleniumRemoteProxy.ZALENIUM_VIDEO_RECORDING_ENABLED))
                     .thenReturn("false");
+            when(environment.getIntEnvVariable(DockerSeleniumRemoteProxy.ZALENIUM_MAX_TEST_SESSIONS, 1))
+                    .thenReturn(1);
 
             // Creating a spy proxy to verify the invoked methods
             DockerSeleniumRemoteProxy spyProxy = spy(proxy);
