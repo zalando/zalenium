@@ -9,7 +9,7 @@ services:
 
 jobs:
   include:
-    - stage: Integration tests with Sauce Labs
+    - stage: Integration and Unit Tests
       script:
       - docker pull elgalu/selenium
       - travis_retry ./run_integration_tests.sh sauceLabs
@@ -22,32 +22,17 @@ jobs:
       - chmod +x docker-compose
       - sudo mv docker-compose /usr/local/bin
       - travis_retry ./run_integration_tests.sh dockerCompose
-
-
-#before_install:
-#  - docker pull elgalu/selenium
-#  - sudo apt-get install jq
-#  - wget -O ~/codacy-coverage-reporter-assembly-latest.jar $(curl https://api.github.com/repos/codacy/codacy-coverage-reporter/releases/latest | jq -r .assets[0].browser_download_url)
-#  - curl -L https://github.com/docker/compose/releases/download/1.13.0/docker-compose-`uname -s`-`uname -m` > docker-compose
-#  - chmod +x docker-compose
-#  - sudo mv docker-compose /usr/local/bin
-
-#script:
-#  - ./gen-scm-source.sh
-#  # Run unit tests for coverage
-#  - mvn clean package -Pcoverage-report
-
-#after_success:
-  # Report coverage results to Codecov
-#  - bash <(curl -s https://codecov.io/bash)
-  # Report coverage results to Codacy
-#  - java -cp ~/codacy-coverage-reporter-assembly-latest.jar com.codacy.CodacyCoverageReporter -l Java -r ./target/site/jacoco/jacoco.xml
-  # When a tag is set and a release is being done, the image is pushed
-#  - ./push_image.sh
-
-#cache:
-#  directories:
-#    - '$HOME/.m2/repository'
+    - script:
+      - sudo apt-get install jq
+      - wget -O ~/codacy-coverage-reporter-assembly-latest.jar $(curl https://api.github.com/repos/codacy/codacy-coverage-reporter/releases/latest | jq -r .assets[0].browser_download_url)
+      - mvn clean package -Pcoverage-report
+      # Report coverage results to Codecov
+      - bash <(curl -s https://codecov.io/bash)
+      # Report coverage results to Codacy
+      - java -cp ~/codacy-coverage-reporter-assembly-latest.jar com.codacy.CodacyCoverageReporter -l Java -r ./target/site/jacoco/jacoco.xml
+    - stage: Push Image (only with a tag)
+      script:
+      - ./push_image.sh
 
 branches:
   only:
