@@ -95,7 +95,7 @@ WaitSauceLabsProxy()
     DONE_MSG="ondemand.saucelabs.com"
     # Using the ZALENIUM_CONTAINER_NAME environment variable here because this method is exported and does not
     # see the variables declared at the beginning
-    while ! docker logs ${ZALENIUM_CONTAINER_NAME} | grep "${DONE_MSG}" >/dev/null; do
+    while ! docker logs ${ZALENIUM_CONTAINER_NAME} 2>&1 | grep "${DONE_MSG}" >/dev/null; do
         echo -n '.'
         sleep 0.2
     done
@@ -115,7 +115,7 @@ WaitBrowserStackProxy()
     DONE_MSG="hub-cloud.browserstack.com"
     # Using the ZALENIUM_CONTAINER_NAME environment variable here because this method is exported and does not
     # see the variables declared at the beginning
-    while ! docker logs ${ZALENIUM_CONTAINER_NAME} | grep "${DONE_MSG}" >/dev/null; do
+    while ! docker logs ${ZALENIUM_CONTAINER_NAME} 2>&1 | grep "${DONE_MSG}" >/dev/null; do
         echo -n '.'
         sleep 0.2
     done
@@ -135,7 +135,7 @@ WaitTestingBotProxy()
     DONE_MSG="hub.testingbot.com"
     # Using the ZALENIUM_CONTAINER_NAME environment variable here because this method is exported and does not
     # see the variables declared at the beginning
-    while ! docker logs ${ZALENIUM_CONTAINER_NAME} | grep "${DONE_MSG}" >/dev/null; do
+    while ! docker logs ${ZALENIUM_CONTAINER_NAME} 2>&1 | grep "${DONE_MSG}" >/dev/null; do
         echo -n '.'
         sleep 0.2
     done
