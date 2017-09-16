@@ -7,6 +7,7 @@
   * [with TestingBot enabled](#with-testingbot-enabled)
   * [with screen width and height, and time zone](#with-screen-width-and-height-and-time-zone)
   * [with node folders mounted](#with-node-folders-mounted)
+  * [configured to run more than one test per node](#configured-to-run-more-than-one-test-per-node)
   * [More configuration parameters](#more-configuration-parameters)
 * [One line starters](#one-line-starters)
   * [Zalenium one-liner installer](#zalenium-one-liner-installer)
@@ -146,6 +147,27 @@ Please take caution in mounting system folders such as `/etc`, as this behavior 
 
 **NOTE:** There are certain protected points which cannot be mounted via `/tmp/node`. See
 [PROTECTED_NODE_MOUNT_POINTS at DockerContainerClient](../src/main/java/de/zalando/ep/zalenium/container/DockerContainerClient.java).
+
+
+### configured to run more than one test per node
+
+By default, Zalenium will run only one test per node/container. This behaviour can be modified by using the flag
+`--maxTestSessions`. If you setup this flag to a value higher than 1, Zalenium will run up to that given value of tests
+per node/container. Tuning this value for your test suites should help to reduce the overall execution time since less
+containers/nodes are started and stopped on demand. Here is an example:
+
+  ```sh
+    docker run --rm -ti --name zalenium -p 4444:4444 \
+      -v /var/run/docker.sock:/var/run/docker.sock \
+      -v /tmp/videos:/home/seluser/videos \
+      --privileged dosel/zalenium start --maxTestSessions 4
+  ```
+
+This means that up to 4 tests will run in each node/container started by Zalenium. You could combine this parameter
+with `--chromeContainers` or `--firefoxContainers` to get an optimal setup for your tests. For example, if you have
+20 tests that should run in Chrome with 5 threads, you could start Zalenium with `--chromeContainers 5` and
+`--maxTestSessions 4`. Therefore, 4 tests would be executed in each one of the 5 nodes/containers and the whole test
+execution should finish earlier. 
 
 ### More configuration parameters
 

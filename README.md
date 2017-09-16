@@ -111,7 +111,7 @@ dependencies.)
 * Stop it: `docker stop zalenium`
 
 ## Additional features
-* __[BETA]__ [Dashboard](http://localhost:4444/dashboard), see all the videos and aggregated logs after your tests completed
+* [Dashboard](http://localhost:4444/dashboard), see all the videos and aggregated logs after your tests completed
   <p align="center">
     <img id="dashboard" height="337" width="600" src="./images/dashboard.gif" />
   </p>
