@@ -21,6 +21,7 @@ import org.openqa.grid.internal.Registry;
 import org.openqa.grid.internal.TestSession;
 import org.openqa.grid.web.servlet.handler.RequestType;
 import org.openqa.grid.web.servlet.handler.WebDriverRequest;
+import org.openqa.selenium.Dimension;
 import org.openqa.selenium.Platform;
 import org.openqa.selenium.remote.BrowserType;
 import org.openqa.selenium.remote.CapabilityType;
@@ -32,6 +33,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.TimeZone;
 import java.util.concurrent.Callable;
 import java.util.function.Supplier;
 
@@ -164,6 +166,29 @@ public class DockerSeleniumRemoteProxyTest {
         Map<String, Object> requestedCapability = new HashMap<>();
         requestedCapability.put(CapabilityType.BROWSER_NAME, BrowserType.IE);
         requestedCapability.put(CapabilityType.PLATFORM, Platform.WIN10);
+
+        TestSession newSession = proxy.getNewSession(requestedCapability);
+        Assert.assertNull(newSession);
+    }
+
+    @Test
+    public void noSessionIsCreatedWithSpecialScreenSize() {
+        // Non supported capabilities
+        Dimension customScreenSize = new Dimension(1280, 760);
+        Map<String, Object> requestedCapability = getCapabilitySupportedByDockerSelenium();
+        String screenResolution = String.format("%sx%s", customScreenSize.getWidth(), customScreenSize.getHeight());
+        requestedCapability.put("screenResolution", screenResolution);
+
+        TestSession newSession = proxy.getNewSession(requestedCapability);
+        Assert.assertNull(newSession);
+    }
+
+    @Test
+    public void noSessionIsCreatedWithSpecialTimeZone() {
+        // Non supported capabilities
+        TimeZone timeZone = TimeZone.getTimeZone("America/Montreal");
+        Map<String, Object> requestedCapability = getCapabilitySupportedByDockerSelenium();
+        requestedCapability.put("tz", timeZone.getID());
 
         TestSession newSession = proxy.getNewSession(requestedCapability);
         Assert.assertNull(newSession);
