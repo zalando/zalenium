@@ -78,9 +78,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     static final String ZALENIUM_SCREEN_WIDTH = "ZALENIUM_SCREEN_WIDTH";
     @VisibleForTesting
     static final String ZALENIUM_SCREEN_HEIGHT = "ZALENIUM_SCREEN_HEIGHT";
-    @VisibleForTesting
     private static final String DEFAULT_ZALENIUM_CONTAINER_NAME = "zalenium";
-    @VisibleForTesting
     private static final String ZALENIUM_CONTAINER_NAME = "ZALENIUM_CONTAINER_NAME";
     private static final Logger LOGGER = Logger.getLogger(DockerSeleniumStarterRemoteProxy.class.getName());
     private static final String DEFAULT_DOCKER_SELENIUM_IMAGE = "elgalu/selenium";
@@ -92,8 +90,9 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     private static final Environment defaultEnvironment = new Environment();
     private static final String LOGGING_PREFIX = "[DS] ";
     private static final List<Integer> allocatedPorts = Collections.synchronizedList(new ArrayList<>());
+    @VisibleForTesting
+    static List<ProcessedCapabilities> processedCapabilitiesList = new ArrayList<>();
     private static List<DesiredCapabilities> dockerSeleniumCapabilities = new ArrayList<>();
-    private static List<ProcessedCapabilities> processedCapabilitiesList = new ArrayList<>();
     private static ContainerClient containerClient = defaultContainerClient;
     private static Environment env = defaultEnvironment;
     private static GoogleAnalyticsApi ga = new GoogleAnalyticsApi();
@@ -412,10 +411,15 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     }
 
     private void cleanProcessedCapabilities() {
+        /*
+            Cleaning processed capabilities to reduce the risk of having two objects with the same
+            identityHashCode after the garbage collector did its job.
+            Not a silver bullet solution, but should be good enough.
+         */
         List<ProcessedCapabilities> processedCapabilitiesToRemove = new ArrayList<>();
         for (ProcessedCapabilities processedCapability : processedCapabilitiesList) {
             long timeSinceLastProcess = System.currentTimeMillis() - processedCapability.getLastProcessedTime();
-            long maximumLastProcessedTime = 1000 * 30;
+            long maximumLastProcessedTime = 1000 * 60;
             if (timeSinceLastProcess >= maximumLastProcessedTime) {
                 processedCapabilitiesToRemove.add(processedCapability);
             }
