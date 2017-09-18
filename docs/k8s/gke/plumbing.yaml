@@ -1,0 +1,35 @@
+kind: Namespace
+apiVersion: v1
+metadata:
+  name: zalenium
+---
+kind: ServiceAccount
+apiVersion: v1
+metadata:
+  name: zalenium
+  namespace: zalenium
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: zalenium-role
+rules:
+  - verbs: ["create", "list", "get", "delete", "exec"]
+    apiGroups: [""]
+    resources: ["pods"]
+  - verbs: ["list", "create", "delete", "get"]
+    apiGroups: [""]
+    resources: ["services"]
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: zalenium
+subjects:
+- kind: ServiceAccount
+  name: zalenium
+  namespace: zalenium
+roleRef:
+  kind: ClusterRole
+  name: zalenium-role
+  apiGroup: rbac.authorization.k8s.io
