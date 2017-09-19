@@ -9,7 +9,7 @@ import java.util.List;
  */
 @SuppressWarnings("WeakerAccess")
 public class TestInformation {
-    private static final String TEST_FILE_NAME_TEMPLATE = "{proxyName}_{testName}_{browser}_{platform}_{timestamp}";
+    private static final String TEST_FILE_NAME_TEMPLATE = "{buildName}{proxyName}_{testName}_{browser}_{platform}_{timestamp}";
     private static final String FILE_NAME_TEMPLATE = "{fileName}{fileExtension}";
     private static final String ZALENIUM_PROXY_NAME = "Zalenium";
     private static final String SAUCE_LABS_PROXY_NAME = "SauceLabs";
@@ -120,17 +120,26 @@ public class TestInformation {
     }
 
     public void buildVideoFileName() {
-        this.testNameNoExtension = TEST_FILE_NAME_TEMPLATE.replace("{proxyName}", this.proxyName.toLowerCase())
+        String buildName;
+        if ("N/A".equalsIgnoreCase(this.build) || this.build.trim().isEmpty()) {
+            buildName = "";
+        } else {
+            buildName = this.build.replace(" ", "_").replace("/", "_") + "/";
+        }
+
+        this.testNameNoExtension = TEST_FILE_NAME_TEMPLATE
+                .replace("{proxyName}", this.proxyName.toLowerCase())
                 .replace("{testName}", getTestName())
                 .replace("{browser}", this.browser)
                 .replace("{platform}", this.platform)
                 .replace("{timestamp}", commonProxyUtilities.getCurrentDateAndTimeFormatted())
                 .replace(" ", "_")
                 .replace("/", "_");
+        this.testNameNoExtension = this.testNameNoExtension.replace("{buildName}", buildName);
+
         this.fileName = FILE_NAME_TEMPLATE.replace("{fileName}", testNameNoExtension)
-                .replace("{fileExtension}", fileExtension)
-                .replace(" ", "_")
-                .replace("/", "_");
+                .replace("{fileExtension}", fileExtension);
+
         this.videoFolderPath = commonProxyUtilities.currentLocalPath() + "/" + Dashboard.VIDEOS_FOLDER_NAME;
         this.logsFolderPath = commonProxyUtilities.currentLocalPath() + "/" + Dashboard.VIDEOS_FOLDER_NAME + "/" +
                 Dashboard.LOGS_FOLDER_NAME + "/" + testNameNoExtension;
