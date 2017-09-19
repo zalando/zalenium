@@ -391,11 +391,13 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         final String[] command = { "bash", "-c", action.getContainerAction() };
         containerClient.executeCommand(containerId, command, action.isWaitForExecution());
 
-        if (DockerSeleniumContainerAction.STOP_RECORDING == action) {
-            copyVideos(containerId);
-        }
-        if (DockerSeleniumContainerAction.TRANSFER_LOGS == action) {
-            copyLogs(containerId);
+        if (keepVideoAndLogs()) {
+            if (DockerSeleniumContainerAction.STOP_RECORDING == action) {
+                copyVideos(containerId);
+            }
+            if (DockerSeleniumContainerAction.TRANSFER_LOGS == action) {
+                copyLogs(containerId);
+            }
         }
     }
 
@@ -465,15 +467,14 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         videoRecording(DockerSeleniumContainerAction.STOP_RECORDING);
         processContainerAction(DockerSeleniumContainerAction.TRANSFER_LOGS, getContainerId());
         processContainerAction(DockerSeleniumContainerAction.CLEANUP_CONTAINER, getContainerId());
-        if (keepOnlyFailedTests) {
-            if (TestInformation.TestStatus.FAILED.equals(testInformation.getTestStatus())) {
-                Dashboard.updateDashboard(testInformation);
-            } else {
-                LOGGER.log(Level.INFO, getId() + " Only keeping videos from failed tests.");
-            }
-        } else {
+        if (keepVideoAndLogs()) {
             Dashboard.updateDashboard(testInformation);
         }
+    }
+
+    private boolean keepVideoAndLogs() {
+        return !keepOnlyFailedTests || TestInformation.TestStatus.FAILED.equals(testInformation.getTestStatus())
+                || TestInformation.TestStatus.TIMEOUT.equals(testInformation.getTestStatus());
     }
     
     private void shutdownNode(boolean isTestIdle) {
