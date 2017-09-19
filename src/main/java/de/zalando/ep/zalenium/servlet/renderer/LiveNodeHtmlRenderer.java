@@ -55,9 +55,9 @@ public class LiveNodeHtmlRenderer implements HtmlRenderer {
         if (!proxy.getTestName().isEmpty()) {
             testName.append("<p>Test name: ").append(proxy.getTestName()).append("</p>");
         }
-        StringBuilder testGroup = new StringBuilder();
-        if (!proxy.getTestGroup().isEmpty()) {
-            testGroup.append("<p>Test group: ").append(proxy.getTestGroup()).append("</p>");
+        StringBuilder testBuild = new StringBuilder();
+        if (!proxy.getTestBuild().isEmpty()) {
+            testBuild.append("<p>Test build: ").append(proxy.getTestBuild()).append("</p>");
         }
 
         SlotsLines wdLines = new SlotsLines();
@@ -88,7 +88,7 @@ public class LiveNodeHtmlRenderer implements HtmlRenderer {
         renderSummaryValues.put("{{proxyId}}", proxy.getId());
         renderSummaryValues.put("{{proxyPlatform}}", getPlatform(proxy));
         renderSummaryValues.put("{{testName}}", testName.toString());
-        renderSummaryValues.put("{{testGroup}}", testGroup.toString());
+        renderSummaryValues.put("{{testBuild}}", testBuild.toString());
         renderSummaryValues.put("{{browserVersion}}", version);
         renderSummaryValues.put("{{slotIcon}}", icon);
         renderSummaryValues.put("{{slotClass}}", slotClass);

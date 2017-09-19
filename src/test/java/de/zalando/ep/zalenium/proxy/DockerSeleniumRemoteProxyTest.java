@@ -141,7 +141,7 @@ public class DockerSeleniumRemoteProxyTest {
             Assert.assertNull(newSession);
         }
 
-        Assert.assertEquals("anyRandomTestGroup", proxy.getTestGroup());
+        Assert.assertEquals("anyRandomTestGroup", proxy.getTestBuild());
         Assert.assertEquals("anyRandomTestName", proxy.getTestName());
     }
 
@@ -156,7 +156,7 @@ public class DockerSeleniumRemoteProxyTest {
         TestSession newSession = proxy.getNewSession(requestedCapability);
         Assert.assertNotNull(newSession);
 
-        Assert.assertTrue(proxy.getTestGroup().isEmpty());
+        Assert.assertTrue(proxy.getTestBuild().isEmpty());
         Assert.assertEquals(newSession.getInternalKey(), proxy.getTestName());
     }
 
