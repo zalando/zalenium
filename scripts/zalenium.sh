@@ -146,7 +146,7 @@ WaitForVideosTransferred() {
     local __amount_of_tests_with_video=$(jq .executedTestsWithVideo /home/seluser/videos/executedTestsInfo.json)
 
     if [ ${__amount_of_tests_with_video} -gt 0 ]; then
-        local __amount_of_mp4_files=$(ls -1q /home/seluser/videos/*.mp4 | wc -l)
+        local __amount_of_mp4_files=$(ls -1q /home/seluser/videos/**/*.mp4 | wc -l)
         while [ "${__amount_of_mp4_files}" -lt "${__amount_of_tests_with_video}" ]; do
             log "Waiting for ${__amount_of_mp4_files} mp4 files to be a total of ${__amount_of_tests_with_video}..."
             sleep 4
