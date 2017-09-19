@@ -18,6 +18,7 @@ TZ="Europe/Berlin"
 SEND_ANONYMOUS_USAGE_INFO=true
 START_TUNNEL=false
 DEBUG_ENABLED=false
+KEEP_ONLY_FAILED_TESTS=false
 
 GA_TRACKING_ID="UA-88441352-3"
 GA_ENDPOINT=https://www.google-analytics.com/collect
@@ -362,6 +363,7 @@ StartUp()
     export ZALENIUM_CONTAINER_NAME=${CONTAINER_NAME}
     export ZALENIUM_SELENIUM_IMAGE_NAME=${SELENIUM_IMAGE_NAME}
     export ZALENIUM_MAX_TEST_SESSIONS=${MAX_TEST_SESSIONS}
+    export ZALENIUM_KEEP_ONLY_FAILED_TESTS=${KEEP_ONLY_FAILED_TESTS}
 
     # Random ID used for Google Analytics
     # If it is running inside the Zalando Jenkins env, we pick the team name from the $BUILD_URL
@@ -741,6 +743,7 @@ function usage()
     echo -e "\t --gridUser -> allows you to specify a user to enable basic auth protection, --gridPassword must be provided also."
     echo -e "\t --gridPassword -> allows you to specify a password to enable basic auth protection, --gridUser must be provided also."
     echo -e "\t --maxTestSessions -> max amount of tests executed per container, defaults to '1'."
+    echo -e "\t --keepOnlyFailedTests -> Keeps only videos of failed tests (you need to send a cookie). Defaults to 'false'"
     echo ""
     echo -e "\t stop"
     echo ""
@@ -823,6 +826,9 @@ case ${SCRIPT_ACTION} in
                     ;;
                 --maxTestSessions)
                     MAX_TEST_SESSIONS=${VALUE}
+                    ;;
+                --keepOnlyFailedTests)
+                    KEEP_ONLY_FAILED_TESTS=${VALUE}
                     ;;
                 *)
                     echo "ERROR: unknown parameter \"$PARAM\""
