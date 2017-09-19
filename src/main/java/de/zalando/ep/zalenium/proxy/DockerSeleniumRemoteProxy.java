@@ -1,6 +1,9 @@
 package de.zalando.ep.zalenium.proxy;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import de.zalando.ep.zalenium.container.ContainerClient;
 import de.zalando.ep.zalenium.container.ContainerClientRegistration;
 import de.zalando.ep.zalenium.container.ContainerFactory;
@@ -64,7 +67,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     private ContainerClient containerClient = ContainerFactory.getContainerClient();
     private int amountOfExecutedTests;
     private long maxTestIdleTimeSecs;
-    private String testGroup;
+    private String testBuild;
     private String testName;
     private TestInformation testInformation;
     private DockerSeleniumNodePoller dockerSeleniumNodePollerThread = null;
@@ -151,12 +154,14 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                         newSession.getExternalKey().getKey() :
                         newSession.getInternalKey();
             }
-            testGroup = getCapability(requestedCapability, "group", "");
+            testBuild = getCapability(requestedCapability, "build", "");
             if (requestedCapability.containsKey("recordVideo")) {
                 boolean videoRecording = Boolean.parseBoolean(getCapability(requestedCapability, "recordVideo", "true"));
                 setVideoRecordingEnabledSession(videoRecording);
             }
+            String screenResolution = getCapability(newSession.getSlot().getCapabilities(), "screenResolution", "N/A");
             String browserVersion = getCapability(newSession.getSlot().getCapabilities(), "version", "");
+            String timeZone = getCapability(newSession.getSlot().getCapabilities(), "tz", "N/A");
             testInformation = new TestInformation.TestInformationBuilder()
                     .withTestName(testName)
                     .withSeleniumSessionId(testName)
@@ -164,6 +169,9 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                     .withBrowser(browserName)
                     .withBrowserVersion(browserVersion)
                     .withPlatform(Platform.LINUX.name())
+                    .withScreenDimension(screenResolution)
+                    .withTimeZone(timeZone)
+                    .withBuild(testBuild)
                     .withTestStatus(TestInformation.TestStatus.COMPLETED)
                     .build();
             testInformation.setVideoRecorded(isVideoRecordingEnabled());
@@ -202,6 +210,22 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         super.beforeCommand(session, request, response);
         LOGGER.log(Level.FINE,
                 getId() + " lastCommand: " +  request.getMethod() + " - " + request.getPathInfo() + " executing...");
+        if (request instanceof WebDriverRequest && "POST".equalsIgnoreCase(request.getMethod())) {
+            WebDriverRequest seleniumRequest = (WebDriverRequest) request;
+            if (seleniumRequest.getPathInfo().endsWith("cookie")) {
+                LOGGER.log(Level.FINE, getId() + " Checking for cookies..." + seleniumRequest.getBody());
+                JsonElement bodyRequest = new JsonParser().parse(seleniumRequest.getBody());
+                JsonObject cookie = bodyRequest.getAsJsonObject().getAsJsonObject("cookie");
+                if ("zaleniumTestPassed".equalsIgnoreCase(cookie.get("name").getAsString())) {
+                    boolean testPassed = Boolean.parseBoolean(cookie.get("value").getAsString());
+                    if (testPassed) {
+                        testInformation.setTestStatus(TestInformation.TestStatus.SUCCESS);
+                    } else {
+                        testInformation.setTestStatus(TestInformation.TestStatus.FAILED);
+                    }
+                }
+            }
+        }
     }
 
     @Override
@@ -213,9 +237,6 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
             WebDriverRequest seleniumRequest = (WebDriverRequest) request;
             if (RequestType.START_SESSION.equals(seleniumRequest.getRequestType())) {
                 videoRecording(DockerSeleniumContainerAction.START_RECORDING);
-            }
-            if (RequestType.STOP_SESSION.equals(seleniumRequest.getRequestType())) {
-                LOGGER.log(Level.FINE, getId() + " Receiving cookie for passed/failed test.");
             }
         }
     }
@@ -342,8 +363,8 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         return testName == null ? "" : testName;
     }
 
-    public String getTestGroup() {
-        return testGroup == null ? "" : testGroup;
+    public String getTestBuild() {
+        return testBuild == null ? "" : testBuild;
     }
 
     public long getMaxTestIdleTimeSecs() {
