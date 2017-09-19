@@ -91,8 +91,18 @@ public class BrowserStackRemoteProxy extends CloudTestingRemoteProxy {
         String platformVersion = automation_session.get("os_version").getAsString();
         String videoUrl = automation_session.get("video_url").getAsString();
         List<String> logUrls = new ArrayList<>();
-        return new TestInformation(seleniumSessionId, testName, getProxyName(), browser, browserVersion, platform,
-                platformVersion, getVideoFileExtension(), videoUrl, logUrls);
+        return new TestInformation.TestInformationBuilder()
+                .withSeleniumSessionId(seleniumSessionId)
+                .withTestName(testName)
+                .withProxyName(getProxyName())
+                .withBrowser(browser)
+                .withBrowserVersion(browserVersion)
+                .withPlatform(platform)
+                .withPlatformVersion(platformVersion)
+                .withFileExtension(getVideoFileExtension())
+                .withVideoUrl(videoUrl)
+                .withLogUrls(logUrls)
+                .build();
     }
 
     @Override

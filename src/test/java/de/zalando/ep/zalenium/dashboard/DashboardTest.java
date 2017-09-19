@@ -20,8 +20,14 @@ public class DashboardTest {
 
     private static final String TEST_COUNT_FILE_NAME = "executedTestsInfo.json";
 
-    private TestInformation ti = new TestInformation("seleniumSessionId", "testName", "proxyName", "browser",
-            "browserVersion", "platform");
+    private TestInformation ti = new TestInformation.TestInformationBuilder()
+            .withSeleniumSessionId("seleniumSessionId")
+            .withTestName("testName")
+            .withProxyName("proxyName")
+            .withBrowser("browser")
+            .withBrowserVersion("browserVersion")
+            .withPlatform("platform")
+            .build();
 
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();

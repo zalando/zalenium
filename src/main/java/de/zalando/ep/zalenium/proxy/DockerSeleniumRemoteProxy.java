@@ -157,8 +157,15 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                 setVideoRecordingEnabledSession(videoRecording);
             }
             String browserVersion = getCapability(newSession.getSlot().getCapabilities(), "version", "");
-            testInformation = new TestInformation(testName, testName, "Zalenium", browserName, browserVersion,
-                    Platform.LINUX.name());
+            testInformation = new TestInformation.TestInformationBuilder()
+                    .withTestName(testName)
+                    .withSeleniumSessionId(testName)
+                    .withProxyName("Zalenium")
+                    .withBrowser(browserName)
+                    .withBrowserVersion(browserVersion)
+                    .withPlatform(Platform.LINUX.name())
+                    .withTestStatus(TestInformation.TestStatus.COMPLETED)
+                    .build();
             testInformation.setVideoRecorded(isVideoRecordingEnabled());
             maxTestIdleTimeSecs = getConfiguredIdleTimeout(requestedCapability);
             return newSession;
@@ -207,26 +214,32 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
             if (RequestType.START_SESSION.equals(seleniumRequest.getRequestType())) {
                 videoRecording(DockerSeleniumContainerAction.START_RECORDING);
             }
+            if (RequestType.STOP_SESSION.equals(seleniumRequest.getRequestType())) {
+                LOGGER.log(Level.FINE, getId() + " Receiving cookie for passed/failed test.");
+            }
         }
     }
 
     @Override
     public void afterSession(TestSession session) {
-        if (isTestSessionLimitReached()) {
-            String message = String.format("%s AFTER_SESSION command received. Node should shutdown soon...", getId());
-            LOGGER.log(Level.INFO, message);
-            shutdownNode(false);
+        // This means that the shutdown command was triggered before receiving this afterSession command
+        if (!TestInformation.TestStatus.TIMEOUT.getTestStatus().equalsIgnoreCase(testInformation.getTestStatus().getTestStatus())) {
+            if (isTestSessionLimitReached()) {
+                String message = String.format("%s AFTER_SESSION command received. Node should shutdown soon...", getId());
+                LOGGER.log(Level.INFO, message);
+                shutdownNode(false);
+            }
+            else {
+                String message = String.format(
+                        "%s AFTER_SESSION command received. Cleaning up node for reuse, used %s of max %s", getId(),
+                        getAmountOfExecutedTests(), MAX_TEST_SESSIONS);
+                LOGGER.log(Level.INFO, message);
+                cleanupNode();
+            }
+            long executionTime = (System.currentTimeMillis() - session.getSlot().getLastSessionStart()) / 1000;
+            ga.testEvent(DockerSeleniumRemoteProxy.class.getName(), session.getRequestedCapabilities().toString(),
+                    executionTime);
         }
-        else {
-            String message = String.format(
-                    "%s AFTER_SESSION command received. Cleaning up node for reuse, used %s of max %s", getId(),
-                    getAmountOfExecutedTests(), MAX_TEST_SESSIONS);
-            LOGGER.log(Level.INFO, message);
-            cleanupNode();
-        }
-        long executionTime = (System.currentTimeMillis() - session.getSlot().getLastSessionStart()) / 1000;
-        ga.testEvent(DockerSeleniumRemoteProxy.class.getName(), session.getRequestedCapabilities().toString(),
-                executionTime);
         super.afterSession(session);
     }
 
@@ -459,7 +472,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         private boolean waitForExecution;
 
         DockerSeleniumContainerAction(String action, boolean waitForExecution) {
-            containerAction = action;
+            this.containerAction = action;
             this.waitForExecution = waitForExecution;
         }
 
@@ -480,7 +493,6 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
 
         private static long sleepTimeBetweenChecks = 500;
         private DockerSeleniumRemoteProxy dockerSeleniumRemoteProxy = null;
-
         DockerSeleniumNodePoller(DockerSeleniumRemoteProxy dockerSeleniumRemoteProxy) {
             this.dockerSeleniumRemoteProxy = dockerSeleniumRemoteProxy;
         }
@@ -496,6 +508,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                     If the current session has been idle for a while, the node shuts down
                 */
                 if (dockerSeleniumRemoteProxy.isTestIdle()) {
+                    dockerSeleniumRemoteProxy.testInformation.setTestStatus(TestInformation.TestStatus.TIMEOUT);
                     LOGGER.log(Level.INFO, dockerSeleniumRemoteProxy.getId() +
                             " Shutting down node due to test inactivity");
                     dockerSeleniumRemoteProxy.shutdownNode(true);

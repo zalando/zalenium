@@ -67,13 +67,18 @@ public class Dashboard {
             synchronizeExecutedTestsValues(testCountFile);
 
             String testEntry = FileUtils.readFileToString(new File(getCurrentLocalPath(), "list_template.html"), UTF_8);
-            testEntry = testEntry.replace("{fileName}", testInformation.getFileName()).
-                    replace("{testName}", testInformation.getTestName()).
-                    replace("{dateAndTime}", commonProxyUtilities.getShortDateAndTime()).
-                    replace("{browserAndPlatform}", testInformation.getBrowserAndPlatform()).
-                    replace("{proxyName}", testInformation.getProxyName()).
-                    replace("{seleniumLogFileName}", testInformation.getSeleniumLogFileName()).
-                    replace("{browserDriverLogFileName}", testInformation.getBrowserDriverLogFileName());
+            testEntry = testEntry.replace("{fileName}", testInformation.getFileName())
+                    .replace("{testName}", testInformation.getTestName())
+                    .replace("{dateAndTime}", commonProxyUtilities.getShortDateAndTime())
+                    .replace("{browserAndPlatform}", testInformation.getBrowserAndPlatform())
+                    .replace("{proxyName}", testInformation.getProxyName())
+                    .replace("{seleniumLogFileName}", testInformation.getSeleniumLogFileName())
+                    .replace("{browserDriverLogFileName}", testInformation.getBrowserDriverLogFileName())
+                    .replace("{testStatus}", testInformation.getTestStatus().getTestStatus())
+                    .replace("{testBadge}", testInformation.getTestStatus().getTestBadge())
+                    .replace("{screenDimension}", testInformation.getScreenDimension())
+                    .replace("{timeZone}", testInformation.getTimeZone())
+                    .replace("{testBuild}", testInformation.getBuild());
 
             File testList = new File(getLocalVideosPath(), TEST_LIST_FILE);
             // Putting the new entry at the top
