@@ -119,6 +119,7 @@ public class SauceLabsRemoteProxy extends CloudTestingRemoteProxy {
                 .withBrowser(browser)
                 .withBrowserVersion(browserVersion)
                 .withPlatform(platform)
+                .withTestStatus(TestInformation.TestStatus.COMPLETED)
                 .withFileExtension(getVideoFileExtension())
                 .withVideoUrl(sauceLabsVideoUrl)
                 .withLogUrls(logUrls)

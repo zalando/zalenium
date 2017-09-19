@@ -98,6 +98,7 @@ public class BrowserStackRemoteProxy extends CloudTestingRemoteProxy {
                 .withBrowser(browser)
                 .withBrowserVersion(browserVersion)
                 .withPlatform(platform)
+                .withTestStatus(TestInformation.TestStatus.COMPLETED)
                 .withPlatformVersion(platformVersion)
                 .withFileExtension(getVideoFileExtension())
                 .withVideoUrl(videoUrl)

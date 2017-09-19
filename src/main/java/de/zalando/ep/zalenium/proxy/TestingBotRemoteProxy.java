@@ -103,6 +103,7 @@ public class TestingBotRemoteProxy extends CloudTestingRemoteProxy {
                     .withBrowser(browser)
                     .withBrowserVersion(browserVersion)
                     .withPlatform(platform)
+                    .withTestStatus(TestInformation.TestStatus.COMPLETED)
                     .withFileExtension(getVideoFileExtension())
                     .withVideoUrl(videoUrl)
                     .withLogUrls(logUrls)
