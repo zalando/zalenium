@@ -186,9 +186,9 @@ public class TestInformation {
         this.videoUrl = builder.videoUrl;
         this.fileExtension = builder.fileExtension == null ? "" : builder.fileExtension;
         this.logUrls = builder.logUrls;
-        this.screenDimension = builder.screenDimension == null ? "N/A" :builder.screenDimension;
-        this.timeZone = builder.timeZone == null ? "N/A" : builder.timeZone;
-        this.build = builder.build == null ? "N/A" : builder.build;
+        this.screenDimension = builder.screenDimension == null ? "" :builder.screenDimension;
+        this.timeZone = builder.timeZone == null ? "" : builder.timeZone;
+        this.build = builder.build == null ? "" : builder.build;
         this.testStatus = builder.testStatus;
         this.videoRecorded = true;
         buildVideoFileName();

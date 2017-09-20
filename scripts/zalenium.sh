@@ -147,14 +147,14 @@ WaitForVideosTransferred() {
     local __amount_of_tests_with_video=$(jq .executedTestsWithVideo /home/seluser/videos/executedTestsInfo.json)
 
     if [ ${__amount_of_tests_with_video} -gt 0 ]; then
-        local __amount_of_mp4_files=$(ls -1q /home/seluser/videos/**/*.mp4 | wc -l)
+        local __amount_of_mp4_files=$(find /home/seluser/videos/ -name '*.mp4' | wc -l)
         while [ "${__amount_of_mp4_files}" -lt "${__amount_of_tests_with_video}" ]; do
             log "Waiting for ${__amount_of_mp4_files} mp4 files to be a total of ${__amount_of_tests_with_video}..."
             sleep 4
 
             # Also check if there are mkv, this would mean that
             # docker-selenium failed to convert them to mp4
-            local __amount_of_mkv_files=$(ls -1q /home/seluser/videos/*.mkv | wc -l)
+            local __amount_of_mkv_files=$(ls -1q find /home/seluser/videos/ -name '*.mkv' | wc -l)
             if [ ${__amount_of_mkv_files} -gt 0 ]; then
                 for __filename in /home/seluser/videos/*.mkv; do
                     local __new_file_name="$(basename ${__filename} .mkv).mp4"
