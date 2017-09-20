@@ -28,6 +28,7 @@
   * [Screen resolution](#screen-resolution)
   * [Disable video recording](#disable-video-recording)
   * [Time zone](#time-zone)
+  * [Marking the test as passed or failed](#marking-the-test-as-passed-or-failed)
 * [Accessing the host](#accessing-the-host)
   * [Linux](#linux-env)
   * [OSX](#osx-env)
@@ -358,6 +359,17 @@ desired value. E.g. `tz=America/Montreal`. Example code in Java for the capabili
     desiredCapabilities.setCapability("tz", "America/Montreal");
   ```
 
+### Marking the test as passed or failed
+By default, tests in Zalenium are marked in the dashboard either as COMPLETED (session finishes normally) or TIMEOUT
+(session was ended due to inactivity). You can mark the test as passed or failed based on the assertions you do on
+your side with your test framework, add a cookie from with the name `zaleniumTestPassed` with a value of `true` (if the
+test passes) or false (if the test fails). This could be done in the after method where you already know if the test
+passed or failed. Here is an example in Java: 
+
+  ```java
+    Cookie cookie = new Cookie("zaleniumTestPassed", "true");
+    webDriver.manage().addCookie(cookie);
+  ```
 
 ### Set browser language (works only with Chrome)
 You can set the browser language when using Google Chrome, just pass the `ChromeOptions` variable with the language
