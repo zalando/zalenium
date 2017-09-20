@@ -19,11 +19,11 @@
 * [Live preview](#live-preview)
   * [Displaying the live preview](#displaying-the-live-preview)
   * [Showing the test name on the live preview](#showing-the-test-name-on-the-live-preview)
-  * [Filtering tests by group name](#filtering-tests-by-group-name)
+  * [Filtering tests by build name](#filtering-tests-by-build-name)
 * [Dashboard](#dashboard)
 * [Test Configuration Options](#test-configuration-options)
   * [Test name](#test-name)
-  * [Group name](#group-name)
+  * [Build name](#build-name)
   * [Idle Timeout](#idle-timeout)
   * [Screen resolution](#screen-resolution)
   * [Disable video recording](#disable-video-recording)
@@ -268,11 +268,11 @@ page every 20 seconds.
 Having a `name` capability with the test name will display it in the live preview. See [test name](#test-name) for more 
 information.
 
-### Filtering tests by group name
-If more than one person is using the same instance of Zalenium, with a `group` capability in your tests, the live 
-preview can be filtered to show only the tests that belong to a specific group. Pass `?group=myTestGroup` at the end 
-of the url. E.g. [http://localhost:4444/grid/admin/live?group=myTestGroup](http://localhost:4444/grid/admin/live?group=myTestGroup).
-See more details at [group name](#group-name).
+### Filtering tests by build name
+If more than one person is using the same instance of Zalenium, with a `build` capability in your tests, the live 
+preview can be filtered to show only the tests that belong to a specific build. Pass `?build=myTestBuild` at the end 
+of the url. E.g. [http://localhost:4444/grid/admin/live?build=myTestBuild](http://localhost:4444/grid/admin/live?build=myTestBuild).
+See more details at [build name](#build-name).
 
 ## Dashboard
 
@@ -300,14 +300,15 @@ Example code in Java for the capability:
     desiredCapabilities.setCapability("name", "myTestName");
   ```
 
-### Group name
-Useful to filter the live preview and only display a group of tests. Example code in Java for the capability:
+### Build name
+Useful to filter the live preview and only display a group of tests belonging to the same build. Example code in Java
+for the capability:
 
   ```java
     DesiredCapabilities desiredCapabilities = new DesiredCapabilities();
     desiredCapabilities.setCapability(CapabilityType.BROWSER_NAME, BrowserType.CHROME);
     desiredCapabilities.setCapability(CapabilityType.PLATFORM, Platform.LINUX);
-    desiredCapabilities.setCapability("group", "myTestGroup");
+    desiredCapabilities.setCapability("build", "myTestBuild");
   ```
 
 ### Idle timeout

@@ -254,14 +254,12 @@
 
         // This will only work when the page is accessed via a WebServer
         // Loads new tests in the list as the file gets modified
-        /*
         setInterval(function() {
             var current_query = $('#search').val().toUpperCase();
             if (current_query === "") {
                 $('#tests').load(document.URL +  ' #tests');
             }
-        }, 2000);
-        */
+        }, 5000);
 
         $(document).on('click', '#cleanupButton', function () {
             var url = [location.protocol, '//', location.host, location.pathname].join('');
@@ -269,7 +267,7 @@
             $('#tests').load(document.URL +  ' #tests');
             playVideo("");
             loadLogs("", "");
-            setTestInformation("", "", "", "");
+            setTestInformation("", "", "", "", "", "", "", "", "");
         });
 
     </script>
