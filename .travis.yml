@@ -11,13 +11,13 @@ jobs:
   include:
     - stage: Integration and Unit Tests
       script:
-      - docker pull elgalu/selenium
+      - docker pull elgalu/selenium:3.5.3
       - travis_retry ./run_integration_tests.sh sauceLabs
     - script:
-      - docker pull elgalu/selenium
+      - docker pull elgalu/selenium:3.5.3
       - travis_retry ./run_integration_tests.sh browserStack
     - script:
-      - docker pull elgalu/selenium
+      - docker pull elgalu/selenium:3.5.3
       - curl -L https://github.com/docker/compose/releases/download/1.13.0/docker-compose-`uname -s`-`uname -m` > docker-compose
       - chmod +x docker-compose
       - sudo mv docker-compose /usr/local/bin
@@ -32,6 +32,7 @@ jobs:
       - java -cp ~/codacy-coverage-reporter-assembly-latest.jar com.codacy.CodacyCoverageReporter -l Java -r ./target/site/jacoco/jacoco.xml
     - stage: Push Image (only with a tag)
       script:
+      - ./gen-scm-source.sh
       - ./push_image.sh
 
 branches:

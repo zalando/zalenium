@@ -7,6 +7,7 @@ import de.zalando.ep.zalenium.container.kubernetes.KubernetesContainerClient;
 import de.zalando.ep.zalenium.matcher.DockerSeleniumCapabilityMatcher;
 import de.zalando.ep.zalenium.util.Environment;
 import de.zalando.ep.zalenium.util.GoogleAnalyticsApi;
+import de.zalando.ep.zalenium.util.ProcessedCapabilities;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.RandomUtils;
 import org.openqa.grid.common.RegistrationRequest;
@@ -77,9 +78,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     static final String ZALENIUM_SCREEN_WIDTH = "ZALENIUM_SCREEN_WIDTH";
     @VisibleForTesting
     static final String ZALENIUM_SCREEN_HEIGHT = "ZALENIUM_SCREEN_HEIGHT";
-    @VisibleForTesting
     private static final String DEFAULT_ZALENIUM_CONTAINER_NAME = "zalenium";
-    @VisibleForTesting
     private static final String ZALENIUM_CONTAINER_NAME = "ZALENIUM_CONTAINER_NAME";
     private static final Logger LOGGER = Logger.getLogger(DockerSeleniumStarterRemoteProxy.class.getName());
     private static final String DEFAULT_DOCKER_SELENIUM_IMAGE = "elgalu/selenium";
@@ -91,6 +90,8 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     private static final Environment defaultEnvironment = new Environment();
     private static final String LOGGING_PREFIX = "[DS] ";
     private static final List<Integer> allocatedPorts = Collections.synchronizedList(new ArrayList<>());
+    @VisibleForTesting
+    static List<ProcessedCapabilities> processedCapabilitiesList = new ArrayList<>();
     private static List<DesiredCapabilities> dockerSeleniumCapabilities = new ArrayList<>();
     private static ContainerClient containerClient = defaultContainerClient;
     private static Environment env = defaultEnvironment;
@@ -143,12 +144,6 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
 
         String seleniumImageName = env.getStringEnvVariable(ZALENIUM_SELENIUM_IMAGE_NAME, DEFAULT_DOCKER_SELENIUM_IMAGE);
         setDockerSeleniumImageName(seleniumImageName);
-    }
-
-    @Override
-    public void teardown() {
-        super.teardown();
-        poolExecutor.shutdown();
     }
 
     /*
@@ -224,7 +219,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
         DockerSeleniumStarterRemoteProxy.firefoxContainersOnStartup = firefoxContainersOnStartup < 0 ?
                 DEFAULT_AMOUNT_FIREFOX_CONTAINERS : firefoxContainersOnStartup;
     }
-    
+
     public static String getContainerName() {
         return containerName == null ? DEFAULT_ZALENIUM_CONTAINER_NAME : containerName;
     }
@@ -232,7 +227,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     private static void setContainerName(String containerName) {
         DockerSeleniumStarterRemoteProxy.containerName = containerName;
     }
-
+    
     public static String getDockerSeleniumImageName() {
         return dockerSeleniumImageName == null ? DEFAULT_DOCKER_SELENIUM_IMAGE : dockerSeleniumImageName;
     }
@@ -314,6 +309,12 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
         env = defaultEnvironment;
     }
 
+    @Override
+    public void teardown() {
+        super.teardown();
+        poolExecutor.shutdown();
+    }
+
     public HtmlRenderer getHtmlRender() {
         return this.renderer;
     }
@@ -348,59 +349,82 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
         /*
             Reusing nodes, rejecting requests when test sessions are still available in the existing nodes.
          */
-        String waitingForNode = String.format("waitingFor_%s_Node", browserName.toUpperCase());
         if (testSessionsAvailable(requestedCapability)) {
-            requestedCapability.put(waitingForNode, 1);
             LOGGER.log(Level.FINE, LOGGING_PREFIX + "There are sessions available for {0}, won't start a new node yet.",
                     requestedCapability);
             return null;
         }
 
-        /*
-            Here a docker-selenium container will be started and it will register to the hub
-            We check first if a node has been created for this request already. If so, we skip it
-            but increment the number of times it has been received. In case something went wrong with the node
-            creation, we remove the mark after 30 times and we create a node again.
-            * The mark is an added custom capability
-         */
-        if (!requestedCapability.containsKey(waitingForNode)) {
-            LOGGER.log(Level.INFO, LOGGING_PREFIX + "Starting new node for {0}.", requestedCapability);
-            requestedCapability.put(waitingForNode, 1);
-            poolExecutor.execute(() -> startDockerSeleniumContainer(browserName, timeZone, screenSize));
-        } else {
-            int attempts = requestedCapability.get(waitingForNode) == null ?
-                    1 : (int) requestedCapability.get(waitingForNode);
-            attempts++;
-            requestedCapability.put(waitingForNode, attempts);
-            long pendingTasks = poolExecutor.getTaskCount() - poolExecutor.getCompletedTaskCount();
-            if (pendingTasks == 0) {
-                LOGGER.log(Level.INFO, LOGGING_PREFIX + "No pending tasks, starting new node for {0}.", requestedCapability);
-                poolExecutor.execute(() -> startDockerSeleniumContainer(browserName, timeZone, screenSize));
-                return null;
-            }
-            if (attempts >= 30) {
-                LOGGER.log(Level.INFO, LOGGING_PREFIX + "Request has waited 30 attempts for a node, something " +
-                        "went wrong with the previous attempts, creating a new node for {0}.", requestedCapability);
-                requestedCapability.put(waitingForNode, 1);
-                poolExecutor.execute(() -> startDockerSeleniumContainer(browserName, timeZone, screenSize));
-            }
+        // Checking if this request has been processed based on its id, contents, and attempts
+        if (hasRequestBeenProcessed(requestedCapability)) {
+            LOGGER.log(Level.FINE, LOGGING_PREFIX + "Request {0}, has been processed and it is waiting for a node.",
+                    requestedCapability);
+            return null;
         }
+        ProcessedCapabilities processedCapabilities = new ProcessedCapabilities(requestedCapability,
+                System.identityHashCode(requestedCapability));
+        processedCapabilitiesList.add(processedCapabilities);
+        LOGGER.log(Level.INFO, LOGGING_PREFIX + "Starting new node for {0}.", requestedCapability);
+        poolExecutor.execute(() -> startDockerSeleniumContainer(browserName, timeZone, screenSize));
+        cleanProcessedCapabilities();
+
         return null;
     }
 
-    private boolean testSessionsAvailable(Map<String, Object> requestedCapability) {
-        for (RemoteProxy remoteProxy : this.getRegistry().getAllProxies()) {
-            if (remoteProxy instanceof DockerSeleniumRemoteProxy) {
-                DockerSeleniumRemoteProxy proxy = (DockerSeleniumRemoteProxy) remoteProxy;
-                // If there are still available sessions to be used
-                if (!proxy.isTestSessionLimitReached() && proxy.hasCapability(requestedCapability)) {
-                    LOGGER.log(Level.FINE, LOGGING_PREFIX + "Sessions still available.");
-                    return true;
+    private boolean hasRequestBeenProcessed(Map<String, Object> requestedCapability) {
+        int requestedCapabilityHashCode = System.identityHashCode(requestedCapability);
+        for (ProcessedCapabilities processedCapability : processedCapabilitiesList) {
+
+            LOGGER.log(Level.FINE, LOGGING_PREFIX + "System.identityHashCode(requestedCapability) -> "
+                    + System.identityHashCode(requestedCapability) + ", " + requestedCapability);
+            LOGGER.log(Level.FINE, LOGGING_PREFIX + "processedCapability.getIdentityHashCode() -> "
+                    + processedCapability.getIdentityHashCode() + ", " + processedCapability.getRequestedCapability());
+
+            if (processedCapability.getIdentityHashCode() == requestedCapabilityHashCode) {
+
+                processedCapability.setLastProcessedTime(System.currentTimeMillis());
+                int processedTimes = processedCapability.getProcessedTimes() + 1;
+                processedCapability.setProcessedTimes(processedTimes);
+
+                /*
+                // Leaving this code commented since it seems it is not needed anymore with the new processing logic
+                // TODO: Check behaviour and see if it necessary to uncomment, otherwise just delete
+                long pendingTasks = poolExecutor.getTaskCount() - poolExecutor.getCompletedTaskCount();
+                if (pendingTasks == 0) {
+                    LOGGER.log(Level.INFO, LOGGING_PREFIX + "No pending tasks, starting new node for {0}.", requestedCapability);
+                    return false;
                 }
+                */
+
+                if (processedTimes >= 30) {
+                    processedCapability.setProcessedTimes(1);
+                    LOGGER.log(Level.INFO, LOGGING_PREFIX + "Request has waited 30 attempts for a node, something " +
+                            "went wrong with the previous attempts, creating a new node for {0}.", requestedCapability);
+                    return false;
+                }
+
+                return true;
+            }
+
+        }
+        return false;
+    }
+
+    private void cleanProcessedCapabilities() {
+        /*
+            Cleaning processed capabilities to reduce the risk of having two objects with the same
+            identityHashCode after the garbage collector did its job.
+            Not a silver bullet solution, but should be good enough.
+         */
+        List<ProcessedCapabilities> processedCapabilitiesToRemove = new ArrayList<>();
+        for (ProcessedCapabilities processedCapability : processedCapabilitiesList) {
+            long timeSinceLastProcess = System.currentTimeMillis() - processedCapability.getLastProcessedTime();
+            long maximumLastProcessedTime = 1000 * 60;
+            if (timeSinceLastProcess >= maximumLastProcessedTime) {
+                processedCapabilitiesToRemove.add(processedCapability);
             }
         }
-        LOGGER.log(Level.FINE, LOGGING_PREFIX + "No sessions available, a new node should be created.");
-        return false;
+        processedCapabilitiesList.removeAll(processedCapabilitiesToRemove);
     }
 
     @Override
@@ -483,7 +507,8 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
                 URL statusUrl = new URL(String.format("http://%s:%s/wd/hub/status", containerIp, nodePort));
                 try {
                     String status = IOUtils.toString(statusUrl, StandardCharsets.UTF_8);
-                    if (status.contains("success")) {
+                    String successMessage = "\"Node is running\"";
+                    if (status.contains(successMessage)) {
                         LOGGER.log(Level.INFO, String.format("%sContainer %s is up after ~%s seconds...",
                                 LOGGING_PREFIX, createdContainerName, i));
                         return true;
@@ -579,7 +604,6 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
         This method will search for a screenResolution capability to be passed when creating a docker-selenium node.
     */
     private Dimension getConfiguredScreenResolutionFromCapabilities(Map<String, Object> requestedCapability) {
-        boolean wasConfiguredScreenWidthAndHeightChanged = false;
         Dimension screenSize = getConfiguredScreenSize();
         String[] screenResolutionNames = {"screenResolution", "resolution", "screen-resolution"};
         for (String screenResolutionName : screenResolutionNames) {
@@ -590,7 +614,6 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
                     int screenHeight = Integer.parseInt(screenResolution.split("x")[1]);
                     if (screenWidth > 0 && screenHeight > 0) {
                         screenSize = new Dimension(screenWidth, screenHeight);
-                        wasConfiguredScreenWidthAndHeightChanged = true;
                     } else {
                         LOGGER.log(Level.FINE, "One of the values provided for screenResolution is negative, " +
                                 "defaults will be used. Passed value -> " + screenResolution);
@@ -602,13 +625,6 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
                 }
             }
         }
-        // If the screen resolution parameters were not changed, we just set the defaults again.
-        // Also in the capabilities, to avoid the situation where a request grabs the node from other request
-        // just because the platform, version, and browser match.
-        if (!wasConfiguredScreenWidthAndHeightChanged) {
-            String screenResolution = String.format("%sx%s", screenSize.getWidth(), screenSize.getHeight());
-            requestedCapability.put("screenResolution", screenResolution);
-        }
         return screenSize;
     }
 
@@ -616,21 +632,30 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     This method will search for a tz capability to be passed when creating a docker-selenium node.
     */
     private TimeZone getConfiguredTimeZoneFromCapabilities(Map<String, Object> requestedCapability) {
-        boolean wasConfiguredTimeZoneChanged = false;
         String timeZoneName = "tz";
         TimeZone timeZone = getConfiguredTimeZone();
         if (requestedCapability.containsKey(timeZoneName)) {
             String timeZoneFromCapabilities = requestedCapability.get(timeZoneName).toString();
             if (Arrays.asList(TimeZone.getAvailableIDs()).contains(timeZoneFromCapabilities)) {
                 timeZone = TimeZone.getTimeZone(timeZoneFromCapabilities);
-                wasConfiguredTimeZoneChanged = true;
             }
         }
-        // If the time zone parameter was not changed, we just set the defaults again.
-        if (!wasConfiguredTimeZoneChanged) {
-            requestedCapability.put(timeZoneName, timeZone.getID());
-        }
         return timeZone;
+    }
+
+    private boolean testSessionsAvailable(Map<String, Object> requestedCapability) {
+        for (RemoteProxy remoteProxy : this.getRegistry().getAllProxies()) {
+            if (remoteProxy instanceof DockerSeleniumRemoteProxy) {
+                DockerSeleniumRemoteProxy proxy = (DockerSeleniumRemoteProxy) remoteProxy;
+                // If there are still available sessions to be used
+                if (!proxy.isTestSessionLimitReached() && proxy.hasCapability(requestedCapability)) {
+                    LOGGER.log(Level.FINE, LOGGING_PREFIX + "Sessions still available.");
+                    return true;
+                }
+            }
+        }
+        LOGGER.log(Level.FINE, LOGGING_PREFIX + "No sessions available, a new node should be created.");
+        return false;
     }
 
     private boolean validateAmountOfDockerSeleniumContainers() {

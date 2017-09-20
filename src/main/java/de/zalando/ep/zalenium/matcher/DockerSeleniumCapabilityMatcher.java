@@ -4,7 +4,6 @@ import de.zalando.ep.zalenium.proxy.DockerSeleniumRemoteProxy;
 import de.zalando.ep.zalenium.proxy.DockerSeleniumStarterRemoteProxy;
 import org.openqa.grid.internal.utils.DefaultCapabilityMatcher;
 import org.openqa.grid.selenium.proxy.DefaultRemoteProxy;
-import org.openqa.selenium.remote.CapabilityType;
 
 import java.util.Map;
 import java.util.logging.Level;
@@ -27,72 +26,66 @@ public class DockerSeleniumCapabilityMatcher extends DefaultCapabilityMatcher {
         logger.log(Level.FINE, ()-> String.format("Validating %s in node with capabilities %s", requestedCapability,
                 nodeCapability));
 
-        /*
-            If after removing 'latest', the capabilities match docker-selenium, we leave the requestedCapabilities
-            without the version. If not, we put the requested capability back in the requestedCapability object, so it
-            can be matched by any of the Cloud Testing Providers.
-         */
-        boolean browserVersionCapabilityMatches = false;
-        if (requestedCapability.containsKey(CapabilityType.VERSION) &&
-                requestedCapability.get(CapabilityType.VERSION) != null) {
-            String requestedVersion = requestedCapability.get(CapabilityType.VERSION).toString();
-            if ("latest".equalsIgnoreCase(requestedVersion)) {
-                requestedCapability.remove(CapabilityType.VERSION);
-                if (super.matches(nodeCapability, requestedCapability)) {
-                    browserVersionCapabilityMatches = true;
-                } else {
-                    requestedCapability.put(CapabilityType.VERSION, requestedVersion);
-                }
-            }
-        }
-
-        boolean screenResolutionCapabilityMatches = true;
-        boolean containsScreenResolutionCapability = false;
-        // This validation is only done for docker-selenium nodes
-        if (proxy instanceof DockerSeleniumRemoteProxy) {
-            String[] screenResolutionNames = {"screenResolution", "resolution", "screen-resolution"};
-            for (String screenResolutionName : screenResolutionNames) {
-                if (requestedCapability.containsKey(screenResolutionName)) {
-                    screenResolutionCapabilityMatches = nodeCapability.containsKey(screenResolutionName) &&
-                            requestedCapability.get(screenResolutionName).equals(nodeCapability.get(screenResolutionName));
-                    containsScreenResolutionCapability = true;
-                }
-            }
-            // This is done to avoid having the test run on a node with a configured screen resolution different from
-            // the global configured one. But not putting it to tests that should go to a cloud provider.
-            if (!containsScreenResolutionCapability && super.matches(nodeCapability, requestedCapability)) {
-                String screenResolution = String.format("%sx%s",
-                        DockerSeleniumStarterRemoteProxy.getConfiguredScreenSize().getWidth(),
-                        DockerSeleniumStarterRemoteProxy.getConfiguredScreenSize().getHeight());
-                requestedCapability.put(screenResolutionNames[0], screenResolution);
-            }
-        }
-
+        boolean screenResolutionMatches = true;
         boolean timeZoneCapabilityMatches = true;
-        boolean containsTimeZoneCapability = false;
         // This validation is only done for docker-selenium nodes
         if (proxy instanceof DockerSeleniumRemoteProxy) {
-            String timeZoneName = "tz";
-            if (requestedCapability.containsKey(timeZoneName)) {
-                timeZoneCapabilityMatches = nodeCapability.containsKey(timeZoneName) &&
-                        requestedCapability.get(timeZoneName).equals(nodeCapability.get(timeZoneName));
-                containsTimeZoneCapability = true;
-            }
-            // This is done to avoid having the test run on a node with a configured time zone different from
-            // the global configured one. But not putting it to tests that should go to a cloud provider.
-            if (!containsTimeZoneCapability && super.matches(nodeCapability, requestedCapability)) {
-                requestedCapability.put(timeZoneName, DockerSeleniumStarterRemoteProxy.getConfiguredTimeZone().getID());
-            }
+            screenResolutionMatches = isScreenResolutionMatching(nodeCapability, requestedCapability);
+            timeZoneCapabilityMatches = isTimeZoneMatching(nodeCapability, requestedCapability);
         }
 
-
-            // If the browser version has been matched, then implicitly the matcher from the super class has also been
-        // invoked.
-        if (browserVersionCapabilityMatches) {
-            return screenResolutionCapabilityMatches && timeZoneCapabilityMatches;
-        } else {
-            return super.matches(nodeCapability, requestedCapability) && screenResolutionCapabilityMatches &&
-                    timeZoneCapabilityMatches;
-        }
+        return super.matches(nodeCapability, requestedCapability) && screenResolutionMatches &&
+                timeZoneCapabilityMatches;
     }
+
+    private boolean isScreenResolutionMatching(Map<String, Object> nodeCapability, Map<String, Object> requestedCapability) {
+        boolean screenResolutionCapabilityMatches = true;
+        boolean screenSizeCapabilityIsRequested = false;
+
+        String[] screenResolutionNames = {"screenResolution", "resolution", "screen-resolution"};
+        for (String screenResolutionName : screenResolutionNames) {
+            if (requestedCapability.containsKey(screenResolutionName)) {
+                screenSizeCapabilityIsRequested = true;
+                screenResolutionCapabilityMatches = nodeCapability.containsKey(screenResolutionName) &&
+                        requestedCapability.get(screenResolutionName).equals(nodeCapability.get(screenResolutionName));
+            }
+        }
+
+        /*
+            This node has a screen size different from the default/configured one,
+            and no special screen size was requested...
+            then this validation prevents requests using nodes that were created with specific screen sizes
+         */
+        String defaultScreenResolution = String.format("%sx%s",
+                DockerSeleniumStarterRemoteProxy.getConfiguredScreenSize().getWidth(),
+                DockerSeleniumStarterRemoteProxy.getConfiguredScreenSize().getHeight());
+        String nodeScreenResolution = nodeCapability.get("screenResolution").toString();
+        if (!screenSizeCapabilityIsRequested && !defaultScreenResolution.equalsIgnoreCase(nodeScreenResolution)) {
+            screenResolutionCapabilityMatches = false;
+        }
+        return screenResolutionCapabilityMatches;
+    }
+
+    private boolean isTimeZoneMatching(Map<String, Object> nodeCapability, Map<String, Object> requestedCapability) {
+        boolean timeZoneCapabilityMatches;
+
+        String timeZoneName = "tz";
+        String defaultTimeZone = DockerSeleniumStarterRemoteProxy.getConfiguredTimeZone().getID();
+        String nodeTimeZone = nodeCapability.get(timeZoneName).toString();
+
+        /*
+            If a time zone is not requested in the capabilities,
+            and this node has a different time zone from the default/configured one...
+            this will prevent that a request without a time zone uses a node created with a specific time zone
+         */
+        if (requestedCapability.containsKey(timeZoneName)) {
+            timeZoneCapabilityMatches = nodeCapability.containsKey(timeZoneName) &&
+                    requestedCapability.get(timeZoneName).equals(nodeCapability.get(timeZoneName));
+        } else {
+            timeZoneCapabilityMatches = defaultTimeZone.equalsIgnoreCase(nodeTimeZone);
+        }
+
+        return timeZoneCapabilityMatches;
+    }
+
 }

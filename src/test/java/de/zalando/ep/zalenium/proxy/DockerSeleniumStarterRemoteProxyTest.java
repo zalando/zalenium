@@ -7,6 +7,7 @@ import de.zalando.ep.zalenium.container.kubernetes.KubernetesContainerClient;
 import de.zalando.ep.zalenium.util.DockerContainerMock;
 import de.zalando.ep.zalenium.util.Environment;
 import de.zalando.ep.zalenium.util.KubernetesContainerMock;
+import de.zalando.ep.zalenium.util.ProcessedCapabilities;
 import de.zalando.ep.zalenium.util.TestUtils;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -110,6 +111,7 @@ public class DockerSeleniumStarterRemoteProxyTest {
         registry.removeIfPresent(spyProxy);
         DockerSeleniumStarterRemoteProxy.setSleepIntervalMultiplier(1000);
         DockerSeleniumStarterRemoteProxy.restoreEnvironment();
+        DockerSeleniumStarterRemoteProxy.processedCapabilitiesList.clear();
         ContainerFactory.setContainerClientGenerator(originalDockerContainerClient);
         ContainerFactory.setIsKubernetes(originalIsKubernetesValue);
         ContainerFactory.setKubernetesContainerClient(originalKubernetesContainerClient);
@@ -153,20 +155,6 @@ public class DockerSeleniumStarterRemoteProxyTest {
         Map<String, Object> supportedCapability = new HashMap<>();
         supportedCapability.put(CapabilityType.BROWSER_NAME, BrowserType.CHROME);
         supportedCapability.put(CapabilityType.PLATFORM, Platform.LINUX);
-        TestSession testSession = spyProxy.getNewSession(supportedCapability);
-
-        Assert.assertNull(testSession);
-        verify(spyProxy, timeout(1000).times(1)).startDockerSeleniumContainer(BrowserType.CHROME, timeZone, screenSize);
-    }
-
-    @Test
-    public void containerIsStartedWhenBrowserIsSupportedAndLatestIsUsedAsBrowserVersion() {
-
-        // Supported desired capability for the test session
-        Map<String, Object> supportedCapability = new HashMap<>();
-        supportedCapability.put(CapabilityType.BROWSER_NAME, BrowserType.CHROME);
-        supportedCapability.put(CapabilityType.PLATFORM, Platform.ANY);
-        supportedCapability.put(CapabilityType.VERSION, "latest");
         TestSession testSession = spyProxy.getNewSession(supportedCapability);
 
         Assert.assertNull(testSession);
@@ -286,7 +274,9 @@ public class DockerSeleniumStarterRemoteProxyTest {
         Map<String, Object> requestedCapability = new HashMap<>();
         requestedCapability.put(CapabilityType.BROWSER_NAME, BrowserType.CHROME);
         requestedCapability.put(CapabilityType.PLATFORM, Platform.LINUX);
-        requestedCapability.put("waitingFor_CHROME_Node", 1);
+        ProcessedCapabilities processedCapabilities = new ProcessedCapabilities(requestedCapability,
+                System.identityHashCode(requestedCapability));
+        DockerSeleniumStarterRemoteProxy.processedCapabilitiesList.add(processedCapabilities);
         TestSession testSession = spyProxy.getNewSession(requestedCapability);
         Assert.assertNull(testSession);
         verify(spyProxy, times(0)).startDockerSeleniumContainer(BrowserType.CHROME, timeZone, screenSize);
@@ -297,7 +287,10 @@ public class DockerSeleniumStarterRemoteProxyTest {
         Map<String, Object> requestedCapability = new HashMap<>();
         requestedCapability.put(CapabilityType.BROWSER_NAME, BrowserType.FIREFOX);
         requestedCapability.put(CapabilityType.PLATFORM, Platform.LINUX);
-        requestedCapability.put("waitingFor_FIREFOX_Node", 31);
+        ProcessedCapabilities processedCapabilities = new ProcessedCapabilities(requestedCapability,
+                System.identityHashCode(requestedCapability));
+        processedCapabilities.setProcessedTimes(31);
+        DockerSeleniumStarterRemoteProxy.processedCapabilitiesList.add(processedCapabilities);
         TestSession testSession = spyProxy.getNewSession(requestedCapability);
         Assert.assertNull(testSession);
         verify(spyProxy, timeout(1000).atLeastOnce()).startDockerSeleniumContainer(BrowserType.FIREFOX, timeZone, screenSize);

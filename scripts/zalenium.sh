@@ -52,7 +52,7 @@ WaitSeleniumHub()
     # Other option is to wait for certain text at
     #  logs/stdout.zalenium.hub.log
     while ! curl -sSL "http://localhost:4444/wd/hub/status" 2>&1 \
-            | jq -r '.status' 2>&1 | grep "13" >/dev/null; do
+            | jq -r '.status' 2>&1 | grep "0" >/dev/null; do
         echo -n '.'
         sleep 0.2
     done
@@ -64,7 +64,7 @@ WaitStarterProxy()
     # Other option is to wait for certain text at
     #  logs/stdout.zalenium.docker.node.log
     while ! curl -sSL "http://localhost:30000/wd/hub/status" 2>&1 \
-            | jq -r '.state' 2>&1 | grep "success" >/dev/null; do
+            | jq -r '.status' 2>&1 | grep "0" >/dev/null; do
         echo -n '.'
         sleep 0.2
     done
@@ -86,7 +86,7 @@ WaitSauceLabsProxy()
 {
     # Wait for the sauce node success
     while ! curl -sSL "http://localhost:30001/wd/hub/status" 2>&1 \
-            | jq -r '.state' 2>&1 | grep "success" >/dev/null; do
+            | jq -r '.status' 2>&1 | grep "0" >/dev/null; do
         echo -n '.'
         sleep 0.2
     done
@@ -97,7 +97,7 @@ WaitBrowserStackProxy()
 {
     # Wait for the sauce node success
     while ! curl -sSL "http://localhost:30002/wd/hub/status" 2>&1 \
-            | jq -r '.state' 2>&1 | grep "success" >/dev/null; do
+            | jq -r '.status' 2>&1 | grep "0" >/dev/null; do
         echo -n '.'
         sleep 0.2
     done
@@ -108,7 +108,7 @@ WaitTestingBotProxy()
 {
     # Wait for the testingbot node success
     while ! curl -sSL "http://localhost:30003/wd/hub/status" 2>&1 \
-            | jq -r '.state' 2>&1 | grep "success" >/dev/null; do
+            | jq -r '.status' 2>&1 | grep "0" >/dev/null; do
         echo -n '.'
         sleep 0.2
     done
@@ -385,6 +385,7 @@ StartUp()
     DEBUG_MODE=info
     if [ "$DEBUG_ENABLED" = true ]; then
         DEBUG_MODE=fine
+        DEBUG_FLAG=-debug
     fi
 
     java ${ZALENIUM_EXTRA_JVM_PARAMS} -Djava.util.logging.config.file=logging_${DEBUG_MODE}.properties \
@@ -394,7 +395,7 @@ StartUp()
     -servlet de.zalando.ep.zalenium.servlet.ZaleniumConsoleServlet \
     -servlet de.zalando.ep.zalenium.servlet.ZaleniumResourceServlet \
     -servlet de.zalando.ep.zalenium.dashboard.DashboardCleanupServlet \
-    -debug ${DEBUG_ENABLED} &
+    ${DEBUG_FLAG} &
 
     echo $! > ${PID_PATH_SELENIUM}
 
@@ -410,16 +411,17 @@ StartUp()
     java -Djava.util.logging.config.file=logging_${DEBUG_MODE}.properties \
      -jar ${SELENIUM_ARTIFACT} -role node -hub http://localhost:4444/grid/register \
      -registerCycle 0 -proxy de.zalando.ep.zalenium.proxy.DockerSeleniumStarterRemoteProxy \
-     -nodePolling 90000 -port 30000 -debug ${DEBUG_ENABLED} &
+     -nodePolling 90000 -port 30000 ${DEBUG_FLAG} &
     echo $! > ${PID_PATH_DOCKER_SELENIUM_NODE}
 
     if ! timeout --foreground "${OVERRIDE_WAIT_TIME:-30s}" bash -c WaitStarterProxy; then
-        echo "StarterRemoteProxy failed to start after $OVERRIDE_WAIT_TIME seconds, failing..."
+        echo "StarterRemoteProxy failed to start after ${OVERRIDE_WAIT_TIME:-30s} seconds, failing..."
+        curl "http://localhost:30000/wd/hub/status"
         exit 12
     fi
 
     if ! timeout --foreground "${OVERRIDE_WAIT_TIME:-30s}" bash -c WaitStarterProxyToRegister; then
-        echo "StarterRemoteProxy failed to register to the hub after $OVERRIDE_WAIT_TIME seconds, failing..."
+        echo "StarterRemoteProxy failed to register to the hub after ${OVERRIDE_WAIT_TIME:-30s} seconds, failing..."
         exit 13
     fi
     echo "DockerSeleniumStarter node started!"
@@ -434,7 +436,7 @@ StartUp()
         java -Djava.util.logging.config.file=logging_${DEBUG_MODE}.properties \
          -jar ${SELENIUM_ARTIFACT} -role node -hub http://localhost:4444/grid/register \
          -registerCycle 0 -proxy de.zalando.ep.zalenium.proxy.SauceLabsRemoteProxy \
-         -nodePolling 90000 -port 30001 -debug ${DEBUG_ENABLED} &
+         -nodePolling 90000 -port 30001 ${DEBUG_FLAG} &
         echo $! > ${PID_PATH_SAUCE_LABS_NODE}
 
         if ! timeout --foreground "40s" bash -c WaitSauceLabsProxy; then
@@ -461,7 +463,7 @@ StartUp()
         java -Djava.util.logging.config.file=logging_${DEBUG_MODE}.properties \
          -jar ${SELENIUM_ARTIFACT} -role node -hub http://localhost:4444/grid/register \
          -registerCycle 0 -proxy de.zalando.ep.zalenium.proxy.BrowserStackRemoteProxy \
-         -nodePolling 90000 -port 30002 -debug ${DEBUG_ENABLED} &
+         -nodePolling 90000 -port 30002 ${DEBUG_FLAG} &
         echo $! > ${PID_PATH_BROWSER_STACK_NODE}
 
         if ! timeout --foreground "40s" bash -c WaitBrowserStackProxy; then
@@ -487,7 +489,7 @@ StartUp()
         java -Djava.util.logging.config.file=logging_${DEBUG_MODE}.properties \
          -jar ${SELENIUM_ARTIFACT} -role node -hub http://localhost:4444/grid/register \
          -registerCycle 0 -proxy de.zalando.ep.zalenium.proxy.TestingBotRemoteProxy \
-         -nodePolling 90000 -port 30003 -debug ${DEBUG_ENABLED} &
+         -nodePolling 90000 -port 30003 ${DEBUG_FLAG} &
         echo $! > ${PID_PATH_TESTINGBOT_NODE}
 
         if ! timeout --foreground "40s" bash -c WaitTestingBotProxy; then

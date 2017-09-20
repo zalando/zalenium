@@ -32,6 +32,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
@@ -143,7 +144,12 @@ public class CloudTestingRemoteProxy extends DefaultRemoteProxy {
                 if (!desiredCapabilities.has(CapabilityType.VERSION) && proxySupportsLatestAsCapability()) {
                     desiredCapabilities.addProperty(CapabilityType.VERSION, "latest");
                 }
-                seleniumRequest.setBody(jsonObject.toString());
+                try {
+                    seleniumRequest.setBody(jsonObject.toString());
+                } catch (UnsupportedEncodingException e) {
+                    logger.log(Level.SEVERE, () ->"Error while setting the body request in " + getProxyName()
+                            + ", " + jsonObject.toString());
+                }
             }
         }
         super.beforeCommand(session, request, response);
