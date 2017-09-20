@@ -278,7 +278,7 @@ public class SauceLabsRemoteProxyTest {
 
         // The terminateIdleSessions() method should be called after a moment
         verify(sauceLabsSpyProxy, timeout(2000)).terminateIdleSessions();
-        verify(sauceLabsSpyProxy, timeout(2000)).addTestToDashboard("RANDOM_EXTERNAL_KEY", true);
+        verify(sauceLabsSpyProxy, timeout(2000)).addTestToDashboard("RANDOM_EXTERNAL_KEY", false);
     }
 
 
