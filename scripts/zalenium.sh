@@ -90,15 +90,6 @@ WaitSauceLabsProxy()
         echo -n '.'
         sleep 0.2
     done
-
-    # Also wait for the sauce url though this is optional
-    DONE_MSG="ondemand.saucelabs.com"
-    # Using the ZALENIUM_CONTAINER_NAME environment variable here because this method is exported and does not
-    # see the variables declared at the beginning
-    while ! docker logs ${ZALENIUM_CONTAINER_NAME} | grep "${DONE_MSG}" >/dev/null; do
-        echo -n '.'
-        sleep 0.2
-    done
 }
 export -f WaitSauceLabsProxy
 
@@ -110,15 +101,6 @@ WaitBrowserStackProxy()
         echo -n '.'
         sleep 0.2
     done
-
-    # Also wait for the sauce url though this is optional
-    DONE_MSG="hub-cloud.browserstack.com"
-    # Using the ZALENIUM_CONTAINER_NAME environment variable here because this method is exported and does not
-    # see the variables declared at the beginning
-    while ! docker logs ${ZALENIUM_CONTAINER_NAME} | grep "${DONE_MSG}" >/dev/null; do
-        echo -n '.'
-        sleep 0.2
-    done
 }
 export -f WaitBrowserStackProxy
 
@@ -127,15 +109,6 @@ WaitTestingBotProxy()
     # Wait for the testingbot node success
     while ! curl -sSL "http://localhost:30003/wd/hub/status" 2>&1 \
             | jq -r '.status' 2>&1 | grep "0" >/dev/null; do
-        echo -n '.'
-        sleep 0.2
-    done
-
-    # Also wait for the testingbot url though this is optional
-    DONE_MSG="hub.testingbot.com"
-    # Using the ZALENIUM_CONTAINER_NAME environment variable here because this method is exported and does not
-    # see the variables declared at the beginning
-    while ! docker logs ${ZALENIUM_CONTAINER_NAME} | grep "${DONE_MSG}" >/dev/null; do
         echo -n '.'
         sleep 0.2
     done
