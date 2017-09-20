@@ -27,6 +27,7 @@ public class DashboardTest {
             .withBrowser("browser")
             .withBrowserVersion("browserVersion")
             .withPlatform("platform")
+            .withTestStatus(TestInformation.TestStatus.COMPLETED)
             .build();
 
     @Rule
@@ -34,6 +35,7 @@ public class DashboardTest {
 
     @Before
     public void initDashboard() throws IOException {
+        ti.setVideoRecorded(true);
         Dashboard.setExecutedTests(0, 0);
         TestUtils.ensureRequiredInputFilesExist(temporaryFolder);
         CommonProxyUtilities proxyUtilities = TestUtils.mockCommonProxyUtilitiesForDashboardTesting(temporaryFolder);
