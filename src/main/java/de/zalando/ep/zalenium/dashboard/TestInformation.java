@@ -190,6 +190,7 @@ public class TestInformation {
         this.timeZone = builder.timeZone == null ? "N/A" : builder.timeZone;
         this.build = builder.build == null ? "N/A" : builder.build;
         this.testStatus = builder.testStatus;
+        this.videoRecorded = true;
         buildVideoFileName();
     }
 
