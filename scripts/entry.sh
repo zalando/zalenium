@@ -87,8 +87,13 @@ else
         # Make sure Docker works (with sudo) before continuing
         docker --version
         sudo docker images elgalu/selenium >/dev/null
+
+        # Replace the current process with zalenium.sh
+        exec sudo --preserve-env ./zalenium.sh "$@"
+    else
+        # Removing the 'sudo' in Kubernetes
+        # Replace the current process with zalenium.sh
+        exec ./zalenium.sh "$@"
     fi
 
-    # Replace the current process with zalenium.sh
-    exec sudo --preserve-env ./zalenium.sh "$@"
 fi

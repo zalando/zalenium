@@ -163,7 +163,7 @@ public class CloudTestingRemoteProxy extends DefaultRemoteProxy {
                 long executionTime = (System.currentTimeMillis() - session.getSlot().getLastSessionStart()) / 1000;
                 getGa().testEvent(getProxyClassName(), session.getRequestedCapabilities().toString(),
                         executionTime);
-                addTestToDashboard(session.getExternalKey().getKey());
+                addTestToDashboard(session.getExternalKey().getKey(), true);
             }
         }
         super.afterCommand(session, request, response);
@@ -222,10 +222,13 @@ public class CloudTestingRemoteProxy extends DefaultRemoteProxy {
         return false;
     }
 
-    public void addTestToDashboard(String seleniumSessionId) {
+    public void addTestToDashboard(String seleniumSessionId, boolean testCompleted) {
         new Thread(() -> {
             try {
                 TestInformation testInformation = getTestInformation(seleniumSessionId);
+                TestInformation.TestStatus status = testCompleted ?
+                        TestInformation.TestStatus.COMPLETED : TestInformation.TestStatus.TIMEOUT;
+                testInformation.setTestStatus(status);
                 String fileNameWithFullPath = testInformation.getVideoFolderPath() + "/" + testInformation.getFileName();
                 commonProxyUtilities.downloadFile(testInformation.getVideoUrl(), fileNameWithFullPath,
                         getUserNameValue(), getAccessKeyValue(), useAuthenticationToDownloadFile());
@@ -316,7 +319,7 @@ public class CloudTestingRemoteProxy extends DefaultRemoteProxy {
                 long executionTime = (System.currentTimeMillis() - testSlot.getLastSessionStart()) / 1000;
                 getGa().testEvent(getProxyClassName(), testSlot.getSession().getRequestedCapabilities().toString(),
                         executionTime);
-                addTestToDashboard(testSlot.getSession().getExternalKey().getKey());
+                addTestToDashboard(testSlot.getSession().getExternalKey().getKey(), false);
                 getRegistry().forceRelease(testSlot, SessionTerminationReason.ORPHAN);
                 logger.log(Level.INFO, getProxyName() + " Releasing slot and terminating session due to inactivity.");
             }

@@ -128,7 +128,7 @@ public class DockerSeleniumRemoteProxyTest {
         // Supported desired capability for the test session
         Map<String, Object> requestedCapability = getCapabilitySupportedByDockerSelenium();
         requestedCapability.put("name", "anyRandomTestName");
-        requestedCapability.put("group", "anyRandomTestGroup");
+        requestedCapability.put("build", "anyRandomTestBuild");
 
         {
             TestSession newSession = proxy.getNewSession(requestedCapability);
@@ -141,7 +141,7 @@ public class DockerSeleniumRemoteProxyTest {
             Assert.assertNull(newSession);
         }
 
-        Assert.assertEquals("anyRandomTestGroup", proxy.getTestGroup());
+        Assert.assertEquals("anyRandomTestBuild", proxy.getTestBuild());
         Assert.assertEquals("anyRandomTestName", proxy.getTestName());
     }
 
@@ -150,13 +150,13 @@ public class DockerSeleniumRemoteProxyTest {
         // Supported desired capability for the test session
         Map<String, Object> requestedCapability = getCapabilitySupportedByDockerSelenium();
         requestedCapability.put("name", null);
-        requestedCapability.put("group", null);
+        requestedCapability.put("build", null);
         requestedCapability.put("version", null);
 
         TestSession newSession = proxy.getNewSession(requestedCapability);
         Assert.assertNotNull(newSession);
 
-        Assert.assertTrue(proxy.getTestGroup().isEmpty());
+        Assert.assertTrue(proxy.getTestBuild().isEmpty());
         Assert.assertEquals(newSession.getInternalKey(), proxy.getTestName());
     }
 
@@ -323,6 +323,7 @@ public class DockerSeleniumRemoteProxyTest {
         HttpServletResponse response = mock(HttpServletResponse.class);
         when(webDriverRequest.getMethod()).thenReturn("POST");
         when(webDriverRequest.getRequestType()).thenReturn(RequestType.START_SESSION);
+        when(webDriverRequest.getPathInfo()).thenReturn("/something");
         spyProxy.beforeCommand(newSession, webDriverRequest, response);
 
         // The node should be busy since there is a session in it

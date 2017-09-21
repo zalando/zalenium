@@ -112,8 +112,18 @@ public class SauceLabsRemoteProxy extends CloudTestingRemoteProxy {
         List<String> logUrls = new ArrayList<>();
         logUrls.add(sauceLabsBrowserLogUrl);
         logUrls.add(sauceLabsSeleniumLogUrl);
-        return new TestInformation(seleniumSessionId, testName, getProxyName(), browser, browserVersion, platform, "",
-                getVideoFileExtension(), sauceLabsVideoUrl, logUrls);
+        return new TestInformation.TestInformationBuilder()
+                .withSeleniumSessionId(seleniumSessionId)
+                .withTestName(testName)
+                .withProxyName(getProxyName())
+                .withBrowser(browser)
+                .withBrowserVersion(browserVersion)
+                .withPlatform(platform)
+                .withTestStatus(TestInformation.TestStatus.COMPLETED)
+                .withFileExtension(getVideoFileExtension())
+                .withVideoUrl(sauceLabsVideoUrl)
+                .withLogUrls(logUrls)
+                .build();
     }
 
     @Override

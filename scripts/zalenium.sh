@@ -18,6 +18,7 @@ TZ="Europe/Berlin"
 SEND_ANONYMOUS_USAGE_INFO=true
 START_TUNNEL=false
 DEBUG_ENABLED=false
+KEEP_ONLY_FAILED_TESTS=false
 
 GA_TRACKING_ID="UA-88441352-3"
 GA_ENDPOINT=https://www.google-analytics.com/collect
@@ -91,11 +92,9 @@ WaitSauceLabsProxy()
         sleep 0.2
     done
 
-    # Also wait for the sauce url though this is optional
-    DONE_MSG="ondemand.saucelabs.com"
-    # Using the ZALENIUM_CONTAINER_NAME environment variable here because this method is exported and does not
-    # see the variables declared at the beginning
-    while ! docker logs ${ZALENIUM_CONTAINER_NAME} | grep "${DONE_MSG}" >/dev/null; do
+    # Also wait for the Proxy to be registered into the hub
+    while ! curl -sSL "http://localhost:4444/grid/console" 2>&1 \
+            | grep "SauceLabsRemoteProxy" 2>&1 >/dev/null; do
         echo -n '.'
         sleep 0.2
     done
@@ -111,11 +110,9 @@ WaitBrowserStackProxy()
         sleep 0.2
     done
 
-    # Also wait for the sauce url though this is optional
-    DONE_MSG="hub-cloud.browserstack.com"
-    # Using the ZALENIUM_CONTAINER_NAME environment variable here because this method is exported and does not
-    # see the variables declared at the beginning
-    while ! docker logs ${ZALENIUM_CONTAINER_NAME} | grep "${DONE_MSG}" >/dev/null; do
+    # Also wait for the Proxy to be registered into the hub
+    while ! curl -sSL "http://localhost:4444/grid/console" 2>&1 \
+            | grep "BrowserStackRemoteProxy" 2>&1 >/dev/null; do
         echo -n '.'
         sleep 0.2
     done
@@ -131,11 +128,9 @@ WaitTestingBotProxy()
         sleep 0.2
     done
 
-    # Also wait for the testingbot url though this is optional
-    DONE_MSG="hub.testingbot.com"
-    # Using the ZALENIUM_CONTAINER_NAME environment variable here because this method is exported and does not
-    # see the variables declared at the beginning
-    while ! docker logs ${ZALENIUM_CONTAINER_NAME} | grep "${DONE_MSG}" >/dev/null; do
+    # Also wait for the Proxy to be registered into the hub
+    while ! curl -sSL "http://localhost:4444/grid/console" 2>&1 \
+            | grep "TestingBotRemoteProxy" 2>&1 >/dev/null; do
         echo -n '.'
         sleep 0.2
     done
@@ -146,14 +141,14 @@ WaitForVideosTransferred() {
     local __amount_of_tests_with_video=$(jq .executedTestsWithVideo /home/seluser/videos/executedTestsInfo.json)
 
     if [ ${__amount_of_tests_with_video} -gt 0 ]; then
-        local __amount_of_mp4_files=$(ls -1q /home/seluser/videos/*.mp4 | wc -l)
+        local __amount_of_mp4_files=$(find /home/seluser/videos/ -name '*.mp4' | wc -l)
         while [ "${__amount_of_mp4_files}" -lt "${__amount_of_tests_with_video}" ]; do
             log "Waiting for ${__amount_of_mp4_files} mp4 files to be a total of ${__amount_of_tests_with_video}..."
             sleep 4
 
             # Also check if there are mkv, this would mean that
             # docker-selenium failed to convert them to mp4
-            local __amount_of_mkv_files=$(ls -1q /home/seluser/videos/*.mkv | wc -l)
+            local __amount_of_mkv_files=$(ls -1q find /home/seluser/videos/ -name '*.mkv' | wc -l)
             if [ ${__amount_of_mkv_files} -gt 0 ]; then
                 for __filename in /home/seluser/videos/*.mkv; do
                     local __new_file_name="$(basename ${__filename} .mkv).mp4"
@@ -362,6 +357,7 @@ StartUp()
     export ZALENIUM_CONTAINER_NAME=${CONTAINER_NAME}
     export ZALENIUM_SELENIUM_IMAGE_NAME=${SELENIUM_IMAGE_NAME}
     export ZALENIUM_MAX_TEST_SESSIONS=${MAX_TEST_SESSIONS}
+    export ZALENIUM_KEEP_ONLY_FAILED_TESTS=${KEEP_ONLY_FAILED_TESTS}
 
     # Random ID used for Google Analytics
     # If it is running inside the Zalando Jenkins env, we pick the team name from the $BUILD_URL
@@ -390,7 +386,9 @@ StartUp()
     # to generate the /dev/random seed
     #==============================================
     # See: SeleniumHQ/docker-selenium/issues/14
-    sudo haveged
+    if [ "${USE_KUBERNETES}" == "false" ]; then
+        sudo haveged
+    fi
 
     echo "Copying files for Dashboard..."
     cp /home/seluser/index.html /home/seluser/videos/index.html
@@ -741,6 +739,7 @@ function usage()
     echo -e "\t --gridUser -> allows you to specify a user to enable basic auth protection, --gridPassword must be provided also."
     echo -e "\t --gridPassword -> allows you to specify a password to enable basic auth protection, --gridUser must be provided also."
     echo -e "\t --maxTestSessions -> max amount of tests executed per container, defaults to '1'."
+    echo -e "\t --keepOnlyFailedTests -> Keeps only videos of failed tests (you need to send a cookie). Defaults to 'false'"
     echo ""
     echo -e "\t stop"
     echo ""
@@ -823,6 +822,9 @@ case ${SCRIPT_ACTION} in
                     ;;
                 --maxTestSessions)
                     MAX_TEST_SESSIONS=${VALUE}
+                    ;;
+                --keepOnlyFailedTests)
+                    KEEP_ONLY_FAILED_TESTS=${VALUE}
                     ;;
                 *)
                     echo "ERROR: unknown parameter \"$PARAM\""

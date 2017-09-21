@@ -67,10 +67,10 @@ public class LivePreviewServlet extends RegistryBasedServlet {
 
 
         int refresh = -1;
-        String testGroup = "";
+        String testBuild = "";
         try {
             refresh = request.getParameter("refresh") == null ? -1 : Integer.parseInt(request.getParameter("refresh"));
-            testGroup = request.getParameter("group") == null ? "" : request.getParameter("group");
+            testBuild = request.getParameter("build") == null ? "" : request.getParameter("build");
         } catch (Exception e) {
             LOGGER.log(Level.FINE, e.toString(), e);
         }
@@ -80,8 +80,8 @@ public class LivePreviewServlet extends RegistryBasedServlet {
             if (proxy instanceof DockerSeleniumRemoteProxy) {
                 DockerSeleniumRemoteProxy dockerSeleniumRemoteProxy = (DockerSeleniumRemoteProxy) proxy;
                 HtmlRenderer renderer = new LiveNodeHtmlRenderer(dockerSeleniumRemoteProxy, request.getServerName());
-                // Render the nodes that are part of an specified test group
-                if (testGroup.isEmpty() || testGroup.equalsIgnoreCase(dockerSeleniumRemoteProxy.getTestGroup())) {
+                // Render the nodes that are part of an specified test build
+                if (testBuild.isEmpty() || testBuild.equalsIgnoreCase(dockerSeleniumRemoteProxy.getTestBuild())) {
                     nodes.add(renderer.renderSummary());
                 }
             }
