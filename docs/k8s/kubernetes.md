@@ -4,9 +4,11 @@ Zalenium has beta support for [Kubernetes](https://kubernetes.io/), these instru
 overview of how to get it running. Be aware that this is work in progress and some things could be missing, both in
 code and documentation.
 
-Zalenium integrates with Kubernetes using the [fabric8 kubernetes-client and openshift-client](https://github.com/fabric8io/kubernetes-client/)
- and the initial support was developed on OpenShift, but should be backwards compatible with vanilla Kubernetes and
- has been tested on [minikube](https://github.com/kubernetes/minikube).
+Zalenium integrates with Kubernetes using the
+[fabric8 kubernetes-client and openshift-client](https://github.com/fabric8io/kubernetes-client/)
+and the initial support was developed on OpenShift, but should be backwards compatible with vanilla Kubernetes and
+has been tested on [minikube](https://github.com/kubernetes/minikube). If you have Google Container Engine (GKE), you can
+complement this guide with this [document](./gke/gke.md).
 
 ## Service Account
 Zalenium uses a service account that is automatically mounted by Kubernetes, it uses this service account to create 
@@ -62,7 +64,8 @@ For performance reasons it could be a good idea to pull the selenium image, `elg
 especially since the image will need to be available on potentially any kubernetes node.
 
 In Openshift there is a built in registry that can automatically pull the an image from an external registry 
-(such as docker hub) [on a schedule](https://docs.openshift.com/container-platform/3.5/dev_guide/managing_images.html#importing-tag-and-image-metadata).
+(such as docker hub)
+[on a schedule](https://docs.openshift.com/container-platform/3.5/dev_guide/managing_images.html#importing-tag-and-image-metadata).
 
 This command will automatically import `elgalu/selenium` into the OpenShift registry at `delivery/selenium:latest` 
 updating it on a schedule.
@@ -75,7 +78,8 @@ This would then be available at `172.23.192.79:5000/delivery/selenium:latest` in
 
 To use that image, specify `--seleniumImageName 172.23.192.79:5000/delivery/selenium:latest` when starting zalenium.
 
-Note: It looks like the OpenShift Image Scheduler in not enabled by default, have a read of [this issue](https://github.com/openshift/origin/issues/9037)
+Note: It looks like the OpenShift Image Scheduler in not enabled by default, have a read of
+[this issue](https://github.com/openshift/origin/issues/9037)
 to see how to enable it.
 
 ## Auto-mounting the shared folder
@@ -119,8 +123,9 @@ at `/tmp/mounted` it will copy the `volume mount` information and the linked `vo
 selenium pod.
 
 ## Managing Resources
-Kubernetes has [support](https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/) for managing how much resources 
-a Pod is allowed to use.  Especially when using video recording it is highly recommended to specify some resource requests and/or 
+Kubernetes has [support](https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/) for managing how
+much resources a Pod is allowed to use.  Especially when using video recording it is highly recommended to specify some resource
+requests and/or 
 limits otherwise users of your Kubernetes cluster may be negatively affected by the selenium pods.
 
 There are 2 resource requests and 2 resource limits that you can set.  The following table lists the possible values that you can use, 

@@ -113,7 +113,7 @@ dependencies.)
 ## Additional features
 * [Dashboard](http://localhost:4444/dashboard), see all the videos and aggregated logs after your tests completed
   <p align="center">
-    <img id="dashboard" height="337" width="600" src="./images/dashboard.gif" />
+    <img id="dashboard" height="352" width="600" src="./images/dashboard.gif" />
   </p>
 * Live preview of your running tests [http://localhost:4444/grid/admin/live](http://localhost:4444/grid/admin/live)
 <p align="center">

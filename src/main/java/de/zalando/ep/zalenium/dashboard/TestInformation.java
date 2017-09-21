@@ -1,9 +1,7 @@
 package de.zalando.ep.zalenium.dashboard;
 
-import de.zalando.ep.zalenium.dashboard.Dashboard;
 import de.zalando.ep.zalenium.util.CommonProxyUtilities;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -11,8 +9,11 @@ import java.util.List;
  */
 @SuppressWarnings("WeakerAccess")
 public class TestInformation {
-    private static final String TEST_FILE_NAME_TEMPLATE = "{proxyName}_{testName}_{browser}_{platform}_{timestamp}";
+    private static final String TEST_FILE_NAME_TEMPLATE = "{buildName}{proxyName}_{testName}_{browser}_{platform}_{timestamp}";
     private static final String FILE_NAME_TEMPLATE = "{fileName}{fileExtension}";
+    private static final String ZALENIUM_PROXY_NAME = "Zalenium";
+    private static final String SAUCE_LABS_PROXY_NAME = "SauceLabs";
+    private static final String BROWSER_STACK_PROXY_NAME = "BrowserStack";
     private static final CommonProxyUtilities commonProxyUtilities = new CommonProxyUtilities();
     private String seleniumSessionId;
     private String testName;
@@ -28,29 +29,11 @@ public class TestInformation {
     private String videoFolderPath;
     private String logsFolderPath;
     private String testNameNoExtension;
+    private String screenDimension;
+    private String timeZone;
+    private String build;
+    private TestStatus testStatus;
     private boolean videoRecorded;
-
-    public TestInformation(String seleniumSessionId, String testName, String proxyName, String browser,
-                           String browserVersion, String platform) {
-        this(seleniumSessionId, testName, proxyName, browser, browserVersion, platform, "", "", "", new ArrayList<>());
-    }
-
-    public TestInformation(String seleniumSessionId, String testName, String proxyName, String browser,
-                           String browserVersion, String platform, String platformVersion, String fileExtension,
-                           String videoUrl, List<String> logUrls) {
-        this.seleniumSessionId = seleniumSessionId;
-        this.testName = testName;
-        this.proxyName = proxyName;
-        this.browser = browser;
-        this.browserVersion = browserVersion;
-        this.platform = platform;
-        this.platformVersion = platformVersion;
-        this.videoUrl = videoUrl;
-        this.fileExtension = fileExtension;
-        this.logUrls = logUrls;
-        this.videoRecorded = true;
-        buildVideoFileName();
-    }
 
     public boolean isVideoRecorded() {
         return videoRecorded;
@@ -88,12 +71,32 @@ public class TestInformation {
         return logsFolderPath;
     }
 
+    public String getScreenDimension() {
+        return screenDimension;
+    }
+
+    public String getTimeZone() {
+        return timeZone;
+    }
+
+    public String getBuild() {
+        return build;
+    }
+
+    public TestStatus getTestStatus() {
+        return testStatus;
+    }
+
+    public void setTestStatus(TestStatus testStatus) {
+        this.testStatus = testStatus;
+    }
+
     public String getSeleniumLogFileName() {
         String seleniumLogFileName = Dashboard.LOGS_FOLDER_NAME + "/" + testNameNoExtension + "/";
-        if ("Zalenium".equalsIgnoreCase(proxyName)) {
+        if (ZALENIUM_PROXY_NAME.equalsIgnoreCase(proxyName)) {
             return seleniumLogFileName.concat(String.format("selenium-node-%s-stderr.log", browser.toLowerCase()));
         }
-        if ("SauceLabs".equalsIgnoreCase(proxyName)) {
+        if (SAUCE_LABS_PROXY_NAME.equalsIgnoreCase(proxyName)) {
             return seleniumLogFileName.concat("selenium-server.log");
         }
         return seleniumLogFileName.concat("not_implemented.log");
@@ -101,10 +104,10 @@ public class TestInformation {
 
     public String getBrowserDriverLogFileName() {
         String browserDriverLogFileName = Dashboard.LOGS_FOLDER_NAME + "/" + testNameNoExtension + "/";
-        if ("Zalenium".equalsIgnoreCase(proxyName)) {
+        if (ZALENIUM_PROXY_NAME.equalsIgnoreCase(proxyName)) {
             return browserDriverLogFileName.concat(String.format("%s_driver.log", browser.toLowerCase()));
         }
-        if ("SauceLabs".equalsIgnoreCase(proxyName)) {
+        if (SAUCE_LABS_PROXY_NAME.equalsIgnoreCase(proxyName)) {
             return browserDriverLogFileName.concat("log.json");
         }
         return browserDriverLogFileName.concat("not_implemented.log");
@@ -117,24 +120,169 @@ public class TestInformation {
     }
 
     public void buildVideoFileName() {
-        this.testNameNoExtension = TEST_FILE_NAME_TEMPLATE.replace("{proxyName}", this.proxyName.toLowerCase()).
-                replace("{testName}", getTestName()).
-                replace("{browser}", this.browser).
-                replace("{platform}", this.platform).
-                replace("{timestamp}", commonProxyUtilities.getCurrentDateAndTimeFormatted()).
-                replace(" ", "_");
-        this.fileName = FILE_NAME_TEMPLATE.replace("{fileName}", testNameNoExtension).
-                replace("{fileExtension}", fileExtension).
-                replace(" ", "_");
+        String buildName;
+        if ("N/A".equalsIgnoreCase(this.build) || this.build.trim().isEmpty()) {
+            buildName = "";
+        } else {
+            buildName = this.build.replace(" ", "_").replace("/", "_") + "/";
+        }
+
+        this.testNameNoExtension = TEST_FILE_NAME_TEMPLATE
+                .replace("{proxyName}", this.proxyName.toLowerCase())
+                .replace("{testName}", getTestName())
+                .replace("{browser}", this.browser)
+                .replace("{platform}", this.platform)
+                .replace("{timestamp}", commonProxyUtilities.getCurrentDateAndTimeFormatted())
+                .replace(" ", "_")
+                .replace("/", "_");
+        this.testNameNoExtension = this.testNameNoExtension.replace("{buildName}", buildName);
+
+        this.fileName = FILE_NAME_TEMPLATE.replace("{fileName}", testNameNoExtension)
+                .replace("{fileExtension}", fileExtension);
+
         this.videoFolderPath = commonProxyUtilities.currentLocalPath() + "/" + Dashboard.VIDEOS_FOLDER_NAME;
         this.logsFolderPath = commonProxyUtilities.currentLocalPath() + "/" + Dashboard.VIDEOS_FOLDER_NAME + "/" +
                 Dashboard.LOGS_FOLDER_NAME + "/" + testNameNoExtension;
     }
 
     public String getBrowserAndPlatform() {
-        if ("BrowserStack".equalsIgnoreCase(proxyName)) {
+        if (BROWSER_STACK_PROXY_NAME.equalsIgnoreCase(proxyName)) {
             return String.format("%s %s, %s %s", browser, browserVersion, platform, platformVersion);
         }
         return String.format("%s %s, %s", browser, browserVersion, platform);
+    }
+
+    public enum TestStatus {
+        COMPLETED("Completed", "primary"),
+        TIMEOUT("Timeout", "warning"),
+        SUCCESS("Success", "success"),
+        FAILED("Failed", "danger");
+
+        private String testStatus;
+        private String testBadge;
+
+        TestStatus(String testStatus, String testBadge) {
+            this.testStatus = testStatus;
+            this.testBadge = testBadge;
+        }
+
+        public String getTestStatus() {
+            return testStatus;
+        }
+
+        public String getTestBadge() {
+            return testBadge;
+        }
+    }
+
+    private TestInformation(TestInformationBuilder builder) {
+        this.seleniumSessionId = builder.seleniumSessionId;
+        this.testName = builder.testName;
+        this.proxyName = builder.proxyName;
+        this.browser = builder.browser;
+        this.browserVersion = builder.browserVersion;
+        this.platform = builder.platform;
+        this.platformVersion = builder.platformVersion;
+        this.videoUrl = builder.videoUrl;
+        this.fileExtension = builder.fileExtension == null ? "" : builder.fileExtension;
+        this.logUrls = builder.logUrls;
+        this.screenDimension = builder.screenDimension == null ? "" :builder.screenDimension;
+        this.timeZone = builder.timeZone == null ? "" : builder.timeZone;
+        this.build = builder.build == null ? "" : builder.build;
+        this.testStatus = builder.testStatus;
+        this.videoRecorded = true;
+        buildVideoFileName();
+    }
+
+    public static class TestInformationBuilder {
+        private String seleniumSessionId;
+        private String testName;
+        private String proxyName;
+        private String browser;
+        private String browserVersion;
+        private String platform;
+        private String platformVersion;
+        private String fileExtension;
+        private String videoUrl;
+        private List<String> logUrls;
+        private String screenDimension;
+        private String timeZone;
+        private String build;
+        private TestStatus testStatus;
+
+        public TestInformationBuilder withSeleniumSessionId(String seleniumSessionId) {
+            this.seleniumSessionId = seleniumSessionId;
+            return this;
+        }
+
+        public TestInformationBuilder withTestName(String testName) {
+            this.testName = testName;
+            return this;
+        }
+
+        public TestInformationBuilder withProxyName(String proxyName) {
+            this.proxyName = proxyName;
+            return this;
+        }
+
+        public TestInformationBuilder withBrowser(String browser) {
+            this.browser = browser;
+            return this;
+        }
+
+        public TestInformationBuilder withBrowserVersion(String browserVersion) {
+            this.browserVersion = browserVersion;
+            return this;
+        }
+
+        public TestInformationBuilder withPlatform(String platform) {
+            this.platform = platform;
+            return this;
+        }
+
+        public TestInformationBuilder withPlatformVersion(String platformVersion) {
+            this.platformVersion = platformVersion;
+            return this;
+        }
+
+        public TestInformationBuilder withFileExtension(String fileExtension) {
+            this.fileExtension = fileExtension;
+            return this;
+        }
+
+        public TestInformationBuilder withVideoUrl(String videoUrl) {
+            this.videoUrl = videoUrl;
+            return this;
+        }
+
+        public TestInformationBuilder withLogUrls(List<String> logUrls) {
+            this.logUrls = logUrls;
+            return this;
+        }
+
+        public TestInformationBuilder withScreenDimension(String screenDimension) {
+            this.screenDimension = screenDimension;
+            return this;
+        }
+
+        public TestInformationBuilder withTimeZone(String timeZone) {
+            this.timeZone = timeZone;
+            return this;
+        }
+
+        public TestInformationBuilder withBuild(String build) {
+            this.build = build;
+            return this;
+        }
+
+        public TestInformationBuilder withTestStatus(TestStatus testStatus) {
+            this.testStatus = testStatus;
+            return this;
+        }
+
+        public TestInformation build() {
+            return new TestInformation(this);
+        }
+
     }
 }
