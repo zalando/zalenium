@@ -386,7 +386,7 @@ StartUp()
     # to generate the /dev/random seed
     #==============================================
     # See: SeleniumHQ/docker-selenium/issues/14
-    if [ "${USE_KUBERNETES}" == "false" ]; then
+    if [ "${KUBERNETES_ENABLED}" == "false" ]; then
         sudo haveged
     fi
 
