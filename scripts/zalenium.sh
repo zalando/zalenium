@@ -386,7 +386,9 @@ StartUp()
     # to generate the /dev/random seed
     #==============================================
     # See: SeleniumHQ/docker-selenium/issues/14
-    sudo haveged
+    if [ "${USE_KUBERNETES}" == "false" ]; then
+        sudo haveged
+    fi
 
     echo "Copying files for Dashboard..."
     cp /home/seluser/index.html /home/seluser/videos/index.html
