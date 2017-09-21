@@ -175,7 +175,7 @@ public class DockerContainerClient implements ContainerClient {
         return 0;
     }
 
-    public boolean createContainer(String zaleniumContainerName, String image, Map<String, String> envVars,
+    public ContainerCreationStatus createContainer(String zaleniumContainerName, String image, Map<String, String> envVars,
                                 String nodePort) {
         String containerName = generateContainerName(zaleniumContainerName, nodePort);
 
@@ -242,11 +242,11 @@ public class DockerContainerClient implements ContainerClient {
         try {
             final ContainerCreation container = dockerClient.createContainer(containerConfig, containerName);
             dockerClient.startContainer(container.id());
-            return true;
+            return new ContainerCreationStatus(true, containerName, nodePort);
         } catch (DockerException | InterruptedException e) {
             logger.log(Level.FINE, nodeId + " Error while starting a new container", e);
             ga.trackException(e);
-            return false;
+            return new ContainerCreationStatus(false);
         }
     }
 
