@@ -93,7 +93,7 @@ else
     else
         # Removing the 'sudo' in Kubernetes
         # Replace the current process with zalenium.sh
-        exec --preserve-env ./zalenium.sh "$@"
+        exec ./zalenium.sh "$@"
     fi
 
 fi
