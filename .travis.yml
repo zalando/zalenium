@@ -30,6 +30,8 @@ jobs:
       - bash <(curl -s https://codecov.io/bash)
       # Report coverage results to Codacy
       - java -cp ~/codacy-coverage-reporter-assembly-latest.jar com.codacy.CodacyCoverageReporter -l Java -r ./target/site/jacoco/jacoco.xml
+    - script:
+      - scripts/minikube-ci-initialize.sh
     - stage: Push Image (only with a tag)
       script:
       - ./gen-scm-source.sh
