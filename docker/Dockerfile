@@ -429,6 +429,9 @@ RUN sudo chmod +x /home/seluser/zalenium.sh \
 # We need the entry.sh to run as root so we can change the uid later on
 USER root
 
+# For non-sudo environments like Openshift
+RUN chown -R seluser:seluser /home/seluser
+
 # IMPORTANT: Using the string form `CMD "entry.sh"` without
 # brackets [] causes Docker to run your process
 # And using `bash` which doesn’t handle signals properly
