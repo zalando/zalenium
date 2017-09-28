@@ -246,69 +246,52 @@ RUN wget -nv -O /usr/bin/gosu \
 # Var `DOCKER` points to which binary to use at runtime
 ENV DOCKER_HOST="unix:///var/run/docker.sock" \
     DOCKER_BUCKET="get.docker.com" \
-    DOCKER="1.12"
-
-#-----------------------
-# Docker 1.11.2 -- 35 MB
-#-----------------------
-# https://github.com/docker-library/docker/blob/master/1.11/Dockerfile
-RUN set -x \
-  && DOCKER_VERSION="1.11.2" \
-     DOCKER_SHA256="8c2e0c35e3cda11706f54b2d46c2521a6e9026a7b13c7d4b8ae1f3a706fc55e1" \
-  && curl -fSL "https://${DOCKER_BUCKET}/builds/Linux/x86_64/docker-${DOCKER_VERSION}.tgz" \
-          -o docker.tgz \
-  && echo "${DOCKER_SHA256} *docker.tgz" | sha256sum -c - \
-  && tar -xzvf docker.tgz \
-  && mv docker/docker /usr/bin/docker-${DOCKER_VERSION} \
-  && rm -rf docker/ && rm docker.tgz \
-  && docker-${DOCKER_VERSION} --version | grep "${DOCKER_VERSION}"
-
-#-----------------------
-# Docker 1.12.6 -- 15 MB
-#-----------------------
-# https://github.com/docker-library/docker/blob/master/1.12/Dockerfile#L1
-RUN set -x \
-  && DOCKER_VERSION="1.12.6" \
-     DOCKER_SHA256="cadc6025c841e034506703a06cf54204e51d0cadfae4bae62628ac648d82efdd" \
-  && curl -fSL "https://${DOCKER_BUCKET}/builds/Linux/x86_64/docker-${DOCKER_VERSION}.tgz" \
-          -o docker.tgz \
-  && echo "${DOCKER_SHA256} *docker.tgz" | sha256sum -c - \
-  && tar -xzvf docker.tgz \
-  && mv docker/docker /usr/bin/docker-${DOCKER_VERSION} \
-  && rm -rf docker/ && rm docker.tgz \
-  && docker-${DOCKER_VERSION} --version | grep "${DOCKER_VERSION}"
-
-#-----------------------
-# Docker 1.13.0 -- 15 MB
-#-----------------------
-# https://github.com/docker-library/docker/blob/master/1.13/Dockerfile#L1
-# Starting with 1.13, newer CLIs can talk to older daemons
-RUN set -x \
-  && DOCKER_VERSION="1.13.1" \
-     DOCKER_SHA256="97892375e756fd29a304bd8cd9ffb256c2e7c8fd759e12a55a6336e15100ad75" \
-  && curl -fSL "https://${DOCKER_BUCKET}/builds/Linux/x86_64/docker-${DOCKER_VERSION}.tgz" \
-          -o docker.tgz \
-  && echo "${DOCKER_SHA256} *docker.tgz" | sha256sum -c - \
-  && tar -xzvf docker.tgz \
-  && mv docker/docker /usr/bin/docker \
-  && rm -rf docker/ && rm docker.tgz \
-  && docker --version | grep "${DOCKER_VERSION}"
+    DOCKER="17.06.2-ce"
 
 #----------------------------
-# Docker 17.03.0-ce -- 15 MB
+# Docker 17.03.1-ce -- 15 MB
 #----------------------------
 # https://github.com/docker-library/docker/blob/master/17.03/Dockerfile
 # Note: Starting with 1.13, newer CLIs can talk to older daemons
 RUN set -x \
-  && DOCKER_VERSION="17.03.0-ce" \
-     DOCKER_SHA256="4a9766d99c6818b2d54dc302db3c9f7b352ad0a80a2dc179ec164a3ba29c2d3e" \
+  && DOCKER_VERSION="17.03.1-ce" \
+     DOCKER_SHA256="820d13b5699b5df63f7032c8517a5f118a44e2be548dd03271a86656a544af55" \
   && curl -fSL "https://${DOCKER_BUCKET}/builds/Linux/x86_64/docker-${DOCKER_VERSION}.tgz" \
           -o docker.tgz \
   && echo "${DOCKER_SHA256} *docker.tgz" | sha256sum -c - \
   && tar -xzvf docker.tgz \
-  && mv docker/docker /usr/bin/docker \
+  && mv docker/docker /usr/bin/docker-${DOCKER_VERSION} \
   && rm -rf docker/ && rm docker.tgz \
-  && docker --version | grep "${DOCKER_VERSION}"
+  && docker-${DOCKER_VERSION} --version | grep "${DOCKER_VERSION}"
+
+#----------------------------
+# Docker 17.06.2-ce -- 15 MB
+#----------------------------
+# https://github.com/docker-library/docker/blob/master/17.06/Dockerfile
+# Note: Starting with 1.13, newer CLIs can talk to older daemons
+RUN set -x \
+  && DOCKER_VERSION="17.06.2-ce" \
+  && curl -fSL "https://${DOCKER_BUCKET}/builds/Linux/x86_64/docker-${DOCKER_VERSION}.tgz" \
+          -o docker.tgz \
+  && tar -xzvf docker.tgz \
+  && mv docker/docker /usr/bin/docker-${DOCKER_VERSION} \
+  && rm -rf docker/ && rm docker.tgz \
+  && docker-${DOCKER_VERSION} --version | grep "${DOCKER_VERSION}"
+
+#----------------------------
+# Docker 17.09.0-ce -- 15 MB
+#----------------------------
+# https://github.com/docker-library/docker/blob/master/17.09/Dockerfile
+# Note: Starting with 1.13, newer CLIs can talk to older daemons
+RUN set -x \
+  && DOCKER_VERSION="17.09.0-ce" \
+  && curl -fSL "https://${DOCKER_BUCKET}/builds/Linux/x86_64/docker-${DOCKER_VERSION}.tgz" \
+          -o docker.tgz \
+  && tar -xzvf docker.tgz \
+  && mv docker/docker /usr/bin/docker-${DOCKER_VERSION} \
+  && rm -rf docker/ && rm docker.tgz \
+  && docker-${DOCKER_VERSION} --version | grep "${DOCKER_VERSION}"
+
 
 # ------------------------#
 # Sauce Connect Tunneling #
