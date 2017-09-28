@@ -287,7 +287,7 @@ RUN set -x \
 # Note: Starting with 1.13, newer CLIs can talk to older daemons
 RUN set -x \
   && DOCKER_VERSION="17.09.0-ce" \
-  && curl -fSL "https://${DOCKER_BUCKET}/builds/Linux/x86_64/docker-${DOCKER_VERSION}.tgz" \
+  && curl -fSL "https://${DOCKER_BUCKET}/linux/static/stable/x86_64/docker-${DOCKER_VERSION}.tgz" \
           -o docker.tgz \
   && tar -xzvf docker.tgz \
   && mv docker/docker /usr/bin/docker-${DOCKER_VERSION} \
