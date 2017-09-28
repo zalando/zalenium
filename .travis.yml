@@ -31,7 +31,9 @@ jobs:
       # Report coverage results to Codacy
       - java -cp ~/codacy-coverage-reporter-assembly-latest.jar com.codacy.CodacyCoverageReporter -l Java -r ./target/site/jacoco/jacoco.xml
     - script:
-      - scripts/minikube-ci-initialize.sh
+      - kubernetes/minikube-ci-initialize.sh
+      - ./kubectl create -f kubernetes/serviceAccount.yaml
+      - ./kubectl get serviceAccounts
     - stage: Push Image (only with a tag)
       script:
       - ./gen-scm-source.sh
