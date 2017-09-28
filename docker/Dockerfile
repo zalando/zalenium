@@ -264,6 +264,8 @@ RUN set -x \
   && rm -rf docker/ && rm docker.tgz \
   && docker-${DOCKER_VERSION} --version | grep "${DOCKER_VERSION}"
 
+ENV DOCKER_BUCKET="download.docker.com"
+
 #----------------------------
 # Docker 17.06.2-ce -- 15 MB
 #----------------------------
@@ -271,7 +273,7 @@ RUN set -x \
 # Note: Starting with 1.13, newer CLIs can talk to older daemons
 RUN set -x \
   && DOCKER_VERSION="17.06.2-ce" \
-  && curl -fSL "https://${DOCKER_BUCKET}/builds/Linux/x86_64/docker-${DOCKER_VERSION}.tgz" \
+  && curl -fSL "https://${DOCKER_BUCKET}/linux/static/stable/x86_64/docker-${DOCKER_VERSION}.tgz" \
           -o docker.tgz \
   && tar -xzvf docker.tgz \
   && mv docker/docker /usr/bin/docker-${DOCKER_VERSION} \
