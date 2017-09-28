@@ -34,6 +34,10 @@ jobs:
       - kubernetes/minikube-ci-initialize.sh
       - ./kubectl create -f kubernetes/serviceAccount.yaml
       - ./kubectl get serviceAccounts
+      - ./kubectl create -f kubernetes/persistentVolume.yaml
+      - ./kubectl pv
+      - ./kubectl create -f kubernetes/persistentVolumeClaim.yaml
+      - ./kubectl pvc
     - stage: Push Image (only with a tag)
       script:
       - ./gen-scm-source.sh
