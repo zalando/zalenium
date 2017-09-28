@@ -35,9 +35,9 @@ jobs:
       - ./kubectl create -f kubernetes/serviceAccount.yaml
       - ./kubectl get serviceAccounts
       - ./kubectl create -f kubernetes/persistentVolume.yaml
-      - ./kubectl pv
+      - ./kubectl get pv
       - ./kubectl create -f kubernetes/persistentVolumeClaim.yaml
-      - ./kubectl pvc
+      - ./kubectl get pvc
     - stage: Push Image (only with a tag)
       script:
       - ./gen-scm-source.sh
