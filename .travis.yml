@@ -42,7 +42,8 @@ jobs:
       - ./kubectl get deployments
       - ./kubectl create -f kubernetes/service.yaml
       - ./kubectl get services
-      - ZALENIUM_URL = "kubectl get svc zalenium -o go-template='{{.spec.clusterIP}}:{{ index (index .spec.ports 0) "nodePort" }}{{ "\n" }}'"
+      - ./kubectl get svc zalenium -o go-template='{{.spec.clusterIP}}:{{ index (index .spec.ports 0) "nodePort" }}{{ "\n" }}'
+      - ZALENIUM_URL = "./kubectl get svc zalenium -o go-template='{{.spec.clusterIP}}:{{ index (index .spec.ports 0) "nodePort" }}{{ "\n" }}'"
       - curl $ZALENIUM_URL
     - stage: Push Image (only with a tag)
       script:
