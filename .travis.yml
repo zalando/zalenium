@@ -38,6 +38,14 @@ jobs:
       # Report coverage results to Codacy
       - java -cp ~/codacy-coverage-reporter-assembly-latest.jar com.codacy.CodacyCoverageReporter -l Java -r ./target/site/jacoco/jacoco.xml
 
+    - env: step=simOpenShift
+      script:
+      - docker pull elgalu/selenium:3.5.3
+      - curl -sSL https://raw.githubusercontent.com/dosel/t/i/p | PULL_DEPENDENCIES=false ADDITIONAL_DOCKER_OPTS='-u 1000060000:1000060000' bash -s start
+      - docker logs zalenium
+      - pip install --upgrade selenium
+      - curl -sSL https://raw.github.com/dosel/t/i/s | python
+
     - env: step=minikube
       script:
       - kubernetes/minikube-ci-initialize.sh
