@@ -10,19 +10,26 @@ services:
 jobs:
   include:
     - stage: Integration and Unit Tests
+      env: step=sauceLabs
       script:
       - docker pull elgalu/selenium:3.5.3
       - travis_retry ./run_integration_tests.sh sauceLabs
-    - script:
-      - docker pull elgalu/selenium:3.5.3
-      - travis_retry ./run_integration_tests.sh browserStack
-    - script:
+
+    - env: step=browserStack
+      script:
+        - docker pull elgalu/selenium:3.5.3
+        - travis_retry ./run_integration_tests.sh browserStack
+
+    - env: step=dockerCompose
+      script:
       - docker pull elgalu/selenium:3.5.3
       - curl -L https://github.com/docker/compose/releases/download/1.13.0/docker-compose-`uname -s`-`uname -m` > docker-compose
       - chmod +x docker-compose
       - sudo mv docker-compose /usr/local/bin
       - travis_retry ./run_integration_tests.sh dockerCompose
-    - script:
+
+    - env: step=codacy-coverage
+      script:
       - sudo apt-get install jq
       - wget -O ~/codacy-coverage-reporter-assembly-latest.jar $(curl https://api.github.com/repos/codacy/codacy-coverage-reporter/releases/latest | jq -r .assets[0].browser_download_url)
       - mvn clean package -Pcoverage-report
@@ -30,7 +37,9 @@ jobs:
       - bash <(curl -s https://codecov.io/bash)
       # Report coverage results to Codacy
       - java -cp ~/codacy-coverage-reporter-assembly-latest.jar com.codacy.CodacyCoverageReporter -l Java -r ./target/site/jacoco/jacoco.xml
-    - script:
+
+    - env: step=minikube
+      script:
       - kubernetes/minikube-ci-initialize.sh
       - ./kubectl create -f kubernetes/serviceAccount.yaml
       - ./kubectl get serviceAccounts
@@ -45,6 +54,7 @@ jobs:
       - ./kubectl get svc zalenium -o go-template='{{.spec.clusterIP}}:{{ index (index .spec.ports 0) "nodePort" }}{{ "\n" }}'
       - ZALENIUM_URL = "./kubectl get svc zalenium -o go-template='{{.spec.clusterIP}}:{{ index (index .spec.ports 0) "nodePort" }}{{ "\n" }}'"
       - curl $ZALENIUM_URL
+
     - stage: Push Image (only with a tag)
       script:
       - ./gen-scm-source.sh
