@@ -267,7 +267,7 @@ StartUp()
         CONTAINER_ID=$(grep docker /proc/self/cgroup | grep -o -E '[0-9a-f]{64}$' | head -n 1)
         CONTAINER_NAME=$(docker inspect ${CONTAINER_ID} | jq -r '.[0].Name' | sed 's/\///g')
         EnsureCleanEnv
-    
+
         log "Ensuring docker-selenium is available..."
         DOCKER_SELENIUM_IMAGE_COUNT=$(docker images | grep "elgalu/selenium" | wc -l)
         if [ ${DOCKER_SELENIUM_IMAGE_COUNT} -eq 0 ]; then
@@ -386,8 +386,12 @@ StartUp()
     # to generate the /dev/random seed
     #==============================================
     # See: SeleniumHQ/docker-selenium/issues/14
-    if [ "${KUBERNETES_ENABLED}" == "false" ]; then
-        sudo haveged
+    if [ "${WE_HAVE_SUDO_ACCESS}" == "true" ]; then
+      # We found that, for better entropy, running haveged
+      # with --privileged and sudo here works more reliable
+      sudo -E haveged
+    else
+      haveged
     fi
 
     echo "Copying files for Dashboard..."

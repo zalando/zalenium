@@ -193,8 +193,14 @@ RUN useradd seluser \
          --create-home \
   && usermod -a -G sudo seluser \
   && gpasswd -a seluser video \
-  && echo 'ALL ALL = (ALL) NOPASSWD: ALL' >> /etc/sudoers \
-  && echo 'seluser:secret' | chpasswd
+  && echo 'seluser:secret' | chpasswd \
+  && useradd extrauser \
+         --shell /bin/bash  \
+  && usermod -a -G sudo extrauser \
+  && gpasswd -a extrauser video \
+  && gpasswd -a extrauser seluser \
+  && echo 'extrauser:secret' | chpasswd \
+  && echo 'ALL ALL = (ALL) NOPASSWD: ALL' >> /etc/sudoers
 
 #==============================
 # Java8 - OpenJDK JRE headless
@@ -373,7 +379,7 @@ ENV ZAL_VER="${project.build.finalName}" \
     TESTINGBOT_TUNNEL="false" \
     TESTINGBOT_WAIT_TIMEOUT="2m"
 
-COPY entry.sh log error /usr/bin/
+COPY entry.sh log warn error /usr/bin/
 COPY nginx.conf /etc/nginx/
 COPY css/ /home/seluser/css/
 COPY js/ /home/seluser/js/
@@ -408,14 +414,11 @@ RUN sudo chmod +x /home/seluser/zalenium.sh \
   && sudo chmod +x /home/seluser/start-testingbot.sh \
   && sudo chmod +x /home/seluser/wait-testingbot.sh \
   && sudo chmod +x /usr/bin/log \
+  && sudo chmod +x /usr/bin/warn \
   && sudo chmod +x /usr/bin/error \
-  && sudo chmod +x /usr/bin/entry.sh
-
-# We need the entry.sh to run as root so we can change the uid later on
-USER root
-
-# For non-sudo environments like Openshift
-RUN chown -R seluser:seluser /home/seluser
+  && sudo chmod +x /usr/bin/entry.sh \
+  && sudo chmod 777 /etc/passwd \
+  && sudo chown -R seluser:seluser /home/seluser
 
 # IMPORTANT: Using the string form `CMD "entry.sh"` without
 # brackets [] causes Docker to run your process
