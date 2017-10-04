@@ -40,12 +40,11 @@ jobs:
 
     - env: step=simOpenShift
       script:
-      - pip3 install --user --upgrade selenium
       - docker pull elgalu/selenium:3.5.3
       - mvn clean package -Pbuild-docker-image -DskipTests=true
       - curl -sSL https://raw.githubusercontent.com/dosel/t/i/p | PULL_DEPENDENCIES=false ADDITIONAL_DOCKER_OPTS='-u 1000060000:1000060000' bash -s start
       - docker logs zalenium
-      - curl -sSL https://raw.github.com/dosel/t/i/s | python3
+      - mvn verify -Pintegration-test -DthreadCountProperty=2 -Dskip.surefire.tests=true -Dskip.failsafe.setup=true -DintegrationToTest=sauceLabs
 
     - env: step=minikube
       script:
