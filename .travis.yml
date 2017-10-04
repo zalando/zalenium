@@ -48,8 +48,8 @@ jobs:
       - kubernetes/minikube-ci-initialize.sh
       - mvn clean package -Pbuild-docker-image -DskipTests=true
       - cd target && docker build -t dosel/zalenium:minikube . && cd ..
-      - docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
-      - docker push dosel/zalenium:minikube
+      #- docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
+      #- docker push dosel/zalenium:minikube
       - kubernetes/start-zalenium-in-minikube.sh
 
     - stage: Push Image (only with a tag)
