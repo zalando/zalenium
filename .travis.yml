@@ -15,10 +15,14 @@ jobs:
       - docker pull elgalu/selenium:3.5.3
       - travis_retry ./run_integration_tests.sh sauceLabs
 
-    - env: step=browserStack
+    - env: step=browserStack_with_user1006
       script:
-        - docker pull elgalu/selenium:3.5.3
-        - travis_retry ./run_integration_tests.sh browserStack
+        - travis_retry docker pull elgalu/selenium:3.5.3
+        - mvn clean package -Pbuild-docker-image -DskipTests=true
+        - cd target && docker build -t dosel/zalenium:latest . && cd ..
+        - curl -sSL https://raw.githubusercontent.com/dosel/t/i/p | PULL_DEPENDENCIES=false ADDITIONAL_DOCKER_OPTS='-u 1000060000:1000060000' bash -s start
+        - docker logs zalenium
+        - travis_retry mvn verify -Pintegration-test -DthreadCountProperty=2 -Dskip.surefire.tests=true -Dskip.failsafe.setup=true -DintegrationToTest=browserStack
 
     - env: step=dockerCompose
       script:
@@ -37,15 +41,6 @@ jobs:
       - bash <(curl -s https://codecov.io/bash)
       # Report coverage results to Codacy
       - java -cp ~/codacy-coverage-reporter-assembly-latest.jar com.codacy.CodacyCoverageReporter -l Java -r ./target/site/jacoco/jacoco.xml
-
-    - env: step=simOpenShift
-      script:
-      - docker pull elgalu/selenium:3.5.3
-      - mvn clean package -Pbuild-docker-image -DskipTests=true
-      - cd target && docker build -t dosel/zalenium:latest . && cd ..
-      - curl -sSL https://raw.githubusercontent.com/dosel/t/i/p | PULL_DEPENDENCIES=false ADDITIONAL_DOCKER_OPTS='-u 1000060000:1000060000' bash -s start
-      - docker logs zalenium
-      - mvn verify -Pintegration-test -DthreadCountProperty=2 -Dskip.surefire.tests=true -Dskip.failsafe.setup=true -DintegrationToTest=sauceLabs
 
     - env: step=minikube
       script:
