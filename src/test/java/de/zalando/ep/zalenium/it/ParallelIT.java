@@ -151,4 +151,14 @@ public class ParallelIT  {
         assertThat(getWebDriver().getTitle(), containsString("Google"));
     }
 
+    @Test(dataProvider = "browsersAndPlatformsForLivePreview", groups = {"minikube"})
+    public void loadTheInternetPageAndCheckTitle(String browserType, Platform platform) {
+
+        // Go to the homepage
+        getWebDriver().get("https://the-internet.herokuapp.com/");
+
+        // Assert that the title is the expected one
+        assertThat(getWebDriver().getTitle(), containsString("Internet"));
+    }
+
 }

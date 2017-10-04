@@ -27,10 +27,6 @@ spec:
             - 'elgalu/selenium'
             - '--maxTestSessions'
             - '4'
-            - '--sauceLabsEnabled'
-            - 'true'
-            - '--startTunnel'
-            - 'true'
           env:
             - name: ZALENIUM_KUBERNETES_CPU_REQUEST
               value: 250m
