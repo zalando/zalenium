@@ -11,8 +11,8 @@
 ./kubectl create --validate=false -f kubernetes/service.yaml
 ./kubectl get services
 
-MINIKUBE_IP=$(minikube ip)
-ZALENIUM_GRID_PORT=$(kubectl get svc zalenium -o go-template='{{ index (index .spec.ports 0) "nodePort" }}{{ "\n" }}')
+MINIKUBE_IP=$(./minikube ip)
+ZALENIUM_GRID_PORT=$(./kubectl get svc zalenium -o go-template='{{ index (index .spec.ports 0) "nodePort" }}{{ "\n" }}')
 
 echo $MINIKUBE_IP:$ZALENIUM_GRID_PORT/wd/hub/status
 
