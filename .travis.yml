@@ -44,7 +44,7 @@ jobs:
       - mvn clean package -Pbuild-docker-image -DskipTests=true
       - curl -sSL https://raw.githubusercontent.com/dosel/t/i/p | PULL_DEPENDENCIES=false ADDITIONAL_DOCKER_OPTS='-u 1000060000:1000060000' bash -s start
       - docker logs zalenium
-      - mvn verify -Pintegration-test -DthreadCountProperty=2 -Dskip.surefire.tests=true -Dskip.failsafe.setup=true -DintegrationToTest=sauceLabs
+      - mvn verify -Pintegration-test -DthreadCountProperty=1 -Dskip.surefire.tests=true -Dskip.failsafe.setup=true -DintegrationToTest=sauceLabs
 
     - env: step=minikube
       script:
