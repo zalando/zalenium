@@ -12,7 +12,7 @@ spec:
     spec:
       containers:
         - name: zalenium
-          image: zalenium
+          image: dosel/zalenium:minikube
           args:
             - start
             - '--chromeContainers'
