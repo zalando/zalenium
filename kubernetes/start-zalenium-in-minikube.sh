@@ -16,8 +16,6 @@ ZALENIUM_GRID_PORT=$(./kubectl get svc zalenium -o go-template='{{ index (index 
 
 echo $MINIKUBE_IP:$ZALENIUM_GRID_PORT/wd/hub/status
 
-sleep 30
-
 ZALENIUM_UP="false"
 for i in {1..150} # timeout for 5 minutes
 do
