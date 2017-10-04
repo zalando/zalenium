@@ -48,6 +48,9 @@ jobs:
 
     - env: step=minikube
       script:
+      - eval $(./minikube docker-env)
+      - mvn clean package -Pbuild-docker-image -DskipTests=true
+      - docker pull elgalu/selenium:3.5.3
       - kubernetes/minikube-ci-initialize.sh
       - kubernetes/start-zalenium-in-minikube.sh
 

@@ -12,7 +12,7 @@ spec:
     spec:
       containers:
         - name: zalenium
-          image: dosel/zalenium
+          image: zalenium
           args:
             - start
             - '--chromeContainers'
@@ -24,7 +24,7 @@ spec:
             - '--screenHeight'
             - '810'
             - '--seleniumImageName'
-            - 'elgalu/selenium:latest'
+            - 'elgalu/selenium'
             - '--maxTestSessions'
             - '4'
           env:

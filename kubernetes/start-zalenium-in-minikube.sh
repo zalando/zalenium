@@ -18,23 +18,25 @@ echo $MINIKUBE_IP:$ZALENIUM_GRID_PORT/wd/hub/status
 
 sleep 30
 
+ZALENIUM_UP="false"
+for i in {1..150} # timeout for 5 minutes
+do
+    curl -sSL $MINIKUBE_IP:$ZALENIUM_GRID_PORT/wd/hub/status 2>&1 \
+            | jq -r '.value.ready' 2>&1 | grep "true" >/dev/null
+    echo -n '.'
+
+    if [ $? -ne 1 ]; then
+      ZALENIUM_UP="true"
+      break
+    fi
+
+    sleep 1
+done
+
 curl $MINIKUBE_IP:$ZALENIUM_GRID_PORT/wd/hub/status
 
-
-# this for loop waits until kubectl can access the api server that minikube has created
-#KUBECTL_UP="false"
-#for i in {1..150} # timeout for 5 minutes
-#do
-#   ./kubectl get po &> /dev/null
-#   if [ $? -ne 1 ]; then
-#      KUBECTL_UP="true"
-#      break
-#  fi
-#  sleep 2
-#done
-#if [ "$KUBECTL_UP" != "true" ]; then
-#  echo "INIT FAILURE: kubectl could not reach api-server in allotted time"
-#  exit 1
-#fi
-# kubectl commands are now able to interact with minikube cluster
+if [ "$ZALENIUM_UP" != "true" ]; then
+  echo "FAILURE starting Zalenium..."
+  exit 1
+fi
 
