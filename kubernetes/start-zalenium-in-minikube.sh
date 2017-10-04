@@ -30,7 +30,7 @@ do
       break
     fi
 
-    sleep 1
+    sleep 2
 done
 
 curl $MINIKUBE_IP:$ZALENIUM_GRID_PORT/wd/hub/status
