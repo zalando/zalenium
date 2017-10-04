@@ -19,7 +19,6 @@ echo $MINIKUBE_IP:$ZALENIUM_GRID_PORT/wd/hub/status
 ZALENIUM_UP="false"
 for i in {1..150} # timeout for 5 minutes
 do
-    curl $MINIKUBE_IP:$ZALENIUM_GRID_PORT/wd/hub/status
     curl -sSL $MINIKUBE_IP:$ZALENIUM_GRID_PORT/wd/hub/status 2>&1 \
             | jq -r '.value.ready' 2>&1 | grep "true" >/dev/null
 

@@ -29,7 +29,11 @@ public class ParallelIT  {
     private static final Logger LOGGER = LoggerFactory.getLogger(ParallelIT.class);
 
     // Zalenium setup variables
-    private static final String DOCKER_SELENIUM_URL = "http://localhost:4444/wd/hub";
+    private static final String ZALENIUM_HOST = System.getenv("ZALENIUM_GRID_HOST") != null ?
+            System.getenv("ZALENIUM_GRID_HOST") : "localhost";
+    private static final String ZALENIUM_PORT = System.getenv("ZALENIUM_GRID_PORT") != null ?
+            System.getenv("ZALENIUM_GRID_PORT") : "4444";
+
 
     // We need a thread safe environment to handle the webDriver variable in each thread separately
     private ThreadLocal<WebDriver> webDriver = new ThreadLocal<>();
@@ -65,13 +69,14 @@ public class ParallelIT  {
 
     @BeforeMethod
     public void startWebDriverAndGetBaseUrl(Method method, Object[] testArgs) throws MalformedURLException {
+        String zaleniumUrl = String.format("http://%s:%s/wd/hub", ZALENIUM_HOST, ZALENIUM_PORT);
         String browserType = testArgs[0].toString();
         Platform platform = (Platform) testArgs[1];
         boolean localTesting = false;
         if (testArgs.length > 2) {
             localTesting = testArgs[2] != null && (boolean) testArgs[2];
         }
-        LOGGER.info("STARTING {} on {} - {}", method.getName(), browserType, platform.name());
+        LOGGER.info("STARTING {} on {} - {}, using {}", method.getName(), browserType, platform.name(), zaleniumUrl);
 
         DesiredCapabilities desiredCapabilities = new DesiredCapabilities();
         desiredCapabilities.setCapability(CapabilityType.BROWSER_NAME, browserType);
@@ -85,7 +90,7 @@ public class ParallelIT  {
         }
 
         try {
-            webDriver.set(new RemoteWebDriver(new URL(DOCKER_SELENIUM_URL), desiredCapabilities));
+            webDriver.set(new RemoteWebDriver(new URL(zaleniumUrl), desiredCapabilities));
         } catch (Exception e) {
             LOGGER.warn("FAILED {} on {} - {}", method.getName(), browserType, platform.name());
             throw e;
@@ -113,7 +118,7 @@ public class ParallelIT  {
         String hostIpAddress = networkUtils.getIp4NonLoopbackAddressOfThisMachine().getHostAddress();
 
         // Go to the homepage
-        getWebDriver().get(String.format("http://%s:4444/grid/admin/live", hostIpAddress));
+        getWebDriver().get(String.format("http://%s:%s/grid/admin/live", hostIpAddress, ZALENIUM_PORT));
 
         // Get the page source to get the iFrame links
         String pageSource = getWebDriver().getPageSource();
@@ -130,7 +135,7 @@ public class ParallelIT  {
     public void loadSeleniumGridAndCheckTitle(String browserType, Platform platform, boolean local) {
 
         // Go to the homepage
-        getWebDriver().get("http://localhost:4444/grid/console");
+        getWebDriver().get(String.format("http://%s:%s/grid/console", ZALENIUM_HOST, ZALENIUM_PORT));
 
         // Assert that the title is the expected one
         assertThat(getWebDriver().getTitle(), equalTo("Grid Console"));

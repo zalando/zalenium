@@ -57,5 +57,13 @@ else
             sudo mvn clean
         fi
     fi
+    if [ "$INTEGRATION_TO_TEST" = minikube ]; then
+        if [ -n "${SAUCE_USERNAME}" ]; then
+            MINIKUBE_IP=$(./minikube ip)
+            export ZALENIUM_GRID_PORT=$(./kubectl get svc zalenium -o go-template='{{ index (index .spec.ports 0) "nodePort" }}{{ "\n" }}')
+            export ZALENIUM_GRID_HOST=$MINIKUBE_IP
+            mvn verify -Pintegration-test -DthreadCountProperty=2 -Dskip.surefire.tests=true -Dskip.failsafe.setup=true -DintegrationToTest=sauceLabs
+        fi
+    fi
 fi
 
