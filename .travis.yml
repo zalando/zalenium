@@ -42,6 +42,7 @@ jobs:
       script:
       - docker pull elgalu/selenium:3.5.3
       - mvn clean package -Pbuild-docker-image -DskipTests=true
+      - cd target && docker build -t dosel/zalenium:latest . && cd ..
       - curl -sSL https://raw.githubusercontent.com/dosel/t/i/p | PULL_DEPENDENCIES=false ADDITIONAL_DOCKER_OPTS='-u 1000060000:1000060000' bash -s start
       - docker logs zalenium
       - mvn verify -Pintegration-test -DthreadCountProperty=2 -Dskip.surefire.tests=true -Dskip.failsafe.setup=true -DintegrationToTest=sauceLabs
