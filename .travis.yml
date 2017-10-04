@@ -50,19 +50,7 @@ jobs:
     - env: step=minikube
       script:
       - kubernetes/minikube-ci-initialize.sh
-      - ./kubectl create --validate=false -f kubernetes/serviceAccount.yaml
-      - ./kubectl get serviceAccounts
-      - ./kubectl create --validate=false -f kubernetes/persistentVolume.yaml
-      - ./kubectl get pv
-      - ./kubectl create --validate=false -f kubernetes/persistentVolumeClaim.yaml
-      - ./kubectl get pvc
-      - ./kubectl create --validate=false -f kubernetes/zaleniumDeployment.yaml
-      - ./kubectl get deployments
-      - ./kubectl create --validate=false -f kubernetes/service.yaml
-      - ./kubectl get services
-      - ./kubectl get svc zalenium -o go-template='{{.spec.clusterIP}}:{{ index (index .spec.ports 0) "nodePort" }}{{ "\n" }}'
-      - ZALENIUM_URL = "./kubectl get svc zalenium -o go-template='{{.spec.clusterIP}}:{{ index (index .spec.ports 0) "nodePort" }}{{ "\n" }}'"
-      - curl $ZALENIUM_URL
+      - kubernetes/start-zalenium-in-minikube.sh
 
     - stage: Push Image (only with a tag)
       script:
