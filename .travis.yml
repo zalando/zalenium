@@ -28,7 +28,7 @@ jobs:
       - sudo mv docker-compose /usr/local/bin
       - travis_retry ./run_integration_tests.sh dockerCompose
 
-    - env: step=codacy-coverage
+    - env: step=unitTests
       script:
       - sudo apt-get install jq
       - wget -O ~/codacy-coverage-reporter-assembly-latest.jar $(curl https://api.github.com/repos/codacy/codacy-coverage-reporter/releases/latest | jq -r .assets[0].browser_download_url)
@@ -42,8 +42,7 @@ jobs:
       script:
       - pip install --user --upgrade selenium
       - docker pull elgalu/selenium:3.5.3
-      - mvn clean package -DskipTests=true
-      - cd target && docker build -t dosel/zalenium .
+      - mvn clean package -Pbuild-docker-image -DskipTests=true
       - curl -sSL https://raw.githubusercontent.com/dosel/t/i/p | PULL_DEPENDENCIES=false ADDITIONAL_DOCKER_OPTS='-u 1000060000:1000060000' bash -s start
       - docker logs zalenium
       - curl -sSL https://raw.github.com/dosel/t/i/s | python
@@ -51,15 +50,15 @@ jobs:
     - env: step=minikube
       script:
       - kubernetes/minikube-ci-initialize.sh
-      - ./kubectl create -f kubernetes/serviceAccount.yaml
+      - ./kubectl create --validate=false -f kubernetes/serviceAccount.yaml
       - ./kubectl get serviceAccounts
-      - ./kubectl create -f kubernetes/persistentVolume.yaml
+      - ./kubectl create --validate=false -f kubernetes/persistentVolume.yaml
       - ./kubectl get pv
-      - ./kubectl create -f kubernetes/persistentVolumeClaim.yaml
+      - ./kubectl create --validate=false -f kubernetes/persistentVolumeClaim.yaml
       - ./kubectl get pvc
-      - ./kubectl create -f kubernetes/zaleniumDeployment.yaml
+      - ./kubectl create --validate=false -f kubernetes/zaleniumDeployment.yaml
       - ./kubectl get deployments
-      - ./kubectl create -f kubernetes/service.yaml
+      - ./kubectl create --validate=false -f kubernetes/service.yaml
       - ./kubectl get services
       - ./kubectl get svc zalenium -o go-template='{{.spec.clusterIP}}:{{ index (index .spec.ports 0) "nodePort" }}{{ "\n" }}'
       - ZALENIUM_URL = "./kubectl get svc zalenium -o go-template='{{.spec.clusterIP}}:{{ index (index .spec.ports 0) "nodePort" }}{{ "\n" }}'"
