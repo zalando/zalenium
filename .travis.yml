@@ -42,6 +42,8 @@ jobs:
       script:
       - pip install --user --upgrade selenium
       - docker pull elgalu/selenium:3.5.3
+      - mvn clean package -DskipTests=true
+      - cd target && docker build -t dosel/zalenium .
       - curl -sSL https://raw.githubusercontent.com/dosel/t/i/p | PULL_DEPENDENCIES=false ADDITIONAL_DOCKER_OPTS='-u 1000060000:1000060000' bash -s start
       - docker logs zalenium
       - curl -sSL https://raw.github.com/dosel/t/i/s | python
