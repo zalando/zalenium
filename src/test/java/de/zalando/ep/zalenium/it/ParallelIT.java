@@ -67,7 +67,7 @@ public class ParallelIT  {
         };
     }
 
-    @BeforeMethod
+    @BeforeMethod(alwaysRun = true)
     public void startWebDriverAndGetBaseUrl(Method method, Object[] testArgs) throws MalformedURLException {
         String zaleniumUrl = String.format("http://%s:%s/wd/hub", ZALENIUM_HOST, ZALENIUM_PORT);
         String browserType = testArgs[0].toString();
@@ -98,7 +98,7 @@ public class ParallelIT  {
 
     }
 
-    @AfterMethod
+    @AfterMethod(alwaysRun = true)
     public void quitBrowser(Method method, Object[] testArgs) {
         webDriver.get().quit();
         String browserType = testArgs[0].toString();
