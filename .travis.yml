@@ -10,19 +10,30 @@ services:
 jobs:
   include:
     - stage: Integration and Unit Tests
+      env: step=sauceLabs
       script:
       - docker pull elgalu/selenium:3.5.3
       - travis_retry ./run_integration_tests.sh sauceLabs
-    - script:
-      - docker pull elgalu/selenium:3.5.3
-      - travis_retry ./run_integration_tests.sh browserStack
-    - script:
+
+    - env: step=browserStack_with_user1006
+      script:
+        - docker pull elgalu/selenium:3.5.3
+        - mvn clean package -Pbuild-docker-image -DskipTests=true
+        - cd target && docker build -t dosel/zalenium:latest . && cd ..
+        - curl -sSL https://raw.githubusercontent.com/dosel/t/i/p | PULL_DEPENDENCIES=false ADDITIONAL_DOCKER_OPTS='-u 1000060000:1000060000' bash -s start
+        - docker logs zalenium
+        - travis_retry mvn verify -Pintegration-test -DthreadCountProperty=2 -Dskip.surefire.tests=true -Dskip.failsafe.setup=true -DintegrationToTest=browserStack
+
+    - env: step=dockerCompose
+      script:
       - docker pull elgalu/selenium:3.5.3
       - curl -L https://github.com/docker/compose/releases/download/1.13.0/docker-compose-`uname -s`-`uname -m` > docker-compose
       - chmod +x docker-compose
       - sudo mv docker-compose /usr/local/bin
       - travis_retry ./run_integration_tests.sh dockerCompose
-    - script:
+
+    - env: step=unitTests
+      script:
       - sudo apt-get install jq
       - wget -O ~/codacy-coverage-reporter-assembly-latest.jar $(curl https://api.github.com/repos/codacy/codacy-coverage-reporter/releases/latest | jq -r .assets[0].browser_download_url)
       - mvn clean package -Pcoverage-report
@@ -30,6 +41,16 @@ jobs:
       - bash <(curl -s https://codecov.io/bash)
       # Report coverage results to Codacy
       - java -cp ~/codacy-coverage-reporter-assembly-latest.jar com.codacy.CodacyCoverageReporter -l Java -r ./target/site/jacoco/jacoco.xml
+
+    - env: step=minikube
+      script:
+      - docker pull elgalu/selenium:3.5.3
+      - kubernetes/minikube-ci-initialize.sh
+      - mvn clean package -Pbuild-docker-image -DskipTests=true
+      - cd target && docker build -t dosel/zalenium:minikube . && cd ..
+      - kubernetes/start-zalenium-in-minikube.sh
+      - ./run_integration_tests.sh minikube
+
     - stage: Push Image (only with a tag)
       script:
       - ./gen-scm-source.sh

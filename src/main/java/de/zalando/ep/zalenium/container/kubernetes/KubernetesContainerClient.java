@@ -24,6 +24,7 @@ import org.apache.commons.lang.StringUtils;
 
 import de.zalando.ep.zalenium.container.ContainerClient;
 import de.zalando.ep.zalenium.container.ContainerClientRegistration;
+import de.zalando.ep.zalenium.container.ContainerCreationStatus;
 import de.zalando.ep.zalenium.util.Environment;
 import io.fabric8.kubernetes.api.model.DoneablePod;
 import io.fabric8.kubernetes.api.model.DoneableService;
@@ -301,7 +302,7 @@ public class KubernetesContainerClient implements ContainerClient {
     }
 
     @Override
-    public boolean createContainer(String zaleniumContainerName, String image, Map<String, String> envVars,
+    public ContainerCreationStatus createContainer(String zaleniumContainerName, String image, Map<String, String> envVars,
                                 String nodePort) {
         String containerIdPrefix = String.format("%s-%s-", zaleniumAppName, nodePort);
         
@@ -333,8 +334,9 @@ public class KubernetesContainerClient implements ContainerClient {
         DoneablePod doneablePod = createDoneablePod.apply(config);
         
         // Create the container
-        doneablePod.done();
-        return true;
+        Pod createdPod = doneablePod.done();
+        String containerName = createdPod.getMetadata().getName();
+        return new ContainerCreationStatus(true, containerName, nodePort);
     }
 
     @Override
@@ -348,15 +350,15 @@ public class KubernetesContainerClient implements ContainerClient {
 
     @Override
     public String getContainerIp(String containerName) {
-        String kubernetesContainerName = containerName.replace("_", "-");
-        for (Pod pod : client.pods().list().getItems()) {
-            if (pod.getMetadata().getName().startsWith(kubernetesContainerName)) {
-                logger.log(Level.FINE, String.format("Pod %s, IP -> %s", pod.getMetadata().getName(),
-                        pod.getStatus().getPodIP()));
-                return pod.getStatus().getPodIP();
-            }
+        Pod pod = client.pods().withName(containerName).get();
+        if (pod != null) {
+            String podIP = pod.getStatus().getPodIP();
+            logger.log(Level.FINE, String.format("Pod %s, IP -> %s", containerName, podIP));
+            return podIP;
         }
-        return null;
+        else {
+            return null;
+        }
     }
 
     private void deleteSeleniumPods() {

@@ -2,6 +2,7 @@ package de.zalando.ep.zalenium.proxy;
 
 import com.google.common.annotations.VisibleForTesting;
 import de.zalando.ep.zalenium.container.ContainerClient;
+import de.zalando.ep.zalenium.container.ContainerCreationStatus;
 import de.zalando.ep.zalenium.container.ContainerFactory;
 import de.zalando.ep.zalenium.container.kubernetes.KubernetesContainerClient;
 import de.zalando.ep.zalenium.matcher.DockerSeleniumCapabilityMatcher;
@@ -477,9 +478,9 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
                         sendAnonymousUsageInfo, nodePolling, nodePort);
 
                 String latestImage = containerClient.getLatestDownloadedImage(getDockerSeleniumImageName());
-                boolean containerCreated = containerClient
+                ContainerCreationStatus creationStatus = containerClient
                         .createContainer(getContainerName(), latestImage, envVars, String.valueOf(nodePort));
-                if (containerCreated && checkContainerStatus(getContainerName(), nodePort)) {
+                if (creationStatus.isCreated() && checkContainerStatus(creationStatus)) {
                     return true;
                 } else {
                     LOGGER.log(Level.FINE, String.format("%sContainer creation failed, retrying...", LOGGING_PREFIX));
@@ -491,12 +492,12 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
         return false;
     }
 
-    private boolean checkContainerStatus(String containerName, int nodePort) {
+    private boolean checkContainerStatus(ContainerCreationStatus creationStatus) {
         long sleepInterval = sleepIntervalMultiplier;
         if (containerClient instanceof KubernetesContainerClient) {
             sleepInterval = sleepInterval * 3;
         }
-        String createdContainerName = String.format("%s_%s", containerName, nodePort);
+        String createdContainerName = creationStatus.getContainerName();
         String containerIp = containerClient.getContainerIp(createdContainerName);
         for (int i = 1; i <= 60; i++) {
             try {
@@ -504,7 +505,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
                 if (containerIp == null || containerIp.trim().isEmpty()) {
                     containerIp = containerClient.getContainerIp(createdContainerName);
                 }
-                URL statusUrl = new URL(String.format("http://%s:%s/wd/hub/status", containerIp, nodePort));
+                URL statusUrl = new URL(String.format("http://%s:%s/wd/hub/status", containerIp, creationStatus.getNodePort()));
                 try {
                     String status = IOUtils.toString(statusUrl, StandardCharsets.UTF_8);
                     String successMessage = "\"Node is running\"";

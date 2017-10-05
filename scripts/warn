@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+# Prints debug info with precise time
+exec echo "--${SELENIUM_FIRST_NODE_PORT}WARN $(date "+%H:%M:%S:%N") $@"
