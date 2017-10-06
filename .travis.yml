@@ -20,7 +20,7 @@ jobs:
         - docker pull elgalu/selenium:3.6.0
         - mvn clean package -Pbuild-docker-image -DskipTests=true
         - cd target && docker build -t dosel/zalenium:latest . && cd ..
-        - curl -sSL https://raw.githubusercontent.com/dosel/t/i/p | PULL_DEPENDENCIES=false ADDITIONAL_DOCKER_OPTS='-u 1000060000:1000060000' bash -s start
+        - curl -sSL https://raw.githubusercontent.com/dosel/t/i/p | SAUCE_USERNAME='' SAUCE_ACCESS_KEY='' PULL_DEPENDENCIES=false ADDITIONAL_DOCKER_OPTS='-u 1000060000:1000060000' bash -s start
         - docker logs zalenium
         - travis_retry mvn verify -Pintegration-test -DthreadCountProperty=2 -Dskip.surefire.tests=true -Dskip.failsafe.setup=true -DintegrationToTest=browserStack
 
