@@ -6,7 +6,7 @@
 
     <groupId>de.zalando.ep</groupId>
     <artifactId>zalenium</artifactId>
-    <version>3.5.3e-SNAPSHOT</version>
+    <version>3.6.0a-SNAPSHOT</version>
     <name>Zalenium</name>
     <description>An on-demand, dynamic local Selenium Grid with an extension to a cloud testing platform.</description>
 
@@ -48,8 +48,8 @@
     </developers>
 
     <properties>
-        <selenium-server.major-minor.version>3.5</selenium-server.major-minor.version>
-        <selenium-server.patch-level.version>3</selenium-server.patch-level.version>
+        <selenium-server.major-minor.version>3.6</selenium-server.major-minor.version>
+        <selenium-server.patch-level.version>0</selenium-server.patch-level.version>
         <docker-client.version>8.9.0</docker-client.version>
         <kubernetes-client.version>2.6.3</kubernetes-client.version>
         <junit.version>4.12</junit.version>
