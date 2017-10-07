@@ -66,7 +66,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     @VisibleForTesting
     static final TimeZone DEFAULT_TZ = TimeZone.getTimeZone("Europe/Berlin");
     @VisibleForTesting
-    static final Dimension DEFAULT_SCREEN_SIZE = new Dimension(1900, 1880);
+    static final Dimension DEFAULT_SCREEN_SIZE = new Dimension(1920, 1080);
     @VisibleForTesting
     static final String ZALENIUM_CHROME_CONTAINERS = "ZALENIUM_CHROME_CONTAINERS";
     @VisibleForTesting
