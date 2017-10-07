@@ -29,6 +29,7 @@
   * [Disable video recording](#disable-video-recording)
   * [Time zone](#time-zone)
   * [Marking the test as passed or failed](#marking-the-test-as-passed-or-failed)
+  * [Referencing test steps in the recorded video](#referencing-test-steps-in-the-recorded-video)
 * [Accessing the host](#accessing-the-host)
   * [Linux](#linux-env)
   * [OSX](#osx-env)
@@ -369,6 +370,37 @@ passed or failed. Here is an example in Java:
   ```java
     Cookie cookie = new Cookie("zaleniumTestPassed", "true");
     webDriver.manage().addCookie(cookie);
+  ```
+
+### Referencing test steps in the recorded video
+It is possible to reference your tests steps in the recorded video by passing their description to Zalenium via a
+cookie. For example, your test could go to the home page, search and add an article to the basket, go to the checkout,
+and pay. All this steps can be referenced in the video for a more simple debugging. You can pass the steps via messages
+with a cookie named `zaleniumMessage`. Here is an example in Java:
+
+  ```java
+    Cookie cookie = new Cookie("zaleniumMessage", "Go to home page");
+    webDriver.manage().addCookie(cookie);
+    webDriver.get("http://www.homepage.com");
+    
+    cookie = new Cookie("zaleniumMessage", "Search and add article to the basket");
+    webDriver.manage().addCookie(cookie);
+    /*
+        Code performing WebDriver actions to search and add article to the basket.
+     */
+
+    cookie = new Cookie("zaleniumMessage", "Go to the checkout");
+    webDriver.manage().addCookie(cookie);
+    /*
+        Code performing WebDriver actions to go to the checkout.
+     */
+
+    cookie = new Cookie("zaleniumMessage", "Pay");
+    webDriver.manage().addCookie(cookie);
+    /*
+        Code performing WebDriver actions to pay.
+     */
+
   ```
 
 ### Set browser language (works only with Chrome)
