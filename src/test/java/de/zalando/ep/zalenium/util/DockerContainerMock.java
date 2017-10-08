@@ -111,9 +111,9 @@ public class DockerContainerMock {
             String[] stopVideo = {"bash", "-c", STOP_RECORDING.getContainerAction()};
             String[] transferLogs = {"bash", "-c", TRANSFER_LOGS.getContainerAction()};
             String[] cleanupContainer = {"bash", "-c", CLEANUP_CONTAINER.getContainerAction()};
-            String[] sendNofiticationCompleted = {"bash", "-c",
+            String[] sendNotificationCompleted = {"bash", "-c",
                     SEND_NOTIFICATION.getContainerAction().concat(COMPLETED.getTestNotificationMessage())};
-            String[] sendNofiticationTimeout = {"bash", "-c",
+            String[] sendNotificationTimeout = {"bash", "-c",
                     SEND_NOTIFICATION.getContainerAction().concat(TIMEOUT.getTestNotificationMessage())};
             when(dockerClient.execCreate(containerId, startVideo, DockerClient.ExecCreateParam.attachStdout(),
                     DockerClient.ExecCreateParam.attachStderr())).thenReturn(execCreation);
@@ -123,9 +123,9 @@ public class DockerContainerMock {
                     DockerClient.ExecCreateParam.attachStderr())).thenReturn(execCreation);
             when(dockerClient.execCreate(containerId, cleanupContainer, DockerClient.ExecCreateParam.attachStdout(),
                     DockerClient.ExecCreateParam.attachStderr())).thenReturn(execCreation);
-            when(dockerClient.execCreate(containerId, sendNofiticationCompleted, DockerClient.ExecCreateParam.attachStdout(),
+            when(dockerClient.execCreate(containerId, sendNotificationCompleted, DockerClient.ExecCreateParam.attachStdout(),
                     DockerClient.ExecCreateParam.attachStderr())).thenReturn(execCreation);
-            when(dockerClient.execCreate(containerId, sendNofiticationTimeout, DockerClient.ExecCreateParam.attachStdout(),
+            when(dockerClient.execCreate(containerId, sendNotificationTimeout, DockerClient.ExecCreateParam.attachStdout(),
                     DockerClient.ExecCreateParam.attachStderr())).thenReturn(execCreation);
 
             when(dockerClient.execStart(anyString())).thenReturn(logStream);

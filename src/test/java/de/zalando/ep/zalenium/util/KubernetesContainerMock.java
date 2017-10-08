@@ -166,7 +166,7 @@ public class KubernetesContainerMock {
                 .always();
 
         KubernetesClient client = server.getClient();
-        
+
         return new KubernetesContainerClient(environment,
                 KubernetesContainerClient::createDoneablePodDefaultImpl,
                 KubernetesContainerClient::createDonableServiceDefaultImpl, client);

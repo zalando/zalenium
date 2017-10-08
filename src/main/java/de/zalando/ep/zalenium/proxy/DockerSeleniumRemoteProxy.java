@@ -313,6 +313,11 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         return defaultValue;
     }
 
+    @VisibleForTesting
+    public TestInformation getTestInformation() {
+        return testInformation;
+    }
+
     /*
         Method to decide if the node can be removed based on the amount of executed tests.
      */
