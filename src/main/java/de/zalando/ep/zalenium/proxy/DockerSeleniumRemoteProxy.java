@@ -228,6 +228,13 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                         testInformation.setTestStatus(TestInformation.TestStatus.FAILED);
                     }
                 }
+                if ("zaleniumMessage".equalsIgnoreCase(cookie.get("name").getAsString())) {
+                    String message = cookie.get("value").getAsString();
+                    String messageCommand = String.format(" 'Zalenium', '%s', --icon=/home/seluser/images/message.png",
+                            message);
+                    processContainerAction(DockerSeleniumContainerAction.SEND_NOTIFICATION, messageCommand,
+                            getContainerId());
+                }
             }
         }
     }
@@ -304,6 +311,11 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
             return requestedCapability.get(capabilityName).toString();
         }
         return defaultValue;
+    }
+
+    @VisibleForTesting
+    public TestInformation getTestInformation() {
+        return testInformation;
     }
 
     /*
@@ -388,7 +400,13 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
 
     @VisibleForTesting
     void processContainerAction(final DockerSeleniumContainerAction action, final String containerId) {
-        final String[] command = { "bash", "-c", action.getContainerAction() };
+        processContainerAction(action, "", containerId);
+    }
+
+    @VisibleForTesting
+    void processContainerAction(final DockerSeleniumContainerAction action, final String commandParameters,
+                                final String containerId) {
+        final String[] command = { "bash", "-c", action.getContainerAction().concat(commandParameters)};
         containerClient.executeCommand(containerId, command, action.isWaitForExecution());
 
         if (keepVideoAndLogs()) {
@@ -464,6 +482,8 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     }
 
     private void cleanupNode() {
+        processContainerAction(DockerSeleniumContainerAction.SEND_NOTIFICATION,
+                testInformation.getTestStatus().getTestNotificationMessage(), getContainerId());
         videoRecording(DockerSeleniumContainerAction.STOP_RECORDING);
         processContainerAction(DockerSeleniumContainerAction.TRANSFER_LOGS, getContainerId());
         processContainerAction(DockerSeleniumContainerAction.CLEANUP_CONTAINER, getContainerId());
@@ -500,7 +520,8 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         START_RECORDING("start-video", false),
         STOP_RECORDING("stop-video", true),
         TRANSFER_LOGS("transfer-logs.sh", true),
-        CLEANUP_CONTAINER("cleanup-container.sh", true);
+        CLEANUP_CONTAINER("cleanup-container.sh", true),
+        SEND_NOTIFICATION("notify", true);
 
         private String containerAction;
         private boolean waitForExecution;

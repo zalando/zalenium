@@ -153,17 +153,19 @@ public class TestInformation {
     }
 
     public enum TestStatus {
-        COMPLETED("Completed", "primary"),
-        TIMEOUT("Timeout", "warning"),
-        SUCCESS("Success", "success"),
-        FAILED("Failed", "danger");
+        COMPLETED("Completed", "primary", " 'Zalenium', 'TEST COMPLETED', --icon=/home/seluser/images/completed.png"),
+        TIMEOUT("Timeout", "warning", " 'Zalenium', 'TEST TIMED OUT', --icon=/home/seluser/images/timeout.png"),
+        SUCCESS("Success", "success", " 'Zalenium', 'TEST PASSED', --icon=/home/seluser/images/success.png"),
+        FAILED("Failed", "danger", " 'Zalenium', 'TEST FAILED', --icon=/home/seluser/images/failure.png");
 
         private String testStatus;
         private String testBadge;
+        private String testNotificationMessage;
 
-        TestStatus(String testStatus, String testBadge) {
+        TestStatus(String testStatus, String testBadge, String testNotificationMessage) {
             this.testStatus = testStatus;
             this.testBadge = testBadge;
+            this.testNotificationMessage = testNotificationMessage;
         }
 
         public String getTestStatus() {
@@ -172,6 +174,10 @@ public class TestInformation {
 
         public String getTestBadge() {
             return testBadge;
+        }
+
+        public String getTestNotificationMessage() {
+            return testNotificationMessage;
         }
     }
 

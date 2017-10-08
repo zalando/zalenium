@@ -4,6 +4,7 @@ import com.spotify.docker.client.exceptions.DockerException;
 import de.zalando.ep.zalenium.container.ContainerClient;
 import de.zalando.ep.zalenium.container.ContainerFactory;
 import de.zalando.ep.zalenium.container.kubernetes.KubernetesContainerClient;
+import de.zalando.ep.zalenium.dashboard.TestInformation;
 import de.zalando.ep.zalenium.util.DockerContainerMock;
 import de.zalando.ep.zalenium.util.Environment;
 import de.zalando.ep.zalenium.util.KubernetesContainerMock;
@@ -300,6 +301,39 @@ public class DockerSeleniumRemoteProxyTest {
         Assert.assertTrue(proxy.isBusy());
         Callable<Boolean> callable = () -> !proxy.isDown();
         await().pollInterval(Duration.FIVE_HUNDRED_MILLISECONDS).atMost(Duration.TWO_SECONDS).until(callable);
+    }
+
+    @Test
+    public void testIsMarkedAsPassedAndFailedWithCookie() throws IOException {
+
+        // Supported desired capability for the test session
+        Map<String, Object> requestedCapability = getCapabilitySupportedByDockerSelenium();
+
+        // Start poller thread
+        proxy.startPolling();
+
+        // Get a test session
+        TestSession newSession = proxy.getNewSession(requestedCapability);
+        Assert.assertNotNull(newSession);
+
+        // The node should be busy since there is a session in it
+        Assert.assertTrue(proxy.isBusy());
+
+        // We release the session, the node should be free
+        WebDriverRequest request = mock(WebDriverRequest.class);
+        HttpServletResponse response = mock(HttpServletResponse.class);
+        when(request.getMethod()).thenReturn("POST");
+        when(request.getRequestType()).thenReturn(RequestType.REGULAR);
+        when(request.getPathInfo()).thenReturn("/cookie");
+        when(request.getBody()).thenReturn("{\"cookie\": {\"name\": \"zaleniumTestPassed\", \"value\": true}}");
+
+        proxy.beforeCommand(newSession, request, response);
+        Assert.assertEquals(TestInformation.TestStatus.SUCCESS, proxy.getTestInformation().getTestStatus());
+
+        when(request.getBody()).thenReturn("{\"cookie\": {\"name\": \"zaleniumTestPassed\", \"value\": false}}");
+
+        proxy.beforeCommand(newSession, request, response);
+        Assert.assertEquals(TestInformation.TestStatus.FAILED, proxy.getTestInformation().getTestStatus());
     }
 
     @Test

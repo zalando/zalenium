@@ -131,14 +131,25 @@ public class KubernetesContainerMock {
                 .withPath("/api/v1/namespaces/test/services")
                 .andReturn(201, service).always();
 
+        String bashCommand = String.format("/api/v1/namespaces/test/pods/%s/exec?command=bash&command=-c&command=", hostName);
+        String tarCommand = String.format("/api/v1/namespaces/test/pods/%s/exec?command=tar&command=-C&command=", hostName);
+        String commandSuffix = "&stdout=true&stderr=true";
         String expectedOutput = "test";
         List<String> execPaths = new ArrayList<>();
-        execPaths.add(String.format("/api/v1/namespaces/test/pods/%s/exec?command=bash&command=-c&command=transfer-logs.sh&stdout=true&stderr=true", hostName));
-        execPaths.add(String.format("/api/v1/namespaces/test/pods/%s/exec?command=tar&command=-C&command=/var/log/cont/&command=-c&command=.&stdout=true&stderr=true", hostName));
-        execPaths.add(String.format("/api/v1/namespaces/test/pods/%s/exec?command=tar&command=-C&command=/videos/&command=-c&command=.&stdout=true&stderr=true", hostName));
-        execPaths.add(String.format("/api/v1/namespaces/test/pods/%s/exec?command=bash&command=-c&command=stop-video&stdout=true&stderr=true", hostName));
-        execPaths.add(String.format("/api/v1/namespaces/test/pods/%s/exec?command=bash&command=-c&command=transfer-logs.sh&stdout=true&stderr=true", hostName));
-        execPaths.add(String.format("/api/v1/namespaces/test/pods/%s/exec?command=bash&command=-c&command=cleanup-container.sh&stdout=true&stderr=true", hostName));
+        execPaths.add(String.format("%stransfer-logs.sh%s", bashCommand, commandSuffix));
+        execPaths.add(String.format("%s/var/log/cont/&command=-c&command=.%s", tarCommand, commandSuffix));
+        execPaths.add(String.format("%s/videos/&command=-c&command=.%s", tarCommand, commandSuffix));
+        execPaths.add(String.format("%sstop-video%s", bashCommand, commandSuffix));
+        execPaths.add(String.format("%stransfer-logs.sh%s", bashCommand, commandSuffix));
+        execPaths.add(String.format("%scleanup-container.sh%s", bashCommand, commandSuffix));
+        String notifyComplete = bashCommand
+                .concat("notify%20%27Zalenium%27,%20%27TEST%20COMPLETED%27,%20--icon=/home/seluser/images/completed.png")
+                .concat(commandSuffix);
+        String notifyTimeout = bashCommand
+                .concat("notify%20%27Zalenium%27,%20%27TEST%20TIMED%20OUT%27,%20--icon=/home/seluser/images/timeout.png")
+                .concat(commandSuffix);
+        execPaths.add(notifyComplete);
+        execPaths.add(notifyTimeout);
 
         for (String execPath : execPaths) {
             server.expect()
@@ -155,8 +166,6 @@ public class KubernetesContainerMock {
                 .always();
 
         KubernetesClient client = server.getClient();
-
-
 
         return new KubernetesContainerClient(environment,
                 KubernetesContainerClient::createDoneablePodDefaultImpl,
