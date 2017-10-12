@@ -191,6 +191,8 @@ execution should finish earlier.
   * `--seleniumImageName` -> enables overriding of the Docker selenium image to use. Defaults to 'elgalu/selenium'.
   * `--gridUser` -> allows you to specify a user to enable basic auth protection, `--gridPassword` must be provided also.
   * `--gridPassword` -> allows you to specify a user to enable basic auth protection, `--gridUser` must be provided also.
+  * `--maxTestSessions` -> max amount of tests executed per container, defaults to '1'.
+  * `--keepOnlyFailedTests` -> Keeps only videos of failed tests (you need to send a cookie). Defaults to 'false'.
 
 
 
