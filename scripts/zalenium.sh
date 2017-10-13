@@ -264,7 +264,7 @@ StartUp()
 {
     if [ ${KUBERNETES_ENABLED} == "false" ]; then
         EnsureDockerWorks
-        CONTAINER_ID=$(grep docker /proc/self/cgroup | grep -o -E '[0-9a-f]{64}$' | head -n 1)
+        CONTAINER_ID=$(grep docker /proc/self/cgroup | head -n 1 | grep -o -E '[0-9a-f]{64}' | tail -n 1)
         CONTAINER_NAME=$(docker inspect ${CONTAINER_ID} | jq -r '.[0].Name' | sed 's/\///g')
         EnsureCleanEnv
 
