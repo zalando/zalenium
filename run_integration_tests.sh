@@ -26,6 +26,7 @@ else
         if [ -n "${BROWSER_STACK_USER}" ]; then
             sudo mvn clean
             mvn clean package -Pbuild-docker-image -DskipTests=true
+            mkdir -p "${VIDEOS_FOLDER}"
             cd target && docker build -t dosel/zalenium:latest . && cd ..
             curl -sSL https://raw.githubusercontent.com/dosel/t/i/p | SAUCE_USERNAME='' SAUCE_ACCESS_KEY='' TESTINGBOT_KEY='' TESTINGBOT_SECRET='' PULL_DEPENDENCIES=false ADDITIONAL_DOCKER_OPTS='-u 1000060000:1000060000' bash -s start
             docker logs zalenium
