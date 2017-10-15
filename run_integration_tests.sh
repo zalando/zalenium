@@ -25,7 +25,11 @@ else
     if [ "$INTEGRATION_TO_TEST" = browserStack ]; then
         if [ -n "${BROWSER_STACK_USER}" ]; then
             sudo mvn clean
-            mvn clean verify -Pintegration-test -DthreadCountProperty=2 -Dskip.surefire.tests=true -DintegrationToTest=${INTEGRATION_TO_TEST}
+            mvn clean package -Pbuild-docker-image -DskipTests=true
+            cd target && docker build -t dosel/zalenium:latest . && cd ..
+            curl -sSL https://raw.githubusercontent.com/dosel/t/i/p | SAUCE_USERNAME='' SAUCE_ACCESS_KEY='' TESTINGBOT_KEY='' TESTINGBOT_SECRET='' PULL_DEPENDENCIES=false ADDITIONAL_DOCKER_OPTS='-u 1000060000:1000060000' bash -s start
+            docker logs zalenium
+            mvn verify -Pintegration-test -DthreadCountProperty=2 -Dskip.surefire.tests=true -Dskip.failsafe.setup=true -DintegrationToTest=${INTEGRATION_TO_TEST}
             # Check for generated videos
             ls -la ${VIDEOS_FOLDER}/browserstack*.mp4 || (echo "No BrowserStack videos were downloaded." && exit 2)
             ls -la ${VIDEOS_FOLDER}/zalenium*.mp4 || (echo "No Zalenium videos were generated." && exit 2)
