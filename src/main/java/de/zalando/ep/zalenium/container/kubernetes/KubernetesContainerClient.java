@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.URL;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -45,6 +46,11 @@ public class KubernetesContainerClient implements ContainerClient {
 
     private static final String SHARED_FOLDER_MOUNT_POINT = "/tmp/mounted";
 
+    private static final String[] PROTECTED_NODE_MOUNT_POINTS = {
+            "/home/seluser/videos",
+            "/dev/shm"
+    };
+
     private static final String SELENIUM_NODE_NAME = "seleniumNodeName";
 
     private static final Logger logger = Logger.getLogger(KubernetesContainerClient.class.getName());
@@ -61,9 +67,10 @@ public class KubernetesContainerClient implements ContainerClient {
     private Map<String, String> appLabelMap;
     private Map<String, String> deploymentConfigLabelMap;
 
-    private Optional<VolumeMount> sharedFolderVolumeMount;
+    private Map<VolumeMount, Volume> mountedSharedFoldersMap;
+    // private Optional<VolumeMount> sharedFolderVolumeMount;
 
-    private Volume sharedFolderVolume;
+    // private Volume sharedFolderVolume;
     
     private final Map<String, Quantity> seleniumPodLimits = new HashMap<>();
     private final Map<String, Quantity> seleniumPodRequests = new HashMap<>();
@@ -157,8 +164,25 @@ public class KubernetesContainerClient implements ContainerClient {
 
     private void discoverSharedFolderMount() {
         List<VolumeMount> volumeMounts = zaleniumPod.getSpec().getContainers().get(0).getVolumeMounts();
-        
+
+        List<VolumeMount> validMounts = new ArrayList<>();
+        volumeMounts.stream()
+                .filter(volumeMount -> !Arrays.asList(PROTECTED_NODE_MOUNT_POINTS).contains(volumeMount.getMountPath()))
+                .forEach(validMounts::add);
+
+        if (!validMounts.isEmpty()) {
+            List<Volume> volumes = zaleniumPod.getSpec().getVolumes();
+            for (VolumeMount validMount : validMounts) {
+                volumes.stream()
+                        .filter(volume -> validMount.getName().equalsIgnoreCase(volume.getName()))
+                        .findFirst()
+                        .ifPresent(volume -> mountedSharedFoldersMap.put(validMount, volume));
+            }
+        }
+
+
         // Look through the volume mounts to see if the shared folder is mounted
+        /*
         sharedFolderVolumeMount = volumeMounts.stream().filter(mount -> SHARED_FOLDER_MOUNT_POINT.equals(mount.getMountPath())).findFirst();
         
         if (sharedFolderVolumeMount.isPresent()) {
@@ -167,6 +191,7 @@ public class KubernetesContainerClient implements ContainerClient {
             // Look for the underlying volume by volume mount name
             sharedFolderVolume = volumes.stream().filter(volume -> sharedFolderVolumeMount.get().getName().equals(volume.getName())).findFirst().get();
         }
+        */
     }
 
     private String findHostname() {
@@ -326,8 +351,9 @@ public class KubernetesContainerClient implements ContainerClient {
         labels.putAll(appLabelMap);
         labels.putAll(podSelector);
         config.setLabels(labels);
-        config.setSharedFolderVolumeMount(sharedFolderVolumeMount);
-        config.setSharedFolderVolume(sharedFolderVolume);
+        config.setMountedSharedFoldersMap(mountedSharedFoldersMap);
+        // config.setSharedFolderVolumeMount(sharedFolderVolumeMount);
+        // config.setSharedFolderVolume(sharedFolderVolume);
         config.setPodLimits(seleniumPodLimits);
         config.setPodRequests(seleniumPodRequests);
         
@@ -549,9 +575,23 @@ public class KubernetesContainerClient implements ContainerClient {
                     .endContainer()
                     .withRestartPolicy("Never")
                 .endSpec();
-            
-            // Add the shared folder if it is available
-            if (config.getSharedFolderVolumeMount().isPresent()) {
+
+        for (Map.Entry<VolumeMount, Volume> entry : config.getMountedSharedFoldersMap().entrySet()) {
+            doneablePod = doneablePod
+                    .editSpec()
+                        .addNewVolumeLike(entry.getValue())
+                    .and()
+                        .editFirstContainer()
+                            .addNewVolumeMountLike(entry.getKey())
+                            .endVolumeMount()
+                        .endContainer()
+                    .endSpec();
+        }
+
+        /*
+
+        // Add the shared folder if it is available
+        if (config.getSharedFolderVolumeMount().isPresent()) {
                 doneablePod = doneablePod
                     .editSpec()
                         .addNewVolumeLike(config.getSharedFolderVolume())
@@ -562,12 +602,13 @@ public class KubernetesContainerClient implements ContainerClient {
                         .endContainer()
                     .endSpec();
             }
+            */
             
             return doneablePod;
     }
     
-    public static DoneableService createDonableServiceDefaultImpl(ServiceConfiguration config) {
-        DoneableService doneableService = config.getClient().services()
+    public static DoneableService createDoneableServiceDefaultImpl(ServiceConfiguration config) {
+        return config.getClient().services()
                 .createNew()
                 .withNewMetadata()
                     .withName(config.getName())
@@ -583,8 +624,6 @@ public class KubernetesContainerClient implements ContainerClient {
                     .endPort()
                     .addToSelector(config.getSelectors())
                 .endSpec();
-        
-        return doneableService;
     }
 
 }

@@ -17,6 +17,7 @@ public class PodConfiguration {
     private String image;
     private List<EnvVar> envVars;
     private Map<String, String> labels;
+    private Map<VolumeMount, Volume> mountedSharedFoldersMap;
     private Optional<VolumeMount> sharedFolderVolumeMount;
     private Volume sharedFolderVolume;
     private Map<String, Quantity> podLimits;
@@ -75,5 +76,11 @@ public class PodConfiguration {
     }
     public void setPodRequests(Map<String, Quantity> podRequests) {
         this.podRequests = podRequests;
+    }
+    public Map<VolumeMount, Volume> getMountedSharedFoldersMap() {
+        return mountedSharedFoldersMap;
+    }
+    public void setMountedSharedFoldersMap(Map<VolumeMount, Volume> mountedSharedFoldersMap) {
+        this.mountedSharedFoldersMap = mountedSharedFoldersMap;
     }
 }
