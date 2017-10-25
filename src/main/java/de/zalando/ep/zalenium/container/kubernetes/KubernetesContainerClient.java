@@ -67,7 +67,7 @@ public class KubernetesContainerClient implements ContainerClient {
     private Map<String, String> appLabelMap;
     private Map<String, String> deploymentConfigLabelMap;
 
-    private Map<VolumeMount, Volume> mountedSharedFoldersMap;
+    private Map<VolumeMount, Volume> mountedSharedFoldersMap = new HashMap<>();
     // private Optional<VolumeMount> sharedFolderVolumeMount;
 
     // private Volume sharedFolderVolume;

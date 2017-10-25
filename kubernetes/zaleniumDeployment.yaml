@@ -48,9 +48,14 @@ spec:
           volumeMounts:
             - name: zalenium-data
               mountPath: /home/seluser/videos
+            - name: zalenium-mounted
+              mountPath: /tmp/mounted
       volumes:
           - name: zalenium-data
             persistentVolumeClaim:
               claimName: zalenium-data
+          - name: zalenium-mounted
+            persistentVolumeClaim:
+              claimName: zalenium-mounted
       serviceAccountName: zalenium
       serviceAccount: zalenium
