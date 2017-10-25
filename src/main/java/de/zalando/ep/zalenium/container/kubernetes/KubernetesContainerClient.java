@@ -430,6 +430,7 @@ public class KubernetesContainerClient implements ContainerClient {
         return registration;
     }
     
+    @SuppressWarnings("WeakerAccess")
     private final class CopyFilesExecListener implements ExecListener {
         private AtomicBoolean closedResource = new AtomicBoolean(false);
         private ExecWatch execWatch;
