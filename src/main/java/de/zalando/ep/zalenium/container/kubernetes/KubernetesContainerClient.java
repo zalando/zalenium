@@ -63,7 +63,6 @@ public class KubernetesContainerClient implements ContainerClient {
 
     private Map<String, String> createdByZaleniumMap;
     private Map<String, String> appLabelMap;
-    private Map<String, String> deploymentConfigLabelMap;
 
     private Map<VolumeMount, Volume> mountedSharedFoldersMap = new HashMap<>();
 
@@ -106,9 +105,6 @@ public class KubernetesContainerClient implements ContainerClient {
 
             appLabelMap = new HashMap<>();
             appLabelMap.put("app", appName);
-
-            deploymentConfigLabelMap = new HashMap<>();
-            deploymentConfigLabelMap.put("deploymentconfig", deploymentConfig);
 
             createdByZaleniumMap = new HashMap<>();
             createdByZaleniumMap.put("createdBy", appName);
