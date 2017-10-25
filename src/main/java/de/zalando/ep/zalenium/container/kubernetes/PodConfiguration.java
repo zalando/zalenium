@@ -2,7 +2,6 @@ package de.zalando.ep.zalenium.container.kubernetes;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import io.fabric8.kubernetes.api.model.EnvVar;
 import io.fabric8.kubernetes.api.model.Quantity;
@@ -10,6 +9,7 @@ import io.fabric8.kubernetes.api.model.Volume;
 import io.fabric8.kubernetes.api.model.VolumeMount;
 import io.fabric8.kubernetes.client.KubernetesClient;
 
+@SuppressWarnings("WeakerAccess")
 public class PodConfiguration {
 
     private KubernetesClient client;
@@ -18,8 +18,6 @@ public class PodConfiguration {
     private List<EnvVar> envVars;
     private Map<String, String> labels;
     private Map<VolumeMount, Volume> mountedSharedFoldersMap;
-    private Optional<VolumeMount> sharedFolderVolumeMount;
-    private Volume sharedFolderVolume;
     private Map<String, Quantity> podLimits;
     private Map<String, Quantity> podRequests;
     
@@ -52,18 +50,6 @@ public class PodConfiguration {
     }
     public void setLabels(Map<String, String> labels) {
         this.labels = labels;
-    }
-    public Optional<VolumeMount> getSharedFolderVolumeMount() {
-        return sharedFolderVolumeMount;
-    }
-    public void setSharedFolderVolumeMount(Optional<VolumeMount> sharedFolderVolumeMount) {
-        this.sharedFolderVolumeMount = sharedFolderVolumeMount;
-    }
-    public Volume getSharedFolderVolume() {
-        return sharedFolderVolume;
-    }
-    public void setSharedFolderVolume(Volume sharedFolderVolume) {
-        this.sharedFolderVolume = sharedFolderVolume;
     }
     public Map<String, Quantity> getPodLimits() {
         return podLimits;

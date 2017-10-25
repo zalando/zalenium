@@ -1,14 +1,10 @@
 #!/usr/bin/env bash
 
-./kubectl create --validate=false -f kubernetes/serviceAccount.yaml
+./kubectl create --validate=false -f kubernetes
 ./kubectl get serviceAccounts
-./kubectl create --validate=false -f kubernetes/persistentVolume.yaml
 ./kubectl get pv
-./kubectl create --validate=false -f kubernetes/persistentVolumeClaim.yaml
 ./kubectl get pvc
-./kubectl create --validate=false -f kubernetes/zaleniumDeployment.yaml
 ./kubectl get deployments
-./kubectl create --validate=false -f kubernetes/service.yaml
 ./kubectl get services
 
 MINIKUBE_IP=$(./minikube ip)
