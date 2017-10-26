@@ -106,6 +106,7 @@ public class CloudTestingRemoteProxy extends DefaultRemoteProxy {
         desiredCapabilities.setBrowserName(proxyName);
         desiredCapabilities.setPlatform(Platform.ANY);
         registrationRequest.getConfiguration().capabilities.add(desiredCapabilities);
+        registrationRequest.getConfiguration().maxSession = concurrency;
         return registrationRequest;
     }
 
