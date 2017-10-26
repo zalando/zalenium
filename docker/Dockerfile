@@ -347,6 +347,10 @@ RUN cd /tmp \
 #===================================================
 USER seluser
 WORKDIR /home/seluser
+# Allows different operations in Openshift environments
+# https://docs.openshift.com/container-platform/latest/creating_images/guidelines.html#openshift-specific-guidelines
+RUN chgrp -R 0 /home/seluser && \
+    chmod -R g=u /home/seluser
 
 #==========
 # Selenium
