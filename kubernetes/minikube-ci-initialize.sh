@@ -53,8 +53,9 @@ fi
 # OPTIONAL depending on kube-dns requirement
 # this for loop waits until the kubernetes addons are active
 KUBE_ADDONS_UP="false"
-for i in {1..150} # timeout for 5 minutes
-do
+WAIT_UNTIL=$((SECONDS + 300))
+# timeout for 5 minutes
+while [ $SECONDS -lt ${WAIT_UNTIL} ]; do
     # Here we are making sure that kubectl is returning the addon pods for the namespace kube-system
     # Without this check, the second if statement won't be in the proper state for execution
     if [[ $(./kubectl get po -n kube-system -l k8s-app=kube-dns | tail -n +2 | grep "kube-dns") ]]; then
