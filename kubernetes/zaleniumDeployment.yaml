@@ -10,6 +10,12 @@ spec:
         app: zalenium
         role: grid
     spec:
+      # Added to test manually https://github.com/zalando/zalenium/issues/246
+      hostAliases:
+      - ip: "127.0.0.1"
+        hostnames:
+        - "foo.local"
+        - "bar.local"
       containers:
         - name: zalenium
           image: dosel/zalenium:minikube
