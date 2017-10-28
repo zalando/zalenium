@@ -342,6 +342,13 @@ RUN cd /tmp \
   && mv testingbot-tunnel.jar /usr/local/bin \
   && java -jar /usr/local/bin/testingbot-tunnel.jar --version
 
+# Allows different operations in Openshift environments
+# https://docs.openshift.com/container-platform/latest/creating_images/guidelines.html#openshift-specific-guidelines
+RUN chgrp -R 0 /home/seluser && \
+    chmod -R g=u /home/seluser
+RUN chgrp -R 0 /etc/nginx && \
+    chmod -R g=u /etc/nginx
+
 #===================================================
 # Run the following commands as non-privileged user
 #===================================================

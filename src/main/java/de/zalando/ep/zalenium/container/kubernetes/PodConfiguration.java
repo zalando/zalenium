@@ -3,10 +3,7 @@ package de.zalando.ep.zalenium.container.kubernetes;
 import java.util.List;
 import java.util.Map;
 
-import io.fabric8.kubernetes.api.model.EnvVar;
-import io.fabric8.kubernetes.api.model.Quantity;
-import io.fabric8.kubernetes.api.model.Volume;
-import io.fabric8.kubernetes.api.model.VolumeMount;
+import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.client.KubernetesClient;
 
 @SuppressWarnings("WeakerAccess")
@@ -16,6 +13,7 @@ public class PodConfiguration {
     private String containerIdPrefix;
     private String image;
     private List<EnvVar> envVars;
+    private List<HostAlias> hostAliases;
     private Map<String, String> labels;
     private Map<VolumeMount, Volume> mountedSharedFoldersMap;
     private Map<String, Quantity> podLimits;
@@ -68,5 +66,11 @@ public class PodConfiguration {
     }
     public void setMountedSharedFoldersMap(Map<VolumeMount, Volume> mountedSharedFoldersMap) {
         this.mountedSharedFoldersMap = mountedSharedFoldersMap;
+    }
+    public List<HostAlias> getHostAliases() {
+        return hostAliases;
+    }
+    public void setHostAliases(List<HostAlias> hostAliases) {
+        this.hostAliases = hostAliases;
     }
 }

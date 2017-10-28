@@ -4,6 +4,8 @@ import de.zalando.ep.zalenium.container.kubernetes.KubernetesContainerClient;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ContainerBuilder;
 import io.fabric8.kubernetes.api.model.EnvVarBuilder;
+import io.fabric8.kubernetes.api.model.HostAlias;
+import io.fabric8.kubernetes.api.model.HostAliasBuilder;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodBuilder;
 import io.fabric8.kubernetes.api.model.PodListBuilder;
@@ -65,6 +67,7 @@ public class KubernetesContainerMock {
 
         String videosVolumeName = RandomStringUtils.randomAlphabetic(5).toLowerCase();
         String generalVolumeName = RandomStringUtils.randomAlphabetic(5).toLowerCase();
+
         VolumeMount volumeMountVideos = new VolumeMountBuilder()
                 .withName(videosVolumeName)
                 .withMountPath("/tmp/videos")
@@ -85,9 +88,15 @@ public class KubernetesContainerMock {
                 .withName(generalVolumeName)
                 .build();
 
+        HostAlias hostAlias = new HostAliasBuilder()
+                .withHostnames("foo.local")
+                .withIp("127.0.0.1")
+                .build();
+
         PodSpec zaleniumPodSpec = new PodSpecBuilder()
                 .withContainers(zaleniumContainer)
                 .withVolumes(videosVolume, generalVolume)
+                .withHostAliases(hostAlias)
                 .build();
         zaleniumPod.setSpec(zaleniumPodSpec);
 

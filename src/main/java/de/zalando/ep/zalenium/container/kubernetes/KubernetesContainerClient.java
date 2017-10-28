@@ -21,21 +21,22 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-import org.apache.commons.lang.StringUtils;
-
-import de.zalando.ep.zalenium.container.ContainerClient;
-import de.zalando.ep.zalenium.container.ContainerClientRegistration;
-import de.zalando.ep.zalenium.container.ContainerCreationStatus;
-import de.zalando.ep.zalenium.util.Environment;
 import io.fabric8.kubernetes.api.model.DoneablePod;
 import io.fabric8.kubernetes.api.model.DoneableService;
 import io.fabric8.kubernetes.api.model.EnvVar;
+import io.fabric8.kubernetes.api.model.HostAlias;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodList;
 import io.fabric8.kubernetes.api.model.Quantity;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.Volume;
 import io.fabric8.kubernetes.api.model.VolumeMount;
+import org.apache.commons.lang.StringUtils;
+
+import de.zalando.ep.zalenium.container.ContainerClient;
+import de.zalando.ep.zalenium.container.ContainerClientRegistration;
+import de.zalando.ep.zalenium.container.ContainerCreationStatus;
+import de.zalando.ep.zalenium.util.Environment;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.ExecListener;
 import io.fabric8.kubernetes.client.dsl.ExecWatch;
@@ -65,6 +66,7 @@ public class KubernetesContainerClient implements ContainerClient {
     private Map<String, String> appLabelMap;
 
     private Map<VolumeMount, Volume> mountedSharedFoldersMap = new HashMap<>();
+    private List<HostAlias> hostAliases = new ArrayList<>();
 
     private final Map<String, Quantity> seleniumPodLimits = new HashMap<>();
     private final Map<String, Quantity> seleniumPodRequests = new HashMap<>();
@@ -109,7 +111,8 @@ public class KubernetesContainerClient implements ContainerClient {
             createdByZaleniumMap.put("createdBy", appName);
             zaleniumAppName = appName;
 
-            discoverSharedFolderMount();
+            discoverFolderMounts();
+            discoverHostAliases();
 
             buildResourceMaps();
 
@@ -151,7 +154,14 @@ public class KubernetesContainerClient implements ContainerClient {
         }
     }
 
-    private void discoverSharedFolderMount() {
+    private void discoverHostAliases() {
+        List<HostAlias> configuredHostAliases = zaleniumPod.getSpec().getHostAliases();
+        if (!configuredHostAliases.isEmpty()) {
+            hostAliases = configuredHostAliases;
+        }
+    }
+
+    private void discoverFolderMounts() {
         List<VolumeMount> volumeMounts = zaleniumPod.getSpec().getContainers().get(0).getVolumeMounts();
 
         List<VolumeMount> validMounts = new ArrayList<>();
@@ -330,6 +340,7 @@ public class KubernetesContainerClient implements ContainerClient {
         labels.putAll(podSelector);
         config.setLabels(labels);
         config.setMountedSharedFoldersMap(mountedSharedFoldersMap);
+        config.setHostAliases(hostAliases);
         config.setPodLimits(seleniumPodLimits);
         config.setPodRequests(seleniumPodRequests);
         
@@ -490,6 +501,7 @@ public class KubernetesContainerClient implements ContainerClient {
         }
     }
     
+    @SuppressWarnings("unused")
     private static enum Resources {
         
         CPU_REQUEST(ResourceType.REQUEST, "cpu", "ZALENIUM_KUBERNETES_CPU_REQUEST"),
@@ -568,6 +580,16 @@ public class KubernetesContainerClient implements ContainerClient {
                         .endContainer()
                     .endSpec();
         }
+
+        // Add configured host aliases, if any
+        for (HostAlias hostAlias : config.getHostAliases()) {
+            doneablePod = doneablePod
+                    .editSpec()
+                        .addNewHostAliasLike(hostAlias)
+                        .endHostAlias()
+                    .endSpec();
+        }
+
         return doneablePod;
     }
     
