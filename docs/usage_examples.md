@@ -33,7 +33,8 @@
 * [Accessing the host](#accessing-the-host)
   * [Linux](#linux-env)
   * [OSX](#osx-env)
-* [Adding hosts to the containers](#adding-hosts-to-the-containers)    
+* [Adding hosts to the containers](#adding-hosts-to-the-containers)
+* [Adding proxy configuration to the containers](#adding-proxy-configuration-to-the-containers)    
 * [Enabling basic auth in Zalenium](#enabling-basic-auth-in-zalenium)  
 
 ## Initial setup
@@ -447,6 +448,23 @@ the host machine. So if the SUT is running on port 8080, you can do `http://mac.
 Sometimes you need to add host entries to the `/etc/hosts` file in order to mock dependencies, reach parts of your test infrastructure,
 or just to simplify your test code. Zalenium supports the `--add-host` flag in `docker run ...` and the `extra_hosts` option in
 docker-compose. You can see an example [here](./docker/docker-compose-extra-hosts.yaml)
+
+## Adding proxy configuration to the containers
+There might be situations where you need to add your own internal proxy configuration in case the network is very restrictive. In
+docker you can add the pass environment variables to overwrite that configuration in a container, e.g. `http_proxy=http://myproxy.example.com:8080`.
+Zalenium allows you to configure this values and they will be passed into the created containers. The variables are called:
+`zalenium_http_proxy`, `zalenium_https_proxy`, and `zalenium_no_proxy`. You can pass them as enviromental variables when
+starting Zalenium, here is an example:
+
+```
+docker run --rm -ti --name zalenium -p 4444:4444 \
+    -v /var/run/docker.sock:/var/run/docker.sock \
+    -v /tmp/videos:/home/seluser/videos \
+    -e "http_proxy=http://myproxy.example.com:8080" \
+    -e "https_proxy=https://myproxy.example.com:8080" \
+    -e "zalenium_no_proxy=172.16/12, 10.0.0.0/8, *.local, 169.254/16, 192.168.99.*, localhost, 127.0.0.1" \ 
+    --privileged dosel/zalenium start --chromeContainers 1 --firefoxContainers 1
+```
 
 ## Enabling basic auth in Zalenium
 Deploying Zalenium to a cloud provider (AWS, GCP, etc...)? You can enable the basich auth feature built in Nginx to protect Zalenium
