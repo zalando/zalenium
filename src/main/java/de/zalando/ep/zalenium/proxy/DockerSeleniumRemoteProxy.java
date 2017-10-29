@@ -48,13 +48,14 @@ import java.util.logging.Logger;
 public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
 
     @VisibleForTesting
-    static final String ZALENIUM_VIDEO_RECORDING_ENABLED = "ZALENIUM_VIDEO_RECORDING_ENABLED";
+    public static final String ZALENIUM_MAX_TEST_SESSIONS = "ZALENIUM_MAX_TEST_SESSIONS";
     @VisibleForTesting
-    static final boolean DEFAULT_VIDEO_RECORDING_ENABLED = true;
+    public static final long DEFAULT_MAX_TEST_IDLE_TIME_SECS = 90L;
     @VisibleForTesting
-    static final long DEFAULT_MAX_TEST_IDLE_TIME_SECS = 90L;
-    static final String ZALENIUM_MAX_TEST_SESSIONS = "ZALENIUM_MAX_TEST_SESSIONS";
-    static final String ZALENIUM_KEEP_ONLY_FAILED_TESTS = "ZALENIUM_KEEP_ONLY_FAILED_TESTS";
+    public static final String ZALENIUM_VIDEO_RECORDING_ENABLED = "ZALENIUM_VIDEO_RECORDING_ENABLED";
+    @VisibleForTesting
+    public static final boolean DEFAULT_VIDEO_RECORDING_ENABLED = true;
+    private static final String ZALENIUM_KEEP_ONLY_FAILED_TESTS = "ZALENIUM_KEEP_ONLY_FAILED_TESTS";
     private static final Logger LOGGER = Logger.getLogger(DockerSeleniumRemoteProxy.class.getName());
     private static final int DEFAULT_MAX_TEST_SESSIONS = 1;
     private static final boolean DEFAULT_KEEP_ONLY_FAILED_TESTS = false;
