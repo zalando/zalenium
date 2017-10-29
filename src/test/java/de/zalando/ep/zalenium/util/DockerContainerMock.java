@@ -77,6 +77,10 @@ public class DockerContainerMock {
         when(containerInfo.networkSettings()).thenReturn(networkSettings);
         when(hostConfig.extraHosts()).thenReturn(null);
         when(containerInfo.hostConfig()).thenReturn(hostConfig);
+        String[] httpEnvVars = {"zalenium_http_proxy=http://34.211.100.239:8080",
+                "zalenium_https_proxy=http://34.211.100.239:8080"};
+        when(containerConfig.env()).thenReturn(ImmutableList.copyOf(Arrays.asList(httpEnvVars)));
+        when(containerInfo.config()).thenReturn(containerConfig);
 
         String containerId = RandomStringUtils.randomAlphabetic(30).toLowerCase();
         Container container_40000 = mock(Container.class);

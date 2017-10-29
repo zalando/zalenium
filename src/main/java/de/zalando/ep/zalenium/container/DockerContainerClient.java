@@ -49,6 +49,11 @@ public class DockerContainerClient implements ContainerClient {
             "/home/seluser/videos",
             "/dev/shm"
     };
+    private static final String[] HTTP_PROXY_ENV_VARS = {
+            "zalenium_http_proxy",
+            "zalenium_https_proxy",
+            "zalenium_no_proxy"
+    };
     private final Logger logger = Logger.getLogger(DockerContainerClient.class.getName());
     private final GoogleAnalyticsApi ga = new GoogleAnalyticsApi();
     private DockerClient dockerClient = new DefaultDockerClient("unix:///var/run/docker.sock");
@@ -56,7 +61,8 @@ public class DockerContainerClient implements ContainerClient {
     private String zaleniumNetwork;
     private List<String> zaleniumExtraHosts;
     private List<ContainerMount> mntFolders = new ArrayList<>();
-    private boolean mntFoldersChecked = false;
+    private List<String> zaleniumHttpEnvVars = new ArrayList<>();
+    private boolean mntFoldersAndHttpEnvVarsChecked = false;
 
     @VisibleForTesting
     public void setContainerClient(final DockerClient client) {
@@ -229,6 +235,7 @@ public class DockerContainerClient implements ContainerClient {
         List<String> flattenedEnvVars = envVars.entrySet().stream()
                 .map(e -> e.getKey() + "=" + e.getValue())
                 .collect(Collectors.toList());
+        flattenedEnvVars.addAll(zaleniumHttpEnvVars);
 
 
         final String[] exposedPorts = {nodePort, noVncPort};
@@ -256,8 +263,7 @@ public class DockerContainerClient implements ContainerClient {
     }
 
     private void loadMountedFolders(String zaleniumContainerName) {
-        if (this.mntFolders.size() == 0 && !this.mntFoldersChecked) {
-            this.mntFoldersChecked = true;
+        if (!this.mntFoldersAndHttpEnvVarsChecked) {
             String containerId = getContainerId(zaleniumContainerName);
             if (containerId == null) {
                 return;
@@ -266,13 +272,23 @@ public class DockerContainerClient implements ContainerClient {
             try {
                 containerInfo = dockerClient.inspectContainer(containerId);
             } catch (DockerException | InterruptedException e) {
-                logger.log(Level.WARNING, nodeId + " Error while getting mounted folders.", e);
+                logger.log(Level.WARNING, nodeId + " Error while getting mounted folders and env vars.", e);
                 ga.trackException(e);
             }
+
+            this.mntFoldersAndHttpEnvVarsChecked = true;
             for (ContainerMount containerMount : containerInfo.mounts()) {
                 if (containerMount.destination().startsWith(NODE_MOUNT_POINT)) {
                     this.mntFolders.add(containerMount);
                 }
+            }
+            for (String envVar : containerInfo.config().env()) {
+                Arrays.asList(HTTP_PROXY_ENV_VARS).forEach(httpEnvVar -> {
+                    String httpEnvVarToAdd = envVar.replace("zalenium_", "");
+                    if (envVar.contains(httpEnvVar) && !zaleniumHttpEnvVars.contains(httpEnvVarToAdd)) {
+                        zaleniumHttpEnvVars.add(httpEnvVarToAdd);
+                    }
+                });
             }
         }
     }

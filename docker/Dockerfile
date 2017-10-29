@@ -3,7 +3,7 @@
 # Layer size: big: ~130 MB
 FROM ubuntu:xenial-20170802
 ENV UBUNTU_FLAVOR="xenial" \
-    UBUNTU_DATE="20170915"
+    UBUNTU_DATE="20171006"
 
 #== Ubuntu flavors - common
 RUN  echo "deb http://archive.ubuntu.com/ubuntu ${UBUNTU_FLAVOR} main universe\n" > /etc/apt/sources.list \
