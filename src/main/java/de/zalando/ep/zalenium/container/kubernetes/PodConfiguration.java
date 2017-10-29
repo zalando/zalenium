@@ -1,10 +1,14 @@
 package de.zalando.ep.zalenium.container.kubernetes;
 
+import io.fabric8.kubernetes.api.model.EnvVar;
+import io.fabric8.kubernetes.api.model.HostAlias;
+import io.fabric8.kubernetes.api.model.Quantity;
+import io.fabric8.kubernetes.api.model.Volume;
+import io.fabric8.kubernetes.api.model.VolumeMount;
+import io.fabric8.kubernetes.client.KubernetesClient;
+
 import java.util.List;
 import java.util.Map;
-
-import io.fabric8.kubernetes.api.model.*;
-import io.fabric8.kubernetes.client.KubernetesClient;
 
 @SuppressWarnings("WeakerAccess")
 public class PodConfiguration {
@@ -18,7 +22,8 @@ public class PodConfiguration {
     private Map<VolumeMount, Volume> mountedSharedFoldersMap;
     private Map<String, Quantity> podLimits;
     private Map<String, Quantity> podRequests;
-    
+    private Map<String, String> nodeSelector;
+
     public KubernetesClient getClient() {
         return client;
     }
@@ -72,5 +77,11 @@ public class PodConfiguration {
     }
     public void setHostAliases(List<HostAlias> hostAliases) {
         this.hostAliases = hostAliases;
+    }
+    public Map<String, String> getNodeSelector() {
+        return nodeSelector;
+    }
+    public void setNodeSelector(final Map<String, String> nodeSelector) {
+        this.nodeSelector = nodeSelector;
     }
 }

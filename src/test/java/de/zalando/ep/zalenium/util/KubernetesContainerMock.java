@@ -93,10 +93,14 @@ public class KubernetesContainerMock {
                 .withIp("127.0.0.1")
                 .build();
 
+        Map<String, String> nodeSelector = new HashMap<>();
+        nodeSelector.put("nodeLabelKey", "nodeLabelValue");
+
         PodSpec zaleniumPodSpec = new PodSpecBuilder()
                 .withContainers(zaleniumContainer)
                 .withVolumes(videosVolume, generalVolume)
                 .withHostAliases(hostAlias)
+                .withNodeSelector(nodeSelector)
                 .build();
         zaleniumPod.setSpec(zaleniumPodSpec);
 
