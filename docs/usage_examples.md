@@ -460,8 +460,8 @@ starting Zalenium, here is an example:
 docker run --rm -ti --name zalenium -p 4444:4444 \
     -v /var/run/docker.sock:/var/run/docker.sock \
     -v /tmp/videos:/home/seluser/videos \
-    -e "http_proxy=http://myproxy.example.com:8080" \
-    -e "https_proxy=https://myproxy.example.com:8080" \
+    -e "zalenium_http_proxy=http://myproxy.example.com:8080" \
+    -e "zalenium_https_proxy=https://myproxy.example.com:8080" \
     -e "zalenium_no_proxy=172.16/12, 10.0.0.0/8, *.local, 169.254/16, 192.168.99.*, localhost, 127.0.0.1" \ 
     --privileged dosel/zalenium start --chromeContainers 1 --firefoxContainers 1
 ```
