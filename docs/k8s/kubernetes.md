@@ -1,6 +1,6 @@
 # Kubernetes Support
 
-Zalenium has beta support for [Kubernetes](https://kubernetes.io/), these instructions will give you an 
+Zalenium has beta support for [Kubernetes](https://kubernetes.io/), these instructions will give you an
 overview of how to get it running. Be aware that this is work in progress and some things could be missing, both in
 code and documentation.
 
@@ -11,10 +11,10 @@ has been tested on [minikube](https://github.com/kubernetes/minikube). If you ha
 complement this guide with this [document](./gke/gke.md).
 
 ## Service Account
-Zalenium uses a service account that is automatically mounted by Kubernetes, it uses this service account to create 
-selenium pods and their related services. 
+Zalenium uses a service account that is automatically mounted by Kubernetes, it uses this service account to create
+selenium pods and their related services.
 
-It is a good idea to create a separate service account for specific use by Zalenium, especially when running inside 
+It is a good idea to create a separate service account for specific use by Zalenium, especially when running inside
 OpenShift because it uses role based authentication by default, meaning that the service account will need a `ClusterRole`
 created that has the necessary privileges to access the parts of the Kubernetes API that it needs to.
 
@@ -63,11 +63,11 @@ A good default to use would be: `app=zalenium`.
 For performance reasons it could be a good idea to pull the selenium image, `elgalu/selenium`, into a local registry,
 especially since the image will need to be available on potentially any kubernetes node.
 
-In Openshift there is a built in registry that can automatically pull the an image from an external registry 
+In Openshift there is a built in registry that can automatically pull the an image from an external registry
 (such as docker hub)
 [on a schedule](https://docs.openshift.com/container-platform/3.5/dev_guide/managing_images.html#importing-tag-and-image-metadata).
 
-This command will automatically import `elgalu/selenium` into the OpenShift registry at `delivery/selenium:latest` 
+This command will automatically import `elgalu/selenium` into the OpenShift registry at `delivery/selenium:latest`
 updating it on a schedule.
 
 ```sh
@@ -125,10 +125,10 @@ selenium pod.
 ## Managing Resources
 Kubernetes has [support](https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/) for managing how
 much resources a Pod is allowed to use.  Especially when using video recording it is highly recommended to specify some resource
-requests and/or 
+requests and/or
 limits otherwise users of your Kubernetes cluster may be negatively affected by the selenium pods.
 
-There are 2 resource requests and 2 resource limits that you can set.  The following table lists the possible values that you can use, 
+There are 2 resource requests and 2 resource limits that you can set.  The following table lists the possible values that you can use,
 however, there are no defaults, so if you don't specify anything, no resource limits or requests will be set.
 
 |Name          |Environment Variable                |Example                                                                                          |
@@ -157,7 +157,7 @@ kubectl create service nodeport zalenium-grid --tcp=4444:4444 --dry-run -o yaml 
     | kubectl set selector --local -f - app=zalenium,role=grid -o yaml \
     | grep -v "running in local/dry-run mode" \
     | kubectl create -f -
-    
+
 ```
 
 Then you can open the grid in minikube by running
@@ -184,7 +184,11 @@ Create the service
 oc create -f ./zalenium-service.yaml
 ```
 
-In the Openshift console you should then probably create a route
+In the Openshift console you should then probably create a route. Make sure you have a proper timeout set on the route. Default in Openshift is 30s and most probably this value is to low (pod creation of new selenium nodes might take longer time).
+
+```sh
+oc create -f ./zalenium-route.yaml
+```
 
 ## Example Zalenium Pod Yaml
 This is an example of a working zalenium pod with all the relevant mounts attached.
