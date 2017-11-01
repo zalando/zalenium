@@ -66,7 +66,7 @@ public class KubernetesContainerClient implements ContainerClient {
 
     private Map<VolumeMount, Volume> mountedSharedFoldersMap = new HashMap<>();
     private List<HostAlias> hostAliases = new ArrayList<>();
-    private Map<String, String> nodeSelector;
+    private Map<String, String> nodeSelector = new HashMap<>();
 
     private final Map<String, Quantity> seleniumPodLimits = new HashMap<>();
     private final Map<String, Quantity> seleniumPodRequests = new HashMap<>();
@@ -164,7 +164,7 @@ public class KubernetesContainerClient implements ContainerClient {
 
     private void discoverNodeSelector() {
         final Map<String, String> configuredNodeSelector = zaleniumPod.getSpec().getNodeSelector();
-        if (!configuredNodeSelector.isEmpty()) {
+        if (configuredNodeSelector != null && !configuredNodeSelector.isEmpty()) {
             nodeSelector = configuredNodeSelector;
         }
     }
