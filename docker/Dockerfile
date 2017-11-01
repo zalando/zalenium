@@ -346,8 +346,6 @@ RUN cd /tmp \
 # https://docs.openshift.com/container-platform/latest/creating_images/guidelines.html#openshift-specific-guidelines
 RUN chgrp -R 0 /home/seluser && \
     chmod -R g=u /home/seluser
-RUN chgrp -R 0 /etc/nginx && \
-    chmod -R g=u /etc/nginx
 
 #===================================================
 # Run the following commands as non-privileged user
