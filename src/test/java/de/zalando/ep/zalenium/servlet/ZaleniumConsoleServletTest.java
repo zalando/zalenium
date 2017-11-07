@@ -17,6 +17,8 @@ import org.junit.Test;
 import org.openqa.grid.common.RegistrationRequest;
 import org.openqa.grid.internal.DefaultGridRegistry;
 import org.openqa.grid.internal.GridRegistry;
+import org.openqa.grid.internal.utils.configuration.GridHubConfiguration;
+import org.openqa.grid.web.Hub;
 import org.openqa.selenium.Platform;
 import org.openqa.selenium.remote.DesiredCapabilities;
 
@@ -41,7 +43,7 @@ public class ZaleniumConsoleServletTest {
 
     @Before
     public void setUp() throws IOException {
-        registry = DefaultGridRegistry.newInstance();
+        registry = DefaultGridRegistry.newInstance(new Hub(new GridHubConfiguration()));
         
         this.originalContainerClient = ContainerFactory.getContainerClientGenerator();
         ContainerFactory.setContainerClientGenerator(DockerContainerMock::getMockedDockerContainerClient);

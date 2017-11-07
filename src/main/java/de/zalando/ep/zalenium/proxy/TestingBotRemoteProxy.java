@@ -5,7 +5,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import de.zalando.ep.zalenium.dashboard.TestInformation;
 import org.openqa.grid.common.RegistrationRequest;
-import org.openqa.grid.internal.DefaultGridRegistry;
+import org.openqa.grid.internal.GridRegistry;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,7 +24,7 @@ public class TestingBotRemoteProxy extends CloudTestingRemoteProxy {
     private static final Logger logger = Logger.getLogger(TestingBotRemoteProxy.class.getName());
     private static final String TESTINGBOT_PROXY_NAME = "TestingBot";
 
-    public TestingBotRemoteProxy(RegistrationRequest request, DefaultGridRegistry registry) {
+    public TestingBotRemoteProxy(RegistrationRequest request, GridRegistry registry) {
         super(updateTBCapabilities(request, TESTINGBOT_ACCOUNT_INFO), registry);
     }
 
