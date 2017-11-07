@@ -9,7 +9,7 @@ import java.util.logging.Logger;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.openqa.grid.internal.Registry;
+import org.openqa.grid.internal.GridRegistry;
 import org.openqa.grid.web.servlet.RegistryBasedServlet;
 import com.google.common.io.ByteStreams;
 
@@ -26,7 +26,7 @@ public class DashboardCleanupServlet extends RegistryBasedServlet {
         this(null);
     }
 
-    public DashboardCleanupServlet(Registry registry) {
+    public DashboardCleanupServlet(GridRegistry registry) {
         super(registry);
     }
 

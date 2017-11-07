@@ -35,9 +35,10 @@ public class TestUtils {
 
     public static RegistrationRequest getRegistrationRequestForTesting(final int port, String proxyClass) {
         GridNodeConfiguration nodeConfiguration = new GridNodeConfiguration();
+        nodeConfiguration.cleanUpCycle = 5000;
         new JCommander(nodeConfiguration, "-role", "wd", "-hubHost", "localhost", "-hubPort", "4444",
                 "-host","localhost", "-port", String.valueOf(port), "-proxy", proxyClass, "-registerCycle", "5000",
-                "-maxSession", "5");
+                "-cleanUpCycle", "5000", "-maxSession", "5");
 
         return RegistrationRequest.build(nodeConfiguration);
     }

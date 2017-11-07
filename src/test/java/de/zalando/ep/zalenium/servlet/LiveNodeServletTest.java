@@ -12,7 +12,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.openqa.grid.common.RegistrationRequest;
-import org.openqa.grid.internal.Registry;
+import org.openqa.grid.internal.DefaultGridRegistry;
+import org.openqa.grid.internal.GridRegistry;
 import org.openqa.selenium.Platform;
 import org.openqa.selenium.remote.DesiredCapabilities;
 
@@ -31,14 +32,14 @@ import static org.hamcrest.CoreMatchers.containsString;
 
 public class LiveNodeServletTest {
 
-    private Registry registry;
+    private GridRegistry registry;
     private HttpServletRequest request;
     private HttpServletResponse response;
     private Supplier<ContainerClient> originalContainerClient;
 
     @Before
     public void setUp() throws IOException {
-        registry = Registry.newInstance();
+        registry = DefaultGridRegistry.newInstance();
         
         this.originalContainerClient = ContainerFactory.getContainerClientGenerator();
         ContainerFactory.setContainerClientGenerator(DockerContainerMock::getMockedDockerContainerClient);

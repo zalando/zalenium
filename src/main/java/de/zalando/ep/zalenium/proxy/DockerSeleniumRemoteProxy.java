@@ -18,7 +18,7 @@ import org.apache.commons.compress.utils.IOUtils;
 import org.openqa.grid.common.RegistrationRequest;
 import org.openqa.grid.common.exception.RemoteNotReachableException;
 import org.openqa.grid.common.exception.RemoteUnregisterException;
-import org.openqa.grid.internal.Registry;
+import org.openqa.grid.internal.GridRegistry;
 import org.openqa.grid.internal.SessionTerminationReason;
 import org.openqa.grid.internal.TestSession;
 import org.openqa.grid.internal.TestSlot;
@@ -78,7 +78,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     private GoogleAnalyticsApi ga = new GoogleAnalyticsApi();
     private CapabilityMatcher capabilityHelper;
 
-    public DockerSeleniumRemoteProxy(RegistrationRequest request, Registry registry) {
+    public DockerSeleniumRemoteProxy(RegistrationRequest request, GridRegistry registry) {
         super(request, registry);
         this.amountOfExecutedTests = 0;
         readEnvVars();
