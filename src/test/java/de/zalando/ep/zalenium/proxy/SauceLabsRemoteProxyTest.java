@@ -2,7 +2,10 @@ package de.zalando.ep.zalenium.proxy;
 
 import com.google.gson.JsonElement;
 import de.zalando.ep.zalenium.dashboard.TestInformation;
-import de.zalando.ep.zalenium.util.*;
+import de.zalando.ep.zalenium.util.CommonProxyUtilities;
+import de.zalando.ep.zalenium.util.Environment;
+import de.zalando.ep.zalenium.util.GoogleAnalyticsApi;
+import de.zalando.ep.zalenium.util.TestUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
@@ -12,7 +15,11 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.openqa.grid.common.RegistrationRequest;
-import org.openqa.grid.internal.*;
+import org.openqa.grid.internal.DefaultGridRegistry;
+import org.openqa.grid.internal.ExternalSessionKey;
+import org.openqa.grid.internal.GridRegistry;
+import org.openqa.grid.internal.RemoteProxy;
+import org.openqa.grid.internal.TestSession;
 import org.openqa.grid.web.servlet.handler.RequestType;
 import org.openqa.grid.web.servlet.handler.WebDriverRequest;
 import org.openqa.selenium.Platform;
@@ -31,12 +38,12 @@ import static org.mockito.Mockito.*;
 public class SauceLabsRemoteProxyTest {
 
     private SauceLabsRemoteProxy sauceLabsProxy;
-    private Registry registry;
+    private GridRegistry registry;
 
 
     @Before
     public void setUp() {
-        registry = Registry.newInstance();
+        registry = DefaultGridRegistry.newInstance();
         // Creating the configuration and the registration request of the proxy (node)
         RegistrationRequest request = TestUtils.getRegistrationRequestForTesting(30001,
                 SauceLabsRemoteProxy.class.getCanonicalName());

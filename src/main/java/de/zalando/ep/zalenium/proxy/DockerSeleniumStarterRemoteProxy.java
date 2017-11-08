@@ -12,7 +12,7 @@ import de.zalando.ep.zalenium.util.ProcessedCapabilities;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.RandomUtils;
 import org.openqa.grid.common.RegistrationRequest;
-import org.openqa.grid.internal.Registry;
+import org.openqa.grid.internal.GridRegistry;
 import org.openqa.grid.internal.RemoteProxy;
 import org.openqa.grid.internal.TestSession;
 import org.openqa.grid.internal.listeners.RegistrationListener;
@@ -113,7 +113,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     private CapabilityMatcher capabilityHelper;
 
     @SuppressWarnings("WeakerAccess")
-    public DockerSeleniumStarterRemoteProxy(RegistrationRequest request, Registry registry) {
+    public DockerSeleniumStarterRemoteProxy(RegistrationRequest request, GridRegistry registry) {
         super(updateDSCapabilities(request), registry);
     }
 

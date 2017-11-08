@@ -2,7 +2,7 @@
 
 
 Zalenium Image Version(s):  
-<!-- 3.5.3b, 3.6.0a etc -->
+<!-- 3.5.3b, 3.6.0a. 3.7.0a etc -->
 Docker Version:  
 <!-- 17.09.0-ce, 17.06.2-ce etc -->
 If using docker-compose, version:  

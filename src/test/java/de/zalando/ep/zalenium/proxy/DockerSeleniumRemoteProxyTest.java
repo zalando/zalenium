@@ -18,7 +18,8 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 import org.openqa.grid.common.RegistrationRequest;
-import org.openqa.grid.internal.Registry;
+import org.openqa.grid.internal.DefaultGridRegistry;
+import org.openqa.grid.internal.GridRegistry;
 import org.openqa.grid.internal.TestSession;
 import org.openqa.grid.web.servlet.handler.RequestType;
 import org.openqa.grid.web.servlet.handler.WebDriverRequest;
@@ -46,7 +47,7 @@ import static org.mockito.Mockito.*;
 public class DockerSeleniumRemoteProxyTest {
 
     private DockerSeleniumRemoteProxy proxy;
-    private Registry registry;
+    private GridRegistry registry;
     private ContainerClient containerClient;
     private Supplier<ContainerClient> originalDockerContainerClient;
     private KubernetesContainerClient originalKubernetesContainerClient;
@@ -85,7 +86,7 @@ public class DockerSeleniumRemoteProxyTest {
         }
         ContainerFactory.setIsKubernetes(this.currentIsKubernetesValue);
 
-        registry = Registry.newInstance();
+        registry = DefaultGridRegistry.newInstance();
 
         // Creating the configuration and the registration request of the proxy (node)
         RegistrationRequest request = TestUtils.getRegistrationRequestForTesting(40000,
