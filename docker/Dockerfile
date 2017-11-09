@@ -342,11 +342,6 @@ RUN cd /tmp \
   && mv testingbot-tunnel.jar /usr/local/bin \
   && java -jar /usr/local/bin/testingbot-tunnel.jar --version
 
-# Allows different operations in Openshift environments
-# https://docs.openshift.com/container-platform/latest/creating_images/guidelines.html#openshift-specific-guidelines
-RUN chgrp -R 0 /home/seluser && \
-    chmod -R g=u /home/seluser
-
 #===================================================
 # Run the following commands as non-privileged user
 #===================================================
@@ -424,6 +419,12 @@ RUN sudo chmod +x /home/seluser/zalenium.sh \
   && sudo chmod +x /usr/bin/entry.sh \
   && sudo chmod 777 /etc/passwd \
   && sudo chown -R seluser:seluser /home/seluser
+
+# Allows different operations in Openshift environments
+# https://docs.openshift.com/container-platform/latest/creating_images/guidelines.html#openshift-specific-guidelines
+RUN sudo chgrp -R 0 /home/seluser && \
+    sudo chmod -R g=u /home/seluser && \
+    sudo chmod -R u+x /home/seluser
 
 # IMPORTANT: Using the string form `CMD "entry.sh"` without
 # brackets [] causes Docker to run your process
