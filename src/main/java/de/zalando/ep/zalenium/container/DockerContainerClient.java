@@ -266,8 +266,9 @@ public class DockerContainerClient implements ContainerClient {
     private void loadMountedFolders(String zaleniumContainerName) {
         if (!this.mntFoldersAndHttpEnvVarsChecked.get()) {
             String containerId = getContainerId(zaleniumContainerName);
-            if (containerId == null)
+            if (containerId == null) {
                 return;
+            }
 
             ContainerInfo containerInfo = null;
 
@@ -282,19 +283,23 @@ public class DockerContainerClient implements ContainerClient {
         }
     }
 
-  private void loadMountedFolders(ContainerInfo containerInfo) {
+  private synchronized void loadMountedFolders(ContainerInfo containerInfo) {
     if (!this.mntFoldersAndHttpEnvVarsChecked.getAndSet(true)) {
 
-      for (ContainerMount containerMount : containerInfo.mounts())
-          if (containerMount.destination().startsWith(NODE_MOUNT_POINT))
+      for (ContainerMount containerMount : containerInfo.mounts()) {
+          if (containerMount.destination().startsWith(NODE_MOUNT_POINT)) {
               this.mntFolders.add(containerMount);
+          }
+      }
 
-      for (String envVar : containerInfo.config().env())
+      for (String envVar : containerInfo.config().env()) {
           Arrays.asList(HTTP_PROXY_ENV_VARS).forEach(httpEnvVar -> {
               String httpEnvVarToAdd = envVar.replace("zalenium_", "");
-              if (envVar.contains(httpEnvVar) && !zaleniumHttpEnvVars.contains(httpEnvVarToAdd))
+              if (envVar.contains(httpEnvVar) && !zaleniumHttpEnvVars.contains(httpEnvVarToAdd)) {
                   zaleniumHttpEnvVars.add(httpEnvVarToAdd);
+              }
           });
+      }
     }
   }
 
