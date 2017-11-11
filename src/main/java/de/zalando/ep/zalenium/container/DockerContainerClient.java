@@ -26,6 +26,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -62,7 +63,7 @@ public class DockerContainerClient implements ContainerClient {
     private List<String> zaleniumExtraHosts;
     private List<ContainerMount> mntFolders = new ArrayList<>();
     private List<String> zaleniumHttpEnvVars = new ArrayList<>();
-    private boolean mntFoldersAndHttpEnvVarsChecked = false;
+    private AtomicBoolean mntFoldersAndHttpEnvVarsChecked = new AtomicBoolean(false);
 
     @VisibleForTesting
     public void setContainerClient(final DockerClient client) {
@@ -263,12 +264,13 @@ public class DockerContainerClient implements ContainerClient {
     }
 
     private void loadMountedFolders(String zaleniumContainerName) {
-        if (!this.mntFoldersAndHttpEnvVarsChecked) {
+        if (!this.mntFoldersAndHttpEnvVarsChecked.get()) {
             String containerId = getContainerId(zaleniumContainerName);
-            if (containerId == null) {
+            if (containerId == null)
                 return;
-            }
+
             ContainerInfo containerInfo = null;
+
             try {
                 containerInfo = dockerClient.inspectContainer(containerId);
             } catch (DockerException | InterruptedException e) {
@@ -276,22 +278,25 @@ public class DockerContainerClient implements ContainerClient {
                 ga.trackException(e);
             }
 
-            this.mntFoldersAndHttpEnvVarsChecked = true;
-            for (ContainerMount containerMount : containerInfo.mounts()) {
-                if (containerMount.destination().startsWith(NODE_MOUNT_POINT)) {
-                    this.mntFolders.add(containerMount);
-                }
-            }
-            for (String envVar : containerInfo.config().env()) {
-                Arrays.asList(HTTP_PROXY_ENV_VARS).forEach(httpEnvVar -> {
-                    String httpEnvVarToAdd = envVar.replace("zalenium_", "");
-                    if (envVar.contains(httpEnvVar) && !zaleniumHttpEnvVars.contains(httpEnvVarToAdd)) {
-                        zaleniumHttpEnvVars.add(httpEnvVarToAdd);
-                    }
-                });
-            }
+            loadMountedFolders(containerInfo);
         }
     }
+
+  private void loadMountedFolders(ContainerInfo containerInfo) {
+    if (!this.mntFoldersAndHttpEnvVarsChecked.getAndSet(true)) {
+
+      for (ContainerMount containerMount : containerInfo.mounts())
+          if (containerMount.destination().startsWith(NODE_MOUNT_POINT))
+              this.mntFolders.add(containerMount);
+
+      for (String envVar : containerInfo.config().env())
+          Arrays.asList(HTTP_PROXY_ENV_VARS).forEach(httpEnvVar -> {
+              String httpEnvVarToAdd = envVar.replace("zalenium_", "");
+              if (envVar.contains(httpEnvVar) && !zaleniumHttpEnvVars.contains(httpEnvVarToAdd))
+                  zaleniumHttpEnvVars.add(httpEnvVarToAdd);
+          });
+    }
+  }
 
     private List<String> generateMountedFolderBinds() {
         List<String> result = new ArrayList<>();
