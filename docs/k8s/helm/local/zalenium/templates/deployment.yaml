@@ -1,0 +1,111 @@
+{{- $serviceName := include "fullname" . -}}
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: {{ template "hub.fullname" . }}
+  labels:
+    app: {{ template "hub.fullname" . }}
+    role: grid
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: {{ template "hub.fullname" . }}
+        role: grid
+        chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+        release: "{{ .Release.Name }}"
+        heritage: "{{ .Release.Service }}"
+      annotations:
+    spec:
+      volumes:
+        {{- if eq true .Values.hub.persistentVolumesEnabled }}
+        - name: {{ template "hub.fullname" . }}-videos
+          persistentVolumeClaim:
+            claimName: {{ template "hub.fullname" . }}-videos
+        - name: {{ template "hub.fullname" . }}-shared
+          persistentVolumeClaim:
+            claimName: {{ template "hub.fullname" . }}-shared
+        {{- else }}
+        - name: {{ template "hub.fullname" . }}-videos
+          hostPath:
+            path: {{ .Values.hub.localVolumesRoot }}/{{ .Chart.Name }}-videos
+        - name: {{ template "hub.fullname" . }}-shared
+          hostPath:
+            path: {{ .Values.hub.localVolumesRoot }}/{{ .Chart.Name }}-shared
+        {{- end }}
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.hub.image }}:{{ .Values.hub.tag }}"
+          imagePullPolicy: {{ .Values.hub.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.hub.port }}
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /grid/console
+              port: {{ .Values.hub.port }}
+            initialDelaySeconds: 90
+            periodSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /grid/console
+              port: {{ .Values.hub.port }}
+            timeoutSeconds: {{ .Values.hub.readinessTimeout }}
+          env:
+            - name: ZALENIUM_KUBERNETES_CPU_REQUEST
+              value: {{ .Values.hub.cpuRequest }}
+            - name: ZALENIUM_KUBERNETES_CPU_LIMIT
+              value: {{ .Values.hub.cpuLimit }}
+            - name: ZALENIUM_KUBERNETES_MEMORY_REQUEST
+              value: {{ .Values.hub.memRequest }}
+            {{- if eq true .Values.hub.sauceLabsEnabled }}
+            - name: SAUCE_USERNAME
+              value: {{ .Values.hub.sauceUserName }}
+            - name: SAUCE_ACCESS_KEY
+              value: {{ .Values.hub.sauceAccessKey }}
+            {{- end }}
+            {{- if eq true .Values.hub.browserStackEnabled }}
+            - name: BROWSER_STACK_USER
+              value: {{ .Values.hub.browserStackUser }}
+            - name: BROWSER_STACK_KEY
+              value: {{ .Values.hub.browserStackKey }}
+            {{- end }}
+            {{- if eq true .Values.hub.testingBotEnabled }}
+            - name: TESTINGBOT_KEY
+              value: {{ .Values.hub.testingBotKey }}
+            - name: TESTINGBOT_SECRET
+              value: {{ .Values.hub.testingBotSecret }}
+            {{- end }}
+          args:
+            - start
+            - '--chromeContainers'
+            - '{{ .Values.hub.chromeContainers }}'
+            - '--firefoxContainers'
+            - '{{ .Values.hub.firefoxContainers }}'
+            - '--maxDockerSeleniumContainers'
+            - '{{ .Values.hub.maxDockerSeleniumContainers }}'
+            - '--sauceLabsEnabled'
+            - '{{ .Values.hub.sauceLabsEnabled }}'
+            - '--browserStackEnabled'
+            - '{{ .Values.hub.browserStackEnabled }}'
+            - '--testingBotEnabled'
+            - '{{ .Values.hub.testingBotEnabled }}'
+            - '--screenWidth'
+            - '{{ .Values.hub.screenWidth }}'
+            - '--screenHeight'
+            - '{{ .Values.hub.screenHeight }}'
+            - '--timeZone'
+            - '{{ .Values.hub.timeZone }}'
+            - '--seleniumImageName'
+            - '{{ .Values.hub.seleniumImageName }}'
+          resources:
+{{ toYaml .Values.hub.resources | indent 12 }}
+          volumeMounts:
+            - name: {{ template "hub.fullname" . }}-videos
+              mountPath: /home/seluser/videos
+            - name: {{ template "hub.fullname" . }}-shared
+              mountPath: /tmp/mounted
+      serviceAccountName: {{ $serviceName }}
+      serviceAccount: {{ $serviceName }}
