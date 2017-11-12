@@ -52,6 +52,20 @@ Next add the `zalenium-role` you just created to the zalenium service account.
 oc adm policy add-role-to-user zalenium-role -z zalenium
 ```
 
+In case you get a message like:
+```sh
+Error from server (NotFound): role.authorization.openshift.io "exampleview" not found
+```
+
+Check the namespace where you deployment is and add it to the previous command, e.g.:
+```sh
+# Check namespaces
+oc get namespace
+# Execute command
+Error from server (NotFound): role.authorization.openshift.io "exampleview" not found
+oc adm policy add-role-to-user zalenium-role -z zalenium --role-namespace='your_deployment_namespace'
+```
+
 ## App label
 Zalenium relies on there being an `app=<something>` label that it will use to locate `Services` and during `Pod` creation.
 This means that you can have multiple zalenium deployments in the same kubernetes namespace that can operate independently

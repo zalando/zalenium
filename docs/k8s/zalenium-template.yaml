@@ -14,12 +14,17 @@ parameters:
   - name: "FIREFOX_CONTAINERS"
     displayName: "Number of initial Firefox containers."
     description: "This is the number of Firefox containers that should be created when Zalenium starts up."
-    value: "0"
+    value: "1"
     required: false
   - name: "CHROME_CONTAINERS"
     displayName: "Number of initial Chrome containers."
     description: "This is the number of Chrome containers that should be created when Zalenium starts up."
-    value: "0"
+    value: "1"
+    required: false
+  - name: "MAX_TEST_SESSIONS"
+    displayName: "Max amount of tests executed per container."
+    description: "This is the number of max amount of tests executed per container/pod."
+    value: "4"
     required: false
   - name: "ZALENIUM_KUBERNETES_CPU_REQUEST"
     displayName: "CPU request for the Selenium Pods."
@@ -34,7 +39,7 @@ parameters:
   - name: "ZALENIUM_KUBERNETES_MEMORY_REQUEST"
     displayName: "Memory request for the Selenium Pods."
     description: "This is the minimum amount of memory that the container will be configured with."
-    value: "500Mi"
+    value: "250Mi"
     required: true
   - name: "ZALENIUM_KUBERNETES_MEMORY_LIMIT"
     displayName: "Memory limit for the Selenium Pods."
@@ -100,8 +105,10 @@ objects:
           - ${FIREFOX_CONTAINERS}
           - --chromeContainers
           - ${CHROME_CONTAINERS}
+          - --maxTestSessions
+          - ${MAX_TEST_SESSIONS}
           - --seleniumImageName
-          - "elgalu/selenium:3.7.1"
+          - "elgalu/selenium:latest"
           - --sendAnonymousUsageInfo
           - "false"
           - --gridUser
@@ -150,18 +157,6 @@ objects:
           - name: zalenium-volume
             persistentVolumeClaim:
               claimName: zalenium-pvc
-          - configMap:
-              defaultMode: 420
-              name: openshift-ca
-            name: openshift-ca
-          - name: zalenium-proxy-secrets-volume
-            secret:
-              defaultMode: 420
-              secretName: zalenium-proxy-secret
-          - name: zalenium-proxy-tls
-            secret:
-              defaultMode: 420
-              secretName: zalenium-proxy-tls
     test: false
     triggers:
     - type: ConfigChange
@@ -169,13 +164,10 @@ objects:
   kind: Route
   metadata:
     annotations:
-      openshift.io/host.generated: "true"
+      openshift.io/host.generated: 'true'
       haproxy.router.openshift.io/timeout: "2000s"
     name: zalenium
   spec:
-    tls:
-      termination: Reencrypt
-      insecureEdgeTerminationPolicy: Redirect
     to:
       kind: Service
       name: zalenium
@@ -184,14 +176,12 @@ objects:
 - apiVersion: v1
   kind: Service
   metadata:
-    annotations:
-      service.alpha.openshift.io/serving-cert-secret-name: zalenium-proxy-tls
     name: zalenium
   spec:
     ports:
     - port: 443
       protocol: TCP
-      targetPort: 8443
+      targetPort: 4444
     selector:
       app: zalenium
     sessionAffinity: None
@@ -202,8 +192,6 @@ objects:
   kind: ServiceAccount
   metadata:
     name: zalenium
-    annotations:
-      serviceaccounts.openshift.io/oauth-redirectreference.zalenium: '{"kind":"OAuthRedirectReference","apiVersion":"v1","reference":{"kind":"Route","name":"zalenium"}}'
 - apiVersion: v1
   kind: PersistentVolumeClaim
   metadata:
@@ -214,19 +202,6 @@ objects:
     resources:
       requests:
         storage: ${VOLUME_CAPACITY}
-- apiVersion: v1
-  groupNames: null
-  kind: RoleBinding
-  metadata:
-    creationTimestamp: null
-    name: zalenium-rolebinding
-  roleRef:
-    name: zalenium-role
-  subjects:
-  - kind: ServiceAccount
-    name: zalenium
-  userNames:
-  - zalenium
 - apiVersion: v1
   kind: Role
   metadata:
@@ -270,8 +245,15 @@ objects:
     zalenium-user: ${ZALENIUM_USER}
     zalenium-password: ${ZALENIUM_PASSWORD}
 - apiVersion: v1
-  kind: Secret
+  groupNames: null
+  kind: RoleBinding
   metadata:
-    name: zalenium-proxy-secret
-  stringData:
-    session_secret: "${SESSION_SECRET}="
+    creationTimestamp: null
+    name: zalenium-rolebinding
+  roleRef:
+    name: zalenium-role
+  subjects:
+  - kind: ServiceAccount
+    name: zalenium
+  userNames:
+  - zalenium
