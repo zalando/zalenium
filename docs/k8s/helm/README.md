@@ -45,7 +45,7 @@ See Zalenium's [usage examples](https://github.com/zalando/zalenium/blob/master/
 | Parameter | Description | Default |
 | --------- | ----------- | ------- |
 | `hub.image` | The zalenium hub image | `dosel/zalenium` |
-| `hub.tag` | The zalenium hub image tag | `3.6.0c` |
+| `hub.tag` | The zalenium hub image tag | `3.7.1c` |
 | `hub.pullPolicy` | The pull policy for the hub image | `IfNotPresent` |
 | `hub.port` | The port the hub listens on | `4444` |
 | `hub.javaOpts` | The java options for the selenium hub JVM, default sets the maximum heap size to 400 mb | `-Xmx400m -XX:+UseSerialGC` |
@@ -68,7 +68,7 @@ See Zalenium's [usage examples](https://github.com/zalando/zalenium/blob/master/
 | `hub.screenWidth` | Screen resolution to use | 1440 |
 | `hub.screenHeight` | Screen resolution to use | 900 |
 | `hub.timeZone` | Time zone | UTC |
-| `hub.seleniumImageName` | The Selenium grid image | `elgalu/selenium:3.6.0` |
+| `hub.seleniumImageName` | The Selenium grid image | `elgalu/selenium:3.7.1` |
 | `hub.maxTestSessions` | The number of tests to run on each grid container before killing it and starting a new one | 1 |
 | `hub.sauceUserName` | Username to log into saucelabs | blank |
 | `hub.sauceAccessKey` | Access key to log into saucelabs | blank |
