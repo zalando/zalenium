@@ -12,10 +12,12 @@ import de.zalando.ep.zalenium.dashboard.Dashboard;
 import de.zalando.ep.zalenium.dashboard.TestInformation;
 import de.zalando.ep.zalenium.matcher.ZaleniumCapabilityMatcher;
 import de.zalando.ep.zalenium.servlet.renderer.CloudProxyHtmlRenderer;
-import de.zalando.ep.zalenium.util.*;
+import de.zalando.ep.zalenium.util.CommonProxyUtilities;
+import de.zalando.ep.zalenium.util.Environment;
+import de.zalando.ep.zalenium.util.GoogleAnalyticsApi;
 import org.apache.commons.io.FileUtils;
 import org.openqa.grid.common.RegistrationRequest;
-import org.openqa.grid.internal.Registry;
+import org.openqa.grid.internal.GridRegistry;
 import org.openqa.grid.internal.SessionTerminationReason;
 import org.openqa.grid.internal.TestSession;
 import org.openqa.grid.internal.TestSlot;
@@ -58,7 +60,7 @@ public class CloudTestingRemoteProxy extends DefaultRemoteProxy {
     private long maxTestIdleTime = DEFAULT_MAX_TEST_IDLE_TIME_SECS;
 
     @SuppressWarnings("WeakerAccess")
-    public CloudTestingRemoteProxy(RegistrationRequest request, Registry registry) {
+    public CloudTestingRemoteProxy(RegistrationRequest request, GridRegistry registry) {
         super(request, registry);
     }
 

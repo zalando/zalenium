@@ -5,7 +5,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import de.zalando.ep.zalenium.dashboard.TestInformation;
 import org.openqa.grid.common.RegistrationRequest;
-import org.openqa.grid.internal.Registry;
+import org.openqa.grid.internal.GridRegistry;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,7 +24,7 @@ public class BrowserStackRemoteProxy extends CloudTestingRemoteProxy {
     private static final String BROWSER_STACK_KEY = getEnv().getStringEnvVariable("BROWSER_STACK_KEY", "");
     private static final String BROWSER_STACK_PROXY_NAME = "BrowserStack";
 
-    public BrowserStackRemoteProxy(RegistrationRequest request, Registry registry) {
+    public BrowserStackRemoteProxy(RegistrationRequest request, GridRegistry registry) {
         super(updateBSCapabilities(request, BROWSER_STACK_ACCOUNT_INFO), registry);
     }
 

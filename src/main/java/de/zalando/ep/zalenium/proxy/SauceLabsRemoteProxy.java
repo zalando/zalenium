@@ -5,7 +5,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import de.zalando.ep.zalenium.dashboard.TestInformation;
 import org.openqa.grid.common.RegistrationRequest;
-import org.openqa.grid.internal.Registry;
+import org.openqa.grid.internal.GridRegistry;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,7 +26,7 @@ public class SauceLabsRemoteProxy extends CloudTestingRemoteProxy {
     private static final Logger LOGGER = Logger.getLogger(SauceLabsRemoteProxy.class.getName());
     private static final String SAUCE_LABS_PROXY_NAME = "SauceLabs";
 
-    public SauceLabsRemoteProxy(RegistrationRequest request, Registry registry) {
+    public SauceLabsRemoteProxy(RegistrationRequest request, GridRegistry registry) {
         super(updateSLCapabilities(request, String.format(SAUCE_LABS_ACCOUNT_INFO, SAUCE_LABS_USER_NAME)), registry);
     }
 
