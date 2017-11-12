@@ -12,7 +12,7 @@ complement this guide with this [document](./gke/gke.md).
 
 ## Helm
 [Helm](https://helm.sh) is a tool that greatly simplifies installing apps on a Kubernetes cluster.  Helm users can 
-see an example of a Helm chart that installs Zalenium grid in the [kubernetes/helm](../../kubernetes/helm/README.md) 
+see an example of a Helm chart that installs Zalenium grid in the [docs/k8s/helm](helm/README.md) 
 directory.  Support can be added for different storage classes, RBAC support (and/or OpenShift).
 
 ## Service Account
