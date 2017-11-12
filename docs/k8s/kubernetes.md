@@ -10,6 +10,11 @@ and the initial support was developed on OpenShift, but should be backwards comp
 has been tested on [minikube](https://github.com/kubernetes/minikube). If you have Google Container Engine (GKE), you can
 complement this guide with this [document](./gke/gke.md).
 
+## Helm
+[Helm](https://helm.sh) is a tool that greatly simplifies installing apps on a Kubernetes cluster.  Helm users can 
+see an example of a Helm chart that installs Zalenium grid in the [docs/k8s/helm](helm/README.md) 
+directory.  Support can be added for different storage classes, RBAC support (and/or OpenShift).
+
 ## Service Account
 Zalenium uses a service account that is automatically mounted by Kubernetes, it uses this service account to create
 selenium pods and their related services.

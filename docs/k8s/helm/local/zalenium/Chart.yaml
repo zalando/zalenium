@@ -1,0 +1,13 @@
+name: zalenium
+version: 0.0.1
+appVersion: 3.4.0
+description: Chart for selenium grid
+keywords:
+  - qa
+home: https://github.com/zalando/zalenium
+sources:
+  - https://github.com/zalando/zalenium
+maintainers:
+  - name: gswallow
+    email: gswallow@indigobio.com
+engine: gotpl
