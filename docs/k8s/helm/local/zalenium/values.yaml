@@ -1,0 +1,87 @@
+hub:
+  ## The repository and image
+  ## ref: https://hub.docker.com/r/selenium/hub/
+  image: "dosel/zalenium"
+
+  ## The tag for the image
+  ## ref: https://hub.docker.com/r/selenium/hub/tags/
+  tag: "3.7.1c"
+
+  ## Specify a imagePullPolicy
+  ## ref: http://kubernetes.io/docs/user-guide/images/#pre-pulling-images
+  pullPolicy: "IfNotPresent"
+
+  ## The port which the hub listens on
+  port: 4444
+
+  ## Timeout for probe Hub readiness via HTTP request on Hub console
+  readinessTimeout: 1
+
+  ## Set the JAVA_OPTS environment variable
+  ## If you find your selenium hub is OOMKilled, try adding -XX:+UseSerialGC
+  javaOpts: "-Xmx400m -XX:+UseSerialGC"
+
+  ## Set the SE_OPTS environment variable
+  ## ref: http://www.seleniumhq.org/docs/07_selenium_grid.jsp#node-configuration
+  # seOpts:
+
+  ## Defining a JMX port will open the port on the container, however, it 
+  ## requires additional javaOpts, ie
+  ## javaOpts: >
+  ##   -Dcom.sun.management.jmxremote.port=4000 
+  ##   -Dcom.sun.management.jmxremote.authenticate=false 
+  ##   -Dcom.sun.management.jmxremote.ssl=false 
+  ## ref: http://openjdk.java.net/groups/jmx/
+  # jmxPort: 4000
+
+  ## Use persistent storage or local?
+  persistentVolumesEnabled: false
+  localVolumesRoot: '/tmp'
+
+  ## Configure resource requests and limits
+  ## ref: http://kubernetes.io/docs/user-guide/compute-resources/
+  resources:
+    limits:
+      cpu: ".5"
+      memory: "512Mi"
+
+  ## The type of service to create
+  ##   Values: ClusterIP, NodePort, LoadBalancer, or ExternalName
+  ## ref: https://kubernetes.io/docs/user-guide/services/
+  serviceType: "NodePort"
+
+  ## Control where client requests go, to the same pod or round-robin
+  ##   Values: ClientIP or None
+  ## ref: https://kubernetes.io/docs/user-guide/services/
+  serviceSessionAffinity: "None"
+
+  # Zalenium hub uses these values to schedule pods through the k8s apiserver.
+  cpuRequest: 500m
+  cpuLimit: 1000m
+  memRequest: 500Mi
+
+  ## Start arguments for Zalenium hub itself
+  ## https://github.com/zalando/zalenium/blob/master/docs/usage_examples.md
+  chromeContainers: 1
+  firefoxContainers: 1
+  maxDockerSeleniumContainers: 10
+  sauceLabsEnabled: false
+  browserStackEnabled: false
+  testingBotEnabled: false
+  videoRecordingEnabled: true
+  cpuRequest: 500m
+  cpuLimit: 1000m
+  memRequest: 500Mi
+  screenWidth: 1440
+  screenHeight: 900
+  timeZone: "UTC"
+  seleniumImageName: "elgalu/selenium:3.7.1"
+  maxTestSessions: 1
+
+  # Environment variables passed to Zalenium hub.
+  sauceUserName: blank
+  sauceAccessKey: blank
+  browserStackUser: blank
+  browserStackKey: blank
+  testingBotKey: blank
+  testingBotSecret: blank
