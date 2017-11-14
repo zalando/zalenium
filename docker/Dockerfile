@@ -306,7 +306,7 @@ RUN set -x \
 # ------------------------#
 # https://docs.saucelabs.com/reference/sauce-connect/
 # Layer size: medium: ~13 MB
-ENV SAUCE_CONN_VER="sc-4.4.9-linux" \
+ENV SAUCE_CONN_VER="sc-4.4.10-linux" \
     SAUCE_CONN_DOWN_URL="https://saucelabs.com/downloads"
 RUN cd /tmp \
   && wget -nv "${SAUCE_CONN_DOWN_URL}/${SAUCE_CONN_VER}.tar.gz" \
