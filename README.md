@@ -138,13 +138,13 @@ docker run --rm -ti --name zalenium -p 4444:4444 \
 ```
 
 #### OSX
-Zalenium for OSX is currently compatible with Docker `1.11`, `1.12` __default__ and `1.13`. In Mac is recommended that
-you explicitly tell Zalenium which major version you are using via `-e DOCKER=1.11` due to API compatibility issues.
-In the future this will be automated on our side as it is with Linux (read above)
+Zalenium for OSX is currently compatible with Docker `17.03.1-ce`, `17.06.2-ce`, and `17.09.0-ce`. Nevertheless, starting
+with 1.13, newer CLIs can talk to older daemons. If you bump into any API compatibility issues, you can explicitly tell
+Zalenium which version you are using via `-e DOCKER=17.06.2-ce`.
 
 ```sh
 docker run --rm -ti --name zalenium -p 4444:4444 \
-  -e DOCKER=1.11 \
+  -e DOCKER=17.06.2-ce \
   -v /var/run/docker.sock:/var/run/docker.sock \
   -v /tmp/videos:/home/seluser/videos \
   --privileged dosel/zalenium start
