@@ -11,10 +11,10 @@ import org.openqa.grid.internal.utils.configuration.GridNodeConfiguration;
 import com.beust.jcommander.JCommander;
 import org.openqa.grid.web.servlet.handler.RequestType;
 import org.openqa.grid.web.servlet.handler.WebDriverRequest;
+import org.openqa.selenium.MutableCapabilities;
 import org.openqa.selenium.Platform;
 import org.openqa.selenium.remote.BrowserType;
 import org.openqa.selenium.remote.CapabilityType;
-import org.openqa.selenium.remote.DesiredCapabilities;
 
 import javax.servlet.ServletOutputStream;
 import javax.servlet.WriteListener;
@@ -63,21 +63,21 @@ public class TestUtils {
         return request;
     }
 
-    public static List<DesiredCapabilities> getDockerSeleniumCapabilitiesForTesting() {
+    public static List<MutableCapabilities> getDockerSeleniumCapabilitiesForTesting() {
         String screenResolution = String.format("%sx%s",
                 DockerSeleniumStarterRemoteProxy.getConfiguredScreenSize().getWidth(),
                 DockerSeleniumStarterRemoteProxy.getConfiguredScreenSize().getHeight());
-        List<DesiredCapabilities> dsCapabilities = new ArrayList<>();
-        DesiredCapabilities firefoxCapabilities = new DesiredCapabilities();
-        firefoxCapabilities.setBrowserName(BrowserType.FIREFOX);
-        firefoxCapabilities.setPlatform(Platform.LINUX);
+        List<MutableCapabilities> dsCapabilities = new ArrayList<>();
+        MutableCapabilities firefoxCapabilities = new MutableCapabilities();
+        firefoxCapabilities.setCapability(CapabilityType.BROWSER_NAME, BrowserType.FIREFOX);
+        firefoxCapabilities.setCapability(CapabilityType.PLATFORM, Platform.LINUX);
         firefoxCapabilities.setCapability(RegistrationRequest.MAX_INSTANCES, 1);
         firefoxCapabilities.setCapability("screenResolution", screenResolution);
         firefoxCapabilities.setCapability("tz", DockerSeleniumStarterRemoteProxy.getConfiguredTimeZone().getID());
         dsCapabilities.add(firefoxCapabilities);
-        DesiredCapabilities chromeCapabilities = new DesiredCapabilities();
-        chromeCapabilities.setBrowserName(BrowserType.CHROME);
-        chromeCapabilities.setPlatform(Platform.LINUX);
+        MutableCapabilities chromeCapabilities = new MutableCapabilities();
+        chromeCapabilities.setCapability(CapabilityType.BROWSER_NAME, BrowserType.CHROME);
+        chromeCapabilities.setCapability(CapabilityType.PLATFORM, Platform.LINUX);
         chromeCapabilities.setCapability(RegistrationRequest.MAX_INSTANCES, 1);
         chromeCapabilities.setCapability("screenResolution", screenResolution);
         chromeCapabilities.setCapability("tz", DockerSeleniumStarterRemoteProxy.getConfiguredTimeZone().getID());
