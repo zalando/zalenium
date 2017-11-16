@@ -345,8 +345,6 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
         // Check and configure time zone capabilities when they have been passed in the test config.
         TimeZone timeZone = getConfiguredTimeZoneFromCapabilities(requestedCapability);
 
-        String browserName = requestedCapability.get(CapabilityType.BROWSER_NAME).toString();
-
         /*
             Reusing nodes, rejecting requests when test sessions are still available in the existing nodes.
          */
@@ -366,7 +364,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
                 System.identityHashCode(requestedCapability));
         processedCapabilitiesList.add(processedCapabilities);
         LOGGER.log(Level.INFO, LOGGING_PREFIX + "Starting new node for {0}.", requestedCapability);
-        poolExecutor.execute(() -> startDockerSeleniumContainer(browserName, timeZone, screenSize));
+        poolExecutor.execute(() -> startDockerSeleniumContainer(timeZone, screenSize));
         cleanProcessedCapabilities();
 
         return null;
@@ -386,16 +384,6 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
                 processedCapability.setLastProcessedTime(System.currentTimeMillis());
                 int processedTimes = processedCapability.getProcessedTimes() + 1;
                 processedCapability.setProcessedTimes(processedTimes);
-
-                /*
-                // Leaving this code commented since it seems it is not needed anymore with the new processing logic
-                // TODO: Check behaviour and see if it necessary to uncomment, otherwise just delete
-                long pendingTasks = poolExecutor.getTaskCount() - poolExecutor.getCompletedTaskCount();
-                if (pendingTasks == 0) {
-                    LOGGER.log(Level.INFO, LOGGING_PREFIX + "No pending tasks, starting new node for {0}.", requestedCapability);
-                    return false;
-                }
-                */
 
                 if (processedTimes >= 30) {
                     processedCapability.setProcessedTimes(1);
@@ -452,13 +440,12 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     }
 
     @VisibleForTesting
-    public boolean startDockerSeleniumContainer(String browser, TimeZone timeZone, Dimension screenSize) {
-        return startDockerSeleniumContainer(browser, timeZone, screenSize, false);
+    public boolean startDockerSeleniumContainer(TimeZone timeZone, Dimension screenSize) {
+        return startDockerSeleniumContainer(timeZone, screenSize, false);
     }
 
     @VisibleForTesting
-    public boolean startDockerSeleniumContainer(String browser, TimeZone timeZone, Dimension screenSize,
-                                                boolean forceCreation) {
+    public boolean startDockerSeleniumContainer(TimeZone timeZone, Dimension screenSize, boolean forceCreation) {
 
         if (forceCreation || validateAmountOfDockerSeleniumContainers()) {
 
@@ -474,8 +461,8 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
                 attempts++;
                 final int nodePort = findFreePortInRange(LOWER_PORT_BOUNDARY, UPPER_PORT_BOUNDARY);
 
-                Map<String, String> envVars = buildEnvVars(browser, timeZone, screenSize, hostIpAddress,
-                        sendAnonymousUsageInfo, nodePolling, nodePort);
+                Map<String, String> envVars = buildEnvVars(timeZone, screenSize, hostIpAddress, sendAnonymousUsageInfo,
+                        nodePolling, nodePort);
 
                 String latestImage = containerClient.getLatestDownloadedImage(getDockerSeleniumImageName());
                 ContainerCreationStatus creationStatus = containerClient
@@ -528,9 +515,8 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
         return false;
     }
 
-    private Map<String, String> buildEnvVars(String browser, TimeZone timeZone, Dimension screenSize,
-                                             String hostIpAddress, boolean sendAnonymousUsageInfo, String nodePolling,
-                                             int nodePort) {
+    private Map<String, String> buildEnvVars(TimeZone timeZone, Dimension screenSize, String hostIpAddress,
+                                             boolean sendAnonymousUsageInfo, String nodePolling, int nodePort) {
         final int noVncPort = nodePort + NO_VNC_PORT_GAP;
         final int vncPort = nodePort + VNC_PORT_GAP;
         Map<String, String> envVars = new HashMap<>();
@@ -554,18 +540,10 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
         envVars.put("SELENIUM_NODE_REGISTER_CYCLE", "0");
         envVars.put("SEL_NODEPOLLING_MS", nodePolling);
         envVars.put("SELENIUM_NODE_PROXY_PARAMS", "de.zalando.ep.zalenium.proxy.DockerSeleniumRemoteProxy");
-        if (BrowserType.CHROME.equalsIgnoreCase(browser)) {
-            envVars.put("SELENIUM_NODE_CH_PORT", String.valueOf(nodePort));
-            envVars.put("CHROME", "true");
-        } else {
-            envVars.put("CHROME", "false");
-        }
-        if (BrowserType.FIREFOX.equalsIgnoreCase(browser)) {
-            envVars.put("SELENIUM_NODE_FF_PORT", String.valueOf(nodePort));
-            envVars.put("FIREFOX", "true");
-        } else {
-            envVars.put("FIREFOX", "false");
-        }
+        envVars.put("MULTINODE", "true");
+        envVars.put("SELENIUM_MULTINODE_PORT", String.valueOf(nodePort));
+        envVars.put("CHROME", "false");
+        envVars.put("FIREFOX", "false");
         return envVars;
     }
 
@@ -576,27 +554,14 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
         LOGGER.log(Level.INFO, String.format("%s Setting up %s nodes...", LOGGING_PREFIX, configuredContainers));
         // Thread.sleep() is to avoid having containers starting at the same time
         for (int i = 0; i < containersToCreate; i++) {
-            if (i < getChromeContainersOnStartup()) {
-                new Thread(() -> {
-                    try {
-                        Thread.sleep(RandomUtils.nextInt(1, (containersToCreate / 2) + 1) * sleepIntervalMultiplier);
-                    } catch (InterruptedException e) {
-                        LOGGER.log(Level.FINE, getId() + " Error sleeping before starting a Chrome container", e);
-                    }
-                    startDockerSeleniumContainer(BrowserType.CHROME, getConfiguredTimeZone(), getConfiguredScreenSize(),
-                            true);
-                }).start();
-            } else {
-                new Thread(() -> {
-                    try {
-                        Thread.sleep(RandomUtils.nextInt(1, (containersToCreate / 2) + 1) * sleepIntervalMultiplier);
-                    } catch (InterruptedException e) {
-                        LOGGER.log(Level.FINE, getId() + " Error sleeping before starting a Firefox container", e);
-                    }
-                    startDockerSeleniumContainer(BrowserType.FIREFOX, getConfiguredTimeZone(), getConfiguredScreenSize(),
-                            true);
-                }).start();
-            }
+            new Thread(() -> {
+                try {
+                    Thread.sleep(RandomUtils.nextInt(1, (containersToCreate / 2) + 1) * sleepIntervalMultiplier);
+                } catch (InterruptedException e) {
+                    LOGGER.log(Level.FINE, getId() + " Error sleeping before starting a Chrome container", e);
+                }
+                startDockerSeleniumContainer(getConfiguredTimeZone(), getConfiguredScreenSize(), true);
+            }).start();
         }
         LOGGER.log(Level.INFO, String.format("%s containers were created, it will take a bit more until all get registered.", containersToCreate));
     }
