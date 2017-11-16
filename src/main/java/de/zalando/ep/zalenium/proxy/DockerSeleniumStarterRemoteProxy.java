@@ -21,11 +21,11 @@ import org.openqa.grid.internal.utils.HtmlRenderer;
 import org.openqa.grid.selenium.proxy.DefaultRemoteProxy;
 import org.openqa.grid.web.servlet.beta.WebProxyHtmlRendererBeta;
 import org.openqa.selenium.Dimension;
+import org.openqa.selenium.MutableCapabilities;
 import org.openqa.selenium.Platform;
 import org.openqa.selenium.net.NetworkUtils;
 import org.openqa.selenium.remote.BrowserType;
 import org.openqa.selenium.remote.CapabilityType;
-import org.openqa.selenium.remote.DesiredCapabilities;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -93,7 +93,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     private static final List<Integer> allocatedPorts = Collections.synchronizedList(new ArrayList<>());
     @VisibleForTesting
     static List<ProcessedCapabilities> processedCapabilitiesList = new ArrayList<>();
-    private static List<DesiredCapabilities> dockerSeleniumCapabilities = new ArrayList<>();
+    private static List<MutableCapabilities> dockerSeleniumCapabilities = new ArrayList<>();
     private static ContainerClient containerClient = defaultContainerClient;
     private static Environment env = defaultEnvironment;
     private static GoogleAnalyticsApi ga = new GoogleAnalyticsApi();
@@ -162,7 +162,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
 
     @SuppressWarnings("ConstantConditions")
     @VisibleForTesting
-    public static List<DesiredCapabilities> getCapabilities() {
+    public static List<MutableCapabilities> getCapabilities() {
         if (!dockerSeleniumCapabilities.isEmpty()) {
             return dockerSeleniumCapabilities;
         }
@@ -177,20 +177,20 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
 
         dockerSeleniumCapabilities.clear();
 
-        List<DesiredCapabilities> dsCapabilities = new ArrayList<>();
-        DesiredCapabilities firefoxCapabilities = new DesiredCapabilities();
-        firefoxCapabilities.setBrowserName(BrowserType.FIREFOX);
-        firefoxCapabilities.setPlatform(Platform.LINUX);
+        List<MutableCapabilities> dsCapabilities = new ArrayList<>();
+        MutableCapabilities firefoxCapabilities = new MutableCapabilities();
+        firefoxCapabilities.setCapability(CapabilityType.BROWSER_NAME, BrowserType.FIREFOX);
+        firefoxCapabilities.setCapability(CapabilityType.PLATFORM, Platform.LINUX);
         if (firefoxVersion != null && !firefoxVersion.isEmpty()) {
-            firefoxCapabilities.setVersion(firefoxVersion);
+            firefoxCapabilities.setCapability(CapabilityType.VERSION, firefoxVersion);
         }
         firefoxCapabilities.setCapability(RegistrationRequest.MAX_INSTANCES, 1);
         dsCapabilities.add(firefoxCapabilities);
-        DesiredCapabilities chromeCapabilities = new DesiredCapabilities();
-        chromeCapabilities.setBrowserName(BrowserType.CHROME);
-        chromeCapabilities.setPlatform(Platform.LINUX);
+        MutableCapabilities chromeCapabilities = new MutableCapabilities();
+        chromeCapabilities.setCapability(CapabilityType.BROWSER_NAME, BrowserType.CHROME);
+        chromeCapabilities.setCapability(CapabilityType.PLATFORM, Platform.LINUX);
         if (chromeVersion != null && !chromeVersion.isEmpty()) {
-            chromeCapabilities.setVersion(chromeVersion);
+            chromeCapabilities.setCapability(CapabilityType.VERSION, chromeVersion);
         }
         chromeCapabilities.setCapability(RegistrationRequest.MAX_INSTANCES, 1);
         dsCapabilities.add(chromeCapabilities);

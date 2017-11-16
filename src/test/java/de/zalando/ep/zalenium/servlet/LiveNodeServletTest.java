@@ -14,8 +14,9 @@ import org.junit.Test;
 import org.openqa.grid.common.RegistrationRequest;
 import org.openqa.grid.internal.DefaultGridRegistry;
 import org.openqa.grid.internal.GridRegistry;
+import org.openqa.selenium.MutableCapabilities;
 import org.openqa.selenium.Platform;
-import org.openqa.selenium.remote.DesiredCapabilities;
+import org.openqa.selenium.remote.CapabilityType;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -53,10 +54,10 @@ public class LiveNodeServletTest {
         registrationRequest = TestUtils.getRegistrationRequestForTesting(40001,
                 DockerSeleniumRemoteProxy.class.getCanonicalName());
         registrationRequest.getConfiguration().capabilities.clear();
-        List<DesiredCapabilities> capabilities = DockerSeleniumStarterRemoteProxy.getCapabilities();
-        DesiredCapabilities desiredCapabilities = new DesiredCapabilities();
-        desiredCapabilities.setBrowserName("NEW_BROWSER");
-        desiredCapabilities.setPlatform(Platform.LINUX);
+        List<MutableCapabilities> capabilities = DockerSeleniumStarterRemoteProxy.getCapabilities();
+        MutableCapabilities desiredCapabilities = new MutableCapabilities();
+        desiredCapabilities.setCapability(CapabilityType.BROWSER_NAME, "NEW_BROWSER");
+        desiredCapabilities.setCapability(CapabilityType.PLATFORM, Platform.LINUX);
         desiredCapabilities.setCapability(RegistrationRequest.MAX_INSTANCES, 1);
         capabilities.add(desiredCapabilities);
         registrationRequest.getConfiguration().capabilities.addAll(capabilities);

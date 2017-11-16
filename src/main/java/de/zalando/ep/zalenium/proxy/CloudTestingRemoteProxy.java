@@ -26,9 +26,9 @@ import org.openqa.grid.internal.utils.HtmlRenderer;
 import org.openqa.grid.selenium.proxy.DefaultRemoteProxy;
 import org.openqa.grid.web.servlet.handler.RequestType;
 import org.openqa.grid.web.servlet.handler.WebDriverRequest;
+import org.openqa.selenium.MutableCapabilities;
 import org.openqa.selenium.Platform;
 import org.openqa.selenium.remote.CapabilityType;
-import org.openqa.selenium.remote.DesiredCapabilities;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -103,10 +103,10 @@ public class CloudTestingRemoteProxy extends DefaultRemoteProxy {
 
     public static RegistrationRequest addCapabilitiesToRegistrationRequest(RegistrationRequest registrationRequest,
                                                                            int concurrency, String proxyName) {
-        DesiredCapabilities desiredCapabilities = new DesiredCapabilities();
+        MutableCapabilities desiredCapabilities = new MutableCapabilities();
         desiredCapabilities.setCapability(RegistrationRequest.MAX_INSTANCES, concurrency);
-        desiredCapabilities.setBrowserName(proxyName);
-        desiredCapabilities.setPlatform(Platform.ANY);
+        desiredCapabilities.setCapability(CapabilityType.BROWSER_NAME, proxyName);
+        desiredCapabilities.setCapability(CapabilityType.PLATFORM, Platform.ANY);
         registrationRequest.getConfiguration().capabilities.add(desiredCapabilities);
         registrationRequest.getConfiguration().maxSession = concurrency;
         return registrationRequest;

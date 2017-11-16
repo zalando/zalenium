@@ -6,8 +6,8 @@ import org.openqa.grid.internal.GridRegistry;
 import org.openqa.grid.internal.RemoteProxy;
 import org.openqa.grid.internal.utils.configuration.GridHubConfiguration;
 import org.openqa.grid.web.servlet.RegistryBasedServlet;
+import org.openqa.selenium.MutableCapabilities;
 import org.openqa.selenium.internal.BuildInfo;
-import org.openqa.selenium.remote.DesiredCapabilities;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -117,7 +117,7 @@ public class ZaleniumConsoleServlet extends RegistryBasedServlet {
 
     private String getRequestQueue() {
         StringBuilder requestQueue = new StringBuilder();
-        for (DesiredCapabilities req : getRegistry().getDesiredCapabilities()) {
+        for (MutableCapabilities req : getRegistry().getDesiredCapabilities()) {
             Map<String, String> pendingRequest = new HashMap<>();
             pendingRequest.put("{{pendingRequest}}", req.toString());
             requestQueue.append(templateRenderer.renderSection("{{requestQueue}}", pendingRequest));
