@@ -167,14 +167,6 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
             return dockerSeleniumCapabilities;
         }
 
-        // Getting versions from the current docker-selenium image
-        if (firefoxVersion == null) {
-            firefoxVersion = containerClient.getLabelValue(getLatestDownloadedImage(), "selenium_firefox_version");
-        }
-        if (chromeVersion == null) {
-            chromeVersion = containerClient.getLabelValue(getLatestDownloadedImage(), "selenium_chrome_version");
-        }
-
         dockerSeleniumCapabilities.clear();
 
         List<MutableCapabilities> dsCapabilities = new ArrayList<>();
@@ -264,9 +256,9 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
                 DEFAULT_AMOUNT_DOCKER_SELENIUM_CONTAINERS_RUNNING : maxDockerSeleniumContainers;
     }
 
-    private static String getLatestDownloadedImage() {
+    private static String getLatestDownloadedImage(String dockerSeleniumImageName) {
         if (latestDownloadedImage == null) {
-            latestDownloadedImage = containerClient.getLatestDownloadedImage(getDockerSeleniumImageName());
+            latestDownloadedImage = containerClient.getLatestDownloadedImage(dockerSeleniumImageName);
         }
         return latestDownloadedImage;
     }
@@ -464,7 +456,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
                 Map<String, String> envVars = buildEnvVars(timeZone, screenSize, hostIpAddress, sendAnonymousUsageInfo,
                         nodePolling, nodePort);
 
-                String latestImage = containerClient.getLatestDownloadedImage(getDockerSeleniumImageName());
+                String latestImage = getLatestDownloadedImage(getDockerSeleniumImageName());
                 ContainerCreationStatus creationStatus = containerClient
                         .createContainer(getContainerName(), latestImage, envVars, String.valueOf(nodePort));
                 if (creationStatus.isCreated() && checkContainerStatus(creationStatus)) {

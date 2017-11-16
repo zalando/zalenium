@@ -9,9 +9,6 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- * The purpose of this class is to let docker-selenium process requests where a capability "version=latest" is present
- */
 public class DockerSeleniumCapabilityMatcher extends DefaultCapabilityMatcher {
     private final Logger logger = Logger.getLogger(DockerSeleniumCapabilityMatcher.class.getName());
     private DefaultRemoteProxy proxy;

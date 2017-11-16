@@ -15,7 +15,6 @@ import com.spotify.docker.client.messages.ContainerMount;
 import com.spotify.docker.client.messages.ExecCreation;
 import com.spotify.docker.client.messages.HostConfig;
 import com.spotify.docker.client.messages.Image;
-import com.spotify.docker.client.messages.ImageInfo;
 import com.spotify.docker.client.messages.PortBinding;
 import de.zalando.ep.zalenium.util.GoogleAnalyticsApi;
 
@@ -152,17 +151,6 @@ public class DockerContainerClient implements ContainerClient {
             ga.trackException(e);
         }
         return imageName;
-    }
-
-    public String getLabelValue(String image, String label) {
-        try {
-            ImageInfo imageInfo = dockerClient.inspectImage(image);
-            return imageInfo.config().labels().get(label);
-        } catch (Exception e) {
-            logger.log(Level.WARNING, nodeId + " Error while getting label value", e);
-            ga.trackException(e);
-        }
-        return null;
     }
 
     public int getRunningContainers(String image) {

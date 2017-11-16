@@ -6,8 +6,6 @@ import java.util.Map;
 
 public interface ContainerClient {
     
-    String NODE_MOUNT_POINT = "/tmp/node";
-
     void setNodeId(String nodeId);
 
     ContainerClientRegistration registerNode(String zaleniumContainerName, URL remoteHost);
@@ -19,8 +17,6 @@ public interface ContainerClient {
     void executeCommand(String containerId, String[] command, boolean waitForExecution);
 
     String getLatestDownloadedImage(String imageName);
-
-    String getLabelValue(String image, String label);
 
     int getRunningContainers(String image);
 
