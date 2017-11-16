@@ -22,10 +22,12 @@
             <p class='protocol'>
                 WebDriver
             </p>
+            {{#tabBrowsers}}
             <p>
                 {{browserVersion}}
                 <img src='{{slotIcon}}' width='16' height='16' class='{{slotClass}}' title='{{slotTitle}}'/>
             </p>
+            {{/tabBrowsers}}
             <p class='vnc'>
                 <a href='{{noVncReadOnlyUrl}}' target='_blank' >Read-only VNC</a>||
                 <a href='{{noVncInteractUrl}}' target='_blank' >Interact via VNC</a>
