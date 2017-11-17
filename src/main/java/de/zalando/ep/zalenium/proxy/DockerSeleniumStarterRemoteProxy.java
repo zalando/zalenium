@@ -58,9 +58,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
 
     public static final int NO_VNC_PORT_GAP = 10000;
     @VisibleForTesting
-    static final int DEFAULT_AMOUNT_CHROME_CONTAINERS = 0;
-    @VisibleForTesting
-    static final int DEFAULT_AMOUNT_FIREFOX_CONTAINERS = 0;
+    static final int DEFAULT_AMOUNT_DESIRED_CONTAINERS = 0;
     @VisibleForTesting
     static final int DEFAULT_AMOUNT_DOCKER_SELENIUM_CONTAINERS_RUNNING = 10;
     @VisibleForTesting
@@ -68,9 +66,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     @VisibleForTesting
     static final Dimension DEFAULT_SCREEN_SIZE = new Dimension(1920, 1080);
     @VisibleForTesting
-    static final String ZALENIUM_CHROME_CONTAINERS = "ZALENIUM_CHROME_CONTAINERS";
-    @VisibleForTesting
-    static final String ZALENIUM_FIREFOX_CONTAINERS = "ZALENIUM_FIREFOX_CONTAINERS";
+    static final String ZALENIUM_DESIRED_CONTAINERS = "ZALENIUM_DESIRED_CONTAINERS";
     @VisibleForTesting
     static final String ZALENIUM_MAX_DOCKER_SELENIUM_CONTAINERS = "ZALENIUM_MAX_DOCKER_SELENIUM_CONTAINERS";
     @VisibleForTesting
@@ -97,11 +93,8 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     private static ContainerClient containerClient = defaultContainerClient;
     private static Environment env = defaultEnvironment;
     private static GoogleAnalyticsApi ga = new GoogleAnalyticsApi();
-    private static String chromeVersion = null;
-    private static String firefoxVersion = null;
     private static String latestDownloadedImage = null;
-    private static int chromeContainersOnStartup;
-    private static int firefoxContainersOnStartup;
+    private static int desiredContainersOnStartup;
     private static int maxDockerSeleniumContainers;
     private static int sleepIntervalMultiplier = 1000;
     private static TimeZone configuredTimeZone;
@@ -122,11 +115,8 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
      */
     private static void readConfigurationFromEnvVariables() {
 
-        int chromeContainers = env.getIntEnvVariable(ZALENIUM_CHROME_CONTAINERS, DEFAULT_AMOUNT_CHROME_CONTAINERS);
-        setChromeContainersOnStartup(chromeContainers);
-
-        int firefoxContainers = env.getIntEnvVariable(ZALENIUM_FIREFOX_CONTAINERS, DEFAULT_AMOUNT_FIREFOX_CONTAINERS);
-        setFirefoxContainersOnStartup(firefoxContainers);
+        int desiredContainers = env.getIntEnvVariable(ZALENIUM_DESIRED_CONTAINERS, DEFAULT_AMOUNT_DESIRED_CONTAINERS);
+        setDesiredContainersOnStartup(desiredContainers);
 
         int maxDSContainers = env.getIntEnvVariable(ZALENIUM_MAX_DOCKER_SELENIUM_CONTAINERS,
                 DEFAULT_AMOUNT_DOCKER_SELENIUM_CONTAINERS_RUNNING);
@@ -173,22 +163,15 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
         MutableCapabilities firefoxCapabilities = new MutableCapabilities();
         firefoxCapabilities.setCapability(CapabilityType.BROWSER_NAME, BrowserType.FIREFOX);
         firefoxCapabilities.setCapability(CapabilityType.PLATFORM, Platform.LINUX);
-        if (firefoxVersion != null && !firefoxVersion.isEmpty()) {
-            firefoxCapabilities.setCapability(CapabilityType.VERSION, firefoxVersion);
-        }
         firefoxCapabilities.setCapability(RegistrationRequest.MAX_INSTANCES, 1);
         dsCapabilities.add(firefoxCapabilities);
         MutableCapabilities chromeCapabilities = new MutableCapabilities();
         chromeCapabilities.setCapability(CapabilityType.BROWSER_NAME, BrowserType.CHROME);
         chromeCapabilities.setCapability(CapabilityType.PLATFORM, Platform.LINUX);
-        if (chromeVersion != null && !chromeVersion.isEmpty()) {
-            chromeCapabilities.setCapability(CapabilityType.VERSION, chromeVersion);
-        }
         chromeCapabilities.setCapability(RegistrationRequest.MAX_INSTANCES, 1);
         dsCapabilities.add(chromeCapabilities);
 
         dockerSeleniumCapabilities = dsCapabilities;
-        LOGGER.log(Level.INFO, LOGGING_PREFIX + "Capabilities grabbed from the docker-selenium image");
         return dockerSeleniumCapabilities;
     }
 
@@ -200,17 +183,6 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     @VisibleForTesting
     static void restoreContainerClient() {
         containerClient = defaultContainerClient;
-    }
-
-    @VisibleForTesting
-    protected static int getFirefoxContainersOnStartup() {
-        return firefoxContainersOnStartup;
-    }
-
-    @VisibleForTesting
-    protected static void setFirefoxContainersOnStartup(int firefoxContainersOnStartup) {
-        DockerSeleniumStarterRemoteProxy.firefoxContainersOnStartup = firefoxContainersOnStartup < 0 ?
-                DEFAULT_AMOUNT_FIREFOX_CONTAINERS : firefoxContainersOnStartup;
     }
 
     public static String getContainerName() {
@@ -235,14 +207,14 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     }
 
     @VisibleForTesting
-    protected static int getChromeContainersOnStartup() {
-        return chromeContainersOnStartup;
+    protected static int getDesiredContainersOnStartup() {
+        return desiredContainersOnStartup;
     }
 
     @VisibleForTesting
-    protected static void setChromeContainersOnStartup(int chromeContainersOnStartup) {
-        DockerSeleniumStarterRemoteProxy.chromeContainersOnStartup = chromeContainersOnStartup < 0 ?
-                DEFAULT_AMOUNT_CHROME_CONTAINERS : chromeContainersOnStartup;
+    protected static void setDesiredContainersOnStartup(int desiredContainersOnStartup) {
+        DockerSeleniumStarterRemoteProxy.desiredContainersOnStartup = desiredContainersOnStartup < 0 ?
+                DEFAULT_AMOUNT_DESIRED_CONTAINERS : desiredContainersOnStartup;
     }
 
     @VisibleForTesting
@@ -540,17 +512,16 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     }
 
     private void createContainersOnStartup() {
-        int configuredContainers = getChromeContainersOnStartup() + getFirefoxContainersOnStartup();
-        int containersToCreate = configuredContainers > getMaxDockerSeleniumContainers() ?
-                getMaxDockerSeleniumContainers() : configuredContainers;
-        LOGGER.log(Level.INFO, String.format("%s Setting up %s nodes...", LOGGING_PREFIX, configuredContainers));
+        int containersToCreate = getDesiredContainersOnStartup() > getMaxDockerSeleniumContainers() ?
+                getMaxDockerSeleniumContainers() : getDesiredContainersOnStartup();
+        LOGGER.log(Level.INFO, String.format("%s Setting up %s nodes...", LOGGING_PREFIX, getDesiredContainersOnStartup()));
         // Thread.sleep() is to avoid having containers starting at the same time
         for (int i = 0; i < containersToCreate; i++) {
             new Thread(() -> {
                 try {
                     Thread.sleep(RandomUtils.nextInt(1, (containersToCreate / 2) + 1) * sleepIntervalMultiplier);
                 } catch (InterruptedException e) {
-                    LOGGER.log(Level.FINE, getId() + " Error sleeping before starting a Chrome container", e);
+                    LOGGER.log(Level.WARNING, getId() + " Error sleeping before starting a container", e);
                 }
                 startDockerSeleniumContainer(getConfiguredTimeZone(), getConfiguredScreenSize(), true);
             }).start();

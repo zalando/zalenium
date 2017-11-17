@@ -309,10 +309,8 @@ public class DockerSeleniumStarterRemoteProxyTest {
 
         registry.add(spyProxy);
 
-        Assert.assertEquals(DockerSeleniumStarterRemoteProxy.DEFAULT_AMOUNT_CHROME_CONTAINERS,
-                DockerSeleniumStarterRemoteProxy.getChromeContainersOnStartup());
-        Assert.assertEquals(DockerSeleniumStarterRemoteProxy.DEFAULT_AMOUNT_FIREFOX_CONTAINERS,
-                DockerSeleniumStarterRemoteProxy.getFirefoxContainersOnStartup());
+        Assert.assertEquals(DockerSeleniumStarterRemoteProxy.DEFAULT_AMOUNT_DESIRED_CONTAINERS,
+                DockerSeleniumStarterRemoteProxy.getDesiredContainersOnStartup());
         Assert.assertEquals(DockerSeleniumStarterRemoteProxy.DEFAULT_AMOUNT_DOCKER_SELENIUM_CONTAINERS_RUNNING,
                 DockerSeleniumStarterRemoteProxy.getMaxDockerSeleniumContainers());
         Assert.assertEquals(DockerSeleniumStarterRemoteProxy.DEFAULT_SCREEN_SIZE.getHeight(),
@@ -327,9 +325,7 @@ public class DockerSeleniumStarterRemoteProxyTest {
     public void fallbackToDefaultAmountValuesWhenVariablesAreNotIntegers() {
         // Mock the environment class that serves as proxy to retrieve env variables
         Environment environment = mock(Environment.class, withSettings().useConstructor());
-        when(environment.getEnvVariable(DockerSeleniumStarterRemoteProxy.ZALENIUM_CHROME_CONTAINERS))
-                .thenReturn("ABC_NON_INTEGER");
-        when(environment.getEnvVariable(DockerSeleniumStarterRemoteProxy.ZALENIUM_FIREFOX_CONTAINERS))
+        when(environment.getEnvVariable(DockerSeleniumStarterRemoteProxy.ZALENIUM_DESIRED_CONTAINERS))
                 .thenReturn("ABC_NON_INTEGER");
         when(environment.getEnvVariable(DockerSeleniumStarterRemoteProxy.ZALENIUM_MAX_DOCKER_SELENIUM_CONTAINERS))
                 .thenReturn("ABC_NON_INTEGER");
@@ -345,10 +341,8 @@ public class DockerSeleniumStarterRemoteProxyTest {
 
         DockerSeleniumStarterRemoteProxy.getNewInstance(request, registry);
 
-        Assert.assertEquals(DockerSeleniumStarterRemoteProxy.DEFAULT_AMOUNT_CHROME_CONTAINERS,
-                DockerSeleniumStarterRemoteProxy.getChromeContainersOnStartup());
-        Assert.assertEquals(DockerSeleniumStarterRemoteProxy.DEFAULT_AMOUNT_FIREFOX_CONTAINERS,
-                DockerSeleniumStarterRemoteProxy.getFirefoxContainersOnStartup());
+        Assert.assertEquals(DockerSeleniumStarterRemoteProxy.DEFAULT_AMOUNT_DESIRED_CONTAINERS,
+                DockerSeleniumStarterRemoteProxy.getDesiredContainersOnStartup());
         Assert.assertEquals(DockerSeleniumStarterRemoteProxy.DEFAULT_AMOUNT_DOCKER_SELENIUM_CONTAINERS_RUNNING,
                 DockerSeleniumStarterRemoteProxy.getMaxDockerSeleniumContainers());
         Assert.assertEquals(DockerSeleniumStarterRemoteProxy.DEFAULT_SCREEN_SIZE.getHeight(),
@@ -363,16 +357,13 @@ public class DockerSeleniumStarterRemoteProxyTest {
     public void variablesGrabTheConfiguredEnvironmentVariables() {
         // Mock the environment class that serves as proxy to retrieve env variables
         Environment environment = mock(Environment.class, withSettings().useConstructor());
-        int amountOfChromeContainers = 4;
-        int amountOfFirefoxContainers = 3;
+        int amountOfDesiredContainers = 7;
         int amountOfMaxContainers = 8;
         int screenWidth = 1440;
         int screenHeight = 810;
         TimeZone timeZone = TimeZone.getTimeZone("America/Montreal");
-        when(environment.getEnvVariable(DockerSeleniumStarterRemoteProxy.ZALENIUM_CHROME_CONTAINERS))
-                .thenReturn(String.valueOf(amountOfChromeContainers));
-        when(environment.getEnvVariable(DockerSeleniumStarterRemoteProxy.ZALENIUM_FIREFOX_CONTAINERS))
-                .thenReturn(String.valueOf(amountOfFirefoxContainers));
+        when(environment.getEnvVariable(DockerSeleniumStarterRemoteProxy.ZALENIUM_DESIRED_CONTAINERS))
+                .thenReturn(String.valueOf(amountOfDesiredContainers));
         when(environment.getEnvVariable(DockerSeleniumStarterRemoteProxy.ZALENIUM_MAX_DOCKER_SELENIUM_CONTAINERS))
                 .thenReturn(String.valueOf(amountOfMaxContainers));
         when(environment.getEnvVariable(DockerSeleniumStarterRemoteProxy.ZALENIUM_SCREEN_HEIGHT))
@@ -387,8 +378,7 @@ public class DockerSeleniumStarterRemoteProxyTest {
 
         DockerSeleniumStarterRemoteProxy.getNewInstance(request, registry);
 
-        Assert.assertEquals(amountOfChromeContainers, DockerSeleniumStarterRemoteProxy.getChromeContainersOnStartup());
-        Assert.assertEquals(amountOfFirefoxContainers, DockerSeleniumStarterRemoteProxy.getFirefoxContainersOnStartup());
+        Assert.assertEquals(amountOfDesiredContainers, DockerSeleniumStarterRemoteProxy.getDesiredContainersOnStartup());
         Assert.assertEquals(amountOfMaxContainers, DockerSeleniumStarterRemoteProxy.getMaxDockerSeleniumContainers());
         Assert.assertEquals(screenHeight, DockerSeleniumStarterRemoteProxy.getConfiguredScreenSize().getHeight());
         Assert.assertEquals(screenWidth, DockerSeleniumStarterRemoteProxy.getConfiguredScreenSize().getWidth());
@@ -399,12 +389,9 @@ public class DockerSeleniumStarterRemoteProxyTest {
     public void amountOfCreatedContainersIsTheConfiguredOne() {
         // Mock the environment class that serves as proxy to retrieve env variables
         Environment environment = mock(Environment.class, withSettings().useConstructor());
-        int amountOfChromeContainers = 3;
-        int amountOfFirefoxContainers = 4;
-        when(environment.getEnvVariable(DockerSeleniumStarterRemoteProxy.ZALENIUM_CHROME_CONTAINERS))
-                .thenReturn(String.valueOf(amountOfChromeContainers));
-        when(environment.getEnvVariable(DockerSeleniumStarterRemoteProxy.ZALENIUM_FIREFOX_CONTAINERS))
-                .thenReturn(String.valueOf(amountOfFirefoxContainers));
+        int amountOfDesiredContainers = 7;
+        when(environment.getEnvVariable(DockerSeleniumStarterRemoteProxy.ZALENIUM_DESIRED_CONTAINERS))
+                .thenReturn(String.valueOf(amountOfDesiredContainers));
         when(environment.getIntEnvVariable(any(String.class), any(Integer.class))).thenCallRealMethod();
         DockerSeleniumStarterRemoteProxy.setEnv(environment);
         DockerSeleniumStarterRemoteProxy.setSleepIntervalMultiplier(0);
@@ -412,22 +399,18 @@ public class DockerSeleniumStarterRemoteProxyTest {
         DockerSeleniumStarterRemoteProxy.getNewInstance(request, registry);
         registry.add(spyProxy);
 
-        verify(spyProxy, timeout(5000).times(amountOfChromeContainers + amountOfFirefoxContainers))
+        verify(spyProxy, timeout(5000).times(amountOfDesiredContainers))
                 .startDockerSeleniumContainer(timeZone, screenSize, true);
-        Assert.assertEquals(amountOfChromeContainers, DockerSeleniumStarterRemoteProxy.getChromeContainersOnStartup());
-        Assert.assertEquals(amountOfFirefoxContainers, DockerSeleniumStarterRemoteProxy.getFirefoxContainersOnStartup());
+        Assert.assertEquals(amountOfDesiredContainers, DockerSeleniumStarterRemoteProxy.getDesiredContainersOnStartup());
     }
 
     @Test
     public void noNegativeValuesAreAllowedForStartup() {
-        DockerSeleniumStarterRemoteProxy.setChromeContainersOnStartup(-1);
-        DockerSeleniumStarterRemoteProxy.setFirefoxContainersOnStartup(-1);
+        DockerSeleniumStarterRemoteProxy.setDesiredContainersOnStartup(-1);
         DockerSeleniumStarterRemoteProxy.setMaxDockerSeleniumContainers(-1);
         DockerSeleniumStarterRemoteProxy.setConfiguredScreenSize(new Dimension(-1, -1));
-        Assert.assertEquals(DockerSeleniumStarterRemoteProxy.DEFAULT_AMOUNT_CHROME_CONTAINERS,
-                DockerSeleniumStarterRemoteProxy.getChromeContainersOnStartup());
-        Assert.assertEquals(DockerSeleniumStarterRemoteProxy.DEFAULT_AMOUNT_FIREFOX_CONTAINERS,
-                DockerSeleniumStarterRemoteProxy.getFirefoxContainersOnStartup());
+        Assert.assertEquals(DockerSeleniumStarterRemoteProxy.DEFAULT_AMOUNT_DESIRED_CONTAINERS,
+                DockerSeleniumStarterRemoteProxy.getDesiredContainersOnStartup());
         Assert.assertEquals(DockerSeleniumStarterRemoteProxy.DEFAULT_AMOUNT_DOCKER_SELENIUM_CONTAINERS_RUNNING,
                 DockerSeleniumStarterRemoteProxy.getMaxDockerSeleniumContainers());
         Assert.assertEquals(DockerSeleniumStarterRemoteProxy.DEFAULT_SCREEN_SIZE.getWidth(),

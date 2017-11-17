@@ -171,7 +171,7 @@ public class DockerContainerClient implements ContainerClient {
     }
 
     public ContainerCreationStatus createContainer(String zaleniumContainerName, String image, Map<String, String> envVars,
-                                String nodePort) {
+                                                   String nodePort) {
         String containerName = generateContainerName(zaleniumContainerName, nodePort);
 
         loadMountedFolders(zaleniumContainerName);
@@ -240,14 +240,14 @@ public class DockerContainerClient implements ContainerClient {
             dockerClient.startContainer(container.id());
             return new ContainerCreationStatus(true, containerName, nodePort);
         } catch (DockerException | InterruptedException e) {
-            logger.log(Level.FINE, nodeId + " Error while starting a new container", e);
+            logger.log(Level.WARNING, nodeId + " Error while starting a new container", e);
             ga.trackException(e);
             return new ContainerCreationStatus(false);
         }
     }
 
     private String generateContainerName(String zaleniumContainerName,
-                             String nodePort) {
+                                         String nodePort) {
         return String.format("%s_%s", zaleniumContainerName, nodePort);
     }
 
@@ -271,25 +271,25 @@ public class DockerContainerClient implements ContainerClient {
         }
     }
 
-  private synchronized void loadMountedFolders(ContainerInfo containerInfo) {
-    if (!this.mntFoldersAndHttpEnvVarsChecked.getAndSet(true)) {
+    private synchronized void loadMountedFolders(ContainerInfo containerInfo) {
+        if (!this.mntFoldersAndHttpEnvVarsChecked.getAndSet(true)) {
 
-      for (ContainerMount containerMount : containerInfo.mounts()) {
-          if (containerMount.destination().startsWith(NODE_MOUNT_POINT)) {
-              this.mntFolders.add(containerMount);
-          }
-      }
+            for (ContainerMount containerMount : containerInfo.mounts()) {
+                if (containerMount.destination().startsWith(NODE_MOUNT_POINT)) {
+                    this.mntFolders.add(containerMount);
+                }
+            }
 
-      for (String envVar : containerInfo.config().env()) {
-          Arrays.asList(HTTP_PROXY_ENV_VARS).forEach(httpEnvVar -> {
-              String httpEnvVarToAdd = envVar.replace("zalenium_", "");
-              if (envVar.contains(httpEnvVar) && !zaleniumHttpEnvVars.contains(httpEnvVarToAdd)) {
-                  zaleniumHttpEnvVars.add(httpEnvVarToAdd);
-              }
-          });
-      }
+            for (String envVar : containerInfo.config().env()) {
+                Arrays.asList(HTTP_PROXY_ENV_VARS).forEach(httpEnvVar -> {
+                    String httpEnvVarToAdd = envVar.replace("zalenium_", "");
+                    if (envVar.contains(httpEnvVar) && !zaleniumHttpEnvVars.contains(httpEnvVarToAdd)) {
+                        zaleniumHttpEnvVars.add(httpEnvVarToAdd);
+                    }
+                });
+            }
+        }
     }
-  }
 
     private List<String> generateMountedFolderBinds() {
         List<String> result = new ArrayList<>();

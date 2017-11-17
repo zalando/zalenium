@@ -5,9 +5,11 @@ SELENIUM_IMAGE_NAME="elgalu/selenium"
 MAX_TEST_SESSIONS=1
 CHROME_CONTAINERS=1
 FIREFOX_CONTAINERS=1
+DESIRED_CONTAINERS=2
 MAX_DOCKER_SELENIUM_CONTAINERS=10
 SELENIUM_ARTIFACT="$(pwd)/selenium-server-standalone-${selenium-server.major-minor.version}.${selenium-server.patch-level.version}.jar"
 ZALENIUM_ARTIFACT="$(pwd)/${project.build.finalName}.jar"
+DEPRECATED_PARAMETERS=false
 SAUCE_LABS_ENABLED=false
 BROWSER_STACK_ENABLED=false
 TESTINGBOT_ENABLED=false
@@ -346,8 +348,10 @@ StartUp()
         fi
     fi
 
-    export ZALENIUM_CHROME_CONTAINERS=${CHROME_CONTAINERS}
-    export ZALENIUM_FIREFOX_CONTAINERS=${FIREFOX_CONTAINERS}
+    if [ "$DEPRECATED_PARAMETERS" = true ]; then
+        DESIRED_CONTAINERS=$((CHROME_CONTAINERS + FIREFOX_CONTAINERS))
+    fi
+    export ZALENIUM_DESIRED_CONTAINERS=${DESIRED_CONTAINERS}
     export ZALENIUM_MAX_DOCKER_SELENIUM_CONTAINERS=${MAX_DOCKER_SELENIUM_CONTAINERS}
     export ZALENIUM_VIDEO_RECORDING_ENABLED=${VIDEO_RECORDING_ENABLED}
     export ZALENIUM_TZ=${TZ}
@@ -788,10 +792,15 @@ case ${SCRIPT_ACTION} in
                     exit
                     ;;
                 --chromeContainers)
+                    DEPRECATED_PARAMETERS=true
                     CHROME_CONTAINERS=${VALUE}
                     ;;
                 --firefoxContainers)
+                    DEPRECATED_PARAMETERS=true
                     FIREFOX_CONTAINERS=${VALUE}
+                    ;;
+                --desiredContainers)
+                    DESIRED_CONTAINERS=${VALUE}
                     ;;
                 --maxDockerSeleniumContainers)
                     MAX_DOCKER_SELENIUM_CONTAINERS=${VALUE}
