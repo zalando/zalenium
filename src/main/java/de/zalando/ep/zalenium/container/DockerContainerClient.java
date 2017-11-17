@@ -310,7 +310,7 @@ public class DockerContainerClient implements ContainerClient {
         return result;
     }
 
-    private List<String> getContainerExtraHosts(String zaleniumContainerName) {
+    private synchronized List<String> getContainerExtraHosts(String zaleniumContainerName) {
         if (zaleniumExtraHosts != null) {
             return zaleniumExtraHosts;
         }
@@ -347,7 +347,7 @@ public class DockerContainerClient implements ContainerClient {
         return registration;
     }
 
-    private String getZaleniumNetwork(String zaleniumContainerName) {
+    private synchronized String getZaleniumNetwork(String zaleniumContainerName) {
         if (zaleniumNetwork != null) {
             return zaleniumNetwork;
         }
