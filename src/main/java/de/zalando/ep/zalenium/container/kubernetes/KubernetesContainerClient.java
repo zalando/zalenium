@@ -293,18 +293,8 @@ public class KubernetesContainerClient implements ContainerClient {
     @Override
     public String getLatestDownloadedImage(String imageName) {
         // Nothing to do here, this is managed by the ImagePullPolicy when creating a container.
-        // Currently the kuberentes API can't manage images, the OpenShift API has some extra hooks though, which we could potential use.
+        // Currently the kubernetes API can't manage images, the OpenShift API has some extra hooks though, which we could potential use.
         return imageName;
-    }
-
-    @Override
-    public String getLabelValue(String image, String label) {
-        // FIXME: This might be possible with the OpenShift API, but not the Kubernetes API at the moment.
-        // Although with the OpenShift API it will be pretty slow as you can't lookup an image by its docker name, only its hash value.
-        // So with the OpenShift API you'd end up listing all images in the registry and looping through them one by one, which is not ideal.
-        /*ImageStreamTag imageStreamTag = oClient.imageStreamTags().withName(image).get();
-        imageStreamTag.getImage().getDockerImageConfig()*/
-        return null;
     }
 
     @Override

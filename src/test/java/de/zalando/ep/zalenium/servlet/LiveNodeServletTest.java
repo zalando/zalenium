@@ -14,16 +14,12 @@ import org.junit.Test;
 import org.openqa.grid.common.RegistrationRequest;
 import org.openqa.grid.internal.DefaultGridRegistry;
 import org.openqa.grid.internal.GridRegistry;
-import org.openqa.selenium.MutableCapabilities;
-import org.openqa.selenium.Platform;
-import org.openqa.selenium.remote.CapabilityType;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.function.Supplier;
 
 import static org.mockito.Mockito.mock;
@@ -51,17 +47,11 @@ public class LiveNodeServletTest {
         registrationRequest.getConfiguration().capabilities.clear();
         registrationRequest.getConfiguration().capabilities.addAll(DockerSeleniumStarterRemoteProxy.getCapabilities());
         DockerSeleniumRemoteProxy proxyOne = DockerSeleniumRemoteProxy.getNewInstance(registrationRequest, registry);
+
         registrationRequest = TestUtils.getRegistrationRequestForTesting(40001,
                 DockerSeleniumRemoteProxy.class.getCanonicalName());
         registrationRequest.getConfiguration().capabilities.clear();
-        List<MutableCapabilities> capabilities = DockerSeleniumStarterRemoteProxy.getCapabilities();
-        MutableCapabilities desiredCapabilities = new MutableCapabilities();
-        desiredCapabilities.setCapability(CapabilityType.BROWSER_NAME, "NEW_BROWSER");
-        desiredCapabilities.setCapability(CapabilityType.PLATFORM, Platform.LINUX);
-        desiredCapabilities.setCapability(RegistrationRequest.MAX_INSTANCES, 1);
-        capabilities.add(desiredCapabilities);
-        registrationRequest.getConfiguration().capabilities.addAll(capabilities);
-        
+        registrationRequest.getConfiguration().capabilities.addAll(DockerSeleniumStarterRemoteProxy.getCapabilities());
         DockerSeleniumRemoteProxy proxyTwo = DockerSeleniumRemoteProxy.getNewInstance(registrationRequest, registry);
 
         registry.add(proxyOne);

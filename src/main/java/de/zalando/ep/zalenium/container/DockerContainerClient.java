@@ -15,7 +15,6 @@ import com.spotify.docker.client.messages.ContainerMount;
 import com.spotify.docker.client.messages.ExecCreation;
 import com.spotify.docker.client.messages.HostConfig;
 import com.spotify.docker.client.messages.Image;
-import com.spotify.docker.client.messages.ImageInfo;
 import com.spotify.docker.client.messages.PortBinding;
 import de.zalando.ep.zalenium.util.GoogleAnalyticsApi;
 
@@ -154,17 +153,6 @@ public class DockerContainerClient implements ContainerClient {
         return imageName;
     }
 
-    public String getLabelValue(String image, String label) {
-        try {
-            ImageInfo imageInfo = dockerClient.inspectImage(image);
-            return imageInfo.config().labels().get(label);
-        } catch (Exception e) {
-            logger.log(Level.WARNING, nodeId + " Error while getting label value", e);
-            ga.trackException(e);
-        }
-        return null;
-    }
-
     public int getRunningContainers(String image) {
         try {
             List<Container> containerList = dockerClient.listContainers(DockerClient.ListContainersParam.allContainers());
@@ -183,7 +171,7 @@ public class DockerContainerClient implements ContainerClient {
     }
 
     public ContainerCreationStatus createContainer(String zaleniumContainerName, String image, Map<String, String> envVars,
-                                String nodePort) {
+                                                   String nodePort) {
         String containerName = generateContainerName(zaleniumContainerName, nodePort);
 
         loadMountedFolders(zaleniumContainerName);
@@ -252,14 +240,14 @@ public class DockerContainerClient implements ContainerClient {
             dockerClient.startContainer(container.id());
             return new ContainerCreationStatus(true, containerName, nodePort);
         } catch (DockerException | InterruptedException e) {
-            logger.log(Level.FINE, nodeId + " Error while starting a new container", e);
+            logger.log(Level.WARNING, nodeId + " Error while starting a new container", e);
             ga.trackException(e);
             return new ContainerCreationStatus(false);
         }
     }
 
     private String generateContainerName(String zaleniumContainerName,
-                             String nodePort) {
+                                         String nodePort) {
         return String.format("%s_%s", zaleniumContainerName, nodePort);
     }
 
@@ -283,25 +271,25 @@ public class DockerContainerClient implements ContainerClient {
         }
     }
 
-  private synchronized void loadMountedFolders(ContainerInfo containerInfo) {
-    if (!this.mntFoldersAndHttpEnvVarsChecked.getAndSet(true)) {
+    private synchronized void loadMountedFolders(ContainerInfo containerInfo) {
+        if (!this.mntFoldersAndHttpEnvVarsChecked.getAndSet(true)) {
 
-      for (ContainerMount containerMount : containerInfo.mounts()) {
-          if (containerMount.destination().startsWith(NODE_MOUNT_POINT)) {
-              this.mntFolders.add(containerMount);
-          }
-      }
+            for (ContainerMount containerMount : containerInfo.mounts()) {
+                if (containerMount.destination().startsWith(NODE_MOUNT_POINT)) {
+                    this.mntFolders.add(containerMount);
+                }
+            }
 
-      for (String envVar : containerInfo.config().env()) {
-          Arrays.asList(HTTP_PROXY_ENV_VARS).forEach(httpEnvVar -> {
-              String httpEnvVarToAdd = envVar.replace("zalenium_", "");
-              if (envVar.contains(httpEnvVar) && !zaleniumHttpEnvVars.contains(httpEnvVarToAdd)) {
-                  zaleniumHttpEnvVars.add(httpEnvVarToAdd);
-              }
-          });
-      }
+            for (String envVar : containerInfo.config().env()) {
+                Arrays.asList(HTTP_PROXY_ENV_VARS).forEach(httpEnvVar -> {
+                    String httpEnvVarToAdd = envVar.replace("zalenium_", "");
+                    if (envVar.contains(httpEnvVar) && !zaleniumHttpEnvVars.contains(httpEnvVarToAdd)) {
+                        zaleniumHttpEnvVars.add(httpEnvVarToAdd);
+                    }
+                });
+            }
+        }
     }
-  }
 
     private List<String> generateMountedFolderBinds() {
         List<String> result = new ArrayList<>();
@@ -322,7 +310,7 @@ public class DockerContainerClient implements ContainerClient {
         return result;
     }
 
-    private List<String> getContainerExtraHosts(String zaleniumContainerName) {
+    private synchronized List<String> getContainerExtraHosts(String zaleniumContainerName) {
         if (zaleniumExtraHosts != null) {
             return zaleniumExtraHosts;
         }
@@ -359,7 +347,7 @@ public class DockerContainerClient implements ContainerClient {
         return registration;
     }
 
-    private String getZaleniumNetwork(String zaleniumContainerName) {
+    private synchronized String getZaleniumNetwork(String zaleniumContainerName) {
         if (zaleniumNetwork != null) {
             return zaleniumNetwork;
         }

@@ -60,22 +60,6 @@ public class LiveNodeHtmlRenderer implements HtmlRenderer {
             testBuild.append("<p>Test build: ").append(proxy.getTestBuild()).append("</p>");
         }
 
-        SlotsLines wdLines = new SlotsLines();
-        TestSlot testSlot = proxy.getTestSlots().get(0);
-        wdLines.add(testSlot);
-        MiniCapability miniCapability = wdLines.getLinesType().iterator().next();
-        String icon = miniCapability.getIcon();
-        String version = miniCapability.getVersion();
-        TestSession session = testSlot.getSession();
-        String slotClass = "";
-        String slotTitle;
-        if (session != null) {
-            slotClass = "busy";
-            slotTitle = session.get("lastCommand") == null ? "" : session.get("lastCommand").toString();
-        } else {
-            slotTitle = testSlot.getCapabilities().toString();
-        }
-
         // Adding live preview
         int noVncPort = proxy.getRegistration().getNoVncPort();
         String noVncViewBaseUrl = "http://%s:%s/?view_only=%s";
@@ -89,14 +73,41 @@ public class LiveNodeHtmlRenderer implements HtmlRenderer {
         renderSummaryValues.put("{{proxyPlatform}}", getPlatform(proxy));
         renderSummaryValues.put("{{testName}}", testName.toString());
         renderSummaryValues.put("{{testBuild}}", testBuild.toString());
-        renderSummaryValues.put("{{browserVersion}}", version);
-        renderSummaryValues.put("{{slotIcon}}", icon);
-        renderSummaryValues.put("{{slotClass}}", slotClass);
-        renderSummaryValues.put("{{slotTitle}}", slotTitle);
+        renderSummaryValues.put("{{tabBrowsers}}", tabBrowsers());
         renderSummaryValues.put("{{noVncReadOnlyUrl}}", noVncReadOnlyUrl);
         renderSummaryValues.put("{{noVncInteractUrl}}", noVncInteractUrl);
         renderSummaryValues.put("{{tabConfig}}", proxy.getConfig().toString("<p>%1$s: %2$s</p>"));
         return templateRenderer.renderTemplate(renderSummaryValues);
+    }
+
+    // content of the browsers tab
+    private String tabBrowsers() {
+        SlotsLines wdLines = new SlotsLines();
+        for (TestSlot testSlot : proxy.getTestSlots()) {
+            wdLines.add(testSlot);
+        }
+        StringBuilder browserSection = new StringBuilder();
+        for (MiniCapability miniCapability : wdLines.getLinesType()) {
+            String icon = miniCapability.getIcon();
+            String version = miniCapability.getVersion();
+            TestSlot testSlot = wdLines.getLine(miniCapability).get(0);
+            TestSession session = testSlot.getSession();
+            String slotClass = "";
+            String slotTitle;
+            if (session != null) {
+                slotClass = "busy";
+                slotTitle = session.get("lastCommand") == null ? "" : session.get("lastCommand").toString();
+            } else {
+                slotTitle = testSlot.getCapabilities().toString();
+            }
+            Map<String, String> browserValues = new HashMap<>();
+            browserValues.put("{{browserVersion}}", version);
+            browserValues.put("{{slotIcon}}", icon);
+            browserValues.put("{{slotClass}}", slotClass);
+            browserValues.put("{{slotTitle}}", slotTitle);
+            browserSection.append(templateRenderer.renderSection("{{tabBrowsers}}", browserValues));
+        }
+        return browserSection.toString();
     }
 
     private String getHtmlNodeVersion() {
