@@ -571,8 +571,8 @@ StartUp()
         fi
 
         # Gathering the options used to start Zalenium, in order to learn about the used options
-        ZALENIUM_START_COMMAND="zalenium.sh --chromeContainers $CHROME_CONTAINERS --firefoxContainers
-            $FIREFOX_CONTAINERS --maxDockerSeleniumContainers $MAX_DOCKER_SELENIUM_CONTAINERS
+        ZALENIUM_START_COMMAND="zalenium.sh --deprecatedParameters $DEPRECATED_PARAMETERS --desiredContainers
+            $DESIRED_CONTAINERS --maxDockerSeleniumContainers $MAX_DOCKER_SELENIUM_CONTAINERS
             --sauceLabsEnabled $SAUCE_LABS_ENABLED --browserStackEnabled $BROWSER_STACK_ENABLED
             --testingBotEnabled $TESTINGBOT_ENABLED --videoRecordingEnabled $VIDEO_RECORDING_ENABLED
             --screenWidth $SCREEN_WIDTH --screenHeight $SCREEN_HEIGHT --timeZone $TZ"
@@ -741,8 +741,7 @@ function usage()
     echo "zalenium"
     echo -e "\t -h --help"
     echo -e "\t start <options, see below>"
-    echo -e "\t --chromeContainers -> Number of Chrome containers created on startup. Default is 1."
-    echo -e "\t --firefoxContainers -> Number of Firefox containers created on startup. Default is 1."
+    echo -e "\t --desiredContainers -> Number of nodes/containers created on startup. Default is 2."
     echo -e "\t --maxDockerSeleniumContainers -> Max number of docker-selenium containers running at the same time. Default is 10."
     echo -e "\t --sauceLabsEnabled -> Determines if the Sauce Labs node is started. Defaults to 'false'."
     echo -e "\t --browserStackEnabled -> Determines if the Browser Stack node is started. Defaults to 'false'."
@@ -763,12 +762,10 @@ function usage()
     echo -e "\t stop"
     echo ""
     echo -e "\t Examples:"
-    echo -e "\t - Starting Zalenium with 2 Chrome containers and with Sauce Labs"
-    echo -e "\t start --chromeContainers 2 --sauceLabsEnabled true"
-    echo -e "\t - Starting Zalenium with 2 Firefox containers and with BrowserStack"
-    echo -e "\t start --chromeContainers 2 --browserStackEnabled true"
-    echo -e "\t - Starting Zalenium with 2 Firefox containers and with TestingBot"
-    echo -e "\t start --chromeContainers 2 --testingBotEnabled true"
+    echo -e "\t - Starting Zalenium with 2 containers and with Sauce Labs"
+    echo -e "\t start --desiredContainers 2 --sauceLabsEnabled true"
+    echo -e "\t - Starting Zalenium with 2 containers and with BrowserStack"
+    echo -e "\t start --desiredContainers 2 --browserStackEnabled true"
     echo -e "\t - Starting Zalenium screen width 1440 and height 810, time zone \"America/Montreal\""
     echo -e "\t start --screenWidth 1440 --screenHeight 810 --timeZone \"America/Montreal\""
 }

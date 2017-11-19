@@ -11,15 +11,10 @@ message: |-
          Username: ${ZALENIUM_USER}
          Password: ${ZALENIUM_PASSWORD}
 parameters:
-  - name: "FIREFOX_CONTAINERS"
-    displayName: "Number of initial Firefox containers."
-    description: "This is the number of Firefox containers that should be created when Zalenium starts up."
-    value: "1"
-    required: false
-  - name: "CHROME_CONTAINERS"
-    displayName: "Number of initial Chrome containers."
-    description: "This is the number of Chrome containers that should be created when Zalenium starts up."
-    value: "1"
+  - name: "DESIRED_CONTAINERS"
+    displayName: "Number of initial containers."
+    description: "This is the number of containers that should be created when Zalenium starts up."
+    value: "2"
     required: false
   - name: "MAX_TEST_SESSIONS"
     displayName: "Max amount of tests executed per container."
@@ -101,10 +96,8 @@ objects:
         containers:
         - args:
           - start
-          - --firefoxContainers
-          - ${FIREFOX_CONTAINERS}
-          - --chromeContainers
-          - ${CHROME_CONTAINERS}
+          - --desiredContainers
+          - ${DESIRED_CONTAINERS}
           - --maxTestSessions
           - ${MAX_TEST_SESSIONS}
           - --seleniumImageName

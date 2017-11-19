@@ -62,8 +62,7 @@ hub:
 
   ## Start arguments for Zalenium hub itself
   ## https://github.com/zalando/zalenium/blob/master/docs/usage_examples.md
-  chromeContainers: 1
-  firefoxContainers: 1
+  desiredContainers: 2
   maxDockerSeleniumContainers: 10
   sauceLabsEnabled: false
   browserStackEnabled: false

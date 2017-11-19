@@ -165,7 +165,7 @@ kubectl run zalenium \
     --image=dosel/zalenium \
     --overrides='{"spec": {"template": {"spec": {"serviceAccount": "zalenium"}}}}' \
     -l app=zalenium,role=grid \
-    -- start --firefoxContainers 0 --chromeContainers 2
+    -- start --desiredContainers 2
 ```
 
 Create the services
@@ -195,7 +195,7 @@ oc run zalenium --image=dosel/zalenium \
     --env="ZALENIUM_KUBERNETES_MEMORY_REQUEST=1Gi" \
     --overrides='{"spec": {"template": {"spec": {"serviceAccount": "zalenium"}}}}' \
     -l app=zalenium,role=hub --port=4444 -- \
-    start --firefoxContainers 0 --chromeContainers 2 --seleniumImageName [registry ip address]:5000/[kubernetes namespace]/selenium:latest
+    start --desiredContainers 2 --seleniumImageName [registry ip address]:5000/[kubernetes namespace]/selenium:latest
 ```
 
 Create the service
@@ -235,10 +235,8 @@ spec:
         172.23.192.79:5000/delivery/zalenium@sha256:f9ac5f4d1dc78811b7b589f0cb16fd198c9c7e562eb149b8c6e60b0686bf150f
       args:
         - start
-        - '--chromeContainers'
+        - '--desiredContainers'
         - '2'
-        - '--firefoxContainers'
-        - '0'
         - '--screenWidth'
         - '1440'
         - '--screenHeight'
