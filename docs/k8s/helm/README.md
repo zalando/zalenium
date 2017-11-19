@@ -55,12 +55,11 @@ See Zalenium's [usage examples](https://github.com/zalando/zalenium/blob/master/
 | `hub.serviceType` | The Service type | `ClusterIP` |
 | `hub.serviceSessionAffinity` | The session affinity for the hub service| `None` |
 | `hub.timeZone` | The time zone for the container | `nil` |
-| `hub.chromeContainers` | How many Chrome pods to launch at start | 1 |
-| `hub.firefoxContainers` | How many Firefox pods to launch at start | 1 |
-| `hub.maxDockerSeleniumContainers` | Maximum number of Selenium containers to run simultaenously | 10 |
-| `hub.sauceLabsEnabled` | Enable saucelabs | false |
-| `hub.browserStackEnabled` | Enable browserstack | false |
-| `hub.testingBotEnabled` | Enable testingbot | false |
+| `hub.desiredContainers` | How many pods to launch at start | 2 |
+| `hub.maxDockerSeleniumContainers` | Maximum number of Selenium containers to run simultaneously | 10 |
+| `hub.sauceLabsEnabled` | Enable SauceLabs | false |
+| `hub.browserStackEnabled` | Enable BrowserStack | false |
+| `hub.testingBotEnabled` | Enable TestingBot | false |
 | `hub.videoRecordingEnabled` | Enable video recording | true |
 | `hub.cpuRequest` | CPU requested for browser pods.  The hub passes this value to the k8s API | 500m |
 | `hub.cpuLimit` | CPU limit for browser pods.  The hub passes this value to the k8s API | 1000m |

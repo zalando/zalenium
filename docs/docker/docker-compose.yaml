@@ -16,8 +16,7 @@ services:
     ports:
       - 4444:4444
     command: >
-      start --chromeContainers 1
-            --firefoxContainers 1
+      start --desiredContainers 2
             --maxDockerSeleniumContainers 8
             --screenWidth 800 --screenHeight 600
             --timeZone "Europe/Berlin"

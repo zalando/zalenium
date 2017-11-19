@@ -21,10 +21,8 @@ spec:
           image: dosel/zalenium:minikube
           args:
             - start
-            - '--chromeContainers'
-            - '1'
-            - '--firefoxContainers'
-            - '1'
+            - '--desiredContainers'
+            - '2'
             - '--screenWidth'
             - '1440'
             - '--screenHeight'

@@ -50,37 +50,38 @@
 Basic usage, without any of the integrated cloud testing platforms.
 ### Linux 
 
-  ```sh
+```sh
     docker run --rm -ti --name zalenium -p 4444:4444 \
       -v /var/run/docker.sock:/var/run/docker.sock \
       -v /tmp/videos:/home/seluser/videos \
       --privileged dosel/zalenium start 
-  ```
+```
 
-### OSX 
-Zalenium for OSX is currently compatible with Docker 1.11, 1.12 default and 1.13. In Mac is recommended that you 
-explicitly tell Zalenium which major version you are using via `-e DOCKER=1.11` due to API compatibility issues. 
+#### OSX
+Zalenium for OSX is currently compatible with Docker `17.03.1-ce`, `17.06.2-ce`, and `17.09.0-ce`. Nevertheless, starting
+with 1.13, newer CLIs can talk to older daemons. If you bump into any API compatibility issues, you can explicitly tell
+Zalenium which version you are using via `-e DOCKER=17.06.2-ce`.
 
-  ```sh
+```sh
     docker run --rm -ti --name zalenium -p 4444:4444 \
-      -e DOCKER=1.11 \
+      -e DOCKER=17.06.2-ce \
       -v /var/run/docker.sock:/var/run/docker.sock \
       -v /tmp/videos:/home/seluser/videos \
       --privileged dosel/zalenium start
-  ```
+```
 
 ### Windows 
 
-  ```sh
+```sh
     docker run --rm -ti --name zalenium -p 4444:4444 \
       -v /var/run/docker.sock:/var/run/docker.sock \
       -v /c/Users/your_user_name/temp/videos:/home/seluser/videos \
       --privileged dosel/zalenium start      
-  ```
+```
 
 ### with Sauce Labs enabled
 
-  ```sh
+```sh
     export SAUCE_USERNAME=<your Sauce Labs username>
     export SAUCE_ACCESS_KEY=<your Sauce Labs access key>
     docker run --rm -ti --name zalenium -p 4444:4444 \
@@ -88,11 +89,11 @@ explicitly tell Zalenium which major version you are using via `-e DOCKER=1.11` 
       -v /tmp/videos:/home/seluser/videos \
       -v /var/run/docker.sock:/var/run/docker.sock \
       --privileged dosel/zalenium start --sauceLabsEnabled true
-  ```
+```
 
 ### with BrowserStack enabled
 
-  ```sh
+```sh
     export BROWSER_STACK_USER=<your BrowserStack username>
     export BROWSER_STACK_KEY=<your BrowserStack access key>
     docker run --rm -ti --name zalenium -p 4444:4444 \
@@ -100,11 +101,11 @@ explicitly tell Zalenium which major version you are using via `-e DOCKER=1.11` 
       -v /tmp/videos:/home/seluser/videos \
       -v /var/run/docker.sock:/var/run/docker.sock \
       --privileged dosel/zalenium start --browserStackEnabled true
-  ```
+```
 
 ### with TestingBot enabled
 
-  ```sh
+```sh
     export TESTINGBOT_KEY=<your TestingBot access key>
     export TESTINGBOT_SECRET=<your TestingBot secret>
     docker run --rm -ti --name zalenium -p 4444:4444 \
@@ -112,16 +113,16 @@ explicitly tell Zalenium which major version you are using via `-e DOCKER=1.11` 
       -v /tmp/videos:/home/seluser/videos \
       -v /var/run/docker.sock:/var/run/docker.sock \
       --privileged dosel/zalenium start --testingBotEnabled true
-  ```
+```
 
 ### with screen width and height, and time zone
 
-  ```sh
+```sh
     docker run --rm -ti --name zalenium -p 4444:4444 \
       -v /var/run/docker.sock:/var/run/docker.sock \
       -v /tmp/videos:/home/seluser/videos \
       --privileged dosel/zalenium start --screenWidth 1440 --screenHeight 810 --timeZone "America/Montreal"
-  ```
+```
 
 ### with node folders mounted
 
@@ -136,7 +137,7 @@ For example, mounting:
 It can be used to provide further customization to your nodes, such as adding client certificates for your browser,
 or mimicking prior multi-purpose folder, both shown below.
 
-  ```sh
+```sh
     docker run --rm -ti --name zalenium -p 4444:4444 \
       -v /var/run/docker.sock:/var/run/docker.sock \
       -v /tmp/videos:/home/seluser/videos \
@@ -144,7 +145,7 @@ or mimicking prior multi-purpose folder, both shown below.
       -v /your/local/folderB:/tmp/node/home/seluser/folderB \      
       -v /tmp/mounted:/tmp/node/tmp/mounted \
       --privileged dosel/zalenium start 
-  ```
+```
 
 Please take caution in mounting system folders such as `/etc`, as this behavior has not been tested with such configuration.
 
@@ -159,23 +160,21 @@ By default, Zalenium will run only one test per node/container. This behaviour c
 per node/container. Tuning this value for your test suites should help to reduce the overall execution time since less
 containers/nodes are started and stopped on demand. Here is an example:
 
-  ```sh
+```sh
     docker run --rm -ti --name zalenium -p 4444:4444 \
       -v /var/run/docker.sock:/var/run/docker.sock \
       -v /tmp/videos:/home/seluser/videos \
       --privileged dosel/zalenium start --maxTestSessions 4
-  ```
+```
 
 This means that up to 4 tests will run in each node/container started by Zalenium. You could combine this parameter
-with `--chromeContainers` or `--firefoxContainers` to get an optimal setup for your tests. For example, if you have
-20 tests that should run in Chrome with 5 threads, you could start Zalenium with `--chromeContainers 5` and
-`--maxTestSessions 4`. Therefore, 4 tests would be executed in each one of the 5 nodes/containers and the whole test
-execution should finish earlier. 
+with `--desiredContainers` to get an optimal setup for your tests. For example, if you have 20 tests that should run
+with 5 threads, you could start Zalenium with `--desiredContainers 5` and `--maxTestSessions 4`. Therefore, 4 tests
+would be executed in each one of the 5 nodes/containers and the whole test execution should finish earlier. 
 
 ### More configuration parameters
 
-  * `--chromeContainers` -> Chrome nodes created on startup. Default is 1.
-  * `--firefoxContainers` -> Firefox nodes created on startup. Default is 1.
+  * `--desiredContainers` -> Number of nodes/containers created on startup. Default is 2.
   * `--maxDockerSeleniumContainers` -> Max number of docker-selenium containers running at the same time. Default is 10.
   * `--sauceLabsEnabled` -> Start Sauce Labs node or not. Defaults to 'false'.
   * `--browserStackEnabled` -> Start BrowserStack node or not. Defaults to 'false'.
@@ -201,27 +200,27 @@ execution should finish earlier.
 
 ### Zalenium one-liner installer
 
-  ```sh
+```sh
     curl -sSL https://raw.githubusercontent.com/dosel/t/i/p | bash
-  ```
+```
   
 ### Install and start
 
-  ```sh
+```sh
     curl -sSL https://raw.githubusercontent.com/dosel/t/i/p | bash -s start
-  ```
+```
 
 ### Install and start a specific version
 
-  ```sh
+```sh
     curl -sSL https://raw.githubusercontent.com/dosel/t/i/p | bash -s 3.0.1a start
-  ```
+```
 
 ### Cleanup
 
-  ```sh
+```sh
     curl -sSL https://raw.githubusercontent.com/dosel/t/i/p | bash -s stop
-  ```
+```
 
 ## Video feature
 When you start Zalenium, and you map a host folder to `/home/seluser/videos`, it will copy all the generated videos 
@@ -229,12 +228,12 @@ from the executed tests into your host mapped folder.
 
 For example, starting Zalenium like this
 
-  ```sh
+```sh
     docker run --rm -ti --name zalenium -p 4444:4444 \
       -v /var/run/docker.sock:/var/run/docker.sock \
       -v /tmp/videos:/home/seluser/videos \
       --privileged dosel/zalenium start 
-  ```
+```
   
 will copy the generated videos to your local `/tmp/videos` folder. This means all videos generated from tests executed 
 in docker-selenium containers and also from the ones executed in an integrated cloud testing platform (Sauce Labs, 
@@ -254,7 +253,8 @@ If the test name is not set via a capability, the Selenium session ID will be us
 
 You can see an example [here](./docker/docker-compose.yaml)
 
-Beware that `docker-compose --abort-on-container-exit` renders the video unusable, the finalization of the file cannot happen. In this case, stopping Zalenium in case of the certain conditions must be automated in another way.
+Beware that `docker-compose --abort-on-container-exit` renders the video unusable, the finalization of the file cannot
+happen. In this case, stopping Zalenium in case of the certain conditions must be automated in another way.
 
 ## Live preview
 
@@ -298,23 +298,23 @@ Adding a `name` capability with the test name will do two things; it will be dis
 identify where your test is running, and the video file will also use it in the file name. 
 Example code in Java for the capability:
 
-  ```java
+```java
     DesiredCapabilities desiredCapabilities = new DesiredCapabilities();
     desiredCapabilities.setCapability(CapabilityType.BROWSER_NAME, BrowserType.FIREFOX);
     desiredCapabilities.setCapability(CapabilityType.PLATFORM, Platform.LINUX);
     desiredCapabilities.setCapability("name", "myTestName");
-  ```
+```
 
 ### Build name
 Useful to filter the live preview and only display a group of tests belonging to the same build. Example code in Java
 for the capability:
 
-  ```java
+```java
     DesiredCapabilities desiredCapabilities = new DesiredCapabilities();
     desiredCapabilities.setCapability(CapabilityType.BROWSER_NAME, BrowserType.CHROME);
     desiredCapabilities.setCapability(CapabilityType.PLATFORM, Platform.LINUX);
     desiredCapabilities.setCapability("build", "myTestBuild");
-  ```
+```
 
 ### Idle timeout
 By default, Zalenium allows a test to be idle up to 90 seconds. After that elapsed time, the session will be terminated, 
@@ -322,46 +322,46 @@ the node will be shutdown and the recorded video will be saved (if video recordi
 run indefinitely after something went wrong. If you need to have a longer idle timeout, just set an `idleTimeout` 
 capability in your test. Example code in Java for the capability (it sets the `idleTimeout` to 150 seconds):
 
-  ```java
+```java
     DesiredCapabilities desiredCapabilities = new DesiredCapabilities();
     desiredCapabilities.setCapability(CapabilityType.BROWSER_NAME, BrowserType.FIREFOX);
     desiredCapabilities.setCapability(CapabilityType.PLATFORM, Platform.LINUX);
     desiredCapabilities.setCapability("idleTimeout", 150);
-  ```
+```
 
 ### Screen resolution
 You can pass a custom screen resolution for your test, just include a `screenResolution` with the desired value. E.g. 
 `screenResolution=1280x1024`. Also supported for the same purpose `resolution` and `screen-resolution`. Example code 
 in Java for the capability `screenResolution`
 
-  ```java
+```java
     DesiredCapabilities desiredCapabilities = new DesiredCapabilities();
     desiredCapabilities.setCapability(CapabilityType.BROWSER_NAME, BrowserType.FIREFOX);
     desiredCapabilities.setCapability(CapabilityType.PLATFORM, Platform.LINUX);
     desiredCapabilities.setCapability("screenResolution", "1280x720");
-  ```
+```
 
 ### Disable video recording
 It is possible to disable video recording (enabled by default) via test capabilities. Add a `recordVideo=false` 
 capability and no video will be recorded. Example code in Java for the capability `recordVideo`
 
-  ```java
+```java
     DesiredCapabilities desiredCapabilities = new DesiredCapabilities();
     desiredCapabilities.setCapability(CapabilityType.BROWSER_NAME, BrowserType.FIREFOX);
     desiredCapabilities.setCapability(CapabilityType.PLATFORM, Platform.LINUX);
     desiredCapabilities.setCapability("recordVideo", false);
-  ```
+```
 
 ### Time zone
 Run your test in a different time zone from the default one `Europe/Berlin`, just pass a capability `tz` with the 
 desired value. E.g. `tz=America/Montreal`. Example code in Java for the capability `tz`
 
-  ```java
+```java
     DesiredCapabilities desiredCapabilities = new DesiredCapabilities();
     desiredCapabilities.setCapability(CapabilityType.BROWSER_NAME, BrowserType.FIREFOX);
     desiredCapabilities.setCapability(CapabilityType.PLATFORM, Platform.LINUX);
     desiredCapabilities.setCapability("tz", "America/Montreal");
-  ```
+```
 
 ### Marking the test as passed or failed
 By default, tests in Zalenium are marked in the dashboard either as COMPLETED (session finishes normally) or TIMEOUT
@@ -370,10 +370,10 @@ your side with your test framework, add a cookie from with the name `zaleniumTes
 test passes) or false (if the test fails). This could be done in the after method where you already know if the test
 passed or failed. Here is an example in Java: 
 
-  ```java
+```java
     Cookie cookie = new Cookie("zaleniumTestPassed", "true");
     webDriver.manage().addCookie(cookie);
-  ```
+```
 
 ### Referencing test steps in the recorded video
 It is possible to reference your tests steps in the recorded video by passing their description to Zalenium via a
@@ -381,7 +381,7 @@ cookie. For example, your test could go to the home page, search and add an arti
 and pay. All this steps can be referenced in the video for a more simple debugging. You can pass the steps via messages
 with a cookie named `zaleniumMessage`. Here is an example in Java:
 
-  ```java
+```java
     Cookie cookie = new Cookie("zaleniumMessage", "Go to home page");
     webDriver.manage().addCookie(cookie);
     webDriver.get("http://www.homepage.com");
@@ -391,26 +391,26 @@ with a cookie named `zaleniumMessage`. Here is an example in Java:
     /*
         Code performing WebDriver actions to search and add article to the basket.
      */
-
+    
     cookie = new Cookie("zaleniumMessage", "Go to the checkout");
     webDriver.manage().addCookie(cookie);
     /*
         Code performing WebDriver actions to go to the checkout.
      */
-
+    
     cookie = new Cookie("zaleniumMessage", "Pay");
     webDriver.manage().addCookie(cookie);
     /*
         Code performing WebDriver actions to pay.
      */
-
-  ```
+    
+```
 
 ### Set browser language (works only with Chrome)
 You can set the browser language when using Google Chrome, just pass the `ChromeOptions` variable with the language
 argument. Example code in Java :
 
-  ```java
+```java
     DesiredCapabilities desiredCapabilities = DesiredCapabilities.chrome();
     ChromeOptions options = new ChromeOptions();
     options.addArguments("lang=en_GB");
@@ -427,20 +427,20 @@ If your SUT is running on your machine on port 8080, you can do `http://localhos
 Example:
 
 With `docker run`:
-  ```sh
+```sh
     docker run --rm -ti --name zalenium --net=host \
       -v /var/run/docker.sock:/var/run/docker.sock \
       -v /tmp/videos:/home/seluser/videos \
       --privileged dosel/zalenium start 
-  ```
+```
 
 With the one line starter:
-  ```sh
+```sh
     curl -sSL https://raw.githubusercontent.com/dosel/t/i/p | bash -s start --docker-opt '--net=host'
-  ```
+```
 
 ### OSX Env
-In OSX environments the `--net=host` flag is not suported yet. For that, we have a workaround, which is to use `mac.host.local` to access
+In OSX environments the `--net=host` flag is not supported yet. For that, we have a workaround, which is to use `mac.host.local` to access
 the host machine. So if the SUT is running on port 8080, you can do `http://mac.host.local:8080` to access it.
 
 
@@ -458,47 +458,46 @@ starting Zalenium, here is an example:
 
 ```
 docker run --rm -ti --name zalenium -p 4444:4444 \
-    -v /var/run/docker.sock:/var/run/docker.sock \
-    -v /tmp/videos:/home/seluser/videos \
-    -e "zalenium_http_proxy=http://myproxy.example.com:8080" \
-    -e "zalenium_https_proxy=https://myproxy.example.com:8080" \
-    -e "zalenium_no_proxy=172.16/12, 10.0.0.0/8, *.local, 169.254/16, 192.168.99.*, localhost, 127.0.0.1" \ 
-    --privileged dosel/zalenium start --chromeContainers 1 --firefoxContainers 1
+        -v /var/run/docker.sock:/var/run/docker.sock \
+        -v /tmp/videos:/home/seluser/videos \
+        -e "zalenium_http_proxy=http://myproxy.example.com:8080" \
+        -e "zalenium_https_proxy=https://myproxy.example.com:8080" \
+        -e "zalenium_no_proxy=172.16/12, 10.0.0.0/8, *.local, 169.254/16, 192.168.99.*, localhost, 127.0.0.1" \ 
+        --privileged dosel/zalenium start 
 ```
 
 ## Enabling basic auth in Zalenium
-Deploying Zalenium to a cloud provider (AWS, GCP, etc...)? You can enable the basich auth feature built in Nginx to protect Zalenium
-when deploying it to the open internet. You can enable it in two different ways; providing a file with user(s) and password(s) or
-using the parameters `--gridUser` and `--gridPassword`. Here are the detailed instructions:
+Deploying Zalenium to a cloud provider (AWS, GCP, etc...)? You can enable the basic auth feature built in Nginx to protect
+Zalenium when deploying it to the open internet. You can enable it in two different ways; providing a file with user(s)
+and password(s) or using the parameters `--gridUser` and `--gridPassword`. Here are the detailed instructions:
 
 ### Providing a file with user(s) and password(s)
 To create a file with that information, please follow the steps for "Creating a Password File"
-[described in the Nginx documentation](https://www.nginx.com/resources/admin-guide/restricting-access-auth-basic/). After that, map the
-created file to the container when you start Zalenium, e.g.:
+[described in the Nginx documentation](https://www.nginx.com/resources/admin-guide/restricting-access-auth-basic/).
+After that, map the created file to the container when you start Zalenium, e.g.:
 
-  ```sh
+```sh
     docker run --rm -ti --name zalenium -p 4444:4444 \
       -v /var/run/docker.sock:/var/run/docker.sock \
       -v /tmp/videos:/home/seluser/videos \
       -v $(pwd)/.htpasswd:/etc/nginx/.htpasswd
       --privileged dosel/zalenium start 
-  ```
+```
 
 ### Using the `--gridUser` and `--gridPassword` parameters
 
-  ```sh
+```sh
     docker run --rm -ti --name zalenium -p 4444:4444 \
       -v /var/run/docker.sock:/var/run/docker.sock \
       -v /tmp/videos:/home/seluser/videos \
       --privileged dosel/zalenium start --gridUser yourUser --gridPassword yourPassword
-  ```
+```
  
 ### Using Zalenium when the basic auth is enabled
 You will need to provide the user and the password stated in the file or in the parameters at the moment of running your tests. Here is
 and example that shows you how to do it (the user will be `yourUser` and the password `yourPassword`).
 
 ```java
-
     @Test
     public void simpleGoogleTest() throws Exception {    
         /*

@@ -20,10 +20,8 @@ spec:
         image: dosel/zalenium
         args:
         - start
-        - '--chromeContainers'
-        - '1'
-        - '--firefoxContainers'
-        - '1'
+        - '--desiredContainers'
+        - '2'
         - '--screenWidth'
         - '1440'
         - '--screenHeight'

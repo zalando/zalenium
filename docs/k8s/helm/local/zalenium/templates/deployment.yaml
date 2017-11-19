@@ -80,10 +80,8 @@ spec:
             {{- end }}
           args:
             - start
-            - '--chromeContainers'
-            - '{{ .Values.hub.chromeContainers }}'
-            - '--firefoxContainers'
-            - '{{ .Values.hub.firefoxContainers }}'
+            - '--desiredContainers'
+            - '{{ .Values.hub.desiredContainers }}'
             - '--maxDockerSeleniumContainers'
             - '{{ .Values.hub.maxDockerSeleniumContainers }}'
             - '--sauceLabsEnabled'
