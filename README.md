@@ -12,10 +12,10 @@
 
 # Zalenium
 This is a Selenium Grid extension to scale your local grid dynamically with docker containers. It uses
-[docker-selenium](https://github.com/elgalu/docker-selenium) to run your tests in Firefox and Chrome locally, and when
-you need a different browser, your tests can get redirected to a cloud testing provider ([Sauce Labs](https://saucelabs.com/), 
-[BrowserStack](https://www.browserstack.com/), [TestingBot](https://testingbot.com/)). Zalenium has also **BETA** support for
-[Kubernetes](./docs/k8s/kubernetes.md).
+[docker-selenium](https://github.com/elgalu/docker-selenium) to run your tests in Firefox and Chrome locally, if you
+need a different browser, your tests can get redirected to a cloud testing provider ([Sauce Labs](https://saucelabs.com/), 
+[BrowserStack](https://www.browserstack.com/), [TestingBot](https://testingbot.com/)). Zalenium has also **BETA** support
+for [Kubernetes](./docs/k8s/kubernetes.md).
 
 Zalenium's maintainers add new features regularly. We invite you to test it, report bugs, suggest any ideas you may
 have, and contribute. See our [contributing guidelines](CONTRIBUTING.md) for more details.
@@ -30,7 +30,7 @@ We know how complicated it is to:
 * Provide capabilities to cover all browsers and platforms
 
 That is why we took this approach where [docker-selenium](https://github.com/elgalu/docker-selenium) nodes are
-created on demand. Your UI tests in Firefox and Chrome will run faster beause they are running on a local grid,
+created on demand. Your UI tests in Firefox and Chrome will run faster because they are running on a local grid,
 on a node created from scratch and disposed after the test completes.
 
 If you need a capability that cannot be fulfilled by [docker-selenium](https://github.com/elgalu/docker-selenium),
@@ -42,11 +42,11 @@ Zalenium's main goal is: to allow anyone to have a disposable and flexible Selen
 Part of the idea comes from this [Sauce Labs post](https://saucelabs.com/blog/introducing-the-sauce-plugin-for-selenium-grid).
 
 ### What does **Zalenium** mean?
-As you can imagine, it is the result of mixing _[Zalando](https://tech.zalando.com)_ and _[Selenium](http://www.seleniumhq.org/)_. As
-mentioned before, this project's aim is to provide a simple way to create a grid and contribute to the Selenium community.
-Nevertheless, this is _**not**_ an official [Selenium](http://www.seleniumhq.org/) project.
-We kindly ask you to post [issues](https://github.com/zalando/zalenium/issues/new) or
-[questions](https://gitter.im/zalando/zalenium) through the channels we created for that.
+As you can imagine, it is the result of mixing _[Zalando](https://tech.zalando.com)_ and _[Selenium](http://www.seleniumhq.org/)_.
+As mentioned before, this project's aim is to provide a simple way to create a grid and contribute to the Selenium community.
+Nevertheless, this is _**not**_ an official [Selenium](http://www.seleniumhq.org/) project. We kindly ask you to post
+[issues](https://github.com/zalando/zalenium/issues/new) or [questions](https://gitter.im/zalando/zalenium) through the
+channels we created for that.
 
 ***
 
@@ -93,9 +93,9 @@ Zalenium uses docker to scale on-demand, therefore we need to give it the `docke
       --privileged dosel/zalenium start
   ```
 
-  * Why `--privileged`? We suggest you run Zalenium as `--privileged` to speed up the node registration process by increasing
-      the entropy level with [Haveged](http://www.issihosts.com/haveged/). Using `--privileged` is optional since it is just meant to
-      improve its performance. For more information, check this
+  * Why `--privileged`? We suggest you run Zalenium as `--privileged` to speed up the node registration process by
+      increasing the entropy level with [Haveged](http://www.issihosts.com/haveged/). Using `--privileged` is optional
+      since it is just meant to improve its performance. For more information, check this
       [tutorial](https://www.digitalocean.com/community/tutorials/how-to-setup-additional-entropy-for-cloud-servers-using-haveged).
 
 * You can also try our one line installer and starter (it will check for the latest images and ask for missing
@@ -148,6 +148,15 @@ docker run --rm -ti --name zalenium -p 4444:4444 \
   -v /var/run/docker.sock:/var/run/docker.sock \
   -v /tmp/videos:/home/seluser/videos \
   --privileged dosel/zalenium start
+```
+
+### Windows 
+
+```sh
+docker run --rm -ti --name zalenium -p 4444:4444 \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  -v /c/Users/your_user_name/temp/videos:/home/seluser/videos \
+  --privileged dosel/zalenium start      
 ```
 
 ## Contributions
@@ -210,9 +219,9 @@ one of the enabled cloud testing platforms.
 * To make life easy for people who want to use Zalenium, we are now using as a version number the Selenium version
 being supported.
 * The major-minor version combined with the patch level will indicate the Selenium version being supported. E.g.
-  * When a release is `3.2.0a`, it supports Selenium 3.2.0
+  * When a release is `3.7.1a`, it supports Selenium 3.7.1
   * The badge above shows the latest image version
-  * Alias for the latest images, `dosel/zalenium:3`
+  * Alias for the latest images, `dosel/zalenium:latest`
 
 ## Zalenium in the Selenium Conf Austin 2017
 Get a better overview of what Zalenium is and how it works by checking the recorded talk [here](https://www.youtube.com/watch?v=W5qMsVrob6I)
