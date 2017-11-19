@@ -50,79 +50,79 @@
 Basic usage, without any of the integrated cloud testing platforms.
 ### Linux 
 
-    ```sh
-        docker run --rm -ti --name zalenium -p 4444:4444 \
-          -v /var/run/docker.sock:/var/run/docker.sock \
-          -v /tmp/videos:/home/seluser/videos \
-          --privileged dosel/zalenium start 
-    ```
+```sh
+    docker run --rm -ti --name zalenium -p 4444:4444 \
+      -v /var/run/docker.sock:/var/run/docker.sock \
+      -v /tmp/videos:/home/seluser/videos \
+      --privileged dosel/zalenium start 
+```
 
 #### OSX
 Zalenium for OSX is currently compatible with Docker `17.03.1-ce`, `17.06.2-ce`, and `17.09.0-ce`. Nevertheless, starting
 with 1.13, newer CLIs can talk to older daemons. If you bump into any API compatibility issues, you can explicitly tell
 Zalenium which version you are using via `-e DOCKER=17.06.2-ce`.
 
-    ```sh
-        docker run --rm -ti --name zalenium -p 4444:4444 \
-          -e DOCKER=17.06.2-ce \
-          -v /var/run/docker.sock:/var/run/docker.sock \
-          -v /tmp/videos:/home/seluser/videos \
-          --privileged dosel/zalenium start
-    ```
+```sh
+    docker run --rm -ti --name zalenium -p 4444:4444 \
+      -e DOCKER=17.06.2-ce \
+      -v /var/run/docker.sock:/var/run/docker.sock \
+      -v /tmp/videos:/home/seluser/videos \
+      --privileged dosel/zalenium start
+```
 
 ### Windows 
 
-    ```sh
-        docker run --rm -ti --name zalenium -p 4444:4444 \
-          -v /var/run/docker.sock:/var/run/docker.sock \
-          -v /c/Users/your_user_name/temp/videos:/home/seluser/videos \
-          --privileged dosel/zalenium start      
-    ```
+```sh
+    docker run --rm -ti --name zalenium -p 4444:4444 \
+      -v /var/run/docker.sock:/var/run/docker.sock \
+      -v /c/Users/your_user_name/temp/videos:/home/seluser/videos \
+      --privileged dosel/zalenium start      
+```
 
 ### with Sauce Labs enabled
 
-    ```sh
-        export SAUCE_USERNAME=<your Sauce Labs username>
-        export SAUCE_ACCESS_KEY=<your Sauce Labs access key>
-        docker run --rm -ti --name zalenium -p 4444:4444 \
-          -e SAUCE_USERNAME -e SAUCE_ACCESS_KEY \
-          -v /tmp/videos:/home/seluser/videos \
-          -v /var/run/docker.sock:/var/run/docker.sock \
-          --privileged dosel/zalenium start --sauceLabsEnabled true
-    ```
+```sh
+    export SAUCE_USERNAME=<your Sauce Labs username>
+    export SAUCE_ACCESS_KEY=<your Sauce Labs access key>
+    docker run --rm -ti --name zalenium -p 4444:4444 \
+      -e SAUCE_USERNAME -e SAUCE_ACCESS_KEY \
+      -v /tmp/videos:/home/seluser/videos \
+      -v /var/run/docker.sock:/var/run/docker.sock \
+      --privileged dosel/zalenium start --sauceLabsEnabled true
+```
 
 ### with BrowserStack enabled
 
-    ```sh
-        export BROWSER_STACK_USER=<your BrowserStack username>
-        export BROWSER_STACK_KEY=<your BrowserStack access key>
-        docker run --rm -ti --name zalenium -p 4444:4444 \
-          -e BROWSER_STACK_USER -e BROWSER_STACK_KEY \
-          -v /tmp/videos:/home/seluser/videos \
-          -v /var/run/docker.sock:/var/run/docker.sock \
-          --privileged dosel/zalenium start --browserStackEnabled true
-    ```
+```sh
+    export BROWSER_STACK_USER=<your BrowserStack username>
+    export BROWSER_STACK_KEY=<your BrowserStack access key>
+    docker run --rm -ti --name zalenium -p 4444:4444 \
+      -e BROWSER_STACK_USER -e BROWSER_STACK_KEY \
+      -v /tmp/videos:/home/seluser/videos \
+      -v /var/run/docker.sock:/var/run/docker.sock \
+      --privileged dosel/zalenium start --browserStackEnabled true
+```
 
 ### with TestingBot enabled
 
-    ```sh
-        export TESTINGBOT_KEY=<your TestingBot access key>
-        export TESTINGBOT_SECRET=<your TestingBot secret>
-        docker run --rm -ti --name zalenium -p 4444:4444 \
-          -e TESTINGBOT_KEY -e TESTINGBOT_SECRET \
-          -v /tmp/videos:/home/seluser/videos \
-          -v /var/run/docker.sock:/var/run/docker.sock \
-          --privileged dosel/zalenium start --testingBotEnabled true
-    ```
+```sh
+    export TESTINGBOT_KEY=<your TestingBot access key>
+    export TESTINGBOT_SECRET=<your TestingBot secret>
+    docker run --rm -ti --name zalenium -p 4444:4444 \
+      -e TESTINGBOT_KEY -e TESTINGBOT_SECRET \
+      -v /tmp/videos:/home/seluser/videos \
+      -v /var/run/docker.sock:/var/run/docker.sock \
+      --privileged dosel/zalenium start --testingBotEnabled true
+```
 
 ### with screen width and height, and time zone
 
-    ```sh
-        docker run --rm -ti --name zalenium -p 4444:4444 \
-          -v /var/run/docker.sock:/var/run/docker.sock \
-          -v /tmp/videos:/home/seluser/videos \
-          --privileged dosel/zalenium start --screenWidth 1440 --screenHeight 810 --timeZone "America/Montreal"
-    ```
+```sh
+    docker run --rm -ti --name zalenium -p 4444:4444 \
+      -v /var/run/docker.sock:/var/run/docker.sock \
+      -v /tmp/videos:/home/seluser/videos \
+      --privileged dosel/zalenium start --screenWidth 1440 --screenHeight 810 --timeZone "America/Montreal"
+```
 
 ### with node folders mounted
 
@@ -137,15 +137,15 @@ For example, mounting:
 It can be used to provide further customization to your nodes, such as adding client certificates for your browser,
 or mimicking prior multi-purpose folder, both shown below.
 
-    ```sh
-        docker run --rm -ti --name zalenium -p 4444:4444 \
-          -v /var/run/docker.sock:/var/run/docker.sock \
-          -v /tmp/videos:/home/seluser/videos \
-          -v /your/local/folder/with/certStore:/tmp/node/home/seluser/.pki/nssdb \      
-          -v /your/local/folderB:/tmp/node/home/seluser/folderB \      
-          -v /tmp/mounted:/tmp/node/tmp/mounted \
-          --privileged dosel/zalenium start 
-    ```
+```sh
+    docker run --rm -ti --name zalenium -p 4444:4444 \
+      -v /var/run/docker.sock:/var/run/docker.sock \
+      -v /tmp/videos:/home/seluser/videos \
+      -v /your/local/folder/with/certStore:/tmp/node/home/seluser/.pki/nssdb \      
+      -v /your/local/folderB:/tmp/node/home/seluser/folderB \      
+      -v /tmp/mounted:/tmp/node/tmp/mounted \
+      --privileged dosel/zalenium start 
+```
 
 Please take caution in mounting system folders such as `/etc`, as this behavior has not been tested with such configuration.
 
@@ -160,12 +160,12 @@ By default, Zalenium will run only one test per node/container. This behaviour c
 per node/container. Tuning this value for your test suites should help to reduce the overall execution time since less
 containers/nodes are started and stopped on demand. Here is an example:
 
-    ```sh
-        docker run --rm -ti --name zalenium -p 4444:4444 \
-          -v /var/run/docker.sock:/var/run/docker.sock \
-          -v /tmp/videos:/home/seluser/videos \
-          --privileged dosel/zalenium start --maxTestSessions 4
-    ```
+```sh
+    docker run --rm -ti --name zalenium -p 4444:4444 \
+      -v /var/run/docker.sock:/var/run/docker.sock \
+      -v /tmp/videos:/home/seluser/videos \
+      --privileged dosel/zalenium start --maxTestSessions 4
+```
 
 This means that up to 4 tests will run in each node/container started by Zalenium. You could combine this parameter
 with `--desiredContainers` to get an optimal setup for your tests. For example, if you have 20 tests that should run
@@ -200,27 +200,27 @@ would be executed in each one of the 5 nodes/containers and the whole test execu
 
 ### Zalenium one-liner installer
 
-    ```sh
-        curl -sSL https://raw.githubusercontent.com/dosel/t/i/p | bash
-    ```
+```sh
+    curl -sSL https://raw.githubusercontent.com/dosel/t/i/p | bash
+```
   
 ### Install and start
 
-    ```sh
-        curl -sSL https://raw.githubusercontent.com/dosel/t/i/p | bash -s start
-    ```
+```sh
+    curl -sSL https://raw.githubusercontent.com/dosel/t/i/p | bash -s start
+```
 
 ### Install and start a specific version
 
-    ```sh
-        curl -sSL https://raw.githubusercontent.com/dosel/t/i/p | bash -s 3.0.1a start
-    ```
+```sh
+    curl -sSL https://raw.githubusercontent.com/dosel/t/i/p | bash -s 3.0.1a start
+```
 
 ### Cleanup
 
-    ```sh
-        curl -sSL https://raw.githubusercontent.com/dosel/t/i/p | bash -s stop
-    ```
+```sh
+    curl -sSL https://raw.githubusercontent.com/dosel/t/i/p | bash -s stop
+```
 
 ## Video feature
 When you start Zalenium, and you map a host folder to `/home/seluser/videos`, it will copy all the generated videos 
@@ -228,12 +228,12 @@ from the executed tests into your host mapped folder.
 
 For example, starting Zalenium like this
 
-    ```sh
-        docker run --rm -ti --name zalenium -p 4444:4444 \
-          -v /var/run/docker.sock:/var/run/docker.sock \
-          -v /tmp/videos:/home/seluser/videos \
-          --privileged dosel/zalenium start 
-    ```
+```sh
+    docker run --rm -ti --name zalenium -p 4444:4444 \
+      -v /var/run/docker.sock:/var/run/docker.sock \
+      -v /tmp/videos:/home/seluser/videos \
+      --privileged dosel/zalenium start 
+```
   
 will copy the generated videos to your local `/tmp/videos` folder. This means all videos generated from tests executed 
 in docker-selenium containers and also from the ones executed in an integrated cloud testing platform (Sauce Labs, 
@@ -298,23 +298,23 @@ Adding a `name` capability with the test name will do two things; it will be dis
 identify where your test is running, and the video file will also use it in the file name. 
 Example code in Java for the capability:
 
-    ```java
-        DesiredCapabilities desiredCapabilities = new DesiredCapabilities();
-        desiredCapabilities.setCapability(CapabilityType.BROWSER_NAME, BrowserType.FIREFOX);
-        desiredCapabilities.setCapability(CapabilityType.PLATFORM, Platform.LINUX);
-        desiredCapabilities.setCapability("name", "myTestName");
-    ```
+```java
+    DesiredCapabilities desiredCapabilities = new DesiredCapabilities();
+    desiredCapabilities.setCapability(CapabilityType.BROWSER_NAME, BrowserType.FIREFOX);
+    desiredCapabilities.setCapability(CapabilityType.PLATFORM, Platform.LINUX);
+    desiredCapabilities.setCapability("name", "myTestName");
+```
 
 ### Build name
 Useful to filter the live preview and only display a group of tests belonging to the same build. Example code in Java
 for the capability:
 
-    ```java
-        DesiredCapabilities desiredCapabilities = new DesiredCapabilities();
-        desiredCapabilities.setCapability(CapabilityType.BROWSER_NAME, BrowserType.CHROME);
-        desiredCapabilities.setCapability(CapabilityType.PLATFORM, Platform.LINUX);
-        desiredCapabilities.setCapability("build", "myTestBuild");
-    ```
+```java
+    DesiredCapabilities desiredCapabilities = new DesiredCapabilities();
+    desiredCapabilities.setCapability(CapabilityType.BROWSER_NAME, BrowserType.CHROME);
+    desiredCapabilities.setCapability(CapabilityType.PLATFORM, Platform.LINUX);
+    desiredCapabilities.setCapability("build", "myTestBuild");
+```
 
 ### Idle timeout
 By default, Zalenium allows a test to be idle up to 90 seconds. After that elapsed time, the session will be terminated, 
@@ -322,12 +322,12 @@ the node will be shutdown and the recorded video will be saved (if video recordi
 run indefinitely after something went wrong. If you need to have a longer idle timeout, just set an `idleTimeout` 
 capability in your test. Example code in Java for the capability (it sets the `idleTimeout` to 150 seconds):
 
-    ```java
-        DesiredCapabilities desiredCapabilities = new DesiredCapabilities();
-        desiredCapabilities.setCapability(CapabilityType.BROWSER_NAME, BrowserType.FIREFOX);
-        desiredCapabilities.setCapability(CapabilityType.PLATFORM, Platform.LINUX);
-        desiredCapabilities.setCapability("idleTimeout", 150);
-    ```
+```java
+    DesiredCapabilities desiredCapabilities = new DesiredCapabilities();
+    desiredCapabilities.setCapability(CapabilityType.BROWSER_NAME, BrowserType.FIREFOX);
+    desiredCapabilities.setCapability(CapabilityType.PLATFORM, Platform.LINUX);
+    desiredCapabilities.setCapability("idleTimeout", 150);
+```
 
 ### Screen resolution
 You can pass a custom screen resolution for your test, just include a `screenResolution` with the desired value. E.g. 
@@ -496,31 +496,32 @@ After that, map the created file to the container when you start Zalenium, e.g.:
 ### Using Zalenium when the basic auth is enabled
 You will need to provide the user and the password stated in the file or in the parameters at the moment of running your tests. Here is
 and example that shows you how to do it (the user will be `yourUser` and the password `yourPassword`).
-    ```java
-        @Test
-        public void simpleGoogleTest() throws Exception {    
-            /*
-               NOTE THE USE OF "yourUser" and "yourPassword" in the RemoteWebDriver url.
-            */
-            String URL = "http://yourUser:yourPassword@localhost:4444/wd/hub";
-            DesiredCapabilities desiredCapabilities = DesiredCapabilities.chrome();
-            desiredCapabilities.setCapability(CapabilityType.PLATFORM, Platform.LINUX);
-    
-            // Create a new instance of the remote web driver
-            WebDriver driver = new RemoteWebDriver(new URL(URL), desiredCapabilities);
-    
-            // Maximize the window
-            driver.manage().window().maximize();
-    
-            // Go to Google
-            driver.get("https://www.google.com");
-    
-            // Assert that the title is the expected one
-            Assert.assertEquals(driver.getTitle(), "Google", "Page title is not the expected one");
-    
-            // Close the browser
-            driver.quit();
-        }
-    ```
+
+```java
+    @Test
+    public void simpleGoogleTest() throws Exception {    
+        /*
+           NOTE THE USE OF "yourUser" and "yourPassword" in the RemoteWebDriver url.
+        */
+        String URL = "http://yourUser:yourPassword@localhost:4444/wd/hub";
+        DesiredCapabilities desiredCapabilities = DesiredCapabilities.chrome();
+        desiredCapabilities.setCapability(CapabilityType.PLATFORM, Platform.LINUX);
+
+        // Create a new instance of the remote web driver
+        WebDriver driver = new RemoteWebDriver(new URL(URL), desiredCapabilities);
+
+        // Maximize the window
+        driver.manage().window().maximize();
+
+        // Go to Google
+        driver.get("https://www.google.com");
+
+        // Assert that the title is the expected one
+        Assert.assertEquals(driver.getTitle(), "Google", "Page title is not the expected one");
+
+        // Close the browser
+        driver.quit();
+    }
+```
 
 
