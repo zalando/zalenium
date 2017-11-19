@@ -334,34 +334,34 @@ You can pass a custom screen resolution for your test, just include a `screenRes
 `screenResolution=1280x1024`. Also supported for the same purpose `resolution` and `screen-resolution`. Example code 
 in Java for the capability `screenResolution`
 
-    ```java
-        DesiredCapabilities desiredCapabilities = new DesiredCapabilities();
-        desiredCapabilities.setCapability(CapabilityType.BROWSER_NAME, BrowserType.FIREFOX);
-        desiredCapabilities.setCapability(CapabilityType.PLATFORM, Platform.LINUX);
-        desiredCapabilities.setCapability("screenResolution", "1280x720");
-    ```
+```java
+    DesiredCapabilities desiredCapabilities = new DesiredCapabilities();
+    desiredCapabilities.setCapability(CapabilityType.BROWSER_NAME, BrowserType.FIREFOX);
+    desiredCapabilities.setCapability(CapabilityType.PLATFORM, Platform.LINUX);
+    desiredCapabilities.setCapability("screenResolution", "1280x720");
+```
 
 ### Disable video recording
 It is possible to disable video recording (enabled by default) via test capabilities. Add a `recordVideo=false` 
 capability and no video will be recorded. Example code in Java for the capability `recordVideo`
 
-    ```java
-        DesiredCapabilities desiredCapabilities = new DesiredCapabilities();
-        desiredCapabilities.setCapability(CapabilityType.BROWSER_NAME, BrowserType.FIREFOX);
-        desiredCapabilities.setCapability(CapabilityType.PLATFORM, Platform.LINUX);
-        desiredCapabilities.setCapability("recordVideo", false);
-    ```
+```java
+    DesiredCapabilities desiredCapabilities = new DesiredCapabilities();
+    desiredCapabilities.setCapability(CapabilityType.BROWSER_NAME, BrowserType.FIREFOX);
+    desiredCapabilities.setCapability(CapabilityType.PLATFORM, Platform.LINUX);
+    desiredCapabilities.setCapability("recordVideo", false);
+```
 
 ### Time zone
 Run your test in a different time zone from the default one `Europe/Berlin`, just pass a capability `tz` with the 
 desired value. E.g. `tz=America/Montreal`. Example code in Java for the capability `tz`
 
-    ```java
-        DesiredCapabilities desiredCapabilities = new DesiredCapabilities();
-        desiredCapabilities.setCapability(CapabilityType.BROWSER_NAME, BrowserType.FIREFOX);
-        desiredCapabilities.setCapability(CapabilityType.PLATFORM, Platform.LINUX);
-        desiredCapabilities.setCapability("tz", "America/Montreal");
-    ```
+```java
+    DesiredCapabilities desiredCapabilities = new DesiredCapabilities();
+    desiredCapabilities.setCapability(CapabilityType.BROWSER_NAME, BrowserType.FIREFOX);
+    desiredCapabilities.setCapability(CapabilityType.PLATFORM, Platform.LINUX);
+    desiredCapabilities.setCapability("tz", "America/Montreal");
+```
 
 ### Marking the test as passed or failed
 By default, tests in Zalenium are marked in the dashboard either as COMPLETED (session finishes normally) or TIMEOUT
@@ -370,10 +370,10 @@ your side with your test framework, add a cookie from with the name `zaleniumTes
 test passes) or false (if the test fails). This could be done in the after method where you already know if the test
 passed or failed. Here is an example in Java: 
 
-    ```java
-        Cookie cookie = new Cookie("zaleniumTestPassed", "true");
-        webDriver.manage().addCookie(cookie);
-    ```
+```java
+    Cookie cookie = new Cookie("zaleniumTestPassed", "true");
+    webDriver.manage().addCookie(cookie);
+```
 
 ### Referencing test steps in the recorded video
 It is possible to reference your tests steps in the recorded video by passing their description to Zalenium via a
@@ -381,41 +381,41 @@ cookie. For example, your test could go to the home page, search and add an arti
 and pay. All this steps can be referenced in the video for a more simple debugging. You can pass the steps via messages
 with a cookie named `zaleniumMessage`. Here is an example in Java:
 
-    ```java
-        Cookie cookie = new Cookie("zaleniumMessage", "Go to home page");
-        webDriver.manage().addCookie(cookie);
-        webDriver.get("http://www.homepage.com");
-        
-        cookie = new Cookie("zaleniumMessage", "Search and add article to the basket");
-        webDriver.manage().addCookie(cookie);
-        /*
-            Code performing WebDriver actions to search and add article to the basket.
-         */
-        
-        cookie = new Cookie("zaleniumMessage", "Go to the checkout");
-        webDriver.manage().addCookie(cookie);
-        /*
-            Code performing WebDriver actions to go to the checkout.
-         */
-        
-        cookie = new Cookie("zaleniumMessage", "Pay");
-        webDriver.manage().addCookie(cookie);
-        /*
-            Code performing WebDriver actions to pay.
-         */
-        
-    ```
+```java
+    Cookie cookie = new Cookie("zaleniumMessage", "Go to home page");
+    webDriver.manage().addCookie(cookie);
+    webDriver.get("http://www.homepage.com");
+    
+    cookie = new Cookie("zaleniumMessage", "Search and add article to the basket");
+    webDriver.manage().addCookie(cookie);
+    /*
+        Code performing WebDriver actions to search and add article to the basket.
+     */
+    
+    cookie = new Cookie("zaleniumMessage", "Go to the checkout");
+    webDriver.manage().addCookie(cookie);
+    /*
+        Code performing WebDriver actions to go to the checkout.
+     */
+    
+    cookie = new Cookie("zaleniumMessage", "Pay");
+    webDriver.manage().addCookie(cookie);
+    /*
+        Code performing WebDriver actions to pay.
+     */
+    
+```
 
 ### Set browser language (works only with Chrome)
 You can set the browser language when using Google Chrome, just pass the `ChromeOptions` variable with the language
 argument. Example code in Java :
 
-    ```java
-        DesiredCapabilities desiredCapabilities = DesiredCapabilities.chrome();
-        ChromeOptions options = new ChromeOptions();
-        options.addArguments("lang=en_GB");
-        desiredCapabilities.setCapability(ChromeOptions.CAPABILITY, options);
-    ```
+```java
+    DesiredCapabilities desiredCapabilities = DesiredCapabilities.chrome();
+    ChromeOptions options = new ChromeOptions();
+    options.addArguments("lang=en_GB");
+    desiredCapabilities.setCapability(ChromeOptions.CAPABILITY, options);
+```
 
 ## Accessing the host
 This is the scenario where you are running some tests with Zalenium, and the SUT (system under test) is running on your host machine.
@@ -496,32 +496,31 @@ After that, map the created file to the container when you start Zalenium, e.g.:
 ### Using Zalenium when the basic auth is enabled
 You will need to provide the user and the password stated in the file or in the parameters at the moment of running your tests. Here is
 and example that shows you how to do it (the user will be `yourUser` and the password `yourPassword`).
-
-```java
-    @Test
-    public void simpleGoogleTest() throws Exception {    
-        /*
-           NOTE THE USE OF "yourUser" and "yourPassword" in the RemoteWebDriver url.
-        */
-        String URL = "http://yourUser:yourPassword@localhost:4444/wd/hub";
-        DesiredCapabilities desiredCapabilities = DesiredCapabilities.chrome();
-        desiredCapabilities.setCapability(CapabilityType.PLATFORM, Platform.LINUX);
-
-        // Create a new instance of the remote web driver
-        WebDriver driver = new RemoteWebDriver(new URL(URL), desiredCapabilities);
-
-        // Maximize the window
-        driver.manage().window().maximize();
-
-        // Go to Google
-        driver.get("https://www.google.com");
-
-        // Assert that the title is the expected one
-        Assert.assertEquals(driver.getTitle(), "Google", "Page title is not the expected one");
-
-        // Close the browser
-        driver.quit();
-    }
-```
+    ```java
+        @Test
+        public void simpleGoogleTest() throws Exception {    
+            /*
+               NOTE THE USE OF "yourUser" and "yourPassword" in the RemoteWebDriver url.
+            */
+            String URL = "http://yourUser:yourPassword@localhost:4444/wd/hub";
+            DesiredCapabilities desiredCapabilities = DesiredCapabilities.chrome();
+            desiredCapabilities.setCapability(CapabilityType.PLATFORM, Platform.LINUX);
+    
+            // Create a new instance of the remote web driver
+            WebDriver driver = new RemoteWebDriver(new URL(URL), desiredCapabilities);
+    
+            // Maximize the window
+            driver.manage().window().maximize();
+    
+            // Go to Google
+            driver.get("https://www.google.com");
+    
+            // Assert that the title is the expected one
+            Assert.assertEquals(driver.getTitle(), "Google", "Page title is not the expected one");
+    
+            // Close the browser
+            driver.quit();
+        }
+    ```
 
 
