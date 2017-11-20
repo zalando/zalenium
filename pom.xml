@@ -6,7 +6,7 @@
 
     <groupId>de.zalando.ep</groupId>
     <artifactId>zalenium</artifactId>
-    <version>3.7.1e-SNAPSHOT</version>
+    <version>3.7.1d</version>
     <name>Zalenium</name>
     <description>An on-demand, dynamic local Selenium Grid with an extension to a cloud testing platform.</description>
 
