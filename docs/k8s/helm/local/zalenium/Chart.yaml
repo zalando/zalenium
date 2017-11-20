@@ -8,6 +8,6 @@ home: https://github.com/zalando/zalenium
 sources:
   - https://github.com/zalando/zalenium
 maintainers:
-  - name: gswallow
-    email: gswallow@indigobio.com
+  - name: diemol
+    email: diemol@gmail.com
 engine: gotpl

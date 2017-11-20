@@ -5,7 +5,7 @@ hub:
 
   ## The tag for the image
   ## ref: https://hub.docker.com/r/selenium/hub/tags/
-  tag: "3.7.1c"
+  tag: "3.7.1d"
 
   ## Specify a imagePullPolicy
   ## ref: http://kubernetes.io/docs/user-guide/images/#pre-pulling-images
