@@ -13,7 +13,6 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.RandomUtils;
 import org.openqa.grid.common.RegistrationRequest;
 import org.openqa.grid.internal.GridRegistry;
-import org.openqa.grid.internal.RemoteProxy;
 import org.openqa.grid.internal.TestSession;
 import org.openqa.grid.internal.listeners.RegistrationListener;
 import org.openqa.grid.internal.utils.CapabilityMatcher;
@@ -309,15 +308,6 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
         // Check and configure time zone capabilities when they have been passed in the test config.
         TimeZone timeZone = getConfiguredTimeZoneFromCapabilities(requestedCapability);
 
-        /*
-            Reusing nodes, rejecting requests when test sessions are still available in the existing nodes.
-         */
-        if (testSessionsAvailable(requestedCapability)) {
-            LOGGER.log(Level.FINE, LOGGING_PREFIX + "There are sessions available for {0}, won't start a new node yet.",
-                    requestedCapability);
-            return null;
-        }
-
         // Checking if this request has been processed based on its id, contents, and attempts
         if (hasRequestBeenProcessed(requestedCapability)) {
             LOGGER.log(Level.FINE, LOGGING_PREFIX + "Request {0}, has been processed and it is waiting for a node.",
@@ -570,21 +560,6 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
             }
         }
         return timeZone;
-    }
-
-    private boolean testSessionsAvailable(Map<String, Object> requestedCapability) {
-        for (RemoteProxy remoteProxy : this.getRegistry().getAllProxies()) {
-            if (remoteProxy instanceof DockerSeleniumRemoteProxy) {
-                DockerSeleniumRemoteProxy proxy = (DockerSeleniumRemoteProxy) remoteProxy;
-                // If there are still available sessions to be used
-                if (!proxy.isTestSessionLimitReached() && proxy.hasCapability(requestedCapability)) {
-                    LOGGER.log(Level.FINE, LOGGING_PREFIX + "Sessions still available.");
-                    return true;
-                }
-            }
-        }
-        LOGGER.log(Level.FINE, LOGGING_PREFIX + "No sessions available, a new node should be created.");
-        return false;
     }
 
     private boolean validateAmountOfDockerSeleniumContainers() {
