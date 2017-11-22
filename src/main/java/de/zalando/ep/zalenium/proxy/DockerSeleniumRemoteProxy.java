@@ -68,6 +68,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     private final ContainerClientRegistration registration;
     private boolean videoRecordingEnabledSession;
     private boolean videoRecordingEnabledConfigured = false;
+    private boolean cleaningUpBeforeNextSession;
     private ContainerClient containerClient = ContainerFactory.getContainerClient();
     private int amountOfExecutedTests;
     private long maxTestIdleTimeSecs;
@@ -149,6 +150,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         if (!hasCapability(requestedCapability)) {
             return null;
         }
+
         if (!this.isBusy() && increaseCounter()) {
             TestSession newSession = super.getNewSession(requestedCapability);
             LOGGER.log(Level.FINE, getId() + " Creating session for: " + requestedCapability.toString());
@@ -267,7 +269,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                         "%s AFTER_SESSION command received. Cleaning up node for reuse, used %s of max %s", getId(),
                         getAmountOfExecutedTests(), maxTestSessions);
                 LOGGER.log(Level.INFO, message);
-                cleanupNode();
+                cleanupNode(false);
             }
             long executionTime = (System.currentTimeMillis() - session.getSlot().getLastSessionStart()) / 1000;
             ga.testEvent(DockerSeleniumRemoteProxy.class.getName(), session.getRequestedCapabilities().toString(),
@@ -482,14 +484,29 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         }
     }
 
-    private void cleanupNode() {
-        processContainerAction(DockerSeleniumContainerAction.SEND_NOTIFICATION,
-                testInformation.getTestStatus().getTestNotificationMessage(), getContainerId());
-        videoRecording(DockerSeleniumContainerAction.STOP_RECORDING);
-        processContainerAction(DockerSeleniumContainerAction.TRANSFER_LOGS, getContainerId());
-        processContainerAction(DockerSeleniumContainerAction.CLEANUP_CONTAINER, getContainerId());
-        if (keepVideoAndLogs()) {
-            Dashboard.updateDashboard(testInformation);
+    public boolean isCleaningUpBeforeNextSession() {
+        return cleaningUpBeforeNextSession;
+    }
+
+    private void setCleaningUpBeforeNextSession(boolean cleaningUpBeforeNextSession) {
+        this.cleaningUpBeforeNextSession = cleaningUpBeforeNextSession;
+    }
+
+    private void cleanupNode(boolean willShutdown) {
+        // This basically means that the node is cleaning up and will receive a new request soon
+        // willShutdown == true => there won't be a next session
+        this.setCleaningUpBeforeNextSession(!willShutdown);
+        try {
+            processContainerAction(DockerSeleniumContainerAction.SEND_NOTIFICATION,
+                    testInformation.getTestStatus().getTestNotificationMessage(), getContainerId());
+            videoRecording(DockerSeleniumContainerAction.STOP_RECORDING);
+            processContainerAction(DockerSeleniumContainerAction.TRANSFER_LOGS, getContainerId());
+            processContainerAction(DockerSeleniumContainerAction.CLEANUP_CONTAINER, getContainerId());
+            if (keepVideoAndLogs()) {
+                Dashboard.updateDashboard(testInformation);
+            }
+        } finally {
+            this.setCleaningUpBeforeNextSession(false);
         }
     }
 
@@ -499,7 +516,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     }
     
     private void shutdownNode(boolean isTestIdle) {
-        cleanupNode();
+        cleanupNode(true);
 
         String shutdownReason = String.format("%s Marking the node as down because it was stopped after %s tests.",
                 getId(), maxTestSessions);

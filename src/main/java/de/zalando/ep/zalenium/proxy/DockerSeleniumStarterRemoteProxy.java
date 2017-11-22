@@ -13,6 +13,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.RandomUtils;
 import org.openqa.grid.common.RegistrationRequest;
 import org.openqa.grid.internal.GridRegistry;
+import org.openqa.grid.internal.RemoteProxy;
 import org.openqa.grid.internal.TestSession;
 import org.openqa.grid.internal.listeners.RegistrationListener;
 import org.openqa.grid.internal.utils.CapabilityMatcher;
@@ -308,6 +309,15 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
         // Check and configure time zone capabilities when they have been passed in the test config.
         TimeZone timeZone = getConfiguredTimeZoneFromCapabilities(requestedCapability);
 
+        /*
+            Reusing nodes, rejecting requests when a node is cleaning up and will be ready again soon.
+         */
+        if (nodesAvailable(requestedCapability)) {
+            LOGGER.log(Level.FINE, LOGGING_PREFIX + "A node is coming up soon for {0}, won't start a new node yet.",
+                    requestedCapability);
+            return null;
+        }
+
         // Checking if this request has been processed based on its id, contents, and attempts
         if (hasRequestBeenProcessed(requestedCapability)) {
             LOGGER.log(Level.FINE, LOGGING_PREFIX + "Request {0}, has been processed and it is waiting for a node.",
@@ -560,6 +570,22 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
             }
         }
         return timeZone;
+    }
+
+    private boolean nodesAvailable(Map<String, Object> requestedCapability) {
+        for (RemoteProxy remoteProxy : this.getRegistry().getAllProxies()) {
+            if (remoteProxy instanceof DockerSeleniumRemoteProxy) {
+                DockerSeleniumRemoteProxy proxy = (DockerSeleniumRemoteProxy) remoteProxy;
+                // If a node is cleaning up it will be available soon
+                // It is faster and more resource wise to wait for the node to be ready
+                if (proxy.isCleaningUpBeforeNextSession() && proxy.hasCapability(requestedCapability)) {
+                    LOGGER.log(Level.FINE, LOGGING_PREFIX + "A node is coming up to handle this request.");
+                    return true;
+                }
+            }
+        }
+        LOGGER.log(Level.FINE, LOGGING_PREFIX + "No sessions available, a new node will be created.");
+        return false;
     }
 
     private boolean validateAmountOfDockerSeleniumContainers() {
