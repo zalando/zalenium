@@ -257,25 +257,30 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
 
     @Override
     public void afterSession(TestSession session) {
-        // This means that the shutdown command was triggered before receiving this afterSession command
-        if (!TestInformation.TestStatus.TIMEOUT.equals(testInformation.getTestStatus())) {
-            if (isTestSessionLimitReached()) {
-                String message = String.format("%s AFTER_SESSION command received. Node should shutdown soon...", getId());
-                LOGGER.log(Level.INFO, message);
-                shutdownNode(false);
+        try {
+            // This means that the shutdown command was triggered before receiving this afterSession command
+            if (!TestInformation.TestStatus.TIMEOUT.equals(testInformation.getTestStatus())) {
+                if (isTestSessionLimitReached()) {
+                    String message = String.format("%s AFTER_SESSION command received. Node should shutdown soon...", getId());
+                    LOGGER.log(Level.INFO, message);
+                    shutdownNode(false);
+                }
+                else {
+                    String message = String.format(
+                            "%s AFTER_SESSION command received. Cleaning up node for reuse, used %s of max %s", getId(),
+                            getAmountOfExecutedTests(), maxTestSessions);
+                    LOGGER.log(Level.INFO, message);
+                    cleanupNode(false);
+                }
+                long executionTime = (System.currentTimeMillis() - session.getSlot().getLastSessionStart()) / 1000;
+                ga.testEvent(DockerSeleniumRemoteProxy.class.getName(), session.getRequestedCapabilities().toString(),
+                        executionTime);
             }
-            else {
-                String message = String.format(
-                        "%s AFTER_SESSION command received. Cleaning up node for reuse, used %s of max %s", getId(),
-                        getAmountOfExecutedTests(), maxTestSessions);
-                LOGGER.log(Level.INFO, message);
-                cleanupNode(false);
-            }
-            long executionTime = (System.currentTimeMillis() - session.getSlot().getLastSessionStart()) / 1000;
-            ga.testEvent(DockerSeleniumRemoteProxy.class.getName(), session.getRequestedCapabilities().toString(),
-                    executionTime);
+        } catch (Exception e) {
+            LOGGER.log(Level.WARNING, getId() + " " + e.toString(), e);
+        } finally {
+            super.afterSession(session);
         }
-        super.afterSession(session);
     }
 
     @Override
