@@ -1,5 +1,6 @@
 **Please make sure that you provide enough information for us to help you with this issue. Thank you!**
 
+<!-- If you are using Zalenium and you want to support us, do so by starring the project! -->
 
 Zalenium Image Version(s):  
 <!-- 3.5.3b, 3.6.0a. 3.7.0a etc -->

@@ -310,10 +310,10 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
         TimeZone timeZone = getConfiguredTimeZoneFromCapabilities(requestedCapability);
 
         /*
-            Reusing nodes, rejecting requests when test sessions are still available in the existing nodes.
+            Reusing nodes, rejecting requests when a node is cleaning up and will be ready again soon.
          */
-        if (testSessionsAvailable(requestedCapability)) {
-            LOGGER.log(Level.FINE, LOGGING_PREFIX + "There are sessions available for {0}, won't start a new node yet.",
+        if (nodesAvailable(requestedCapability)) {
+            LOGGER.log(Level.FINE, LOGGING_PREFIX + "A node is coming up soon for {0}, won't start a new node yet.",
                     requestedCapability);
             return null;
         }
@@ -572,18 +572,19 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
         return timeZone;
     }
 
-    private boolean testSessionsAvailable(Map<String, Object> requestedCapability) {
+    private boolean nodesAvailable(Map<String, Object> requestedCapability) {
         for (RemoteProxy remoteProxy : this.getRegistry().getAllProxies()) {
             if (remoteProxy instanceof DockerSeleniumRemoteProxy) {
                 DockerSeleniumRemoteProxy proxy = (DockerSeleniumRemoteProxy) remoteProxy;
-                // If there are still available sessions to be used
-                if (!proxy.isTestSessionLimitReached() && proxy.hasCapability(requestedCapability)) {
-                    LOGGER.log(Level.FINE, LOGGING_PREFIX + "Sessions still available.");
+                // If a node is cleaning up it will be available soon
+                // It is faster and more resource wise to wait for the node to be ready
+                if (proxy.isCleaningUpBeforeNextSession() && proxy.hasCapability(requestedCapability)) {
+                    LOGGER.log(Level.FINE, LOGGING_PREFIX + "A node is coming up to handle this request.");
                     return true;
                 }
             }
         }
-        LOGGER.log(Level.FINE, LOGGING_PREFIX + "No sessions available, a new node should be created.");
+        LOGGER.log(Level.FINE, LOGGING_PREFIX + "No sessions available, a new node will be created.");
         return false;
     }
 
