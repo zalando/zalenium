@@ -45,7 +45,7 @@ See Zalenium's [usage examples](https://github.com/zalando/zalenium/blob/master/
 | Parameter | Description | Default |
 | --------- | ----------- | ------- |
 | `hub.image` | The zalenium hub image | `dosel/zalenium` |
-| `hub.tag` | The zalenium hub image tag | `3.7.1c` |
+| `hub.tag` | The zalenium hub image tag | `3.7.1e` |
 | `hub.pullPolicy` | The pull policy for the hub image | `IfNotPresent` |
 | `hub.port` | The port the hub listens on | `4444` |
 | `hub.javaOpts` | The java options for the selenium hub JVM, default sets the maximum heap size to 400 mb | `-Xmx400m -XX:+UseSerialGC` |
