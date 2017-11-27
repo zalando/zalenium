@@ -71,6 +71,7 @@ public class TestUtils {
         MutableCapabilities firefoxCapabilities = new MutableCapabilities();
         firefoxCapabilities.setCapability(CapabilityType.BROWSER_NAME, BrowserType.FIREFOX);
         firefoxCapabilities.setCapability(CapabilityType.PLATFORM, Platform.LINUX);
+        firefoxCapabilities.setCapability(CapabilityType.VERSION, "57.0");
         firefoxCapabilities.setCapability(RegistrationRequest.MAX_INSTANCES, 1);
         firefoxCapabilities.setCapability("screenResolution", screenResolution);
         firefoxCapabilities.setCapability("tz", DockerSeleniumStarterRemoteProxy.getConfiguredTimeZone().getID());
@@ -78,6 +79,7 @@ public class TestUtils {
         MutableCapabilities chromeCapabilities = new MutableCapabilities();
         chromeCapabilities.setCapability(CapabilityType.BROWSER_NAME, BrowserType.CHROME);
         chromeCapabilities.setCapability(CapabilityType.PLATFORM, Platform.LINUX);
+        chromeCapabilities.setCapability(CapabilityType.VERSION, "62.0.3202.94");
         chromeCapabilities.setCapability(RegistrationRequest.MAX_INSTANCES, 1);
         chromeCapabilities.setCapability("screenResolution", screenResolution);
         chromeCapabilities.setCapability("tz", DockerSeleniumStarterRemoteProxy.getConfiguredTimeZone().getID());
