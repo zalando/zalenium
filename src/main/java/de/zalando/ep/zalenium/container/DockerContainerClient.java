@@ -344,6 +344,7 @@ public class DockerContainerClient implements ContainerClient {
         String containerId = this.getContainerId(containerName);
         registration.setNoVncPort(noVncPort);
         registration.setContainerId(containerId);
+        registration.setIpAddress(remoteHost.getHost());
         return registration;
     }
 

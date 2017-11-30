@@ -427,6 +427,7 @@ StartUp()
     -servlet de.zalando.ep.zalenium.servlet.ZaleniumConsoleServlet \
     -servlet de.zalando.ep.zalenium.servlet.ZaleniumResourceServlet \
     -servlet de.zalando.ep.zalenium.dashboard.DashboardCleanupServlet \
+    -servlet de.zalando.ep.zalenium.servlet.VncAuthenticationServlet \
     ${DEBUG_FLAG} &
 
     echo $! > ${PID_PATH_SELENIUM}

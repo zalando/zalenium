@@ -20,13 +20,11 @@ public class LiveNodeHtmlRenderer implements HtmlRenderer {
     private static final Logger LOGGER = Logger.getLogger(LiveNodeHtmlRenderer.class.getName());
 
     private DockerSeleniumRemoteProxy proxy;
-    private String serverName;
     private TemplateRenderer templateRenderer;
 
     @SuppressWarnings("WeakerAccess")
-    public LiveNodeHtmlRenderer(DockerSeleniumRemoteProxy proxy, String serverName) {
+    public LiveNodeHtmlRenderer(DockerSeleniumRemoteProxy proxy) {
         this.proxy = proxy;
-        this.serverName = serverName;
         this.templateRenderer = new TemplateRenderer(getTemplateName());
     }
 
@@ -62,9 +60,10 @@ public class LiveNodeHtmlRenderer implements HtmlRenderer {
 
         // Adding live preview
         int noVncPort = proxy.getRegistration().getNoVncPort();
-        String noVncViewBaseUrl = "http://%s:%s/?view_only=%s";
-        String noVncReadOnlyUrl = String.format(noVncViewBaseUrl, serverName, noVncPort, "true");
-        String noVncInteractUrl = String.format(noVncViewBaseUrl, serverName, noVncPort, "false");
+        String noVncIpAddress = proxy.getRegistration().getIpAddress();
+        String noVncViewBaseUrl = "/vnc/host/%s/port/%s/?nginx=%s:%s&view_only=%s";
+        String noVncReadOnlyUrl = String.format(noVncViewBaseUrl, noVncIpAddress, noVncPort, noVncIpAddress, noVncPort, "true");
+        String noVncInteractUrl = String.format(noVncViewBaseUrl, noVncIpAddress, noVncPort, noVncIpAddress, noVncPort, "false");
 
         Map<String, String> renderSummaryValues = new HashMap<>();
         renderSummaryValues.put("{{proxyName}}", proxy.getClass().getSimpleName());
