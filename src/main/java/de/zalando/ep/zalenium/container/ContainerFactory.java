@@ -34,7 +34,7 @@ public class ContainerFactory {
                 if (kubernetesContainerClient == null) {
                     kubernetesContainerClient = new KubernetesContainerClient(new Environment(),
                             KubernetesContainerClient::createDoneablePodDefaultImpl,
-                            KubernetesContainerClient::createDoneableServiceDefaultImpl, new DefaultKubernetesClient());
+                            new DefaultKubernetesClient());
                 }
             }
         }

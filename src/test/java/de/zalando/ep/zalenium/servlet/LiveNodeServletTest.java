@@ -76,10 +76,10 @@ public class LiveNodeServletTest {
         assertThat(responseContent, containsString("Zalenium Live Preview"));
         assertThat(responseContent, containsString("http://localhost:40000"));
         assertThat(responseContent, containsString("http://localhost:40001"));
-        assertThat(responseContent, containsString("http://localhost:50000/?view_only=true'"));
-        assertThat(responseContent, containsString("http://localhost:50000/?view_only=false'"));
-        assertThat(responseContent, containsString("http://localhost:50001/?view_only=true'"));
-        assertThat(responseContent, containsString("http://localhost:50001/?view_only=false'"));
+        assertThat(responseContent, containsString("/vnc/host/localhost/port/50000/?nginx=localhost:50000&view_only=true'"));
+        assertThat(responseContent, containsString("/vnc/host/localhost/port/50000/?nginx=localhost:50000&view_only=false'"));
+        assertThat(responseContent, containsString("/vnc/host/localhost/port/50001/?nginx=localhost:50001&view_only=true'"));
+        assertThat(responseContent, containsString("/vnc/host/localhost/port/50001/?nginx=localhost:50001&view_only=false'"));
     }
 
     @Test

@@ -5,6 +5,8 @@ public class ContainerClientRegistration {
     private String containerId;
     
     private Integer noVncUrlPort;
+    
+    private String ipAddress;
 
     public String getContainerId() {
         return containerId;
@@ -22,4 +24,11 @@ public class ContainerClientRegistration {
         this.noVncUrlPort = noVncUrlPort;
     }
     
+    public void setIpAddress(String ipAddress) {
+        this.ipAddress = ipAddress;
+    }
+    
+    public String getIpAddress() {
+        return this.ipAddress;
+    }
 }
