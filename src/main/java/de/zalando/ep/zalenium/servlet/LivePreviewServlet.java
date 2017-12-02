@@ -79,7 +79,7 @@ public class LivePreviewServlet extends RegistryBasedServlet {
         for (RemoteProxy proxy : getRegistry().getAllProxies()) {
             if (proxy instanceof DockerSeleniumRemoteProxy) {
                 DockerSeleniumRemoteProxy dockerSeleniumRemoteProxy = (DockerSeleniumRemoteProxy) proxy;
-                HtmlRenderer renderer = new LiveNodeHtmlRenderer(dockerSeleniumRemoteProxy, request.getServerName());
+                HtmlRenderer renderer = new LiveNodeHtmlRenderer(dockerSeleniumRemoteProxy);
                 // Render the nodes that are part of an specified test build
                 if (testBuild.isEmpty() || testBuild.equalsIgnoreCase(dockerSeleniumRemoteProxy.getTestBuild())) {
                     nodes.add(renderer.renderSummary());

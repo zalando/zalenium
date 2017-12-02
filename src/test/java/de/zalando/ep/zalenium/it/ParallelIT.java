@@ -124,10 +124,8 @@ public class ParallelIT  {
         String pageSource = getWebDriver().getPageSource();
 
         // Assert that the href for the iFrame has the vnc links
-        assertThat(pageSource, containsString("/?view_only=true"));
-        assertThat(pageSource, containsString("/?view_only=false"));
-        // Assert that the href for the iFrame has the serverName from the request
-        assertThat(pageSource, containsString(String.format("http://%s", hostIpAddress)));
+        assertThat(pageSource, containsString("view_only=true"));
+        assertThat(pageSource, containsString("view_only=false"));
     }
 
 

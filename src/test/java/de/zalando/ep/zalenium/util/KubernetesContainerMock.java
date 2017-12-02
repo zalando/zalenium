@@ -182,6 +182,6 @@ public class KubernetesContainerMock {
 
         return new KubernetesContainerClient(environment,
                 KubernetesContainerClient::createDoneablePodDefaultImpl,
-                KubernetesContainerClient::createDoneableServiceDefaultImpl, client);
+                client);
     }
 }
