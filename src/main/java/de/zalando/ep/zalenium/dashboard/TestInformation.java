@@ -94,7 +94,7 @@ public class TestInformation {
     public String getSeleniumLogFileName() {
         String seleniumLogFileName = Dashboard.LOGS_FOLDER_NAME + "/" + testNameNoExtension + "/";
         if (ZALENIUM_PROXY_NAME.equalsIgnoreCase(proxyName)) {
-            return seleniumLogFileName.concat(String.format("selenium-node-%s-stderr.log", browser.toLowerCase()));
+            return seleniumLogFileName.concat("selenium-multinode-stderr.log");
         }
         if (SAUCE_LABS_PROXY_NAME.equalsIgnoreCase(proxyName)) {
             return seleniumLogFileName.concat("selenium-server.log");
