@@ -1,6 +1,5 @@
 package de.zalando.ep.zalenium.proxy;
 
-import com.spotify.docker.client.exceptions.DockerException;
 import de.zalando.ep.zalenium.container.ContainerClient;
 import de.zalando.ep.zalenium.container.ContainerFactory;
 import de.zalando.ep.zalenium.container.kubernetes.KubernetesContainerClient;
@@ -24,7 +23,10 @@ import org.openqa.selenium.Dimension;
 import org.openqa.selenium.Platform;
 import org.openqa.selenium.remote.BrowserType;
 import org.openqa.selenium.remote.CapabilityType;
+import org.openqa.selenium.remote.server.jmx.JMXHelper;
 
+import javax.management.MalformedObjectNameException;
+import javax.management.ObjectName;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -78,7 +80,7 @@ public class DockerSeleniumStarterRemoteProxyTest {
 
 
     @Before
-    public void setUp() throws DockerException, InterruptedException {
+    public void setUp() {
         // Change the factory to return our version of the Container Client
         if (this.currentIsKubernetesValue.get()) {
             // This is needed in order to use a fresh version of the mock, otherwise the return values
@@ -108,7 +110,9 @@ public class DockerSeleniumStarterRemoteProxyTest {
     }
 
     @After
-    public void afterMethod() {
+    public void afterMethod() throws MalformedObjectNameException {
+        ObjectName objectName = new ObjectName("org.seleniumhq.grid:type=RemoteProxy,node=\"http://localhost:30000\"");
+        new JMXHelper().unregister(objectName);
         registry.removeIfPresent(spyProxy);
         DockerSeleniumStarterRemoteProxy.setSleepIntervalMultiplier(1000);
         DockerSeleniumStarterRemoteProxy.restoreEnvironment();
@@ -125,7 +129,7 @@ public class DockerSeleniumStarterRemoteProxyTest {
     }
 
     @Test
-    public void noContainerIsStartedWhenCapabilitiesAreNotSupported() throws DockerException, InterruptedException {
+    public void noContainerIsStartedWhenCapabilitiesAreNotSupported() {
 
         // Non supported desired capability for the test session
         Map<String, Object> nonSupportedCapability = new HashMap<>();
@@ -322,7 +326,8 @@ public class DockerSeleniumStarterRemoteProxyTest {
     }
 
     @Test
-    public void fallbackToDefaultAmountValuesWhenVariablesAreNotIntegers() {
+    public void fallbackToDefaultAmountValuesWhenVariablesAreNotIntegers() throws MalformedObjectNameException {
+
         // Mock the environment class that serves as proxy to retrieve env variables
         Environment environment = mock(Environment.class, withSettings().useConstructor());
         when(environment.getEnvVariable(DockerSeleniumStarterRemoteProxy.ZALENIUM_DESIRED_CONTAINERS))
@@ -339,7 +344,12 @@ public class DockerSeleniumStarterRemoteProxyTest {
         when(environment.getStringEnvVariable(any(String.class), any(String.class))).thenCallRealMethod();
         DockerSeleniumStarterRemoteProxy.setEnv(environment);
 
-        DockerSeleniumStarterRemoteProxy.getNewInstance(request, registry);
+        try {
+            ObjectName objectName = new ObjectName("org.seleniumhq.grid:type=RemoteProxy,node=\"http://localhost:30000\"");
+            new JMXHelper().unregister(objectName);
+        } finally {
+            DockerSeleniumStarterRemoteProxy.getNewInstance(request, registry);
+        }
 
         Assert.assertEquals(DockerSeleniumStarterRemoteProxy.DEFAULT_AMOUNT_DESIRED_CONTAINERS,
                 DockerSeleniumStarterRemoteProxy.getDesiredContainersOnStartup());
@@ -354,7 +364,7 @@ public class DockerSeleniumStarterRemoteProxyTest {
     }
 
     @Test
-    public void variablesGrabTheConfiguredEnvironmentVariables() {
+    public void variablesGrabTheConfiguredEnvironmentVariables() throws MalformedObjectNameException {
         // Mock the environment class that serves as proxy to retrieve env variables
         Environment environment = mock(Environment.class, withSettings().useConstructor());
         int amountOfDesiredContainers = 7;
@@ -376,7 +386,12 @@ public class DockerSeleniumStarterRemoteProxyTest {
         when(environment.getStringEnvVariable(any(String.class), any(String.class))).thenCallRealMethod();
         DockerSeleniumStarterRemoteProxy.setEnv(environment);
 
-        DockerSeleniumStarterRemoteProxy.getNewInstance(request, registry);
+        try {
+            ObjectName objectName = new ObjectName("org.seleniumhq.grid:type=RemoteProxy,node=\"http://localhost:30000\"");
+            new JMXHelper().unregister(objectName);
+        } finally {
+            DockerSeleniumStarterRemoteProxy.getNewInstance(request, registry);
+        }
 
         Assert.assertEquals(amountOfDesiredContainers, DockerSeleniumStarterRemoteProxy.getDesiredContainersOnStartup());
         Assert.assertEquals(amountOfMaxContainers, DockerSeleniumStarterRemoteProxy.getMaxDockerSeleniumContainers());
@@ -386,7 +401,7 @@ public class DockerSeleniumStarterRemoteProxyTest {
     }
 
     @Test
-    public void amountOfCreatedContainersIsTheConfiguredOne() {
+    public void amountOfCreatedContainersIsTheConfiguredOne() throws MalformedObjectNameException {
         // Mock the environment class that serves as proxy to retrieve env variables
         Environment environment = mock(Environment.class, withSettings().useConstructor());
         int amountOfDesiredContainers = 7;
@@ -396,7 +411,12 @@ public class DockerSeleniumStarterRemoteProxyTest {
         DockerSeleniumStarterRemoteProxy.setEnv(environment);
         DockerSeleniumStarterRemoteProxy.setSleepIntervalMultiplier(0);
 
-        DockerSeleniumStarterRemoteProxy.getNewInstance(request, registry);
+        try {
+            ObjectName objectName = new ObjectName("org.seleniumhq.grid:type=RemoteProxy,node=\"http://localhost:30000\"");
+            new JMXHelper().unregister(objectName);
+        } finally {
+            DockerSeleniumStarterRemoteProxy.getNewInstance(request, registry);
+        }
         registry.add(spyProxy);
 
         verify(spyProxy, timeout(5000).times(amountOfDesiredContainers))

@@ -26,6 +26,7 @@ import org.openqa.selenium.Platform;
 import org.openqa.selenium.net.NetworkUtils;
 import org.openqa.selenium.remote.BrowserType;
 import org.openqa.selenium.remote.CapabilityType;
+import org.openqa.selenium.remote.server.jmx.ManagedService;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -54,6 +55,7 @@ import java.util.logging.Logger;
  */
 
 @SuppressWarnings("WeakerAccess")
+@ManagedService(description = "DockerSeleniumStarter TestSlots")
 public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy implements RegistrationListener {
 
     public static final int NO_VNC_PORT_GAP = 10000;

@@ -48,14 +48,14 @@ public class DashboardTest {
     }
 
     @Test
-    public void testCountOne() throws IOException {
+    public void testCountOne() {
         Dashboard.updateDashboard(ti);
         Assert.assertEquals(1, Dashboard.getExecutedTests());
         Assert.assertEquals(1, Dashboard.getExecutedTestsWithVideo());
     }
 
     @Test
-    public void testCountTwo() throws IOException {
+    public void testCountTwo() {
         Dashboard.updateDashboard(ti);
         Dashboard.updateDashboard(ti);
         Assert.assertEquals(2, Dashboard.getExecutedTests());

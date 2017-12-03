@@ -111,7 +111,7 @@ public class TestUtils {
             }
 
             @Override
-            public void write(int b) throws IOException {
+            public void write(int b) {
                 this.stringBuilder.append((char) b );
             }
 

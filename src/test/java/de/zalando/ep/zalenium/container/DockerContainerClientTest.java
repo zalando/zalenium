@@ -12,7 +12,7 @@ public class DockerContainerClientTest {
   private DockerContainerClient containerClient;
 
   @BeforeTest
-  public void prepare() throws Exception {
+  public void prepare() {
     containerClient =
         DockerContainerMock.getMockedDockerContainerClient();
   }
@@ -20,7 +20,7 @@ public class DockerContainerClientTest {
 
   @Test(threadPoolSize = 999, invocationCount = 999, timeOut = 10000)
   @Parameters()
-  public void createContainer() throws Exception {
+  public void createContainer() {
     HashMap<String, String> envVars = new HashMap<>();
     envVars.put("NOVNC_PORT", "50000");
     containerClient

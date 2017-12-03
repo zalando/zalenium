@@ -1,6 +1,7 @@
 package de.zalando.ep.zalenium.util;
 
 import com.google.common.annotations.VisibleForTesting;
+import org.apache.log4j.lf5.LogLevel;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -22,7 +23,8 @@ public class Environment {
             try {
                 return Integer.parseInt(getEnvVariable(envVariableName));
             } catch (Exception e) {
-                logger.log(Level.WARNING, String.format(ENV_VAR_IS_NOT_A_VALID_DATA_TYPE, envVariableName, "integer"), e);
+                logger.log(Level.WARNING, String.format(ENV_VAR_IS_NOT_A_VALID_DATA_TYPE, envVariableName, "integer"));
+                logger.log(Level.FINE, String.format(ENV_VAR_IS_NOT_A_VALID_DATA_TYPE, envVariableName, "integer"), e);
                 return defaultValue;
             }
         } else {
@@ -36,7 +38,8 @@ public class Environment {
             try {
                 return String.valueOf(getEnvVariable(envVariableName));
             } catch (Exception e) {
-                logger.log(Level.WARNING, String.format(ENV_VAR_IS_NOT_A_VALID_DATA_TYPE, envVariableName, "String"), e);
+                logger.log(Level.WARNING, String.format(ENV_VAR_IS_NOT_A_VALID_DATA_TYPE, envVariableName, "String"));
+                logger.log(Level.FINE, String.format(ENV_VAR_IS_NOT_A_VALID_DATA_TYPE, envVariableName, "String"), e);
                 return defaultValue;
             }
         } else {

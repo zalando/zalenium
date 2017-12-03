@@ -29,6 +29,7 @@ import org.openqa.grid.web.servlet.handler.WebDriverRequest;
 import org.openqa.selenium.MutableCapabilities;
 import org.openqa.selenium.Platform;
 import org.openqa.selenium.remote.CapabilityType;
+import org.openqa.selenium.remote.server.jmx.ManagedService;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -43,6 +44,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @SuppressWarnings("WeakerAccess")
+@ManagedService(description = "CloudTesting TestSlots")
 public class CloudTestingRemoteProxy extends DefaultRemoteProxy {
 
     @VisibleForTesting
@@ -198,7 +200,7 @@ public class CloudTestingRemoteProxy extends DefaultRemoteProxy {
     }
 
     public String getCloudTestingServiceUrl() {
-        return null;
+        return "http://localhost:4444";
     }
 
     public TestInformation getTestInformation(String seleniumSessionId) {
@@ -336,7 +338,7 @@ public class CloudTestingRemoteProxy extends DefaultRemoteProxy {
     static class CloudProxyNodePoller extends Thread {
 
         private static long sleepTimeBetweenChecks = 500;
-        private CloudTestingRemoteProxy cloudProxy = null;
+        private CloudTestingRemoteProxy cloudProxy;
 
         CloudProxyNodePoller(CloudTestingRemoteProxy cloudProxy) {
             this.cloudProxy = cloudProxy;
