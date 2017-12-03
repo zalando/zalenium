@@ -12,17 +12,17 @@ jobs:
     - stage: Integration and Unit Tests
       env: step=sauceLabs
       script:
-      - docker pull elgalu/selenium:3.7.1
+      - docker pull elgalu/selenium
       - travis_retry ./run_integration_tests.sh sauceLabs
 
     - env: step=browserStack_with_user1006
       script:
-        - docker pull elgalu/selenium:3.7.1
+        - docker pull elgalu/selenium
         - travis_retry ./run_integration_tests.sh browserStack
 
     - env: step=dockerCompose
       script:
-      - docker pull elgalu/selenium:3.7.1
+      - docker pull elgalu/selenium
       - curl -L https://github.com/docker/compose/releases/download/1.13.0/docker-compose-`uname -s`-`uname -m` > docker-compose
       - chmod +x docker-compose
       - sudo mv docker-compose /usr/local/bin
@@ -40,7 +40,7 @@ jobs:
 
     - env: step=minikube
       script:
-      - docker pull elgalu/selenium:3.7.1
+      - docker pull elgalu/selenium
       - kubernetes/minikube-ci-initialize.sh
       - mvn clean package -Pbuild-docker-image -DskipTests=true
       - cd target && docker build -t dosel/zalenium:minikube . && cd ..

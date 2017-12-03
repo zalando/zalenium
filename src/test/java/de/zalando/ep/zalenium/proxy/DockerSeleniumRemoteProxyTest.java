@@ -1,6 +1,5 @@
 package de.zalando.ep.zalenium.proxy;
 
-import com.spotify.docker.client.exceptions.DockerException;
 import de.zalando.ep.zalenium.container.ContainerClient;
 import de.zalando.ep.zalenium.container.ContainerFactory;
 import de.zalando.ep.zalenium.container.kubernetes.KubernetesContainerClient;
@@ -27,10 +26,11 @@ import org.openqa.selenium.Dimension;
 import org.openqa.selenium.Platform;
 import org.openqa.selenium.remote.BrowserType;
 import org.openqa.selenium.remote.CapabilityType;
+import org.openqa.selenium.remote.server.jmx.JMXHelper;
 
+import javax.management.MalformedObjectNameException;
+import javax.management.ObjectName;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -41,7 +41,15 @@ import java.util.function.Supplier;
 
 import static org.awaitility.Awaitility.await;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.withSettings;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.timeout;
+import static org.mockito.Mockito.never;
+
 
 @RunWith(value = Parameterized.class)
 public class DockerSeleniumRemoteProxyTest {
@@ -74,7 +82,7 @@ public class DockerSeleniumRemoteProxyTest {
     }
 
     @Before
-    public void setUp() throws DockerException, InterruptedException, IOException {
+    public void setUp() {
         // Change the factory to return our version of the Container Client
         if (this.currentIsKubernetesValue.get()) {
             // This is needed in order to use a fresh version of the mock, otherwise the return values
@@ -101,7 +109,9 @@ public class DockerSeleniumRemoteProxyTest {
     }
 
     @After
-    public void tearDown() {
+    public void tearDown() throws MalformedObjectNameException {
+        ObjectName objectName = new ObjectName("org.seleniumhq.grid:type=RemoteProxy,node=\"http://localhost:40000\"");
+        new JMXHelper().unregister(objectName);
         ContainerFactory.setContainerClientGenerator(originalDockerContainerClient);
         ContainerFactory.setIsKubernetes(originalIsKubernetesValue);
         ContainerFactory.setKubernetesContainerClient(originalKubernetesContainerClient);
@@ -243,7 +253,7 @@ public class DockerSeleniumRemoteProxyTest {
     }
 
     @Test
-    public void pollerThreadTearsDownNodeAfterTestIsCompleted() throws IOException {
+    public void pollerThreadTearsDownNodeAfterTestIsCompleted() {
 
         // Supported desired capability for the test session
         Map<String, Object> requestedCapability = getCapabilitySupportedByDockerSelenium();
@@ -275,7 +285,7 @@ public class DockerSeleniumRemoteProxyTest {
     }
 
     @Test
-    public void normalSessionCommandsDoNotStopNode() throws IOException {
+    public void normalSessionCommandsDoNotStopNode() {
 
         // Supported desired capability for the test session
         Map<String, Object> requestedCapability = getCapabilitySupportedByDockerSelenium();
@@ -305,7 +315,7 @@ public class DockerSeleniumRemoteProxyTest {
     }
 
     @Test
-    public void testIsMarkedAsPassedAndFailedWithCookie() throws IOException {
+    public void testIsMarkedAsPassedAndFailedWithCookie() {
 
         // Supported desired capability for the test session
         Map<String, Object> requestedCapability = getCapabilitySupportedByDockerSelenium();
@@ -338,7 +348,7 @@ public class DockerSeleniumRemoteProxyTest {
     }
 
     @Test
-    public void nodeShutsDownWhenTestIsIdle() throws IOException {
+    public void nodeShutsDownWhenTestIsIdle() {
 
         // Supported desired capability for the test session
         Map<String, Object> requestedCapability = getCapabilitySupportedByDockerSelenium();
@@ -388,8 +398,9 @@ public class DockerSeleniumRemoteProxyTest {
     }
 
     @Test
-    public void videoRecordingIsStartedAndStopped() throws DockerException, InterruptedException,
-            URISyntaxException, IOException {
+    public void videoRecordingIsStartedAndStopped() throws MalformedObjectNameException {
+
+        try {
 
             // Create a docker-selenium container
             RegistrationRequest request = TestUtils.getRegistrationRequestForTesting(30000,
@@ -442,10 +453,14 @@ public class DockerSeleniumRemoteProxyTest {
                     .processContainerAction(DockerSeleniumRemoteProxy.DockerSeleniumContainerAction.STOP_RECORDING,
                             containerId);
             verify(spyProxy, timeout(40000)).copyVideos(containerId);
+        } finally {
+            ObjectName objectName = new ObjectName("org.seleniumhq.grid:type=RemoteProxy,node=\"http://localhost:30000\"");
+            new JMXHelper().unregister(objectName);
+        }
     }
 
     @Test
-    public void videoRecordingIsDisabled() throws DockerException, InterruptedException, IOException, URISyntaxException {
+    public void videoRecordingIsDisabled() throws MalformedObjectNameException {
 
         try {
             // Create a docker-selenium container
@@ -509,6 +524,8 @@ public class DockerSeleniumRemoteProxyTest {
             verify(spyProxy, never()).copyVideos("");
         } finally {
             DockerSeleniumRemoteProxy.restoreEnvironment();
+            ObjectName objectName = new ObjectName("org.seleniumhq.grid:type=RemoteProxy,node=\"http://localhost:30000\"");
+            new JMXHelper().unregister(objectName);
         }
     }
 

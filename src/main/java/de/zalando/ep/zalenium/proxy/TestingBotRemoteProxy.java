@@ -6,6 +6,7 @@ import com.google.gson.JsonObject;
 import de.zalando.ep.zalenium.dashboard.TestInformation;
 import org.openqa.grid.common.RegistrationRequest;
 import org.openqa.grid.internal.GridRegistry;
+import org.openqa.selenium.remote.server.jmx.ManagedService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,6 +16,7 @@ import java.util.logging.Logger;
 /*
     This class should work in a similar way as its sibling, SauceLabsRemoteProxy
  */
+@ManagedService(description = "TestingBot TestSlots")
 public class TestingBotRemoteProxy extends CloudTestingRemoteProxy {
 
     private static final String TESTINGBOT_URL = "http://hub.testingbot.com:80";

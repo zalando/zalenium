@@ -5,7 +5,6 @@ import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 
-import javax.servlet.ServletException;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.WriteListener;
 import javax.servlet.http.HttpServletRequest;
@@ -47,7 +46,7 @@ public class DashboardCleanupServletTest {
             }
 
             @Override
-            public void write(int b) throws IOException {
+            public void write(int b) {
                 this.stringBuilder.append((char) b);
             }
 
@@ -61,7 +60,7 @@ public class DashboardCleanupServletTest {
     }
 
     @Test
-    public void getDoCleanupAll() throws ServletException, IOException {
+    public void getDoCleanupAll() throws IOException {
         try {
             CommonProxyUtilities proxyUtilities = TestUtils.mockCommonProxyUtilitiesForDashboardTesting(temporaryFolder);
             Dashboard.setCommonProxyUtilities(proxyUtilities);
@@ -75,7 +74,7 @@ public class DashboardCleanupServletTest {
     }
 
     @Test
-    public void postDoCleanupAll() throws ServletException, IOException {
+    public void postDoCleanupAll() throws IOException {
         try {
             CommonProxyUtilities proxyUtilities = TestUtils.mockCommonProxyUtilitiesForDashboardTesting(temporaryFolder);
             Dashboard.setCommonProxyUtilities(proxyUtilities);
@@ -89,13 +88,13 @@ public class DashboardCleanupServletTest {
 
 
     @Test
-    public void postMissingParameter() throws ServletException, IOException {
+    public void postMissingParameter() throws IOException {
         dashboardCleanupServlet.doPost(request, response);
         Assert.assertEquals("ERROR action not implemented. Given action=null", response.getOutputStream().toString());
     }
 
     @Test
-    public void postUnsupportedParameter() throws ServletException, IOException {
+    public void postUnsupportedParameter() throws IOException {
         when(request.getParameter("action")).thenReturn("anyValue");
         dashboardCleanupServlet.doPost(request, response);
         Assert.assertEquals("ERROR action not implemented. Given action=anyValue",

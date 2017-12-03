@@ -30,6 +30,7 @@ import org.openqa.grid.web.servlet.handler.RequestType;
 import org.openqa.grid.web.servlet.handler.WebDriverRequest;
 import org.openqa.selenium.Platform;
 import org.openqa.selenium.remote.CapabilityType;
+import org.openqa.selenium.remote.server.jmx.ManagedService;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -45,6 +46,7 @@ import java.util.logging.Logger;
     The implementation of this class was inspired on https://gist.github.com/krmahadevan/4649607
  */
 @SuppressWarnings("WeakerAccess")
+@ManagedService(description = "DockerSelenium TestSlots")
 public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
 
     @VisibleForTesting
@@ -204,7 +206,8 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
             configuredIdleTimeout = Long.valueOf(String.valueOf(idleTimeout));
         } catch (Exception e) {
             configuredIdleTimeout = DEFAULT_MAX_TEST_IDLE_TIME_SECS;
-            LOGGER.log(Level.WARNING, getId() + " " + e.toString(), e);
+            LOGGER.log(Level.WARNING, getId() + " " + e.toString());
+            LOGGER.log(Level.FINE, getId() + " " + e.toString(), e);
         }
         if (configuredIdleTimeout <= 0) {
             configuredIdleTimeout = DEFAULT_MAX_TEST_IDLE_TIME_SECS;
@@ -570,7 +573,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     static class DockerSeleniumNodePoller extends Thread {
 
         private static long sleepTimeBetweenChecks = 500;
-        private DockerSeleniumRemoteProxy dockerSeleniumRemoteProxy = null;
+        private DockerSeleniumRemoteProxy dockerSeleniumRemoteProxy;
         DockerSeleniumNodePoller(DockerSeleniumRemoteProxy dockerSeleniumRemoteProxy) {
             this.dockerSeleniumRemoteProxy = dockerSeleniumRemoteProxy;
         }
