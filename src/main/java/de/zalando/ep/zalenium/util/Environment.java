@@ -1,7 +1,6 @@
 package de.zalando.ep.zalenium.util;
 
 import com.google.common.annotations.VisibleForTesting;
-import org.apache.log4j.lf5.LogLevel;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
