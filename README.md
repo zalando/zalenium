@@ -220,7 +220,7 @@ one of the enabled cloud testing platforms.
 * To make life easy for people who want to use Zalenium, we are now using as a version number the Selenium version
 being supported.
 * The major-minor version combined with the patch level will indicate the Selenium version being supported. E.g.
-  * When a release is `3.7.1a`, it supports Selenium 3.7.1
+  * When a release is `3.8.1a`, it supports Selenium 3.8.1
   * The badge above shows the latest image version
   * Alias for the latest images, `dosel/zalenium:latest`
 
