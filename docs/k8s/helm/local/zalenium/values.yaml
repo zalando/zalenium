@@ -5,7 +5,7 @@ hub:
 
   ## The tag for the image
   ## ref: https://hub.docker.com/r/selenium/hub/tags/
-  tag: "3.7.1g"
+  tag: "3.8.1a"
 
   ## Specify a imagePullPolicy
   ## ref: http://kubernetes.io/docs/user-guide/images/#pre-pulling-images
@@ -74,7 +74,7 @@ hub:
   screenWidth: 1440
   screenHeight: 900
   timeZone: "UTC"
-  seleniumImageName: "elgalu/selenium:3.7.1"
+  seleniumImageName: "elgalu/selenium"
   maxTestSessions: 1
 
   # Environment variables passed to Zalenium hub.
