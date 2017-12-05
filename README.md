@@ -14,8 +14,8 @@
 This is a Selenium Grid extension to scale your local grid dynamically with docker containers. It uses
 [docker-selenium](https://github.com/elgalu/docker-selenium) to run your tests in Firefox and Chrome locally, if you
 need a different browser, your tests can get redirected to a cloud testing provider ([Sauce Labs](https://saucelabs.com/), 
-[BrowserStack](https://www.browserstack.com/), [TestingBot](https://testingbot.com/)). Zalenium has also **BETA** support
-for [Kubernetes](./docs/k8s/kubernetes.md).
+[BrowserStack](https://www.browserstack.com/), [TestingBot](https://testingbot.com/)). Zalenium has also support for 
+[Kubernetes](./docs/k8s/kubernetes.md).
 
 Zalenium's maintainers add new features regularly. We invite you to test it, report bugs, suggest any ideas you may
 have, and contribute. See our [contributing guidelines](CONTRIBUTING.md) for more details.
@@ -60,7 +60,7 @@ channels we created for that.
 * [Docker version](#docker-version)
   * [Linux](#linux)
   * [OSX](#osx)
-* [__[BETA]__ Kubernetes version](./docs/k8s/kubernetes.md)
+* [Kubernetes version](./docs/k8s/kubernetes.md)
 * [Contributions](#contributions)
   * [Building and Testing](#building-and-testing)
 * [How it works](#how-it-works)

@@ -120,17 +120,23 @@ public class DockerContainerMock {
             String[] sendNotificationTimeout = {"bash", "-c",
                     SEND_NOTIFICATION.getContainerAction().concat(TIMEOUT.getTestNotificationMessage())};
             when(dockerClient.execCreate(containerId, startVideo, DockerClient.ExecCreateParam.attachStdout(),
-                    DockerClient.ExecCreateParam.attachStderr())).thenReturn(execCreation);
+                    DockerClient.ExecCreateParam.attachStderr(), DockerClient.ExecCreateParam.attachStdin()))
+                    .thenReturn(execCreation);
             when(dockerClient.execCreate(containerId, stopVideo, DockerClient.ExecCreateParam.attachStdout(),
-                    DockerClient.ExecCreateParam.attachStderr())).thenReturn(execCreation);
+                    DockerClient.ExecCreateParam.attachStderr(), DockerClient.ExecCreateParam.attachStdin()))
+                    .thenReturn(execCreation);
             when(dockerClient.execCreate(containerId, transferLogs, DockerClient.ExecCreateParam.attachStdout(),
-                    DockerClient.ExecCreateParam.attachStderr())).thenReturn(execCreation);
+                    DockerClient.ExecCreateParam.attachStderr(), DockerClient.ExecCreateParam.attachStdin()))
+                    .thenReturn(execCreation);
             when(dockerClient.execCreate(containerId, cleanupContainer, DockerClient.ExecCreateParam.attachStdout(),
-                    DockerClient.ExecCreateParam.attachStderr())).thenReturn(execCreation);
+                    DockerClient.ExecCreateParam.attachStderr(), DockerClient.ExecCreateParam.attachStdin()))
+                    .thenReturn(execCreation);
             when(dockerClient.execCreate(containerId, sendNotificationCompleted, DockerClient.ExecCreateParam.attachStdout(),
-                    DockerClient.ExecCreateParam.attachStderr())).thenReturn(execCreation);
+                    DockerClient.ExecCreateParam.attachStderr(), DockerClient.ExecCreateParam.attachStdin()))
+                    .thenReturn(execCreation);
             when(dockerClient.execCreate(containerId, sendNotificationTimeout, DockerClient.ExecCreateParam.attachStdout(),
-                    DockerClient.ExecCreateParam.attachStderr())).thenReturn(execCreation);
+                    DockerClient.ExecCreateParam.attachStderr(), DockerClient.ExecCreateParam.attachStdin()))
+                    .thenReturn(execCreation);
 
             when(dockerClient.execStart(anyString())).thenReturn(logStream);
             doNothing().when(dockerClient).stopContainer(anyString(), anyInt());

@@ -1,6 +1,6 @@
 # Kubernetes Support
 
-Zalenium has beta support for [Kubernetes](https://kubernetes.io/), these instructions will give you an
+Zalenium has support for [Kubernetes](https://kubernetes.io/), these instructions will give you an
 overview of how to get it running. Be aware that this is work in progress and some things could be missing, both in
 code and documentation.
 
