@@ -56,10 +56,8 @@ spec:
               mountPath: /tmp/mounted
       volumes:
           - name: zalenium-data
-            persistentVolumeClaim:
-              claimName: zalenium-data
+            emptyDir: {}
           - name: zalenium-mounted
-            persistentVolumeClaim:
-              claimName: zalenium-mounted
+            emptyDir: {}
       serviceAccountName: zalenium
       serviceAccount: zalenium

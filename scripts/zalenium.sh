@@ -734,7 +734,9 @@ ShutDown()
         fi
     fi
 
-    EnsureCleanEnv
+    if [ ${KUBERNETES_ENABLED} == "false" ]; then
+        EnsureCleanEnv
+    fi
 }
 
 function usage()

@@ -25,6 +25,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -324,10 +325,7 @@ public class DockerContainerClient implements ContainerClient {
             logger.log(Level.WARNING, nodeId + " Error while getting Zalenium extra hosts.", e);
             ga.trackException(e);
         }
-        if (zaleniumExtraHosts == null) {
-            zaleniumExtraHosts = DEFAULT_DOCKER_EXTRA_HOSTS;
-        }
-        return zaleniumExtraHosts;
+        return Optional.ofNullable(zaleniumExtraHosts).orElse(DEFAULT_DOCKER_EXTRA_HOSTS);
     }
 
     @Override

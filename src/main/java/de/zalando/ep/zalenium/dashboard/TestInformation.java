@@ -3,6 +3,7 @@ package de.zalando.ep.zalenium.dashboard;
 import de.zalando.ep.zalenium.util.CommonProxyUtilities;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * The purpose of this class is to gather the test information that can be used to render the dashboard.
@@ -48,7 +49,7 @@ public class TestInformation {
     }
 
     public String getTestName() {
-        return testName == null ? seleniumSessionId : testName;
+        return Optional.ofNullable(testName).orElse(seleniumSessionId);
     }
 
     public String getProxyName() {
@@ -190,11 +191,11 @@ public class TestInformation {
         this.platform = builder.platform;
         this.platformVersion = builder.platformVersion;
         this.videoUrl = builder.videoUrl;
-        this.fileExtension = builder.fileExtension == null ? "" : builder.fileExtension;
+        this.fileExtension = Optional.ofNullable(builder.fileExtension).orElse("");
         this.logUrls = builder.logUrls;
-        this.screenDimension = builder.screenDimension == null ? "" :builder.screenDimension;
-        this.timeZone = builder.timeZone == null ? "" : builder.timeZone;
-        this.build = builder.build == null ? "" : builder.build;
+        this.screenDimension = Optional.ofNullable(builder.screenDimension).orElse("");
+        this.timeZone = Optional.ofNullable(builder.timeZone).orElse("");
+        this.build = Optional.ofNullable(builder.build).orElse("");
         this.testStatus = builder.testStatus;
         this.videoRecorded = true;
         buildVideoFileName();
