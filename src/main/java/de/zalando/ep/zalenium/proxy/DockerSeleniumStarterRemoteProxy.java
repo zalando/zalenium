@@ -447,7 +447,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
 
     private boolean checkContainerStatus(ContainerCreationStatus creationStatus) {
         long sleepInterval = sleepIntervalMultiplier;
-        if (containerClient instanceof KubernetesContainerClient) {
+        if (ContainerFactory.getIsKubernetes().get()) {
             sleepInterval = sleepInterval * 3;
         }
         String createdContainerName = creationStatus.getContainerName();

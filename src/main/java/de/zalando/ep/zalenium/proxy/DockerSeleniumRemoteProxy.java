@@ -456,7 +456,14 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                         testInformation.getVideoFolderPath(), testInformation.getFileName()});
             }
         } catch (IOException e) {
-            LOGGER.log(Level.WARNING, getId() + " Error while copying the video", e);
+            // This error happens in k8s, but the file is ok, nevertheless the size is not accurate
+            boolean isPipeClosed = e.getMessage().toLowerCase().contains("pipe closed");
+            if (ContainerFactory.getIsKubernetes().get() && isPipeClosed) {
+                LOGGER.log(Level.INFO, "{0} Video file copied to: {1}/{2}", new Object[]{getId(),
+                        testInformation.getVideoFolderPath(), testInformation.getFileName()});
+            } else {
+                LOGGER.log(Level.WARNING, getId() + " Error while copying the video", e);
+            }
             ga.trackException(e);
         } finally {
             if (!videoWasCopied) {
@@ -487,7 +494,13 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
             }
             LOGGER.log(Level.INFO, "{0} Logs copied to: {1}", new Object[]{getId(), testInformation.getLogsFolderPath()});
         } catch (IOException e) {
-            LOGGER.log(Level.WARNING, getId() + " Error while copying the logs", e);
+            // This error happens in k8s, but the file is ok, nevertheless the size is not accurate
+            boolean isPipeClosed = e.getMessage().toLowerCase().contains("pipe closed");
+            if (ContainerFactory.getIsKubernetes().get() && isPipeClosed) {
+                LOGGER.log(Level.INFO, "{0} Logs copied to: {1}", new Object[]{getId(), testInformation.getLogsFolderPath()});
+            } else {
+                LOGGER.log(Level.WARNING, getId() + " Error while copying the logs", e);
+            }
             ga.trackException(e);
         }
     }
