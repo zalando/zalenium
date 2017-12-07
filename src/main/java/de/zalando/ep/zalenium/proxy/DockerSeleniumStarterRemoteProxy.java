@@ -38,6 +38,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.TimeZone;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -188,7 +189,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     }
 
     public static String getContainerName() {
-        return containerName == null ? DEFAULT_ZALENIUM_CONTAINER_NAME : containerName;
+        return Optional.ofNullable(containerName).orElse(DEFAULT_ZALENIUM_CONTAINER_NAME);
     }
     
     private static void setContainerName(String containerName) {
@@ -196,7 +197,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     }
     
     public static String getDockerSeleniumImageName() {
-        return dockerSeleniumImageName == null ? DEFAULT_DOCKER_SELENIUM_IMAGE : dockerSeleniumImageName;
+        return Optional.ofNullable(dockerSeleniumImageName).orElse(DEFAULT_DOCKER_SELENIUM_IMAGE);
     }
 
     public static void setDockerSeleniumImageName(String dockerSeleniumImageName) {
@@ -254,7 +255,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     }
 
     public static TimeZone getConfiguredTimeZone() {
-        return configuredTimeZone == null ? DEFAULT_TZ : configuredTimeZone;
+        return Optional.ofNullable(configuredTimeZone).orElse(DEFAULT_TZ);
     }
 
     public static void setConfiguredTimeZone(String configuredTimeZone) {

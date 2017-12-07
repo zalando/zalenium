@@ -39,6 +39,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Map;
+import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -387,11 +388,11 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     }
 
     public String getTestName() {
-        return testName == null ? "" : testName;
+        return Optional.ofNullable(testName).orElse("");
     }
 
     public String getTestBuild() {
-        return testBuild == null ? "" : testBuild;
+        return Optional.ofNullable(testBuild).orElse("");
     }
 
     public long getMaxTestIdleTimeSecs() {
