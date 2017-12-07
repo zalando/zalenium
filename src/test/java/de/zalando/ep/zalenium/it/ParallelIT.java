@@ -30,9 +30,9 @@ public class ParallelIT  {
 
     // Zalenium setup variables
     private static final String ZALENIUM_HOST = System.getenv("ZALENIUM_GRID_HOST") != null ?
-            System.getenv("ZALENIUM_GRID_HOST") : "192.168.64.38";
+            System.getenv("ZALENIUM_GRID_HOST") : "localhost";
     private static final String ZALENIUM_PORT = System.getenv("ZALENIUM_GRID_PORT") != null ?
-            System.getenv("ZALENIUM_GRID_PORT") : "32347";
+            System.getenv("ZALENIUM_GRID_PORT") : "4444";
 
 
     // We need a thread safe environment to handle the webDriver variable in each thread separately
