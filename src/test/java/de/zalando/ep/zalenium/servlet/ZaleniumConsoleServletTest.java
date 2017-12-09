@@ -7,6 +7,7 @@ import de.zalando.ep.zalenium.proxy.DockerSeleniumRemoteProxy;
 import de.zalando.ep.zalenium.proxy.DockerSeleniumStarterRemoteProxy;
 import de.zalando.ep.zalenium.proxy.SauceLabsRemoteProxy;
 import de.zalando.ep.zalenium.proxy.TestingBotRemoteProxy;
+import de.zalando.ep.zalenium.registry.ZaleniumRegistry;
 import de.zalando.ep.zalenium.util.CommonProxyUtilities;
 import de.zalando.ep.zalenium.util.DockerContainerMock;
 import de.zalando.ep.zalenium.util.TestUtils;
@@ -15,7 +16,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.openqa.grid.common.RegistrationRequest;
-import org.openqa.grid.internal.DefaultGridRegistry;
 import org.openqa.grid.internal.GridRegistry;
 import org.openqa.grid.internal.utils.configuration.GridHubConfiguration;
 import org.openqa.grid.web.Hub;
@@ -44,7 +44,7 @@ public class ZaleniumConsoleServletTest {
 
     @Before
     public void setUp() throws IOException {
-        registry = DefaultGridRegistry.newInstance(new Hub(new GridHubConfiguration()));
+        registry = ZaleniumRegistry.newInstance(new Hub(new GridHubConfiguration()));
         
         this.originalContainerClient = ContainerFactory.getContainerClientGenerator();
         ContainerFactory.setContainerClientGenerator(DockerContainerMock::getMockedDockerContainerClient);

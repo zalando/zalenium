@@ -1,6 +1,7 @@
 package de.zalando.ep.zalenium.servlet;
 
 
+import de.zalando.ep.zalenium.registry.ZaleniumRegistry;
 import de.zalando.ep.zalenium.util.DockerContainerMock;
 import de.zalando.ep.zalenium.util.TestUtils;
 import de.zalando.ep.zalenium.container.ContainerClient;
@@ -12,7 +13,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.openqa.grid.common.RegistrationRequest;
-import org.openqa.grid.internal.DefaultGridRegistry;
 import org.openqa.grid.internal.GridRegistry;
 
 import javax.servlet.ServletException;
@@ -36,7 +36,7 @@ public class LiveNodeServletTest {
 
     @Before
     public void setUp() throws IOException {
-        registry = DefaultGridRegistry.newInstance();
+        registry = ZaleniumRegistry.newInstance();
         
         this.originalContainerClient = ContainerFactory.getContainerClientGenerator();
         ContainerFactory.setContainerClientGenerator(DockerContainerMock::getMockedDockerContainerClient);
