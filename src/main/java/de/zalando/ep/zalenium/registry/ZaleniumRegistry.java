@@ -35,24 +35,15 @@ import java.util.logging.Logger;
 @ThreadSafe
 public class ZaleniumRegistry extends BaseGridRegistry implements GridRegistry {
     private static final Logger LOG = Logger.getLogger(ZaleniumRegistry.class.getName());
-
-    protected static class UncaughtExceptionHandler implements Thread.UncaughtExceptionHandler {
-        public void uncaughtException(Thread t, Throwable e) {
-            LOG.log(Level.SEVERE, "Matcher thread dying due to unhandled exception.", e);
-        }
-    }
-
     // lock for anything modifying the tests session currently running on this
     // registry.
     private final ReentrantLock lock = new ReentrantLock();
     private final Condition testSessionAvailable = lock.newCondition();
     private final ProxySet proxies;
     private final ActiveTestSessions activeTestSessions = new ActiveTestSessions();
-
     private final NewSessionRequestQueue newSessionQueue;
     private final Matcher matcherThread = new Matcher();
     private final List<RemoteProxy> registeringProxies = new CopyOnWriteArrayList<>();
-
     private volatile boolean stop = false;
 
     public ZaleniumRegistry() {
@@ -64,19 +55,6 @@ public class ZaleniumRegistry extends BaseGridRegistry implements GridRegistry {
         this.newSessionQueue = new NewSessionRequestQueue();
         proxies = new ProxySet((hub != null) ? hub.getConfiguration().throwOnCapabilityNotPresent : true);
         this.matcherThread.setUncaughtExceptionHandler(new UncaughtExceptionHandler());
-    }
-
-    public void start() {
-        matcherThread.start();
-
-        // freynaud : TODO
-        // Grid registry is in a valid state when testSessionAvailable.await(); from
-        // assignRequestToProxy is reached. Not before.
-        try {
-            Thread.sleep(250);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
     }
 
     /**
@@ -99,6 +77,19 @@ public class ZaleniumRegistry extends BaseGridRegistry implements GridRegistry {
         ZaleniumRegistry registry = new ZaleniumRegistry(hub);
         registry.start();
         return registry;
+    }
+
+    public void start() {
+        matcherThread.start();
+
+        // freynaud : TODO
+        // Grid registry is in a valid state when testSessionAvailable.await(); from
+        // assignRequestToProxy is reached. Not before.
+        try {
+            Thread.sleep(250);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -174,29 +165,6 @@ public class ZaleniumRegistry extends BaseGridRegistry implements GridRegistry {
         String internalKey = testSlot.getInternalKey();
         release(internalKey, reason);
         testSlot.doFinishRelease();
-    }
-
-
-    /**
-     * iterates the queue of incoming new session request and assign them to proxy after they've been
-     * sorted by priority, with priority defined by the prioritizer.
-     */
-    class Matcher extends Thread { // Thread safety reviewed
-
-        Matcher() {
-            super("Matcher thread");
-        }
-
-        @Override
-        public void run() {
-            try {
-                lock.lock();
-                assignRequestToProxy();
-            } finally {
-                lock.unlock();
-            }
-        }
-
     }
 
     /**
@@ -422,6 +390,34 @@ public class ZaleniumRegistry extends BaseGridRegistry implements GridRegistry {
      */
     public RemoteProxy getProxyById(String id) {
         return proxies.getProxyById(id);
+    }
+
+    protected static class UncaughtExceptionHandler implements Thread.UncaughtExceptionHandler {
+        public void uncaughtException(Thread t, Throwable e) {
+            LOG.log(Level.SEVERE, "Matcher thread dying due to unhandled exception.", e);
+        }
+    }
+
+    /**
+     * iterates the queue of incoming new session request and assign them to proxy after they've been
+     * sorted by priority, with priority defined by the prioritizer.
+     */
+    class Matcher extends Thread { // Thread safety reviewed
+
+        Matcher() {
+            super("Matcher thread");
+        }
+
+        @Override
+        public void run() {
+            try {
+                lock.lock();
+                assignRequestToProxy();
+            } finally {
+                lock.unlock();
+            }
+        }
+
     }
 
 }
