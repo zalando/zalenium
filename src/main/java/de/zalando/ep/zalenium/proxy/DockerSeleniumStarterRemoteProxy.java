@@ -420,6 +420,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
 
             boolean sendAnonymousUsageInfo = env.getBooleanEnvVariable("ZALENIUM_SEND_ANONYMOUS_USAGE_INFO", false);
             String nodePolling = String.valueOf(RandomUtils.nextInt(90, 120) * 1000);
+            String nodeRegisterCycle = String.valueOf(RandomUtils.nextInt(15, 25) * 1000);
 
             int attempts = 0;
             int maxAttempts = 2;
@@ -428,7 +429,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
                 final int nodePort = findFreePortInRange(LOWER_PORT_BOUNDARY, UPPER_PORT_BOUNDARY);
 
                 Map<String, String> envVars = buildEnvVars(timeZone, screenSize, hostIpAddress, sendAnonymousUsageInfo,
-                        nodePolling, nodePort);
+                        nodePolling, nodeRegisterCycle, nodePort);
 
                 String latestImage = getLatestDownloadedImage(getDockerSeleniumImageName());
                 ContainerCreationStatus creationStatus = containerClient
@@ -464,7 +465,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
                     String successMessage = "\"Node is running\"";
                     if (status.contains(successMessage)) {
                         LOGGER.log(Level.INFO, String.format("%sContainer %s is up after ~%s seconds...",
-                                LOGGING_PREFIX, createdContainerName, i));
+                                LOGGING_PREFIX, createdContainerName, i * (sleepInterval / 1000)));
                         return true;
                     }
                 } catch (IOException e) {
@@ -482,7 +483,8 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     }
 
     private Map<String, String> buildEnvVars(TimeZone timeZone, Dimension screenSize, String hostIpAddress,
-                                             boolean sendAnonymousUsageInfo, String nodePolling, int nodePort) {
+                                             boolean sendAnonymousUsageInfo, String nodePolling,
+                                             String nodeRegisterCycle, int nodePort) {
         final int noVncPort = nodePort + NO_VNC_PORT_GAP;
         final int vncPort = nodePort + VNC_PORT_GAP;
         Map<String, String> envVars = new HashMap<>();
@@ -503,7 +505,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
         envVars.put("SCREEN_WIDTH", String.valueOf(screenSize.getWidth()));
         envVars.put("SCREEN_HEIGHT", String.valueOf(screenSize.getHeight()));
         envVars.put("TZ", timeZone.getID());
-        envVars.put("SELENIUM_NODE_REGISTER_CYCLE", "0");
+        envVars.put("SELENIUM_NODE_REGISTER_CYCLE", nodeRegisterCycle);
         envVars.put("SEL_NODEPOLLING_MS", nodePolling);
         envVars.put("SELENIUM_NODE_PROXY_PARAMS", "de.zalando.ep.zalenium.proxy.DockerSeleniumRemoteProxy");
         envVars.put("MULTINODE", "true");

@@ -200,7 +200,7 @@ public class ZaleniumRegistry extends BaseGridRegistry implements GridRegistry {
         while (!stop) {
             try {
                 testSessionAvailable.await(5, TimeUnit.SECONDS);
-                newSessionQueue.processQueue(this::takeRequestHandler, configuration.prioritizer);
+                newSessionQueue.processQueue(this::takeRequestHandler, getHub().getConfiguration().prioritizer);
                 // Just make sure we delete anything that is logged on this thread from memory
                 LoggingManager.perSessionLogHandler().clearThreadTempLogs();
             } catch (InterruptedException e) {
@@ -385,6 +385,7 @@ public class ZaleniumRegistry extends BaseGridRegistry implements GridRegistry {
      * @see GridRegistry#getProxyById(String)
      */
     public RemoteProxy getProxyById(String id) {
+        LOG.log(Level.FINE, "Getting proxy " + id);
         return proxies.getProxyById(id);
     }
 
