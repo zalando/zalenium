@@ -166,7 +166,7 @@ public class CommonProxyUtilities {
 
     @SuppressWarnings("WeakerAccess")
     public String getCurrentDateAndTimeFormatted() {
-        DateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
+        DateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmssSSS");
         return dateFormat.format(new Date());
     }
 

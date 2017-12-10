@@ -9,7 +9,6 @@ import org.openqa.grid.web.servlet.RegistryBasedServlet;
 import org.openqa.selenium.MutableCapabilities;
 import org.openqa.selenium.internal.BuildInfo;
 
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.ByteArrayInputStream;
@@ -40,13 +39,13 @@ public class ZaleniumConsoleServlet extends RegistryBasedServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
+            throws IOException {
         process(request, response);
     }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
+            throws IOException {
         process(request, response);
     }
 

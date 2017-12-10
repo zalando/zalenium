@@ -16,7 +16,6 @@ import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.compress.utils.IOUtils;
 import org.openqa.grid.common.RegistrationRequest;
-import org.openqa.grid.common.exception.RemoteNotReachableException;
 import org.openqa.grid.common.exception.RemoteUnregisterException;
 import org.openqa.grid.internal.GridRegistry;
 import org.openqa.grid.internal.SessionTerminationReason;
@@ -550,9 +549,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         }
 
         containerClient.stopContainer(getContainerId());
-        addNewEvent(new RemoteNotReachableException(shutdownReason));
         addNewEvent(new RemoteUnregisterException(shutdownReason));
-        teardown();
     }
 
 
@@ -612,7 +609,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                 try {
                     Thread.sleep(getSleepTimeBetweenChecks());
                 } catch (InterruptedException e) {
-                    LOGGER.log(Level.FINE, dockerSeleniumRemoteProxy.getId() + " Error while sleeping the " +
+                    LOGGER.log(Level.FINEST, dockerSeleniumRemoteProxy.getId() + " Error while sleeping the " +
                             "thread, stopping thread execution.", e);
                     return;
                 }
