@@ -550,7 +550,6 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
 
         containerClient.stopContainer(getContainerId());
         addNewEvent(new RemoteUnregisterException(shutdownReason));
-        teardown();
     }
 
 
@@ -610,7 +609,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                 try {
                     Thread.sleep(getSleepTimeBetweenChecks());
                 } catch (InterruptedException e) {
-                    LOGGER.log(Level.FINE, dockerSeleniumRemoteProxy.getId() + " Error while sleeping the " +
+                    LOGGER.log(Level.FINEST, dockerSeleniumRemoteProxy.getId() + " Error while sleeping the " +
                             "thread, stopping thread execution.", e);
                     return;
                 }
