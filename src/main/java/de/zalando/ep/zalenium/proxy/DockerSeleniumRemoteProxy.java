@@ -16,7 +16,6 @@ import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.compress.utils.IOUtils;
 import org.openqa.grid.common.RegistrationRequest;
-import org.openqa.grid.common.exception.RemoteNotReachableException;
 import org.openqa.grid.common.exception.RemoteUnregisterException;
 import org.openqa.grid.internal.GridRegistry;
 import org.openqa.grid.internal.SessionTerminationReason;
@@ -550,7 +549,6 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         }
 
         containerClient.stopContainer(getContainerId());
-        addNewEvent(new RemoteNotReachableException(shutdownReason));
         addNewEvent(new RemoteUnregisterException(shutdownReason));
         teardown();
     }

@@ -133,10 +133,6 @@ public class ZaleniumRegistry extends BaseGridRegistry implements GridRegistry {
         }
     }
 
-    void terminateSynchronousFOR_TEST_ONLY(TestSession testSession) {
-        _release(testSession.getSlot(), SessionTerminationReason.CLIENT_STOPPED_SESSION);
-    }
-
     /**
      * @see GridRegistry#removeIfPresent(RemoteProxy)
      */
