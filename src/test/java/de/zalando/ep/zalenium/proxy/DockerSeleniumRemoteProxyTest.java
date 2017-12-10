@@ -280,7 +280,7 @@ public class DockerSeleniumRemoteProxyTest {
 
         // After running one test, the node shouldn't be busy and also down
         Assert.assertFalse(proxy.isBusy());
-        Callable<Boolean> callable = () -> proxy.isDown();
+        Callable<Boolean> callable = () -> registry.getProxyById(proxy.getId()) == null;
         await().pollInterval(Duration.FIVE_HUNDRED_MILLISECONDS).atMost(Duration.TWO_SECONDS).until(callable);
     }
 
@@ -376,7 +376,7 @@ public class DockerSeleniumRemoteProxyTest {
 
         // The node should tear down after the maximum idle time is elapsed
         Assert.assertTrue(spyProxy.isBusy());
-        Callable<Boolean> callable = spyProxy::isDown;
+        Callable<Boolean> callable = () -> registry.getProxyById(spyProxy.getId()) == null;
         await().pollInterval(Duration.FIVE_HUNDRED_MILLISECONDS).atMost(Duration.FIVE_SECONDS).until(callable);
     }
 
