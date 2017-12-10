@@ -4,6 +4,7 @@ import de.zalando.ep.zalenium.container.ContainerClient;
 import de.zalando.ep.zalenium.container.ContainerFactory;
 import de.zalando.ep.zalenium.container.kubernetes.KubernetesContainerClient;
 import de.zalando.ep.zalenium.dashboard.TestInformation;
+import de.zalando.ep.zalenium.registry.ZaleniumRegistry;
 import de.zalando.ep.zalenium.util.DockerContainerMock;
 import de.zalando.ep.zalenium.util.Environment;
 import de.zalando.ep.zalenium.util.KubernetesContainerMock;
@@ -17,7 +18,6 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 import org.openqa.grid.common.RegistrationRequest;
-import org.openqa.grid.internal.DefaultGridRegistry;
 import org.openqa.grid.internal.GridRegistry;
 import org.openqa.grid.internal.TestSession;
 import org.openqa.grid.web.servlet.handler.RequestType;
@@ -94,7 +94,7 @@ public class DockerSeleniumRemoteProxyTest {
         }
         ContainerFactory.setIsKubernetes(this.currentIsKubernetesValue);
 
-        registry = DefaultGridRegistry.newInstance();
+        registry = ZaleniumRegistry.newInstance();
 
         // Creating the configuration and the registration request of the proxy (node)
         RegistrationRequest request = TestUtils.getRegistrationRequestForTesting(40000,

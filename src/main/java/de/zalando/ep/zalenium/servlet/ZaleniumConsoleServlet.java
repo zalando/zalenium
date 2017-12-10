@@ -53,7 +53,8 @@ public class ZaleniumConsoleServlet extends RegistryBasedServlet {
     protected void process(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
 
-        int refresh = -1;
+        // Refreshing every 20 minutes by default
+        int refresh = 1200;
         if (request.getParameter("refresh") != null) {
             refresh = Integer.parseInt(request.getParameter("refresh"));
         }
