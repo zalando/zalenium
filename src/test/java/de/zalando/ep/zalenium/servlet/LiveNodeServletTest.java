@@ -14,8 +14,9 @@ import org.junit.Before;
 import org.junit.Test;
 import org.openqa.grid.common.RegistrationRequest;
 import org.openqa.grid.internal.GridRegistry;
+import org.openqa.grid.internal.utils.configuration.GridHubConfiguration;
+import org.openqa.grid.web.Hub;
 
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -36,7 +37,7 @@ public class LiveNodeServletTest {
 
     @Before
     public void setUp() throws IOException {
-        registry = ZaleniumRegistry.newInstance();
+        registry = ZaleniumRegistry.newInstance(new Hub(new GridHubConfiguration()));
         
         this.originalContainerClient = ContainerFactory.getContainerClientGenerator();
         ContainerFactory.setContainerClientGenerator(DockerContainerMock::getMockedDockerContainerClient);
@@ -66,7 +67,7 @@ public class LiveNodeServletTest {
     }
 
     @Test
-    public void addedNodesAreRenderedInServlet() throws ServletException, IOException {
+    public void addedNodesAreRenderedInServlet() throws IOException {
 
         LivePreviewServlet livePreviewServletServlet = new LivePreviewServlet(registry);
 
@@ -83,7 +84,7 @@ public class LiveNodeServletTest {
     }
 
     @Test
-    public void postAndGetReturnSameContent() throws ServletException, IOException {
+    public void postAndGetReturnSameContent() throws IOException {
 
         LivePreviewServlet livePreviewServletServlet = new LivePreviewServlet(registry);
 
@@ -96,7 +97,7 @@ public class LiveNodeServletTest {
     }
 
     @Test
-    public void noRefreshInHtmlWhenParameterIsInvalid() throws ServletException, IOException {
+    public void noRefreshInHtmlWhenParameterIsInvalid() throws IOException {
         when(request.getParameter("refresh")).thenReturn("XYZ");
 
         LivePreviewServlet livePreviewServletServlet = new LivePreviewServlet(registry);
@@ -104,7 +105,7 @@ public class LiveNodeServletTest {
         livePreviewServletServlet.doPost(request, response);
         String postResponseContent = response.getOutputStream().toString();
         // content='-1' means that the page won't refresh
-        assertThat(postResponseContent, containsString("<meta http-equiv='refresh' content='-1' />"));
+        assertThat(postResponseContent, containsString("<meta http-equiv='refresh' content='1200' />"));
     }
     
     @After
