@@ -15,7 +15,6 @@ import org.openqa.grid.internal.RemoteProxy;
 import org.openqa.grid.internal.utils.HtmlRenderer;
 import org.openqa.grid.web.servlet.RegistryBasedServlet;
 
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.ByteArrayInputStream;
@@ -25,7 +24,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -43,8 +41,7 @@ public class LivePreviewServlet extends RegistryBasedServlet {
     }
 
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) {
         try {
             process(request, response);
         } catch (Exception e) {
@@ -53,8 +50,7 @@ public class LivePreviewServlet extends RegistryBasedServlet {
     }
 
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) {
         try {
             process(request, response);
         } catch (Exception e) {
@@ -67,7 +63,7 @@ public class LivePreviewServlet extends RegistryBasedServlet {
             throws IOException {
 
 
-        int refresh = -1;
+        int refresh = 1200;
         String testBuild = "";
         try {
             refresh = request.getParameter("refresh") == null ? -1 : Integer.parseInt(request.getParameter("refresh"));
