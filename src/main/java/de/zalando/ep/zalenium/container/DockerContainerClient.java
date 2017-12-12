@@ -215,7 +215,7 @@ public class DockerContainerClient implements ContainerClient {
 
         HostConfig hostConfig = HostConfig.builder()
                 .appendBinds(binds)
-                .portBindings(portBindings)
+                // .portBindings(portBindings)
                 .networkMode(networkMode)
                 .extraHosts(extraHosts)
                 .autoRemove(true)
