@@ -10,7 +10,7 @@ echo ${VIDEOS_FOLDER}
 EnsureCleanEnv()
 {
     CONTAINER_NAME=zalenium
-    log "Ensuring no stale Zalenium related containers are still around..."
+    echo -e "Ensuring no stale Zalenium related containers are still around..."
     local __containers=$(docker ps -a -f name=${CONTAINER_NAME} -q | wc -l)
 
     # If there are still containers around; stop gracefully
