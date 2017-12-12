@@ -7,6 +7,30 @@ INTEGRATION_TO_TEST=$1
 VIDEOS_FOLDER=$(pwd)/target/videos
 echo ${VIDEOS_FOLDER}
 
+EnsureCleanEnv()
+{
+    CONTAINER_NAME=zalenium
+    log "Ensuring no stale Zalenium related containers are still around..."
+    local __containers=$(docker ps -a -f name=${CONTAINER_NAME} -q | wc -l)
+
+    # If there are still containers around; stop gracefully
+    if [ ${__containers} -gt 0 ]; then
+        echo "Removing exited docker-selenium containers..."
+        docker stop $(docker ps -a -f name=${CONTAINER_NAME} -q)
+
+        # If there are still containers around; remove them
+        if [ $(docker ps -a -f name=${CONTAINER_NAME}_ -q | wc -l) -gt 0 ]; then
+            docker rm $(docker ps -a -f name=${CONTAINER_NAME} -q)
+        fi
+
+        # If there are still containers around; forcibly remove them
+        if [ $(docker ps -a -f name=${CONTAINER_NAME}_ -q | wc -l) -gt 0 ]; then
+            docker rm -f $(docker ps -a -f name=${CONTAINER_NAME} -q)
+        fi
+    fi
+}
+
+
 if [ "$TRAVIS_PULL_REQUEST" = "false" ] && [ -n "${TRAVIS_TAG}" ] && [ "${TRAVIS_TAG}" != "latest" ]; then
     echo "TRAVIS_TAG=${TRAVIS_TAG}"
 	echo "Not running integration tests when a TAG is set, we assume they already ran in the PR."
@@ -64,25 +88,3 @@ else
     fi
 fi
 
-EnsureCleanEnv()
-{
-    CONTAINER_NAME=zalenium
-    log "Ensuring no stale Zalenium related containers are still around..."
-    local __containers=$(docker ps -a -f name=${CONTAINER_NAME} -q | wc -l)
-
-    # If there are still containers around; stop gracefully
-    if [ ${__containers} -gt 0 ]; then
-        echo "Removing exited docker-selenium containers..."
-        docker stop $(docker ps -a -f name=${CONTAINER_NAME} -q)
-
-        # If there are still containers around; remove them
-        if [ $(docker ps -a -f name=${CONTAINER_NAME}_ -q | wc -l) -gt 0 ]; then
-            docker rm $(docker ps -a -f name=${CONTAINER_NAME} -q)
-        fi
-
-        # If there are still containers around; forcibly remove them
-        if [ $(docker ps -a -f name=${CONTAINER_NAME}_ -q | wc -l) -gt 0 ]; then
-            docker rm -f $(docker ps -a -f name=${CONTAINER_NAME} -q)
-        fi
-    fi
-}
