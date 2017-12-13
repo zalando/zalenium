@@ -12,6 +12,7 @@ import org.openqa.selenium.remote.CapabilityType;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -100,11 +101,10 @@ public class LiveNodeHtmlRenderer implements HtmlRenderer {
                 slotTitle = testSlot.getCapabilities().toString();
             }
             Map<String, String> browserValues = new HashMap<>();
-            browserValues.put("{{browserVersion}}", version);
-            browserValues.put("{{slotIcon}}", icon);
+            browserValues.put("{{browserVersion}}", Optional.ofNullable(version).orElse("N/A"));
+            browserValues.put("{{slotIcon}}", Optional.ofNullable(icon).orElse("N/A"));
             browserValues.put("{{slotClass}}", slotClass);
             browserValues.put("{{slotTitle}}", slotTitle);
-            LOGGER.info("browserValues.toString() -> " + browserValues.toString());
             browserSection.append(templateRenderer.renderSection("{{tabBrowsers}}", browserValues));
         }
         return browserSection.toString();

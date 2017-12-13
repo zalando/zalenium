@@ -117,7 +117,7 @@ public class ZaleniumConsoleServletTest {
 
 
     @Test
-    public void addedNodesAreRenderedInServlet() throws ServletException, IOException {
+    public void addedNodesAreRenderedInServlet() throws IOException {
 
         ZaleniumConsoleServlet zaleniumConsoleServlet = new ZaleniumConsoleServlet(registry);
 
@@ -132,7 +132,7 @@ public class ZaleniumConsoleServletTest {
     }
 
     @Test
-    public void postAndGetReturnSameContent() throws ServletException, IOException {
+    public void postAndGetReturnSameContent() throws IOException {
 
         ZaleniumConsoleServlet zaleniumConsoleServlet = new ZaleniumConsoleServlet(registry);
 
