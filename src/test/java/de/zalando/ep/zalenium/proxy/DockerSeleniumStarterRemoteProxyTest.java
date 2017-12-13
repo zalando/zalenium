@@ -19,14 +19,18 @@ import org.junit.runners.Parameterized;
 import org.openqa.grid.common.RegistrationRequest;
 import org.openqa.grid.internal.GridRegistry;
 import org.openqa.grid.internal.TestSession;
+import org.openqa.grid.internal.utils.configuration.GridHubConfiguration;
+import org.openqa.grid.web.Hub;
 import org.openqa.selenium.Dimension;
 import org.openqa.selenium.Platform;
 import org.openqa.selenium.remote.BrowserType;
 import org.openqa.selenium.remote.CapabilityType;
 import org.openqa.selenium.remote.server.jmx.JMXHelper;
 
+import javax.management.InstanceNotFoundException;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
+import java.lang.management.ManagementFactory;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -92,7 +96,14 @@ public class DockerSeleniumStarterRemoteProxyTest {
         }
         ContainerFactory.setIsKubernetes(this.currentIsKubernetesValue);
 
-        registry = ZaleniumRegistry.newInstance();
+        try {
+            ObjectName objectName = new ObjectName("org.seleniumhq.grid:type=Hub");
+            ManagementFactory.getPlatformMBeanServer().getObjectInstance(objectName);
+            new JMXHelper().unregister(objectName);
+        } catch (MalformedObjectNameException | InstanceNotFoundException e) {
+            // Might be that the object does not exist, it is ok. Nothing to do, this is just a cleanup task.
+        }
+        registry = ZaleniumRegistry.newInstance(new Hub(new GridHubConfiguration()));
 
         // Creating the configuration and the registration request of the proxy (node)
         request = TestUtils.getRegistrationRequestForTesting(30000,
