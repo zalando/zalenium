@@ -41,7 +41,7 @@ jobs:
     - env: step=minikube
       script:
       - docker pull elgalu/selenium
-      - kubernetes/minikube-ci-initialize.sh
+      - travis_retry kubernetes/minikube-ci-initialize.sh
       - mvn clean package -Pbuild-docker-image -DskipTests=true
       - cd target && docker build -t dosel/zalenium:minikube . && cd ..
       - kubernetes/start-zalenium-in-minikube.sh
