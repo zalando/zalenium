@@ -183,14 +183,6 @@ public class DockerContainerClient implements ContainerClient {
 
         String noVncPort = envVars.get("NOVNC_PORT");
 
-        final Map<String, List<PortBinding>> portBindings = new HashMap<>();
-        List<PortBinding> portBindingList = new ArrayList<>();
-        portBindingList.add(PortBinding.of("", nodePort));
-        portBindings.put(nodePort, portBindingList);
-        portBindingList = new ArrayList<>();
-        portBindingList.add(PortBinding.of("", noVncPort));
-        portBindings.put(noVncPort, portBindingList);
-
         String networkMode = getZaleniumNetwork(zaleniumContainerName);
 
         List<String> extraHosts = new ArrayList<>();
@@ -215,7 +207,6 @@ public class DockerContainerClient implements ContainerClient {
 
         HostConfig hostConfig = HostConfig.builder()
                 .appendBinds(binds)
-                // .portBindings(portBindings)
                 .networkMode(networkMode)
                 .extraHosts(extraHosts)
                 .autoRemove(true)
