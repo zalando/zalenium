@@ -7,12 +7,17 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
+import java.lang.management.ManagementFactory;
 import java.util.function.Supplier;
 
+import javax.management.InstanceNotFoundException;
+import javax.management.MalformedObjectNameException;
+import javax.management.ObjectName;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import de.zalando.ep.zalenium.registry.ZaleniumRegistry;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -25,6 +30,9 @@ import de.zalando.ep.zalenium.proxy.DockerSeleniumRemoteProxy;
 import de.zalando.ep.zalenium.proxy.DockerSeleniumStarterRemoteProxy;
 import de.zalando.ep.zalenium.util.DockerContainerMock;
 import de.zalando.ep.zalenium.util.TestUtils;
+import org.openqa.grid.internal.utils.configuration.GridHubConfiguration;
+import org.openqa.grid.web.Hub;
+import org.openqa.selenium.remote.server.jmx.JMXHelper;
 
 public class VncAuthenticationServletTest {
     private GridRegistry registry;
@@ -34,7 +42,14 @@ public class VncAuthenticationServletTest {
 
     @Before
     public void setUp() throws IOException {
-        registry = ZaleniumRegistry.newInstance();
+        try {
+            ObjectName objectName = new ObjectName("org.seleniumhq.grid:type=Hub");
+            ManagementFactory.getPlatformMBeanServer().getObjectInstance(objectName);
+            new JMXHelper().unregister(objectName);
+        } catch (MalformedObjectNameException | InstanceNotFoundException e) {
+            // Might be that the object does not exist, it is ok. Nothing to do, this is just a cleanup task.
+        }
+        registry = ZaleniumRegistry.newInstance(new Hub(new GridHubConfiguration()));
         
         this.originalContainerClient = ContainerFactory.getContainerClientGenerator();
         ContainerFactory.setContainerClientGenerator(DockerContainerMock::getMockedDockerContainerClient);
@@ -62,7 +77,16 @@ public class VncAuthenticationServletTest {
         when(request.getServerName()).thenReturn("localhost");
         when(response.getOutputStream()).thenReturn(TestUtils.getMockedServletOutputStream());
     }
-    
+
+    @After
+    public void tearDown() throws MalformedObjectNameException {
+        ObjectName objectName = new ObjectName("org.seleniumhq.grid:type=RemoteProxy,node=\"http://localhost:40001\"");
+        new JMXHelper().unregister(objectName);
+        objectName = new ObjectName("org.seleniumhq.grid:type=RemoteProxy,node=\"http://localhost:40000\"");
+        new JMXHelper().unregister(objectName);
+        ContainerFactory.setContainerClientGenerator(originalContainerClient);
+    }
+
     @Test
     public void testAuthenticationSucceedsForNoVnc() throws Exception {
         VncAuthenticationServlet vncAuthenticationServlet = new VncAuthenticationServlet(registry);
