@@ -116,7 +116,6 @@ public class LiveNodeServletTest {
 
         livePreviewServletServlet.doPost(request, response);
         String postResponseContent = response.getOutputStream().toString();
-        // content='-1' means that the page won't refresh
         assertThat(postResponseContent, containsString("<meta http-equiv='refresh' content='1200' />"));
     }
     

@@ -104,6 +104,7 @@ public class LiveNodeHtmlRenderer implements HtmlRenderer {
             browserValues.put("{{slotIcon}}", icon);
             browserValues.put("{{slotClass}}", slotClass);
             browserValues.put("{{slotTitle}}", slotTitle);
+            LOGGER.info("browserValues.toString() -> " + browserValues.toString());
             browserSection.append(templateRenderer.renderSection("{{tabBrowsers}}", browserValues));
         }
         return browserSection.toString();
