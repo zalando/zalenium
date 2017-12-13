@@ -5,13 +5,15 @@ import de.zalando.ep.zalenium.util.TestUtils;
 import org.junit.Test;
 import org.openqa.grid.common.RegistrationRequest;
 import org.openqa.grid.internal.GridRegistry;
+import org.openqa.grid.internal.utils.configuration.GridHubConfiguration;
+import org.openqa.grid.web.Hub;
 import org.testng.Assert;
 
 public class CloudTestingRemoteProxyTest {
 
     @Test
     public void defaultValuesAreAlwaysNull() {
-        GridRegistry registry = ZaleniumRegistry.newInstance();
+        GridRegistry registry = ZaleniumRegistry.newInstance(new Hub(new GridHubConfiguration()));
         RegistrationRequest request = TestUtils.getRegistrationRequestForTesting(30003,
                 CloudTestingRemoteProxy.class.getCanonicalName());
         CloudTestingRemoteProxy proxy = CloudTestingRemoteProxy.getNewInstance(request, registry);
