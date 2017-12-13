@@ -7,38 +7,14 @@ INTEGRATION_TO_TEST=$1
 VIDEOS_FOLDER=$(pwd)/target/videos
 echo ${VIDEOS_FOLDER}
 
-EnsureCleanEnv()
-{
-    CONTAINER_NAME=zalenium
-    echo -e "Ensuring no stale Zalenium related containers are still around..."
-    local __containers=$(docker ps -a -f name=${CONTAINER_NAME} -q | wc -l)
-
-    # If there are still containers around; stop gracefully
-    if [ ${__containers} -gt 0 ]; then
-        echo "Removing exited docker-selenium containers..."
-        docker stop $(docker ps -a -f name=${CONTAINER_NAME} -q)
-
-        # If there are still containers around; remove them
-        if [ $(docker ps -a -f name=${CONTAINER_NAME}_ -q | wc -l) -gt 0 ]; then
-            docker rm $(docker ps -a -f name=${CONTAINER_NAME} -q)
-        fi
-
-        # If there are still containers around; forcibly remove them
-        if [ $(docker ps -a -f name=${CONTAINER_NAME}_ -q | wc -l) -gt 0 ]; then
-            docker rm -f $(docker ps -a -f name=${CONTAINER_NAME} -q)
-        fi
-    fi
-}
-
-
 if [ "$TRAVIS_PULL_REQUEST" = "false" ] && [ -n "${TRAVIS_TAG}" ] && [ "${TRAVIS_TAG}" != "latest" ]; then
     echo "TRAVIS_TAG=${TRAVIS_TAG}"
 	echo "Not running integration tests when a TAG is set, we assume they already ran in the PR."
 else
-    EnsureCleanEnv
     # If the environment var exists, then we run the integration tests. This is to allow external PRs ro tun
     if [ "$INTEGRATION_TO_TEST" = sauceLabs ]; then
         if [ -n "${SAUCE_USERNAME}" ]; then
+            sudo mvn clean
             mvn clean verify -Pintegration-test -DthreadCountProperty=2 -Dskip.surefire.tests=true -DintegrationToTest=${INTEGRATION_TO_TEST}
             # Check for generated videos
             ls -la ${VIDEOS_FOLDER}/saucelabs*.mp4 || (echo "No Sauce Labs videos were downloaded." && exit 2)
@@ -47,6 +23,7 @@ else
     fi
     if [ "$INTEGRATION_TO_TEST" = browserStack ]; then
         if [ -n "${BROWSER_STACK_USER}" ]; then
+            sudo mvn clean
             mvn clean package -Pbuild-docker-image -DskipTests=true
             mkdir -p "${VIDEOS_FOLDER}"
             cd target && docker build -t dosel/zalenium:latest . && cd ..
@@ -61,6 +38,7 @@ else
     fi
     if [ "$INTEGRATION_TO_TEST" = testingBot ]; then
         if [ -n "${TESTINGBOT_KEY}" ]; then
+            sudo mvn clean
             mvn clean verify -Pintegration-test -DthreadCountProperty=2 -Dskip.surefire.tests=true -DintegrationToTest=${INTEGRATION_TO_TEST}
             # Check for generated videos
             ls -la ${VIDEOS_FOLDER}/testingbot*.mp4 || (echo "No TestingBot videos were downloaded." && exit 2)
@@ -69,6 +47,7 @@ else
     fi
     if [ "$INTEGRATION_TO_TEST" = dockerCompose ]; then
         if [ -n "${SAUCE_USERNAME}" ]; then
+            sudo mvn clean
             mvn clean package -Pbuild-docker-image -DskipTests=true
             mkdir -p "${VIDEOS_FOLDER}"
             chmod +x target/zalenium_in_docker_compose.sh
