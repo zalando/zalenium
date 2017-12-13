@@ -152,7 +152,9 @@ public class KubernetesContainerMock {
         execPaths.add(String.format("%stransfer-logs.sh%s", bashCommand, commandSuffix));
         execPaths.add(String.format("%s/var/log/cont/&command=-c&command=.%s", tarCommand, commandSuffix));
         execPaths.add(String.format("%s/videos/&command=-c&command=.%s", tarCommand, commandSuffix));
+        execPaths.add(String.format("%s/videos/&command=-C&command=.%s", tarCommand, commandSuffix));
         execPaths.add(String.format("%sstop-video%s", bashCommand, commandSuffix));
+        execPaths.add(String.format("%sstart-video%s", bashCommand, commandSuffix));
         execPaths.add(String.format("%stransfer-logs.sh%s", bashCommand, commandSuffix));
         execPaths.add(String.format("%scleanup-container.sh%s", bashCommand, commandSuffix));
         String notifyComplete = bashCommand
