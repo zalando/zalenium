@@ -85,8 +85,15 @@ public class TemplateRenderer {
     public String renderTemplate(Map<String, String> renderValues) {
         String renderedTemplate = getTemplateContents();
         for (Map.Entry<String, String> mapEntry : renderValues.entrySet()) {
+            validateEntryValues(mapEntry.getKey(), mapEntry.getValue());
             renderedTemplate = renderValue(renderedTemplate, mapEntry.getKey(), mapEntry.getValue());
         }
         return renderedTemplate;
+    }
+
+    private void validateEntryValues(String key, String value) {
+        if (value == null) {
+            logger.log(Level.WARNING, String.format("Vale for key %s is null!", key));
+        }
     }
 }
