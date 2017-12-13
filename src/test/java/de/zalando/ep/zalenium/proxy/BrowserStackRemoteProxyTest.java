@@ -31,11 +31,13 @@ import org.openqa.selenium.remote.BrowserType;
 import org.openqa.selenium.remote.CapabilityType;
 import org.openqa.selenium.remote.server.jmx.JMXHelper;
 
+import javax.management.InstanceNotFoundException;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.lang.management.ManagementFactory;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -61,7 +63,14 @@ public class BrowserStackRemoteProxyTest {
 
     @SuppressWarnings("ConstantConditions")
     @Before
-    public void setUp() throws IOException {
+    public void setUp() {
+        try {
+            ObjectName objectName = new ObjectName("org.seleniumhq.grid:type=Hub");
+            ManagementFactory.getPlatformMBeanServer().getObjectInstance(objectName);
+            new JMXHelper().unregister(objectName);
+        } catch (MalformedObjectNameException | InstanceNotFoundException e) {
+            // Might be that the object does not exist, it is ok. Nothing to do, this is just a cleanup task.
+        }
         registry = ZaleniumRegistry.newInstance(new Hub(new GridHubConfiguration()));
         // Creating the configuration and the registration request of the proxy (node)
         RegistrationRequest request = TestUtils.getRegistrationRequestForTesting(30002,
@@ -86,8 +95,6 @@ public class BrowserStackRemoteProxyTest {
         ObjectName objectName = new ObjectName("org.seleniumhq.grid:type=RemoteProxy,node=\"http://hub-cloud.browserstack.com:80\"");
         new JMXHelper().unregister(objectName);
         objectName = new ObjectName("org.seleniumhq.grid:type=RemoteProxy,node=\"http://localhost:30000\"");
-        new JMXHelper().unregister(objectName);
-        objectName = new ObjectName("org.seleniumhq.grid:type=Hub");
         new JMXHelper().unregister(objectName);
         BrowserStackRemoteProxy.restoreCommonProxyUtilities();
         BrowserStackRemoteProxy.restoreGa();
