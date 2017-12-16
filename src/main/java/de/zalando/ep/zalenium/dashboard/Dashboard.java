@@ -170,6 +170,7 @@ public class Dashboard {
         commonProxyUtilities = new CommonProxyUtilities();
     }
 
+    @VisibleForTesting
     public static void setCommonProxyUtilities(CommonProxyUtilities commonProxyUtilities) {
         Dashboard.commonProxyUtilities = commonProxyUtilities;
     }

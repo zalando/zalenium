@@ -3,21 +3,27 @@ package de.zalando.ep.zalenium.proxy;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import de.zalando.ep.zalenium.dashboard.Dashboard;
 import de.zalando.ep.zalenium.registry.ZaleniumRegistry;
 import de.zalando.ep.zalenium.util.CommonProxyUtilities;
 import de.zalando.ep.zalenium.util.Environment;
 import de.zalando.ep.zalenium.util.TestUtils;
 import de.zalando.ep.zalenium.dashboard.TestInformation;
+import org.awaitility.Duration;
 import org.hamcrest.CoreMatchers;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 import org.openqa.grid.common.RegistrationRequest;
 import org.openqa.grid.internal.ExternalSessionKey;
 import org.openqa.grid.internal.GridRegistry;
 import org.openqa.grid.internal.RemoteProxy;
 import org.openqa.grid.internal.TestSession;
+import org.openqa.grid.internal.utils.configuration.GridHubConfiguration;
+import org.openqa.grid.web.Hub;
 import org.openqa.grid.web.servlet.handler.RequestType;
 import org.openqa.grid.web.servlet.handler.WebDriverRequest;
 import org.openqa.selenium.Platform;
@@ -25,16 +31,19 @@ import org.openqa.selenium.remote.BrowserType;
 import org.openqa.selenium.remote.CapabilityType;
 import org.openqa.selenium.remote.server.jmx.JMXHelper;
 
+import javax.management.InstanceNotFoundException;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.lang.management.ManagementFactory;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -42,16 +51,27 @@ import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.timeout;
+import static org.awaitility.Awaitility.await;
 
 public class BrowserStackRemoteProxyTest {
 
     private BrowserStackRemoteProxy browserStackProxy;
     private GridRegistry registry;
 
+    @Rule
+    public TemporaryFolder temporaryFolder = new TemporaryFolder();
+
     @SuppressWarnings("ConstantConditions")
     @Before
     public void setUp() {
-        registry = ZaleniumRegistry.newInstance();
+        try {
+            ObjectName objectName = new ObjectName("org.seleniumhq.grid:type=Hub");
+            ManagementFactory.getPlatformMBeanServer().getObjectInstance(objectName);
+            new JMXHelper().unregister(objectName);
+        } catch (MalformedObjectNameException | InstanceNotFoundException e) {
+            // Might be that the object does not exist, it is ok. Nothing to do, this is just a cleanup task.
+        }
+        registry = ZaleniumRegistry.newInstance(new Hub(new GridHubConfiguration()));
         // Creating the configuration and the registration request of the proxy (node)
         RegistrationRequest request = TestUtils.getRegistrationRequestForTesting(30002,
                 BrowserStackRemoteProxy.class.getCanonicalName());
@@ -142,13 +162,15 @@ public class BrowserStackRemoteProxyTest {
             requestedCapability.put(CapabilityType.PLATFORM, Platform.WIN10);
 
             JsonElement informationSample = TestUtils.getTestInformationSample("browserstack_testinformation.json");
-            CommonProxyUtilities commonProxyUtilities = mock(CommonProxyUtilities.class);
+            TestUtils.ensureRequiredInputFilesExist(temporaryFolder);
+            CommonProxyUtilities commonProxyUtilities = TestUtils.mockCommonProxyUtilitiesForDashboardTesting(temporaryFolder);
             Environment env = new Environment();
             String mockTestInformationUrl = "https://www.browserstack.com/automate/sessions/77e51cead8e6e37b0a0feb0dfa69325b2c4acf97.json";
             when(commonProxyUtilities.readJSONFromUrl(mockTestInformationUrl,
                     env.getStringEnvVariable("BROWSER_STACK_USER", ""),
                     env.getStringEnvVariable("BROWSER_STACK_KEY", ""))).thenReturn(informationSample);
             BrowserStackRemoteProxy.setCommonProxyUtilities(commonProxyUtilities);
+            Dashboard.setCommonProxyUtilities(commonProxyUtilities);
 
             // Getting a test session in the sauce labs node
             BrowserStackRemoteProxy bsSpyProxy = spy(browserStackProxy);
@@ -166,6 +188,8 @@ public class BrowserStackRemoteProxyTest {
             bsSpyProxy.afterCommand(testSession, request, response);
 
             verify(bsSpyProxy, timeout(1000 * 5)).getTestInformation(mockSeleniumSessionId);
+            Callable<Boolean> callable = () -> BrowserStackRemoteProxy.addToDashboardCalled;
+            await().pollInterval(Duration.FIVE_HUNDRED_MILLISECONDS).atMost(Duration.TWO_SECONDS).until(callable);
             TestInformation testInformation = bsSpyProxy.getTestInformation(mockSeleniumSessionId);
             Assert.assertEquals("loadZalandoPageAndCheckTitle", testInformation.getTestName());
             Assert.assertThat(testInformation.getFileName(),
@@ -181,6 +205,7 @@ public class BrowserStackRemoteProxyTest {
             BrowserStackRemoteProxy.restoreCommonProxyUtilities();
             BrowserStackRemoteProxy.restoreGa();
             BrowserStackRemoteProxy.restoreEnvironment();
+            Dashboard.restoreCommonProxyUtilities();
         }
     }
 

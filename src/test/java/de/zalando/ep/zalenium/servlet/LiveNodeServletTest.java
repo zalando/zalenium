@@ -16,11 +16,16 @@ import org.openqa.grid.common.RegistrationRequest;
 import org.openqa.grid.internal.GridRegistry;
 import org.openqa.grid.internal.utils.configuration.GridHubConfiguration;
 import org.openqa.grid.web.Hub;
+import org.openqa.selenium.remote.server.jmx.JMXHelper;
 
+import javax.management.InstanceNotFoundException;
+import javax.management.MalformedObjectNameException;
+import javax.management.ObjectName;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
+import java.lang.management.ManagementFactory;
 import java.util.function.Supplier;
 
 import static org.mockito.Mockito.mock;
@@ -37,6 +42,13 @@ public class LiveNodeServletTest {
 
     @Before
     public void setUp() throws IOException {
+        try {
+            ObjectName objectName = new ObjectName("org.seleniumhq.grid:type=Hub");
+            ManagementFactory.getPlatformMBeanServer().getObjectInstance(objectName);
+            new JMXHelper().unregister(objectName);
+        } catch (MalformedObjectNameException | InstanceNotFoundException e) {
+            // Might be that the object does not exist, it is ok. Nothing to do, this is just a cleanup task.
+        }
         registry = ZaleniumRegistry.newInstance(new Hub(new GridHubConfiguration()));
         
         this.originalContainerClient = ContainerFactory.getContainerClientGenerator();
@@ -104,12 +116,15 @@ public class LiveNodeServletTest {
 
         livePreviewServletServlet.doPost(request, response);
         String postResponseContent = response.getOutputStream().toString();
-        // content='-1' means that the page won't refresh
         assertThat(postResponseContent, containsString("<meta http-equiv='refresh' content='1200' />"));
     }
     
     @After
-    public void tearDown() {
+    public void tearDown() throws MalformedObjectNameException {
+        ObjectName objectName = new ObjectName("org.seleniumhq.grid:type=RemoteProxy,node=\"http://localhost:40000\"");
+        new JMXHelper().unregister(objectName);
+        objectName = new ObjectName("org.seleniumhq.grid:type=RemoteProxy,node=\"http://localhost:40001\"");
+        new JMXHelper().unregister(objectName);
         ContainerFactory.setContainerClientGenerator(originalContainerClient);
     }
 

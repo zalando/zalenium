@@ -121,7 +121,7 @@ public class TestUtils {
         };
     }
 
-    public static CommonProxyUtilities mockCommonProxyUtilitiesForDashboardTesting(TemporaryFolder temporaryFolder) {
+    public static CommonProxyUtilities mockCommonProxyUtilitiesForDashboardTesting(TemporaryFolder temporaryFolder) throws IOException {
         CommonProxyUtilities commonProxyUtilities = mock(CommonProxyUtilities.class);
         when(commonProxyUtilities.currentLocalPath()).thenReturn(temporaryFolder.getRoot().getAbsolutePath());
         when(commonProxyUtilities.getShortDateAndTime()).thenCallRealMethod();

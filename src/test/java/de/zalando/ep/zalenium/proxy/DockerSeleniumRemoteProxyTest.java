@@ -3,8 +3,10 @@ package de.zalando.ep.zalenium.proxy;
 import de.zalando.ep.zalenium.container.ContainerClient;
 import de.zalando.ep.zalenium.container.ContainerFactory;
 import de.zalando.ep.zalenium.container.kubernetes.KubernetesContainerClient;
+import de.zalando.ep.zalenium.dashboard.Dashboard;
 import de.zalando.ep.zalenium.dashboard.TestInformation;
 import de.zalando.ep.zalenium.registry.ZaleniumRegistry;
+import de.zalando.ep.zalenium.util.CommonProxyUtilities;
 import de.zalando.ep.zalenium.util.DockerContainerMock;
 import de.zalando.ep.zalenium.util.Environment;
 import de.zalando.ep.zalenium.util.KubernetesContainerMock;
@@ -13,13 +15,17 @@ import org.awaitility.Duration;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 import org.openqa.grid.common.RegistrationRequest;
 import org.openqa.grid.internal.GridRegistry;
 import org.openqa.grid.internal.TestSession;
+import org.openqa.grid.internal.utils.configuration.GridHubConfiguration;
+import org.openqa.grid.web.Hub;
 import org.openqa.grid.web.servlet.handler.RequestType;
 import org.openqa.grid.web.servlet.handler.WebDriverRequest;
 import org.openqa.selenium.Dimension;
@@ -28,9 +34,12 @@ import org.openqa.selenium.remote.BrowserType;
 import org.openqa.selenium.remote.CapabilityType;
 import org.openqa.selenium.remote.server.jmx.JMXHelper;
 
+import javax.management.InstanceNotFoundException;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.lang.management.ManagementFactory;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -61,6 +70,9 @@ public class DockerSeleniumRemoteProxyTest {
     private KubernetesContainerClient originalKubernetesContainerClient;
     private Supplier<Boolean> originalIsKubernetesValue;
     private Supplier<Boolean> currentIsKubernetesValue;
+
+    @Rule
+    public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
     public DockerSeleniumRemoteProxyTest(ContainerClient containerClient, Supplier<Boolean> isKubernetes) {
         this.containerClient = containerClient;
@@ -94,7 +106,15 @@ public class DockerSeleniumRemoteProxyTest {
         }
         ContainerFactory.setIsKubernetes(this.currentIsKubernetesValue);
 
-        registry = ZaleniumRegistry.newInstance();
+        try {
+            ObjectName objectName = new ObjectName("org.seleniumhq.grid:type=Hub");
+            ManagementFactory.getPlatformMBeanServer().getObjectInstance(objectName);
+            new JMXHelper().unregister(objectName);
+        } catch (MalformedObjectNameException | InstanceNotFoundException e) {
+            // Might be that the object does not exist, it is ok. Nothing to do, this is just a cleanup task.
+        }
+
+        registry = ZaleniumRegistry.newInstance(new Hub(new GridHubConfiguration()));
 
         // Creating the configuration and the registration request of the proxy (node)
         RegistrationRequest request = TestUtils.getRegistrationRequestForTesting(40000,
@@ -253,35 +273,43 @@ public class DockerSeleniumRemoteProxyTest {
     }
 
     @Test
-    public void pollerThreadTearsDownNodeAfterTestIsCompleted() {
+    public void pollerThreadTearsDownNodeAfterTestIsCompleted() throws IOException {
 
-        // Supported desired capability for the test session
-        Map<String, Object> requestedCapability = getCapabilitySupportedByDockerSelenium();
+        try {
+            CommonProxyUtilities commonProxyUtilities = TestUtils.mockCommonProxyUtilitiesForDashboardTesting(temporaryFolder);
+            TestUtils.ensureRequiredInputFilesExist(temporaryFolder);
+            Dashboard.setCommonProxyUtilities(commonProxyUtilities);
 
-        // Start poller thread
-        proxy.startPolling();
+            // Supported desired capability for the test session
+            Map<String, Object> requestedCapability = getCapabilitySupportedByDockerSelenium();
 
-        // Get a test session
-        TestSession newSession = proxy.getNewSession(requestedCapability);
-        Assert.assertNotNull(newSession);
+            // Start poller thread
+            proxy.startPolling();
 
-        // The node should be busy since there is a session in it
-        Assert.assertTrue(proxy.isBusy());
+            // Get a test session
+            TestSession newSession = proxy.getNewSession(requestedCapability);
+            Assert.assertNotNull(newSession);
 
-        // We release the session, the node should be free
-        WebDriverRequest request = mock(WebDriverRequest.class);
-        HttpServletResponse response = mock(HttpServletResponse.class);
-        when(request.getMethod()).thenReturn("DELETE");
-        when(request.getRequestType()).thenReturn(RequestType.STOP_SESSION);
+            // The node should be busy since there is a session in it
+            Assert.assertTrue(proxy.isBusy());
 
-        newSession.getSlot().doFinishRelease();
-        proxy.afterCommand(newSession, request, response);
-        proxy.afterSession(newSession);
+            // We release the session, the node should be free
+            WebDriverRequest request = mock(WebDriverRequest.class);
+            HttpServletResponse response = mock(HttpServletResponse.class);
+            when(request.getMethod()).thenReturn("DELETE");
+            when(request.getRequestType()).thenReturn(RequestType.STOP_SESSION);
 
-        // After running one test, the node shouldn't be busy and also down
-        Assert.assertFalse(proxy.isBusy());
-        Callable<Boolean> callable = () -> registry.getProxyById(proxy.getId()) == null;
-        await().pollInterval(Duration.FIVE_HUNDRED_MILLISECONDS).atMost(Duration.TWO_SECONDS).until(callable);
+            newSession.getSlot().doFinishRelease();
+            proxy.afterCommand(newSession, request, response);
+            proxy.afterSession(newSession);
+
+            // After running one test, the node shouldn't be busy and also down
+            Assert.assertFalse(proxy.isBusy());
+            Callable<Boolean> callable = () -> registry.getProxyById(proxy.getId()) == null;
+            await().pollInterval(Duration.FIVE_HUNDRED_MILLISECONDS).atMost(Duration.TWO_SECONDS).until(callable);
+        } finally {
+            Dashboard.restoreCommonProxyUtilities();
+        }
     }
 
     @Test
@@ -398,7 +426,7 @@ public class DockerSeleniumRemoteProxyTest {
     }
 
     @Test
-    public void videoRecordingIsStartedAndStopped() throws MalformedObjectNameException {
+    public void videoRecordingIsStartedAndStopped() throws MalformedObjectNameException, IOException {
 
         try {
 
@@ -410,6 +438,10 @@ public class DockerSeleniumRemoteProxyTest {
             DockerSeleniumStarterRemoteProxy.setConfiguredScreenSize(DockerSeleniumStarterRemoteProxy.DEFAULT_SCREEN_SIZE);
             DockerSeleniumStarterRemoteProxy.setContainerClient(containerClient);
             dsProxy.getNewSession(getCapabilitySupportedByDockerSelenium());
+
+            CommonProxyUtilities commonProxyUtilities = TestUtils.mockCommonProxyUtilitiesForDashboardTesting(temporaryFolder);
+            TestUtils.ensureRequiredInputFilesExist(temporaryFolder);
+            Dashboard.setCommonProxyUtilities(commonProxyUtilities);
 
             // Creating a spy proxy to verify the invoked methods
             DockerSeleniumRemoteProxy spyProxy = spy(proxy);
@@ -456,11 +488,12 @@ public class DockerSeleniumRemoteProxyTest {
         } finally {
             ObjectName objectName = new ObjectName("org.seleniumhq.grid:type=RemoteProxy,node=\"http://localhost:30000\"");
             new JMXHelper().unregister(objectName);
+            Dashboard.restoreCommonProxyUtilities();
         }
     }
 
     @Test
-    public void videoRecordingIsDisabled() throws MalformedObjectNameException {
+    public void videoRecordingIsDisabled() throws MalformedObjectNameException, IOException {
 
         try {
             // Create a docker-selenium container
@@ -481,9 +514,13 @@ public class DockerSeleniumRemoteProxyTest {
                     .thenReturn(1);
 
             // Creating a spy proxy to verify the invoked methods
+            CommonProxyUtilities commonProxyUtilities = TestUtils.mockCommonProxyUtilitiesForDashboardTesting(temporaryFolder);
+            TestUtils.ensureRequiredInputFilesExist(temporaryFolder);
+            Dashboard.setCommonProxyUtilities(commonProxyUtilities);
             DockerSeleniumRemoteProxy spyProxy = spy(proxy);
             DockerSeleniumRemoteProxy.setEnv(environment);
             DockerSeleniumRemoteProxy.readEnvVars();
+
 
             // Start poller thread
             spyProxy.startPolling();
@@ -524,6 +561,7 @@ public class DockerSeleniumRemoteProxyTest {
             verify(spyProxy, never()).copyVideos("");
         } finally {
             DockerSeleniumRemoteProxy.restoreEnvironment();
+            Dashboard.restoreCommonProxyUtilities();
             ObjectName objectName = new ObjectName("org.seleniumhq.grid:type=RemoteProxy,node=\"http://localhost:30000\"");
             new JMXHelper().unregister(objectName);
         }

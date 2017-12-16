@@ -49,6 +49,8 @@ public class CloudTestingRemoteProxy extends DefaultRemoteProxy {
 
     @VisibleForTesting
     public static final long DEFAULT_MAX_TEST_IDLE_TIME_SECS = 90L;
+    @VisibleForTesting
+    public static boolean addToDashboardCalled = false;
     private static final Logger logger = Logger.getLogger(CloudTestingRemoteProxy.class.getName());
     private static final GoogleAnalyticsApi defaultGA = new GoogleAnalyticsApi();
     private static final CommonProxyUtilities defaultCommonProxyUtilities = new CommonProxyUtilities();
@@ -228,6 +230,7 @@ public class CloudTestingRemoteProxy extends DefaultRemoteProxy {
     }
 
     public void addTestToDashboard(String seleniumSessionId, boolean testCompleted) {
+        addToDashboardCalled = false;
         new Thread(() -> {
             try {
                 TestInformation testInformation = getTestInformation(seleniumSessionId);
@@ -248,6 +251,7 @@ public class CloudTestingRemoteProxy extends DefaultRemoteProxy {
                 }
                 createFeatureNotImplementedFile(testInformation.getLogsFolderPath());
                 Dashboard.updateDashboard(testInformation);
+                addToDashboardCalled = true;
             } catch (Exception e) {
                 logger.log(Level.SEVERE, e.toString(), e);
             }
