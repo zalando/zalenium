@@ -36,6 +36,7 @@
 * [Adding hosts to the containers](#adding-hosts-to-the-containers)
 * [Adding proxy configuration to the containers](#adding-proxy-configuration-to-the-containers)    
 * [Enabling basic auth in Zalenium](#enabling-basic-auth-in-zalenium)  
+* [Waiting for Zalenium to be ready](#waiting-for-zalenium-to-be-ready)
 
 ## Initial setup
 
@@ -524,4 +525,37 @@ and example that shows you how to do it (the user will be `yourUser` and the pas
     }
 ```
 
+## Waiting for Zalenium to be ready
+A simple way to check if Zalenium is ready to receive test requests is to use the built-in status url that Selenium
+Grid already provides: http://localhost:4444/wd/hub/status
 
+If the endpoint returns an HTTP code 200 and the value for the key `ready` is `true`, it means that Zalenium is ready
+to receive tests requests. Here is an example how the JSON payload looks like: 
+
+```json
+{
+  "status": 0,
+  "value": {
+    "ready": true,
+    "message": "Hub has capacity",
+    "build": {
+      "revision": "6e95a6684b",
+      "time": "2017-12-01T19:05:32.194Z",
+      "version": "3.8.1"
+    },
+    "os": {
+      "arch": "amd64",
+      "name": "Linux",
+      "version": "4.9.49-moby"
+    },
+    "java": {
+      "version": "1.8.0_151"
+    }
+  }
+}
+```
+
+You could `grep` the value using `jq` in a bash function like this:
+```bash
+curl -sSL http://localhost:4444/wd/hub/status | jq .value.ready | grep true
+``` 
