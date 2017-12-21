@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -63,11 +64,11 @@ public class LivePreviewServlet extends RegistryBasedServlet {
             throws IOException {
 
 
-        int refresh = 1200;
+        String refresh = "1200";
         String testBuild = "";
         try {
-            refresh = request.getParameter("refresh") == null ? -1 : Integer.parseInt(request.getParameter("refresh"));
-            testBuild = request.getParameter("build") == null ? "" : request.getParameter("build");
+            refresh = Optional.ofNullable(request.getParameter("refresh")).orElse(refresh);
+            testBuild = Optional.ofNullable(request.getParameter("build")).orElse(testBuild);
         } catch (Exception e) {
             LOGGER.log(Level.FINE, e.toString(), e);
         }
@@ -99,7 +100,7 @@ public class LivePreviewServlet extends RegistryBasedServlet {
         }
 
         Map<String, String> livePreviewValues = new HashMap<>();
-        livePreviewValues.put("{{refreshInterval}}", String.valueOf(refresh));
+        livePreviewValues.put("{{refreshInterval}}", refresh);
         livePreviewValues.put("{{leftColumnNodes}}", leftColumnNodes.toString());
         livePreviewValues.put("{{rightColumnNodes}}", rightColumnNodes.toString());
         String templateFile = "html_templates/live_preview_servlet.html";
