@@ -116,7 +116,7 @@ public class LiveNodeServletTest {
 
         livePreviewServletServlet.doPost(request, response);
         String postResponseContent = response.getOutputStream().toString();
-        assertThat(postResponseContent, containsString("<meta http-equiv='refresh' content='1200' />"));
+        assertThat(postResponseContent, containsString("<meta http-equiv='refresh' content='XYZ' />"));
     }
     
     @After
