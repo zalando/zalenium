@@ -5,6 +5,7 @@ import de.zalando.ep.zalenium.container.ContainerClient;
 import de.zalando.ep.zalenium.container.ContainerCreationStatus;
 import de.zalando.ep.zalenium.container.ContainerFactory;
 import de.zalando.ep.zalenium.matcher.DockerSeleniumCapabilityMatcher;
+import de.zalando.ep.zalenium.matcher.ZaleniumCapabilityType;
 import de.zalando.ep.zalenium.util.Environment;
 import de.zalando.ep.zalenium.util.GoogleAnalyticsApi;
 import de.zalando.ep.zalenium.util.ProcessedCapabilities;
@@ -538,7 +539,10 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     */
     private Dimension getConfiguredScreenResolutionFromCapabilities(Map<String, Object> requestedCapability) {
         Dimension screenSize = getConfiguredScreenSize();
-        String[] screenResolutionNames = {"screenResolution", "resolution", "screen-resolution"};
+        List<String> screenResolutionNames = Arrays.asList(ZaleniumCapabilityType.SCREEN_RESOLUTION,
+                ZaleniumCapabilityType.SCREEN_RESOLUTION_NO_PREFIX, ZaleniumCapabilityType.RESOLUTION,
+                ZaleniumCapabilityType.RESOLUTION_NO_PREFIX, ZaleniumCapabilityType.SCREEN_RESOLUTION_DASH,
+                ZaleniumCapabilityType.SCREEN_RESOLUTION_DASH_NO_PREFIX);
         for (String screenResolutionName : screenResolutionNames) {
             if (requestedCapability.containsKey(screenResolutionName)) {
                 String screenResolution = requestedCapability.get(screenResolutionName).toString();
@@ -565,14 +569,18 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     This method will search for a tz capability to be passed when creating a docker-selenium node.
     */
     private TimeZone getConfiguredTimeZoneFromCapabilities(Map<String, Object> requestedCapability) {
-        String timeZoneName = "tz";
+        List<String> timeZoneCapabilities = Arrays.asList(ZaleniumCapabilityType.TIME_ZONE_NO_PREFIX,
+                ZaleniumCapabilityType.TIME_ZONE);
         TimeZone timeZone = getConfiguredTimeZone();
-        if (requestedCapability.containsKey(timeZoneName)) {
-            String timeZoneFromCapabilities = requestedCapability.get(timeZoneName).toString();
-            if (Arrays.asList(TimeZone.getAvailableIDs()).contains(timeZoneFromCapabilities)) {
-                timeZone = TimeZone.getTimeZone(timeZoneFromCapabilities);
+        for (String timeZoneCapability : timeZoneCapabilities) {
+            if (requestedCapability.containsKey(timeZoneCapability)) {
+                String timeZoneFromCapabilities = requestedCapability.get(timeZoneCapability).toString();
+                if (Arrays.asList(TimeZone.getAvailableIDs()).contains(timeZoneFromCapabilities)) {
+                    timeZone = TimeZone.getTimeZone(timeZoneFromCapabilities);
+                }
             }
         }
+
         return timeZone;
     }
 
