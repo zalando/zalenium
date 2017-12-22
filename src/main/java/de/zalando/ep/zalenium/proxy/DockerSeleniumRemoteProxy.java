@@ -10,6 +10,7 @@ import de.zalando.ep.zalenium.container.ContainerFactory;
 import de.zalando.ep.zalenium.dashboard.Dashboard;
 import de.zalando.ep.zalenium.dashboard.TestInformation;
 import de.zalando.ep.zalenium.matcher.DockerSeleniumCapabilityMatcher;
+import de.zalando.ep.zalenium.matcher.ZaleniumCapabilityType;
 import de.zalando.ep.zalenium.util.Environment;
 import de.zalando.ep.zalenium.util.GoogleAnalyticsApi;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
@@ -157,20 +158,20 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
             TestSession newSession = super.getNewSession(requestedCapability);
             LOGGER.log(Level.FINE, getId() + " Creating session for: " + requestedCapability.toString());
             String browserName = requestedCapability.get(CapabilityType.BROWSER_NAME).toString();
-            testName = getCapability(requestedCapability, "name", "");
+            testName = getCapability(requestedCapability, ZaleniumCapabilityType.TEST_NAME, "");
             if (testName.isEmpty()) {
                 testName = newSession.getExternalKey() != null ?
                         newSession.getExternalKey().getKey() :
                         newSession.getInternalKey();
             }
-            testBuild = getCapability(requestedCapability, "build", "");
-            if (requestedCapability.containsKey("recordVideo")) {
-                boolean videoRecording = Boolean.parseBoolean(getCapability(requestedCapability, "recordVideo", "true"));
+            testBuild = getCapability(requestedCapability, ZaleniumCapabilityType.BUILD_NAME, "");
+            if (requestedCapability.containsKey(ZaleniumCapabilityType.RECORD_VIDEO)) {
+                boolean videoRecording = Boolean.parseBoolean(getCapability(requestedCapability, ZaleniumCapabilityType.RECORD_VIDEO, "true"));
                 setVideoRecordingEnabledSession(videoRecording);
             }
-            String screenResolution = getCapability(newSession.getSlot().getCapabilities(), "screenResolution", "N/A");
-            String browserVersion = getCapability(newSession.getSlot().getCapabilities(), "version", "");
-            String timeZone = getCapability(newSession.getSlot().getCapabilities(), "tz", "N/A");
+            String screenResolution = getCapability(newSession.getSlot().getCapabilities(), ZaleniumCapabilityType.SCREEN_RESOLUTION, "N/A");
+            String browserVersion = getCapability(newSession.getSlot().getCapabilities(), CapabilityType.VERSION, "");
+            String timeZone = getCapability(newSession.getSlot().getCapabilities(), ZaleniumCapabilityType.TIME_ZONE, "N/A");
             testInformation = new TestInformation.TestInformationBuilder()
                     .withTestName(testName)
                     .withSeleniumSessionId(testName)
@@ -202,7 +203,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     private long getConfiguredIdleTimeout(Map<String, Object> requestedCapability) {
         long configuredIdleTimeout;
         try {
-            Object idleTimeout = requestedCapability.getOrDefault("idleTimeout", DEFAULT_MAX_TEST_IDLE_TIME_SECS);
+            Object idleTimeout = requestedCapability.getOrDefault(ZaleniumCapabilityType.IDLE_TIMEOUT, DEFAULT_MAX_TEST_IDLE_TIME_SECS);
             configuredIdleTimeout = Long.valueOf(String.valueOf(idleTimeout));
         } catch (Exception e) {
             configuredIdleTimeout = DEFAULT_MAX_TEST_IDLE_TIME_SECS;

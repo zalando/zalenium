@@ -247,7 +247,7 @@ public class DockerSeleniumRemoteProxyTest {
     @Test
     public void testIdleTimeoutUsesDefaultValueWhenCapabilityHasFaultyValue() {
         Map<String, Object> requestedCapability = getCapabilitySupportedByDockerSelenium();
-        requestedCapability.put("idleTimeout", "thisValueIsNAN Should not work.");
+        requestedCapability.put("zal:idleTimeout", "thisValueIsNAN Should not work.");
 
         proxy.getNewSession(requestedCapability);
         Assert.assertEquals(proxy.getMaxTestIdleTimeSecs(), DockerSeleniumRemoteProxy.DEFAULT_MAX_TEST_IDLE_TIME_SECS);
@@ -256,20 +256,20 @@ public class DockerSeleniumRemoteProxyTest {
     @Test
     public void testIdleTimeoutUsesValueInStringPassedAsCapability() {
         Map<String, Object> requestedCapability = getCapabilitySupportedByDockerSelenium();
-        requestedCapability.put("idleTimeout", "200");
+        requestedCapability.put("zal:idleTimeout", "200");
 
         proxy.getNewSession(requestedCapability);
-        Assert.assertEquals(proxy.getMaxTestIdleTimeSecs(), 200L);
+        Assert.assertEquals(200L, proxy.getMaxTestIdleTimeSecs());
     }
 
     @Test
     public void testIdleTimeoutUsesValuePassedAsCapability() {
         Map<String, Object> requestedCapability = getCapabilitySupportedByDockerSelenium();
-        requestedCapability.put("idleTimeout", 180L);
+        requestedCapability.put("zal:idleTimeout", 180L);
 
         TestSession newSession = proxy.getNewSession(requestedCapability);
         Assert.assertNotNull(newSession);
-        Assert.assertEquals(proxy.getMaxTestIdleTimeSecs(), 180L);
+        Assert.assertEquals(180L, proxy.getMaxTestIdleTimeSecs());
     }
 
     @Test
