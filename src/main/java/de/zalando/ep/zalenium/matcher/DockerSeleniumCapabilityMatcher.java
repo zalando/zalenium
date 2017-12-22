@@ -31,32 +31,34 @@ public class DockerSeleniumCapabilityMatcher extends DefaultCapabilityMatcher {
         logger.log(Level.FINE, ()-> String.format("Validating %s in node with capabilities %s", requestedCapability,
                 nodeCapability));
 
-        Map<String, Object> requestedCapabilityCopy = copyMap(requestedCapability);
-        Map<String, Object> nodeCapabilityCopy = copyMap(nodeCapability);
-
-        boolean screenResolutionMatches = true;
-        boolean timeZoneCapabilityMatches = true;
-        // This validation is only done for docker-selenium nodes
-        if (proxy instanceof DockerSeleniumRemoteProxy) {
-            getChromeAndFirefoxVersions(proxy);
-            screenResolutionMatches = isScreenResolutionMatching(nodeCapabilityCopy, requestedCapabilityCopy);
-            timeZoneCapabilityMatches = isTimeZoneMatching(nodeCapabilityCopy, requestedCapabilityCopy);
-        } else if (proxy instanceof DockerSeleniumStarterRemoteProxy) {
-            // We do this because the starter node does not have the browser versions
+        // We do this because the starter node does not have the browser versions when Zalenium starts
+        if (proxy instanceof DockerSeleniumStarterRemoteProxy) {
             if (browserVersionsFetched.get()) {
                 String browser = nodeCapability.get(CapabilityType.BROWSER_NAME).toString();
                 if (BrowserType.FIREFOX.equalsIgnoreCase(browser)) {
-                    nodeCapabilityCopy.put(CapabilityType.VERSION, firefoxVersion);
+                    nodeCapability.put(CapabilityType.VERSION, firefoxVersion);
                 } else if (BrowserType.CHROME.equalsIgnoreCase(browser)) {
-                    nodeCapabilityCopy.put(CapabilityType.VERSION, chromeVersion);
+                    nodeCapability.put(CapabilityType.VERSION, chromeVersion);
                 }
             } else {
+                Map<String, Object> requestedCapabilityCopy = copyMap(requestedCapability);
                 requestedCapabilityCopy.remove(CapabilityType.VERSION);
+                return super.matches(nodeCapability, requestedCapabilityCopy);
             }
         }
 
-        return super.matches(nodeCapabilityCopy, requestedCapabilityCopy) && screenResolutionMatches &&
-                timeZoneCapabilityMatches;
+        if (super.matches(nodeCapability, requestedCapability)) {
+            boolean screenResolutionMatches = true;
+            boolean timeZoneCapabilityMatches = true;
+            // This validation is only done for docker-selenium nodes
+            if (proxy instanceof DockerSeleniumRemoteProxy) {
+                getChromeAndFirefoxVersions(proxy);
+                screenResolutionMatches = isScreenResolutionMatching(nodeCapability, requestedCapability);
+                timeZoneCapabilityMatches = isTimeZoneMatching(nodeCapability, requestedCapability);
+            }
+            return screenResolutionMatches && timeZoneCapabilityMatches;
+        }
+        return false;
     }
 
     // Cannot use Collectors.toMap() because it fails when there are null values.
