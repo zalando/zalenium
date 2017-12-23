@@ -1,8 +1,5 @@
 
-
-Design by Tim O'Brien [t413.com](http://t413.com/)
+Zalenium is 100% [open source](https://github.com/zalando/zalenium)
 &mdash;
-[SinglePaged theme](https://github.com/t413/SinglePaged)
-&mdash;
-this site is [open source]({{ site.source_link }})
+GitHub issue [tracker](https://github.com/zalando/zalenium/issues)
 

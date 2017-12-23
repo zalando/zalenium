@@ -5,3 +5,4 @@ dependency-reduced-pom.xml
 logs/
 TODO.private.md
 velocity.log
+docs/_site
