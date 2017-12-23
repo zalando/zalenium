@@ -319,10 +319,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     }
 
     private String getCapability(Map<String, Object> requestedCapability, String capabilityName, String defaultValue) {
-        if (requestedCapability.containsKey(capabilityName) && requestedCapability.get(capabilityName) != null) {
-            return requestedCapability.get(capabilityName).toString();
-        }
-        return defaultValue;
+        return Optional.ofNullable(requestedCapability.get(capabilityName)).orElse(defaultValue).toString();
     }
 
     @VisibleForTesting
