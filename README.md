@@ -125,41 +125,6 @@ Check a live demo [here](http://zalenium.bitballoon.com/dashboard)
 * Customise video file naming via capabilities and [more](./docs/usage_examples.md)
 * Basic auth to protect the grid when deployed to the open internet, instructions to enable basic auth [here](./docs/usage_examples.md#enabling-basic-auth-in-zalenium)
 
-## Docker version
-
-#### Linux
-For Linux systems you can simply share the docker binary via `-v $(which docker):/usr/bin/docker`
-
-```sh
-docker run --rm -ti --name zalenium -p 4444:4444 \
-  -v $(which docker):/usr/bin/docker \
-  -v /var/run/docker.sock:/var/run/docker.sock \
-  -v /tmp/videos:/home/seluser/videos \
-  --privileged dosel/zalenium start
-```
-
-#### OSX
-Zalenium for OSX is currently compatible with Docker `17.03.1-ce`, `17.06.2-ce`, and `17.09.0-ce`. Nevertheless, starting
-with 1.13, newer CLIs can talk to older daemons. If you bump into any API compatibility issues, you can explicitly tell
-Zalenium which version you are using via `-e DOCKER=17.06.2-ce`.
-
-```sh
-docker run --rm -ti --name zalenium -p 4444:4444 \
-  -e DOCKER=17.06.2-ce \
-  -v /var/run/docker.sock:/var/run/docker.sock \
-  -v /tmp/videos:/home/seluser/videos \
-  --privileged dosel/zalenium start
-```
-
-### Windows 
-
-```sh
-docker run --rm -ti --name zalenium -p 4444:4444 \
-  -v /var/run/docker.sock:/var/run/docker.sock \
-  -v /c/Users/your_user_name/temp/videos:/home/seluser/videos \
-  --privileged dosel/zalenium start      
-```
-
 ## Contributions
 Any feedback or contributions are welcome! Please check our [guidelines](CONTRIBUTING.md), they just follow the general
 GitHub issue/PR flow. 
