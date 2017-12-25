@@ -19,21 +19,22 @@ title:       "Zalenium - A flexible and scalable Selenium Grid."
 keywords:    "docker, selenium, selenium, grid, kubernetes, saucelabs, browserstack, testingbot"
 description: "Allows anyone to have a disposable, flexible, container based Selenium Grid infrastructure featuring video recording, live preview, basic auth & online/offline dashboards"
 source_link: "https://github.com/zalando/zalenium"
-favicon:     "/zalando.ico"
+favicon:     "zalando.ico"
 touch_icon:  #put a path like: "img/apple-touch-icon.png"
 google_analytics_key: ## put YOUR key here to enable tracking! (blank to disable)
 
 
 ### template colors, used site-wide via css ###
 colors:
-  black:     '#111111'
-  white:     '#fcfaf9'
-  blue:      '#49a7e9'
-  green:     '#9bcf2f'
-  purple:    '#c869bf'
-  orange:    '#fab125'
-  turquoise: '#0fbfcf'
+  black:      '#111111'
+  white:      '#fcfaf9'
+  blue:       '#49a7e9'
+  green:      '#9bcf2f'
+  purple:     '#c869bf'
+  orange:     '#fab125'
+  turquoise:  '#0fbfcf'
   dark_blue:  '#152c43'
+  grey:       '#8993a2'
 
 kramdown:
   auto_ids:  false
