@@ -33,9 +33,8 @@
       {% capture id %}{{ page.id | remove:'/' | downcase }}{% endcapture %}
       <div id="{{id}}" class="section p-{{id}}">
         {% if page.icon %}
-        <div class="subtlecircle sectiondivider imaged">
-          <img src="{{page.icon}}" alt="section icon" />
-          <h5 class="icon-title">{{ page.title }}</h5>
+        <div class="subtlecircle sectiondivider">
+          <img src="{{page.icon}}" alt="section icon"/>
         </div>
         {% elsif page.fa-icon %}
         <div class="subtlecircle sectiondivider faicon">

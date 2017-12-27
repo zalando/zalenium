@@ -39,7 +39,7 @@ $.extend($.easing,
             );
     	});
 
-        //populate lookup of clicable elements and destination sections
+        //populate lookup of clickable elements and destination sections
         populateDestinations(); //should also be run on browser resize, btw
 
         // setup scroll listener
