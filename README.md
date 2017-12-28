@@ -1,5 +1,5 @@
 <p align="center">
-  <img id="header" height="214" width="500" src="./images/logo_zalenium_wide.png" />
+  <img id="header" height="214" width="500" src="./docs/img/logo_zalenium_wide.png" />
 </p>
 
 [![Build Status](https://travis-ci.org/zalando/zalenium.svg?branch=master)](https://travis-ci.org/zalando/zalenium)
