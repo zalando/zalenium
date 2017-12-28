@@ -35,6 +35,7 @@ colors:
   turquoise:  '#0fbfcf'
   dark_blue:  '#152c43'
   grey:       '#8993a2'
+  edge_water: '#bddac8'
 
 kramdown:
   auto_ids:  false
