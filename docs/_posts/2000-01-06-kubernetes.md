@@ -46,3 +46,13 @@ After starting Minikube locally, follow these steps:
 {% endhighlight %}
 
 That's it, you can point your tests to the url obtained in the last step.
+
+***
+
+### Deploying with Helm
+[Helm](https://helm.sh) is a tool that greatly simplifies installing apps on a Kubernetes cluster.  Helm users can 
+see an example of a Helm chart that installs Zalenium grid in the [k8s/helm](k8s/helm) 
+directory.  Support can be added for different storage classes, RBAC support (and/or OpenShift).
+
+***
+
