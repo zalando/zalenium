@@ -30,7 +30,7 @@ html { box-sizing: border-box; }
 
 code, pre { font-family: Monaco, Menlo, Consolas, "Courier New", monospace; }
 
-/* spesifically inline code */
+/* specifically inline code */
 code, pre {
   background: rgba(255,255,255,0.2);
   display: inline;
@@ -68,12 +68,19 @@ hr {
 .center { text-align: center; }
 .left, .container .left { text-align: left; }
 
-.container h1, .container h2, .container h3, .container h4 {
+.container h1, .container h2, .container h3 {
   margin-bottom: 20px;
   text-align: center;
   padding: 0 4%;
 }
-.container p, .container ol, .container ul {
+
+.container h4 {
+  margin-bottom: 20px;
+  margin-top: 20px;
+  padding: 0 5%;
+}
+
+.container p, .container ol, .container ul, .container details {
   font-size: 17px;
   padding: 0 5%;
 }
