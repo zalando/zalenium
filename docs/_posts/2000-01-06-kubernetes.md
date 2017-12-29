@@ -223,3 +223,54 @@ is set to <code class="bg-light text-dark">ReadWriteMany</code>, otherwise the s
 
     </div>        
 </details>
+
+#### Managing Resources
+Kubernetes has [support](https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/) for managing how
+much resources a Pod is allowed to use. Especially when using video recording it is highly recommended to specify some resource
+requests and/or limits otherwise users of your Kubernetes cluster may be negatively affected by the selenium pods.
+
+<details>
+    <summary>Click here for more details</summary>
+
+    <div class="container m-2 p-2">
+
+        There are 2 resource requests and 2 resource limits that you can set.  The following table lists the possible values that you can use,
+        however, there are no defaults, so if you don't specify anything, no resource limits or requests will be set.
+        <br>
+        <br>
+        <table class="table table-bordered table-striped table-responsive">
+          <thead>
+            <tr>
+              <th style="width: 150px;">Name</th>
+              <th style="width: 200px;">Environment Variable</th>
+              <th>Example</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>CPU Request</td>
+              <td><code class="bg-light text-dark">ZALENIUM_KUBERNETES_CPU_REQUEST</code></td>
+              <td><code class="bg-light text-dark">250m</code> (25% of a CPU core)</td>
+            </tr>
+            <tr>
+              <td>CPU Limit</td>
+              <td><code class="bg-light text-dark">ZALENIUM_KUBERNETES_CPU_LIMIT</code></td>
+              <td><code class="bg-light text-dark">500m</code> (50% of a CPU core)</td>
+            </tr>
+            <tr>
+              <td>Memory Request</td>
+              <td><code class="bg-light text-dark">ZALENIUM_KUBERNETES_MEMORY_REQUEST</code></td>
+              <td><code class="bg-light text-dark">1Gi</code> (1 Gibibyte)</td>
+            </tr>
+            <tr>
+              <td>Memory Limit</td>
+              <td><code class="bg-light text-dark">ZALENIUM_KUBERNETES_MEMORY_LIMIT</code></td>
+              <td>Probably best to leave empty, because Kubernetes will kill the container if it exceeds the value.</td>
+            </tr>
+          </tbody>
+        </table>
+
+    </div>
+</details>    
+
+*** 
