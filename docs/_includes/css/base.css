@@ -339,7 +339,7 @@ span.lineno {
 .nx { color: #a6e22e } /* Name.Other */
 .py { color: #f8f8f2 } /* Name.Property */
 .nt { color: #f92672 } /* Name.Tag */
-.nv { color: #f8f8f2 } /* Name.Variable */
+.nv { color: #000000 } /* Name.Variable */
 .ow { color: #f92672 } /* Operator.Word */
 .w { color: #f8f8f2 } /* Text.Whitespace */
 .mf { color: #ae81ff } /* Literal.Number.Float */
