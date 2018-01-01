@@ -57,10 +57,6 @@ channels we created for that.
   * [Set it up](#set-it-up)
   * [Run it](#run-it)
 * [Additional features](#additional-features)
-* [Docker version](#docker-version)
-  * [Linux](#linux)
-  * [OSX](#osx)
-* [Kubernetes version](./docs/k8s/kubernetes.md)
 * [Contributions](#contributions)
   * [Building and Testing](#building-and-testing)
 * [How it works](#how-it-works)
@@ -124,70 +120,6 @@ Check a live demo [here](http://zalenium.bitballoon.com/dashboard)
 * Video recording, check them in the `/tmp/videos` folder (or the one you mapped when starting Zalenium)
 * Customise video file naming via capabilities and [more](./docs/usage_examples.md)
 * Basic auth to protect the grid when deployed to the open internet, instructions to enable basic auth [here](./docs/usage_examples.md#enabling-basic-auth-in-zalenium)
-
-## Contributions
-Any feedback or contributions are welcome! Please check our [guidelines](CONTRIBUTING.md), they just follow the general
-GitHub issue/PR flow. 
-
-Also, we have adopted the Contributor Covenant as the code of conduct for this project:
-
-http://contributor-covenant.org/version/1/4/
-
-#### Building and Testing
-
-If you want to verify your changes locally with the existing tests (please double check that the Docker daemon is
-running and that you can do `docker ps`):
-* Unit tests
-
-    ```sh
-        mvn clean test
-    ```
-* Building the image
-
-    ```sh
-        mvn clean package
-        cd target
-        docker build -t zalenium:YOUR_TAG .
-    ```
-* Running the image you just built
-    ```sh
-      docker run --rm -ti --name zalenium -p 4444:4444 \
-        -v /var/run/docker.sock:/var/run/docker.sock \
-        -v /tmp/videos:/home/seluser/videos \
-        --privileged zalenium:YOUR_TAG start
-    ```
-* Running the integration tests with Sauce Labs or BrowserStack or TestingBot. You will need an account on any of those providers 
-to run them (they have free plans). Or you can just run some of our [tests](./src/test/java/de/zalando/tip/zalenium/it/ParallelIT.java)
-individually from an IDE.
-    ```sh
-        ./run_integration_tests.sh sauceLabs|browserStack|testingBot
-    ```
-
-## How it works
-
-![How it works](./images/how_it_works.gif)
-
-Zalenium works conceptually in a simple way:
-
-1. A Selenium Hub starts and listens on port 4444.
-2. One custom node for [docker-selenium](https://github.com/elgalu/docker-selenium) registers to the grid.
-3. If a cloud testing integration is enabled, a cloud proxy node to support a cloud provider ([Sauce Labs](https://saucelabs.com/),
-[BrowserStack](https://www.browserstack.com/), [TestingBot](https://testingbot.com/)) will register to the grid.
-4. A test request is received by the hub and the requested capabilities are verified against each one of the nodes.
-5. If [docker-selenium](https://github.com/elgalu/docker-selenium) can fulfill the requested capabilities, a docker container is 
-created on the run, and the test request is sent back to the hub while the new node registers.
-5. The hub acknowledges the new node and routes the the test request with to it.
-6. The test is executed and the container is disposed after test completion.
-7. If [docker-selenium](https://github.com/elgalu/docker-selenium) cannot fulfill the requested capabilities, it will processed by
-one of the enabled cloud testing platforms.
-
-## About the project versioning
-* To make life easy for people who want to use Zalenium, we are now using as a version number the Selenium version
-being supported.
-* The major-minor version combined with the patch level will indicate the Selenium version being supported. E.g.
-  * When a release is `3.8.1a`, it supports Selenium 3.8.1
-  * The badge above shows the latest image version
-  * Alias for the latest images, `dosel/zalenium:latest`
 
 ## Zalenium in the Selenium Conf Austin 2017
 Get a better overview of what Zalenium is and how it works by checking the recorded talk [here](https://www.youtube.com/watch?v=W5qMsVrob6I)
