@@ -1,6 +1,6 @@
 # Contributing to Zalenium
 
-**Thank you for your interest in making this project even better and more awesome. Your contributions are highly welcome.**
+**Thank you for your interest in making this project even better and more awesome. Your contributions are highly welcomed.**
 
 There are multiple ways of getting involved:
 
