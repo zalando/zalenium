@@ -355,7 +355,7 @@ span.lineno {
 .si { color: #e6db74 } /* Literal.String.Interpol */
 .sx { color: #e6db74 } /* Literal.String.Other */
 .sr { color: #e6db74 } /* Literal.String.Regex */
-.s1 { color: #e6db74 } /* Literal.String.Single */
+.s1 { color: #000000 } /* Literal.String.Single */
 .ss { color: #e6db74 } /* Literal.String.Symbol */
 .bp { color: #f8f8f2 } /* Name.Builtin.Pseudo */
 .vc { color: #f8f8f2 } /* Name.Variable.Class */

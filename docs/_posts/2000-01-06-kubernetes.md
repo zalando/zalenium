@@ -154,7 +154,7 @@ especially since the image will need to be available on potentially any kubernet
     <summary>For more deails about overriding the Selenium image, click here</summary>
 
     <div class="container m-2 p-2">
-        In Openshift there is a built in registry that can automatically pull the an image from an external registry
+        In OpenShift there is a built in registry that can automatically pull the an image from an external registry
         (such as docker hub) 
         <a target="_blank" href="https://docs.openshift.com/container-platform/3.5/dev_guide/managing_images.html#importing-tag-and-image-metadata"><u>on a schedule</u></a>.
         <br>
@@ -274,3 +274,332 @@ requests and/or limits otherwise users of your Kubernetes cluster may be negativ
 </details>    
 
 *** 
+
+## Getting Started Guidelines
+
+#### Vanilla Kubernetes
+
+<details>
+    <summary>Click here for more details</summary>
+
+    <div class="container m-2 p-2">
+
+        Create the deployment:
+
+{% highlight bash %}
+    kubectl run zalenium \
+        --image=dosel/zalenium \
+        --overrides='{"spec": {"template": {"spec": {"serviceAccount": "zalenium"}}}}' \
+        -l app=zalenium,role=grid \
+        -- start --desiredContainers 2
+{% endhighlight %}
+        
+        Create the services
+
+{% highlight bash %}
+kubectl create service nodeport zalenium-grid --tcp=4444:4444 --dry-run -o yaml \
+    | kubectl label --local -f - app=zalenium --overwrite -o yaml \
+    | kubectl set selector --local -f - app=zalenium,role=grid -o yaml \
+    | grep -v "running in local/dry-run mode" \
+    | kubectl create -f -
+{% endhighlight %}
+
+    Then you can open the grid in minikube by running
+    
+{% highlight bash %}
+minikube service zalenium-grid
+{% endhighlight %}
+    
+    For videos to work you need to mount in `/home/seluser/videos`.
+    </div>
+</details>    
+
+#### OpenShift
+
+<details>
+    <summary>Click here for more details</summary>
+
+    <div class="container m-2 p-2">
+
+        Create the deployment:
+
+{% highlight bash %}
+    oc run zalenium --image=dosel/zalenium \
+        --env="ZALENIUM_KUBERNETES_CPU_REQUEST=250m" \
+        --env="ZALENIUM_KUBERNETES_CPU_LIMIT=500m" \
+        --env="ZALENIUM_KUBERNETES_MEMORY_REQUEST=1Gi" \
+        --overrides='{"spec": {"template": {"spec": {"serviceAccount": "zalenium"}}}}' \
+        -l app=zalenium,role=hub --port=4444 -- \
+        start --desiredContainers 2 --seleniumImageName [registry ip address]:5000/[kubernetes namespace]/selenium:latest
+{% endhighlight %}
+        
+        Create the service
+{% highlight bash %}
+    oc create -f ./zalenium-service.yaml
+{% endhighlight %}
+
+In the OpenShift console you should then probably create a route. Make sure you have a proper timeout set on the route. Default in OpenShift is 30s and most probably this value is to low (pod creation of new selenium nodes might take longer time).
+
+{% highlight bash %}
+    oc create -f ./zalenium-route.yaml
+{% endhighlight %}
+
+    </div>    
+</details>    
+
+#### Google Container Engine (GKE)
+
+<details>
+    <summary>Click here for more details</summary>
+
+    <div class="container m-2 p-2">
+
+        This guide can be used in addition to the information provided in the sections above.
+        <br>
+        <br>
+        <h5>Prerequisites</h5>
+
+        <ul>
+            <li>You have to have a Google Container Engine account with billing enabled</li>
+            <li>And a project created on the <a target="_blank" href="https://console.cloud.google.com/kubernetes"><u>GKE dashboard</u></a></li>
+            <li>The Google Cloud SDK with the <code class="bg-light text-dark">gcloud</code> tool must be present on 
+            your machine and configured to the previously created project</li>
+            <li><code class="bg-light text-dark">kubectl</code> has to be installed on your machine</li>
+        </ul>            
+
+        Follow the <a target="_blank" href="https://cloud.google.com/container-engine/docs/quickstart"><u>Quickstart for Google Container Engine</u></a> to set these up.
+        <br>
+        <br>
+        <h5>Creating a Kubernetes cluster</h5>
+
+{% highlight bash %}
+    
+    gcloud container clusters create zalenium
+    
+    ...
+
+    Creating cluster zalenium...done.
+    Created [https://container.googleapis.com/v1/projects/xxx/zones/europe-west3-c/clusters/zalenium].
+    kubeconfig entry generated for zalenium.
+    NAME      ZONE            MASTER_VERSION  MASTER_IP      MACHINE_TYPE   NODE_VERSION  NUM_NODES  STATUS
+    zalenium  europe-west3-c  1.6.9           aaa.bb.xxx.yy  n1-standard-1  1.6.9         3          RUNNING
+    
+    
+{% endhighlight %}
+
+
+
+    Then activate the kubeconfig profile with
+
+{% highlight bash %}
+    
+    gcloud container clusters get-credentials zalenium
+    
+    ...
+    
+    Fetching cluster endpoint and auth data.
+    kubeconfig entry generated for zalenium.
+    
+{% endhighlight %}
+
+
+        Verify the kubectl config with <code class="bg-light text-dark">kubectl get pods --all-namespaces</code> command.
+        
+        <br>
+        <br>
+        <h5>Zalenium Plumbing</h5>
+    
+        Zalenium uses a Kubernetes ServiceAccount to create pods on-demand. As explained in the section above, we have to 
+        create the ServiceAccount, and we have to grant the required permissions to that account. To be able to create the 
+        roles and the necessary bindings the GKE setup has a 
+        <a target="_blank" href="https://github.com/coreos/prometheus-operator/issues/357"><u>special step</u></a>,
+        we have to make our users a cluster-admin.
+
+{% highlight bash %}   
+    kubectl create clusterrolebinding <Arbitrary name for the binding, use your nickname> \
+        --clusterrole=cluster-admin --user=<your google cloud login email>
+{% endhighlight %}
+
+        Then create the necessary constructs. it also creates a Namespaces, called <code class="bg-light text-dark">zalenium</code>.
+        You can find the <code class="bg-light text-dark">plumbing.yaml</code> file 
+        <a target="_blank" href="https://github.com/zalando/zalenium/blob/master/docs/k8s/gke/plumbing.yaml"><u>here</u></a>.    
+
+{% highlight bash %}    
+    kubectl apply -f plumbing.yaml
+{% endhighlight %}
+
+        For the video files, a PersistentVolume has to be created also. The <code class="bg-light text-dark">pv.yaml</code> 
+        file can be found <a target="_blank" href="https://github.com/zalando/zalenium/blob/master/docs/k8s/gke/pv.yaml"><u>here</u></a>.
+
+{% highlight bash %}
+    kubectl apply -f pv.yaml
+{% endhighlight %}
+
+        Change the kubectl context to "zalenium".
+
+{% highlight bash %}
+    kubectl config set-context $(kubectl config current-context) --namespace=zalenium
+{% endhighlight %}
+
+        <h5>Launch Zalenium</h5>
+
+        Find the <code class="bg-light text-dark">zalenium.yaml</code> file 
+        <a target="_blank" href="https://github.com/zalando/zalenium/blob/master/docs/k8s/gke/zalenium.yaml"><u>here</u></a>.
+
+{% highlight bash %}
+    kubectl apply -f zalenium.yaml
+{% endhighlight %}
+
+
+        Then watch as the pods are created with <code class="bg-light text-dark">kubectl get pods</code>.
+
+{% highlight bash %}
+    ➜  yaml git:(kubernetes) ✗ kubectl get pods
+    NAME                        READY     STATUS    RESTARTS   AGE
+    zalenium-2238551656-c0w17   1/1       Running   0          4m
+    zalenium-40000-17d5v        1/1       Running   0          3m
+    zalenium-40001-xnqdr        1/1       Running   0          3m
+{% endhighlight %}
+
+        You can also follow the logs with <code class="bg-light text-dark">kubectl logs -f zalenium-2238551656-c0w17</code>.
+
+        <h5>Accessing Zalenium</h5>
+        
+        <h6>NodePort</h6>
+
+        Kubernetes provides <a target="_blank" href="https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services---service-types"><u>multiple ways</u></a> 
+        to route external traffic to the deployed services. NodePort being the most simple one and by default that is 
+        enabled in the <a target="_blank" href="https://github.com/zalando/zalenium/blob/master/docs/k8s/gke/zalenium.yaml"><u>zalenium.yaml</u></a> file.
+        <br>
+        <br>
+        NodePort is picking a random port in the default port range (30000-32767) and makes sure that if a request is 
+        hitting that port on <strong>any</strong> of the cluster nodes, it gets routed to the deployed pod.
+
+{% highlight bash %}
+    $ kubectl get svc
+    NAME                   CLUSTER-IP      EXTERNAL-IP   PORT(S)           AGE
+    zalenium               10.43.251.95    <nodes>       4444:30714/TCP    4m
+    zalenium-40000-058z8   10.43.247.200   <nodes>       50000:30862/TCP   50s
+    zalenium-40001-853mq   10.43.244.122   <nodes>       50001:30152/TCP   46s
+{% endhighlight %}
+
+        The above console output lists all services in the zalenium namespace and you can see that the hub is exposed on 
+        port 30714, and the two browser nodes on 30862 and 30152.
+        <br>
+        <br>
+        To access the service first you have to locate the IP address of one of the cluster nodes. The GKE cluster is 
+        built on standard Google Cloud VMs, so to find a node you have to go to the 
+        <a target="_blank" href="https://console.cloud.google.com/compute/instances"><u>GCloud dashboard</u></a> and 
+        copy an IP a node address.
+
+        <br>
+        <br>
+        <img alt="Google Cloud VMs" src="./k8s/gke/vm.png">
+        <br>
+        <br>
+
+        In addition to that, you have to open the GCloud firewall too. To keep the rules flexible, but somewhat tight, 
+        the example bellow opens the firewall from a source range of IPs to all of the NodePort variations. Adjust it 
+        to your needs.
+
+{% highlight bash %}
+    gcloud compute firewall-rules create zalenium \
+        --allow tcp:30000-32767 --source-ranges=83.94.yyy.xx/32
+{% endhighlight %}
+
+        Zalenium is accessible on the <code class="bg-light text-dark">http://35.198.142.117:30714/grid/console</code> address 
+        in the example.
+        <br>
+        <br>
+        The dashboard on <code class="bg-light text-dark">http://35.198.142.117:30714/dashboard/</code> and the "live" page 
+        on <code class="bg-light text-dark">http://35.198.142.117:30714/grid/admin/live</code>
+
+        <h5>Troubleshooting</h5>
+
+        In any case you would like to recreate the service the following one liners can assist you:
+        <br>
+        <br>
+
+        To delete the PersistentVolume and all Zalenium deployments.
+{% highlight bash %}
+    kubectl delete -f pv.yaml && kubectl delete -f zalenium.yaml
+{% endhighlight %}
+
+        Then to recreate them
+{% highlight bash %}
+    kubectl apply -f pv.yaml && kubectl apply -f zalenium.yaml
+{% endhighlight %}
+    
+    </div>    
+</details>    
+
+#### Example Zalenium Pod Example
+
+<details>
+    <summary>Click here for more details</summary>
+
+    <div class="container m-2 p-2">
+        This is an example of a working zalenium pod with all the relevant mounts attached.
+
+{% highlight yaml %}
+​
+apiVersion: v1
+kind: Pod
+metadata:
+  name: zalenium-test-15-lsg0v
+  generateName: zalenium-test-15-
+  labels:
+    app: zalenium-test
+spec:
+  volumes:
+    - name: zalenium-videos
+      persistentVolumeClaim:
+        claimName: zalenium-test-videos
+    - name: zalenium-shared
+      persistentVolumeClaim:
+        claimName: zalenium-shared
+  containers:
+    - name: zalenium
+      image: >-
+        172.23.192.79:5000/delivery/zalenium@sha256:f9ac5f4d1dc78811b7b589f0cb16fd198c9c7e562eb149b8c6e60b0686bf150f
+      args:
+        - start
+        - '--desiredContainers'
+        - '2'
+        - '--screenWidth'
+        - '1440'
+        - '--screenHeight'
+        - '810'
+        - '--timeZone'
+        - Australia/Canberra
+        - '--seleniumImageName'
+        - '172.23.192.79:5000/delivery/selenium:latest'
+      ports:
+        - containerPort: 4444
+          protocol: TCP
+      env:
+        - name: ZALENIUM_KUBERNETES_CPU_REQUEST
+          value: 250m
+        - name: ZALENIUM_KUBERNETES_CPU_LIMIT
+          value: 500m
+        - name: ZALENIUM_KUBERNETES_MEMORY_REQUEST
+          value: 1Gi
+      resources: {}
+      volumeMounts:
+        - name: zalenium-videos
+          mountPath: /home/seluser/videos
+        - name: zalenium-shared
+          mountPath: /tmp/mounted
+      terminationMessagePath: /dev/termination-log
+      imagePullPolicy: Always
+  restartPolicy: Always
+  terminationGracePeriodSeconds: 120
+  dnsPolicy: ClusterFirst
+  nodeSelector:
+    purpose: work
+  serviceAccountName: zalenium
+  serviceAccount: zalenium
+{% endhighlight %}
+
+    </div>
+</details>   
