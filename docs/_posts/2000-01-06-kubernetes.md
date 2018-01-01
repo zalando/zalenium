@@ -297,17 +297,17 @@ requests and/or limits otherwise users of your Kubernetes cluster may be negativ
         Create the services
 
 {% highlight bash %}
-kubectl create service nodeport zalenium-grid --tcp=4444:4444 --dry-run -o yaml \
-    | kubectl label --local -f - app=zalenium --overwrite -o yaml \
-    | kubectl set selector --local -f - app=zalenium,role=grid -o yaml \
-    | grep -v "running in local/dry-run mode" \
-    | kubectl create -f -
+    kubectl create service nodeport zalenium-grid --tcp=4444:4444 --dry-run -o yaml \
+        | kubectl label --local -f - app=zalenium --overwrite -o yaml \
+        | kubectl set selector --local -f - app=zalenium,role=grid -o yaml \
+        | grep -v "running in local/dry-run mode" \
+        | kubectl create -f -
 {% endhighlight %}
 
     Then you can open the grid in minikube by running
     
 {% highlight bash %}
-minikube service zalenium-grid
+    minikube service zalenium-grid
 {% endhighlight %}
     
     For videos to work you need to mount in `/home/seluser/videos`.
@@ -543,62 +543,63 @@ In the OpenShift console you should then probably create a route. Make sure you 
 
 {% highlight yaml %}
 ​
-apiVersion: v1
-kind: Pod
-metadata:
-  name: zalenium-test-15-lsg0v
-  generateName: zalenium-test-15-
-  labels:
-    app: zalenium-test
-spec:
-  volumes:
-    - name: zalenium-videos
-      persistentVolumeClaim:
-        claimName: zalenium-test-videos
-    - name: zalenium-shared
-      persistentVolumeClaim:
-        claimName: zalenium-shared
-  containers:
-    - name: zalenium
-      image: >-
-        172.23.192.79:5000/delivery/zalenium@sha256:f9ac5f4d1dc78811b7b589f0cb16fd198c9c7e562eb149b8c6e60b0686bf150f
-      args:
-        - start
-        - '--desiredContainers'
-        - '2'
-        - '--screenWidth'
-        - '1440'
-        - '--screenHeight'
-        - '810'
-        - '--timeZone'
-        - Australia/Canberra
-        - '--seleniumImageName'
-        - '172.23.192.79:5000/delivery/selenium:latest'
-      ports:
-        - containerPort: 4444
-          protocol: TCP
-      env:
-        - name: ZALENIUM_KUBERNETES_CPU_REQUEST
-          value: 250m
-        - name: ZALENIUM_KUBERNETES_CPU_LIMIT
-          value: 500m
-        - name: ZALENIUM_KUBERNETES_MEMORY_REQUEST
-          value: 1Gi
-      resources: {}
-      volumeMounts:
+    apiVersion: v1
+    kind: Pod
+    metadata:
+      name: zalenium-test-15-lsg0v
+      generateName: zalenium-test-15-
+      labels:
+        app: zalenium-test
+    spec:
+      volumes:
         - name: zalenium-videos
-          mountPath: /home/seluser/videos
+          persistentVolumeClaim:
+            claimName: zalenium-test-videos
         - name: zalenium-shared
-          mountPath: /tmp/mounted
-      terminationMessagePath: /dev/termination-log
-      imagePullPolicy: Always
-  restartPolicy: Always
-  terminationGracePeriodSeconds: 120
-  dnsPolicy: ClusterFirst
-  nodeSelector:
-    purpose: work
-  serviceAccountName: zalenium
-  serviceAccount: zalenium
+          persistentVolumeClaim:
+            claimName: zalenium-shared
+      containers:
+        - name: zalenium
+          image: >-
+            172.23.192.79:5000/delivery/zalenium@sha256:f9ac5f4d1dc78811b7b589f0cb16fd198c9c7e562eb149b8c6e60b0686bf150f
+          args:
+            - start
+            - '--desiredContainers'
+            - '2'
+            - '--screenWidth'
+            - '1440'
+            - '--screenHeight'
+            - '810'
+            - '--timeZone'
+            - Australia/Canberra
+            - '--seleniumImageName'
+            - '172.23.192.79:5000/delivery/selenium:latest'
+          ports:
+            - containerPort: 4444
+              protocol: TCP
+          env:
+            - name: ZALENIUM_KUBERNETES_CPU_REQUEST
+              value: 250m
+            - name: ZALENIUM_KUBERNETES_CPU_LIMIT
+              value: 500m
+            - name: ZALENIUM_KUBERNETES_MEMORY_REQUEST
+              value: 1Gi
+          resources: {}
+          volumeMounts:
+            - name: zalenium-videos
+              mountPath: /home/seluser/videos
+            - name: zalenium-shared
+              mountPath: /tmp/mounted
+          terminationMessagePath: /dev/termination-log
+          imagePullPolicy: Always
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 120
+      dnsPolicy: ClusterFirst
+      nodeSelector:
+        purpose: work
+      serviceAccountName: zalenium
+      serviceAccount: zalenium
+
 {% endhighlight %}
 
     </div>
