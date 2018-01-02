@@ -5,7 +5,7 @@ color: seashell
 icon: img/kubernetes.png
 ---
 
-Zalenium has support for <a target="_blank" href="https://kubernetes.io/"><u>Kubernetes</u></a>, these instructions will 
+Zalenium has support for [Kubernetes](https://kubernetes.io/){:target="_blank"}, these instructions will 
 give you an overview of how to get it running. If you find something that needs to be improved, please give us a hand by 
 creating a pull request or an issue.
 
@@ -15,9 +15,9 @@ creating a pull request or an issue.
 
 ### Quick start with Minikube
 
-You can use <a target="_blank" href="https://kubernetes.io/docs/getting-started-guides/minikube/"><u>Minikube</u></a>
+You can use [Minikube](https://kubernetes.io/docs/getting-started-guides/minikube/){:target="_blank"} 
 to deploy locally and get a first impression of Zalenium in Kubernetes. Before starting, you could follow the
-<a target="_blank" href="https://kubernetes.io/docs/tutorials/stateless-application/hello-minikube/"><u>Hello-Minikube</u></a>
+[Hello-Minikube](https://kubernetes.io/docs/tutorials/stateless-application/hello-minikube/){:target="_blank"}
 tutorial to get familiar with Minikube and make sure it is properly installed.
 
 After starting Minikube locally, follow these steps:
@@ -55,10 +55,10 @@ That's it, you can point your tests to the url obtained in the last step.
 
 > Thanks to [@gswallow](https://github.com/gswallow){:target="_blank"} for contributing to Zalenium with the Helm chart.
 
-<a target="_blank" href="https://helm.sh"><u>Helm</u></a> is a tool that greatly simplifies installing apps on a 
-Kubernetes cluster. Helm users can see an example of a Helm chart that installs Zalenium grid in the 
-<a target="_blank" href="https://github.com/zalando/zalenium/tree/master/docs/k8s/helm"><u>k8s/helm</u></a> 
-directory. Support can be added for different storage classes, RBAC support (and/or OpenShift).
+[Helm](https://helm.sh){:target="_blank"} is a tool that greatly simplifies installing apps on a Kubernetes cluster. 
+Helm users can see an example of a Helm chart that installs Zalenium grid in the 
+[k8s/helm](https://github.com/zalando/zalenium/tree/master/docs/k8s/helm){:target="_blank"} directory. Support can be 
+added for different storage classes, RBAC support (and/or OpenShift).
 
 ***
 
@@ -88,7 +88,7 @@ the Kubernetes API that it needs to.
     kubectl create sa zalenium
 {% endhighlight %}
         
-        Starting from Kubernetes 1.6, there is beta <a target="_blank" href="http://blog.kubernetes.io/2017/04/rbac-support-in-kubernetes.html"><u>RBAC support</u></a>
+        Starting from Kubernetes 1.6, there is beta <a target="_blank" href="http://blog.kubernetes.io/2017/04/rbac-support-in-kubernetes.html">RBAC support</a>
         (Role Based Access Control), it is possible that this may be similar to the built-in RBAC support in OpenShift.
         If you want to use RBAC support in Kubernetes, you could try adapting the OpenShift instructions below.
     </div>     
@@ -99,7 +99,7 @@ the Kubernetes API that it needs to.
     <summary>Click to see service account creation in OpenShift</summary>
 
     <div class="container m-2 p-2">
-        First up, create the <a target="_blank" href="https://github.com/zalando/zalenium/blob/master/docs/k8s/zalenium-role.json"><u>cluster role</u></a>:
+        First up, create the <a target="_blank" href="https://github.com/zalando/zalenium/blob/master/docs/k8s/zalenium-role.json">cluster role</a>:
         
 {% highlight shell %}
     oc create -f zalenium-role.json
@@ -162,7 +162,7 @@ especially since the image will need to be available on potentially any kubernet
     <div class="container m-2 p-2">
         In OpenShift there is a built in registry that can automatically pull the an image from an external registry
         (such as docker hub) 
-        <a target="_blank" href="https://docs.openshift.com/container-platform/3.5/dev_guide/managing_images.html#importing-tag-and-image-metadata"><u>on a schedule</u></a>.
+        <a target="_blank" href="https://docs.openshift.com/container-platform/3.5/dev_guide/managing_images.html#importing-tag-and-image-metadata">on a schedule</a>.
         <br>
         <br>    
         This command will automatically import <code class="bg-light text-dark">elgalu/selenium</code> into the OpenShift 
@@ -231,9 +231,10 @@ is set to <code class="bg-light text-dark">ReadWriteMany</code>, otherwise the s
 </details>
 
 #### Managing Resources
-Kubernetes has [support](https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/) for managing how
-much resources a Pod is allowed to use. Especially when using video recording it is highly recommended to specify some resource
-requests and/or limits otherwise users of your Kubernetes cluster may be negatively affected by the selenium pods.
+Kubernetes has [support](https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/){:target="_blank"} 
+for managing how much resources a Pod is allowed to use. Especially when using video recording it is highly recommended 
+to specify some resource requests and/or limits otherwise users of your Kubernetes cluster may be negatively affected by 
+the Selenium pods.
 
 <details>
     <summary>Click here for more details</summary>
@@ -373,13 +374,13 @@ In the OpenShift console you should then probably create a route. Make sure you 
 
         <ul>
             <li>You have to have a Google Container Engine account with billing enabled</li>
-            <li>And a project created on the <a target="_blank" href="https://console.cloud.google.com/kubernetes"><u>GKE dashboard</u></a></li>
+            <li>And a project created on the <a target="_blank" href="https://console.cloud.google.com/kubernetes">GKE dashboard</a></li>
             <li>The Google Cloud SDK with the <code class="bg-light text-dark">gcloud</code> tool must be present on 
             your machine and configured to the previously created project</li>
             <li><code class="bg-light text-dark">kubectl</code> has to be installed on your machine</li>
         </ul>            
 
-        Follow the <a target="_blank" href="https://cloud.google.com/container-engine/docs/quickstart"><u>Quickstart for Google Container Engine</u></a> to set these up.
+        Follow the <a target="_blank" href="https://cloud.google.com/container-engine/docs/quickstart">Quickstart for Google Container Engine</a> to set these up.
         <br>
         <br>
         <h5>Creating a Kubernetes cluster</h5>
@@ -424,7 +425,7 @@ In the OpenShift console you should then probably create a route. Make sure you 
         Zalenium uses a Kubernetes ServiceAccount to create pods on-demand. As explained in the section above, we have to 
         create the ServiceAccount, and we have to grant the required permissions to that account. To be able to create the 
         roles and the necessary bindings the GKE setup has a 
-        <a target="_blank" href="https://github.com/coreos/prometheus-operator/issues/357"><u>special step</u></a>,
+        <a target="_blank" href="https://github.com/coreos/prometheus-operator/issues/357">special step</a>,
         we have to make our users a cluster-admin.
 
 {% highlight bash %}   
@@ -434,14 +435,14 @@ In the OpenShift console you should then probably create a route. Make sure you 
 
         Then create the necessary constructs. it also creates a Namespaces, called <code class="bg-light text-dark">zalenium</code>.
         You can find the <code class="bg-light text-dark">plumbing.yaml</code> file 
-        <a target="_blank" href="https://github.com/zalando/zalenium/blob/master/docs/k8s/gke/plumbing.yaml"><u>here</u></a>.    
+        <a target="_blank" href="https://github.com/zalando/zalenium/blob/master/docs/k8s/gke/plumbing.yaml">here</a>.    
 
 {% highlight bash %}    
     kubectl apply -f plumbing.yaml
 {% endhighlight %}
 
         For the video files, a PersistentVolume has to be created also. The <code class="bg-light text-dark">pv.yaml</code> 
-        file can be found <a target="_blank" href="https://github.com/zalando/zalenium/blob/master/docs/k8s/gke/pv.yaml"><u>here</u></a>.
+        file can be found <a target="_blank" href="https://github.com/zalando/zalenium/blob/master/docs/k8s/gke/pv.yaml">here</a>.
 
 {% highlight bash %}
     kubectl apply -f pv.yaml
@@ -456,7 +457,7 @@ In the OpenShift console you should then probably create a route. Make sure you 
         <h5>Launch Zalenium</h5>
 
         Find the <code class="bg-light text-dark">zalenium.yaml</code> file 
-        <a target="_blank" href="https://github.com/zalando/zalenium/blob/master/docs/k8s/gke/zalenium.yaml"><u>here</u></a>.
+        <a target="_blank" href="https://github.com/zalando/zalenium/blob/master/docs/k8s/gke/zalenium.yaml">here</a>.
 
 {% highlight bash %}
     kubectl apply -f zalenium.yaml
@@ -479,9 +480,9 @@ In the OpenShift console you should then probably create a route. Make sure you 
         
         <h6>NodePort</h6>
 
-        Kubernetes provides <a target="_blank" href="https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services---service-types"><u>multiple ways</u></a> 
+        Kubernetes provides <a target="_blank" href="https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services---service-types">multiple ways</a> 
         to route external traffic to the deployed services. NodePort being the most simple one and by default that is 
-        enabled in the <a target="_blank" href="https://github.com/zalando/zalenium/blob/master/docs/k8s/gke/zalenium.yaml"><u>zalenium.yaml</u></a> file.
+        enabled in the <a target="_blank" href="https://github.com/zalando/zalenium/blob/master/docs/k8s/gke/zalenium.yaml">zalenium.yaml</a> file.
         <br>
         <br>
         NodePort is picking a random port in the default port range (30000-32767) and makes sure that if a request is 
@@ -501,7 +502,7 @@ In the OpenShift console you should then probably create a route. Make sure you 
         <br>
         To access the service first you have to locate the IP address of one of the cluster nodes. The GKE cluster is 
         built on standard Google Cloud VMs, so to find a node you have to go to the 
-        <a target="_blank" href="https://console.cloud.google.com/compute/instances"><u>GCloud dashboard</u></a> and 
+        <a target="_blank" href="https://console.cloud.google.com/compute/instances">GCloud dashboard</a> and 
         copy an IP a node address.
 
         <br>
