@@ -3,12 +3,12 @@
 
 </p>
 
-[![Build Status](https://img.shields.io/travis/zalando/zalenium.svg?style=for-the-badge)](https://travis-ci.org/zalando/zalenium)
-[![Codacy Badge](https://img.shields.io/codacy/grade/c719a14f5537488b8fb95d70e27acd5f.svg?style=for-the-badge)](https://www.codacy.com/app/diemol_zalenium/zalenium?utm_content=zalando/zalenium)
-[![Codecov](https://img.shields.io/codecov/c/github/zalando/zalenium.svg?style=for-the-badge)](https://codecov.io/gh/zalando/zalenium)
-[![GitHub release](https://img.shields.io/github/release/zalando/zalenium.svg?style=for-the-badge)]()
-[![Docker Pulls](https://img.shields.io/docker/pulls/dosel/zalenium.svg?style=for-the-badge)](https://hub.docker.com/r/dosel/zalenium/tags/)
-[![Gitter](https://img.shields.io/gitter/room/zalando/zalenium.js.svg?style=for-the-badge)](https://gitter.im/zalando/zalenium)
+[![Build Status](https://travis-ci.org/zalando/zalenium.svg?branch=master)](https://travis-ci.org/zalando/zalenium)
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/c719a14f5537488b8fb95d70e27acd5f)](https://www.codacy.com/app/diemol_zalenium/zalenium?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=zalando/zalenium&amp;utm_campaign=Badge_Grade)
+[![codecov](https://codecov.io/gh/zalando/zalenium/branch/master/graph/badge.svg)](https://codecov.io/gh/zalando/zalenium)
+[![GitHub release](https://img.shields.io/github/release/zalando/zalenium.svg)]()
+[![Docker Pulls](https://img.shields.io/docker/pulls/dosel/zalenium.svg)](https://hub.docker.com/r/dosel/zalenium/tags/)
+[![Gitter](https://badges.gitter.im/zalando/zalenium.svg)](https://gitter.im/zalando/zalenium?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
 
 
