@@ -56,27 +56,28 @@ channels we created for that.
   * [Set it up](#set-it-up)
   * [Run it](#run-it)
 * [Additional features](#additional-features)
-* [Performance](./docs/performance.md)
 
 ## Getting Started
 
 #### Prerequisites
 * Docker engine running, version >= 1.11.1 (probably works with earlier versions, not tested yet).
-* Pull the [docker-selenium](https://github.com/elgalu/docker-selenium) image. `docker pull elgalu/selenium`
-* If you want to use the cloud testing provider integration feature ([Sauce Labs](https://saucelabs.com/),
-[BrowserStack](https://www.browserstack.com/), [TestingBot](https://testingbot.com/)), you will need an account with them.
-
-#### Set it up
 * Make sure your docker daemon is running (e.g. `docker info` works without errors).
+
+* Pull the [docker-selenium](https://github.com/elgalu/docker-selenium) image. `docker pull elgalu/selenium`
+
 * `docker pull dosel/zalenium`
 
 #### Run it
-Zalenium uses docker to scale on-demand, therefore we need to give it the `docker.sock` full access, this is known as
+* Zalenium uses docker to scale on-demand, therefore we need to give it the `docker.sock` full access, this is known as
 "Docker alongside docker".
 
-* Basic usage, without any of the integrated cloud testing platforms enabled:
-
   ```sh
+   # Pull docker-selenium
+    docker pull elgalu/selenium
+
+    # Pull Zalenium
+    docker pull dosel/zalenium
+          
     docker run --rm -ti --name zalenium -p 4444:4444 \
       -v /var/run/docker.sock:/var/run/docker.sock \
       -v /tmp/videos:/home/seluser/videos \
@@ -88,15 +89,14 @@ Zalenium uses docker to scale on-demand, therefore we need to give it the `docke
       since it is just meant to improve its performance. For more information, check this
       [tutorial](https://www.digitalocean.com/community/tutorials/how-to-setup-additional-entropy-for-cloud-servers-using-haveged).
 
-* You can also try our one line installer and starter (it will check for the latest images and ask for missing
-dependencies.)
+* Try also our one line installer and starter for OSX/Linux (it will check for the latest images and ask for missing dependencies.)
 
   ```sh
     curl -sSL https://raw.githubusercontent.com/dosel/t/i/p | bash -s start
   ```
 
-* More usage examples, more parameters, configurations, video usage and one line starters can be seen [here](./docs/usage_examples.md)
-* After the output, you should see the DockerSeleniumStarter node in the [grid](http://localhost:4444/grid/console)
+* More usage examples, parameters, configurations, video usage and one line starters can be seen [here](https://zalando.github.io/zalenium/#usage)
+* After the output, you can check the [grid](http://localhost:4444/grid/console) console
 * Now you can point your Selenium tests to [http://localhost:4444/wd/hub](http://localhost:4444/wd/hub)
 * Stop it: `docker stop zalenium`
 
@@ -104,16 +104,15 @@ dependencies.)
 * [Dashboard](http://localhost:4444/dashboard), see all the videos and aggregated logs after your tests completed. 
 Check a live demo [here](http://zalenium.bitballoon.com/dashboard)
   <p align="center">
-    <img id="dashboard" height="352" width="600" src="./images/dashboard.gif" />
+    <img id="dashboard" height="352" width="600" src="docs/img/dashboard.gif" />
   </p>
 * Live preview of your running tests [http://localhost:4444/grid/admin/live](http://localhost:4444/grid/admin/live)
 <p align="center">
-  <img id="live-preview" height="231" width="600" src="./images/live_preview.gif" />
+  <img id="live-preview" height="231" width="600" src="docs/img/live_preview.gif" />
 </p>
 
 * Video recording, check them in the `/tmp/videos` folder (or the one you mapped when starting Zalenium)
-* Customise video file naming via capabilities and [more](./docs/usage_examples.md)
-* Basic auth to protect the grid when deployed to the open internet, instructions to enable basic auth [here](./docs/usage_examples.md#enabling-basic-auth-in-zalenium)
+* Customise video file naming via capabilities, basic auth and [more](https://zalando.github.io/zalenium/#usage)
 
 License
 ===================
