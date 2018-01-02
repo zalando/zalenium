@@ -5,18 +5,20 @@ color: seashell
 icon: img/kubernetes.png
 ---
 
-Zalenium has support for [Kubernetes](https://kubernetes.io/), these instructions will give you an
-overview of how to get it running. If you find something that needs to be improved, please give us a hand by creating
-a pull request or an issue.
+Zalenium has support for <a target="_blank" href="https://kubernetes.io/"><u>Kubernetes</u></a>, these instructions will 
+give you an overview of how to get it running. If you find something that needs to be improved, please give us a hand by 
+creating a pull request or an issue.
+
+> Kudos to [@pearj](https://github.com/pearj){:target="_blank"} for helping Zalenium work in Kubernetes.
 
 ***
 
 ### Quick start with Minikube
 
-You can use [Minikube](https://kubernetes.io/docs/getting-started-guides/minikube/) to deploy locally and get a first 
-impression of Zalenium in Kubernetes. Before starting, you could follow the
-[Hello-Minikube](https://kubernetes.io/docs/tutorials/stateless-application/hello-minikube/) tutorial to get familiar
-with Minikube and make sure it is properly installed.
+You can use <a target="_blank" href="https://kubernetes.io/docs/getting-started-guides/minikube/"><u>Minikube</u></a>
+to deploy locally and get a first impression of Zalenium in Kubernetes. Before starting, you could follow the
+<a target="_blank" href="https://kubernetes.io/docs/tutorials/stateless-application/hello-minikube/"><u>Hello-Minikube</u></a>
+tutorial to get familiar with Minikube and make sure it is properly installed.
 
 After starting Minikube locally, follow these steps:
 * (Optional) To save time, switch to the Minikube docker daemon and pull the images.
@@ -50,9 +52,13 @@ That's it, you can point your tests to the url obtained in the last step.
 ***
 
 ### Deploying with Helm
-[Helm](https://helm.sh) is a tool that greatly simplifies installing apps on a Kubernetes cluster.  Helm users can 
-see an example of a Helm chart that installs Zalenium grid in the [k8s/helm](k8s/helm) 
-directory.  Support can be added for different storage classes, RBAC support (and/or OpenShift).
+
+> Thanks to [@gswallow](https://github.com/gswallow){:target="_blank"} for contributing to Zalenium with the Helm chart.
+
+<a target="_blank" href="https://helm.sh"><u>Helm</u></a> is a tool that greatly simplifies installing apps on a 
+Kubernetes cluster. Helm users can see an example of a Helm chart that installs Zalenium grid in the 
+<a target="_blank" href="https://github.com/zalando/zalenium/tree/master/docs/k8s/helm"><u>k8s/helm</u></a> 
+directory. Support can be added for different storage classes, RBAC support (and/or OpenShift).
 
 ***
 
@@ -82,7 +88,7 @@ the Kubernetes API that it needs to.
     kubectl create sa zalenium
 {% endhighlight %}
         
-        Starting from Kubernetes 1.6, there is beta [RBAC support](http://blog.kubernetes.io/2017/04/rbac-support-in-kubernetes.html)
+        Starting from Kubernetes 1.6, there is beta <a target="_blank" href="http://blog.kubernetes.io/2017/04/rbac-support-in-kubernetes.html"><u>RBAC support</u></a>
         (Role Based Access Control), it is possible that this may be similar to the built-in RBAC support in OpenShift.
         If you want to use RBAC support in Kubernetes, you could try adapting the OpenShift instructions below.
     </div>     
@@ -93,7 +99,7 @@ the Kubernetes API that it needs to.
     <summary>Click to see service account creation in OpenShift</summary>
 
     <div class="container m-2 p-2">
-        First up, create the [cluster role](https://github.com/zalando/zalenium/blob/master/docs/k8s/zalenium-role.json):
+        First up, create the <a target="_blank" href="https://github.com/zalando/zalenium/blob/master/docs/k8s/zalenium-role.json"><u>cluster role</u></a>:
         
 {% highlight shell %}
     oc create -f zalenium-role.json
@@ -310,7 +316,7 @@ requests and/or limits otherwise users of your Kubernetes cluster may be negativ
     minikube service zalenium-grid
 {% endhighlight %}
     
-    For videos to work you need to mount in `/home/seluser/videos`.
+    For videos to work you need to mount in <code class="bg-light text-dark">/home/seluser/videos</code>.
     </div>
 </details>    
 
@@ -353,6 +359,12 @@ In the OpenShift console you should then probably create a route. Make sure you 
     <summary>Click here for more details</summary>
 
     <div class="container m-2 p-2">
+    
+        <blockquote class="blockquote">
+            <p class="mb-0">
+                Thanks to <a target="_blank" href="https://github.com/laszlocph">@laszlocph</a> for contributing this section.
+            </p>
+        </blockquote>
 
         This guide can be used in addition to the information provided in the sections above.
         <br>
