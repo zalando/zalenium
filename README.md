@@ -58,9 +58,9 @@ channels we created for that.
 
 * [Getting Started](#getting-started)
   * [Prerequisites](#prerequisites)
-  * [Set it up](#set-it-up)
   * [Run it](#run-it)
 * [Additional features](#additional-features)
+* [Documentation](#documentation)
 
 ## Getting Started
 
@@ -118,6 +118,10 @@ Check a live demo [here](http://zalenium.bitballoon.com/dashboard)
 
 * Video recording, check them in the `/tmp/videos` folder (or the one you mapped when starting Zalenium)
 * Customise video file naming via capabilities, basic auth and [more](https://zalando.github.io/zalenium/#usage)
+
+## Documentation
+
+Check the complete documentation at https://zalando.github.io/zalenium/
 
 License
 ===================
