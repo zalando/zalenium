@@ -104,11 +104,11 @@ channels we created for that.
 * [Dashboard](http://localhost:4444/dashboard), see all the videos and aggregated logs after your tests completed. 
 Check a live demo [here](http://zalenium.bitballoon.com/dashboard)
   <p align="center">
-    <img id="dashboard" height="352" width="600" src="docs/img/dashboard.gif" />
+    <img id="dashboard" width="600" src="docs/img/dashboard.gif" />
   </p>
 * Live preview of your running tests [http://localhost:4444/grid/admin/live](http://localhost:4444/grid/admin/live)
 <p align="center">
-  <img id="live-preview" height="231" width="600" src="docs/img/live_preview.gif" />
+  <img id="live-preview" width="600" src="docs/img/live_preview.gif" />
 </p>
 
 * Video recording, check them in the `/tmp/videos` folder (or the one you mapped when starting Zalenium)
