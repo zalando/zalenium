@@ -76,7 +76,7 @@ their related services.
 
 It is a good idea to create a separate service account for specific use by Zalenium, especially when running inside
 OpenShift because it uses role based authentication by default, meaning that the service account will need a 
-<code>ClusterRole</code> created that has the necessary privileges to access the parts of 
+`ClusterRole created that has the necessary privileges to access the parts of 
 the Kubernetes API that it needs to.
 
 <details>
@@ -143,16 +143,14 @@ the Kubernetes API that it needs to.
 
 
 #### App label
-Zalenium relies on there being an <code>app="something"</code> label that it will use to 
-locate <code>Services</code> and during <code>Pod</code> creation.
+Zalenium relies on there being an `app="something"` label that it will use to locate `Services` and during `Pod` creation.
 This means that you can have multiple zalenium deployments in the same kubernetes namespace that can operate independently
 if they have different app labels.
 
-A good default to use would be: <code>app=zalenium</code>.
+A good default to use would be: `app=zalenium`.
 
 #### Overriding the Selenium Image
-For performance reasons it could be a good idea to pull the selenium image, 
-<code>elgalu/selenium</code>, into a local registry,
+For performance reasons it could be a good idea to pull the selenium image, `elgalu/selenium`, into a local registry,
 especially since the image will need to be available on potentially any kubernetes node.
 
 
@@ -184,8 +182,8 @@ especially since the image will need to be available on potentially any kubernet
 
 #### Auto-mounting the shared folder
 Like the Docker version of Zalenium, the Kubernetes version can automatically mount shared folders, the only catch is 
-that when you are using persistent volumes you need to make sure that the <code>Access Mode</code> 
-is set to <code>ReadWriteMany</code>, otherwise the selenium nodes will not be able to mount it.
+that when you are using persistent volumes you need to make sure that the `Access Mode` is set to `ReadWriteMany`, 
+otherwise the selenium nodes will not be able to mount it.
 
 <details>
     <summary>Click here for more details</summary>
