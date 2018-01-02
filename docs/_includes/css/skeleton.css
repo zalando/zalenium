@@ -10,7 +10,7 @@
 
 /* ----- base grid----- */
 
-.container               { position: relative; width: 960px; margin: 0 auto; padding: 0; }
+.container               { position: relative; width: 1140px; margin: 0 auto; padding: 0; }
 .container .column       { float: left; display: inline; margin-left: 10px; margin-right: 10px; }
 .row                     { margin-bottom: 20px; }
 

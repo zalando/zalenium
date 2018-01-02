@@ -31,6 +31,9 @@
 		font-size: 100%;
 		font: inherit;
 		vertical-align: baseline; }
+	code {
+		font-size: 85%;
+	}
 	article, aside, details, figcaption, figure, footer, header, hgroup, menu, nav, section {
 		display: block; }
 	body {
