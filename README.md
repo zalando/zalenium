@@ -1,5 +1,6 @@
 <p align="center">
   <img id="header" height="214" width="500" src="./docs/img/logo_zalenium_wide.png" />
+
 </p>
 
 [![Build Status](https://travis-ci.org/zalando/zalenium.svg?branch=master)](https://travis-ci.org/zalando/zalenium)
@@ -10,15 +11,15 @@
 [![Gitter](https://badges.gitter.im/zalando/zalenium.svg)](https://gitter.im/zalando/zalenium?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
 
-# Zalenium
+
 This is a Selenium Grid extension to scale your local grid dynamically with docker containers. It uses
 [docker-selenium](https://github.com/elgalu/docker-selenium) to run your tests in Firefox and Chrome locally, if you
 need a different browser, your tests can get redirected to a cloud testing provider ([Sauce Labs](https://saucelabs.com/), 
-[BrowserStack](https://www.browserstack.com/), [TestingBot](https://testingbot.com/)). Zalenium has also support for 
-[Kubernetes](./docs/k8s/kubernetes.md).
+[BrowserStack](https://www.browserstack.com/), [TestingBot](https://testingbot.com/)). Zalenium also works out of the box
+in [Kubernetes](https://zalando.github.io/zalenium/#kubernetes).
 
 Zalenium's maintainers add new features regularly. We invite you to test it, report bugs, suggest any ideas you may
-have, and contribute. See our [contributing guidelines](CONTRIBUTING.md) for more details.
+have, and contribute. See our [contributing guidelines](https://zalando.github.io/zalenium/#contributing) for more details.
 
 ### Why?
 
@@ -54,35 +55,31 @@ channels we created for that.
 
 * [Getting Started](#getting-started)
   * [Prerequisites](#prerequisites)
-  * [Set it up](#set-it-up)
   * [Run it](#run-it)
 * [Additional features](#additional-features)
-* [Contributions](#contributions)
-  * [Building and Testing](#building-and-testing)
-* [How it works](#how-it-works)
-* [About the project versioning](#about-the-project-versioning)
-* [Usage examples](./docs/usage_examples.md)
-* [Performance](./docs/performance.md)
+* [Documentation](#documentation)
 
 ## Getting Started
 
 #### Prerequisites
 * Docker engine running, version >= 1.11.1 (probably works with earlier versions, not tested yet).
-* Pull the [docker-selenium](https://github.com/elgalu/docker-selenium) image. `docker pull elgalu/selenium`
-* If you want to use the cloud testing provider integration feature ([Sauce Labs](https://saucelabs.com/),
-[BrowserStack](https://www.browserstack.com/), [TestingBot](https://testingbot.com/)), you will need an account with them.
-
-#### Set it up
 * Make sure your docker daemon is running (e.g. `docker info` works without errors).
+
+* Pull the [docker-selenium](https://github.com/elgalu/docker-selenium) image. `docker pull elgalu/selenium`
+
 * `docker pull dosel/zalenium`
 
 #### Run it
-Zalenium uses docker to scale on-demand, therefore we need to give it the `docker.sock` full access, this is known as
+* Zalenium uses docker to scale on-demand, therefore we need to give it the `docker.sock` full access, this is known as
 "Docker alongside docker".
 
-* Basic usage, without any of the integrated cloud testing platforms enabled:
-
   ```sh
+   # Pull docker-selenium
+    docker pull elgalu/selenium
+
+    # Pull Zalenium
+    docker pull dosel/zalenium
+          
     docker run --rm -ti --name zalenium -p 4444:4444 \
       -v /var/run/docker.sock:/var/run/docker.sock \
       -v /tmp/videos:/home/seluser/videos \
@@ -94,15 +91,14 @@ Zalenium uses docker to scale on-demand, therefore we need to give it the `docke
       since it is just meant to improve its performance. For more information, check this
       [tutorial](https://www.digitalocean.com/community/tutorials/how-to-setup-additional-entropy-for-cloud-servers-using-haveged).
 
-* You can also try our one line installer and starter (it will check for the latest images and ask for missing
-dependencies.)
+* Try also our one line installer and starter for OSX/Linux (it will check for the latest images and ask for missing dependencies.)
 
   ```sh
     curl -sSL https://raw.githubusercontent.com/dosel/t/i/p | bash -s start
   ```
 
-* More usage examples, more parameters, configurations, video usage and one line starters can be seen [here](./docs/usage_examples.md)
-* After the output, you should see the DockerSeleniumStarter node in the [grid](http://localhost:4444/grid/console)
+* More usage examples, parameters, configurations, video usage and one line starters can be seen [here](https://zalando.github.io/zalenium/#usage)
+* After the output, you can check the [grid](http://localhost:4444/grid/console) console
 * Now you can point your Selenium tests to [http://localhost:4444/wd/hub](http://localhost:4444/wd/hub)
 * Stop it: `docker stop zalenium`
 
@@ -110,27 +106,19 @@ dependencies.)
 * [Dashboard](http://localhost:4444/dashboard), see all the videos and aggregated logs after your tests completed. 
 Check a live demo [here](http://zalenium.bitballoon.com/dashboard)
   <p align="center">
-    <img id="dashboard" height="352" width="600" src="./images/dashboard.gif" />
+    <img id="dashboard" width="600" src="docs/img/dashboard.gif" />
   </p>
 * Live preview of your running tests [http://localhost:4444/grid/admin/live](http://localhost:4444/grid/admin/live)
 <p align="center">
-  <img id="live-preview" height="231" width="600" src="./images/live_preview.gif" />
+  <img id="live-preview" width="600" src="docs/img/live_preview.gif" />
 </p>
 
 * Video recording, check them in the `/tmp/videos` folder (or the one you mapped when starting Zalenium)
-* Customise video file naming via capabilities and [more](./docs/usage_examples.md)
-* Basic auth to protect the grid when deployed to the open internet, instructions to enable basic auth [here](./docs/usage_examples.md#enabling-basic-auth-in-zalenium)
+* Customise video file naming via capabilities, basic auth and [more](https://zalando.github.io/zalenium/#usage)
 
-## Zalenium in the Selenium Conf Austin 2017
-Get a better overview of what Zalenium is and how it works by checking the recorded talk [here](https://www.youtube.com/watch?v=W5qMsVrob6I)
+## Documentation
 
-## Integrated Cloud Testing solutions
-* Thanks to the open source accounts we got, we have integrated so far:
-
-![BrowserStack](./images/browserstack_logo.png)    ![Sauce Labs](./images/saucelabs_logo.png)     ![TestingBot](./images/testingbot_logo.png)
-
-If you want to integrate another cloud testing solution, we are happy to receive PRs or requests via issues, don't
-forget to check the [guidelines](CONTRIBUTING.md) for contributing.
+Check the complete documentation at https://zalando.github.io/zalenium/
 
 License
 ===================
