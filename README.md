@@ -10,15 +10,14 @@
 [![Gitter](https://badges.gitter.im/zalando/zalenium.svg)](https://gitter.im/zalando/zalenium?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
 
-# Zalenium
 This is a Selenium Grid extension to scale your local grid dynamically with docker containers. It uses
 [docker-selenium](https://github.com/elgalu/docker-selenium) to run your tests in Firefox and Chrome locally, if you
 need a different browser, your tests can get redirected to a cloud testing provider ([Sauce Labs](https://saucelabs.com/), 
-[BrowserStack](https://www.browserstack.com/), [TestingBot](https://testingbot.com/)). Zalenium has also support for 
-[Kubernetes](./docs/k8s/kubernetes.md).
+[BrowserStack](https://www.browserstack.com/), [TestingBot](https://testingbot.com/)). Zalenium also works out of the box
+in [Kubernetes](https://zalando.github.io/zalenium/#kubernetes).
 
 Zalenium's maintainers add new features regularly. We invite you to test it, report bugs, suggest any ideas you may
-have, and contribute. See our [contributing guidelines](CONTRIBUTING.md) for more details.
+have, and contribute. See our [contributing guidelines](https://zalando.github.io/zalenium/#contributing) for more details.
 
 ### Why?
 
@@ -57,11 +56,6 @@ channels we created for that.
   * [Set it up](#set-it-up)
   * [Run it](#run-it)
 * [Additional features](#additional-features)
-* [Contributions](#contributions)
-  * [Building and Testing](#building-and-testing)
-* [How it works](#how-it-works)
-* [About the project versioning](#about-the-project-versioning)
-* [Usage examples](./docs/usage_examples.md)
 * [Performance](./docs/performance.md)
 
 ## Getting Started
@@ -120,17 +114,6 @@ Check a live demo [here](http://zalenium.bitballoon.com/dashboard)
 * Video recording, check them in the `/tmp/videos` folder (or the one you mapped when starting Zalenium)
 * Customise video file naming via capabilities and [more](./docs/usage_examples.md)
 * Basic auth to protect the grid when deployed to the open internet, instructions to enable basic auth [here](./docs/usage_examples.md#enabling-basic-auth-in-zalenium)
-
-## Zalenium in the Selenium Conf Austin 2017
-Get a better overview of what Zalenium is and how it works by checking the recorded talk [here](https://www.youtube.com/watch?v=W5qMsVrob6I)
-
-## Integrated Cloud Testing solutions
-* Thanks to the open source accounts we got, we have integrated so far:
-
-![BrowserStack](./images/browserstack_logo.png)    ![Sauce Labs](./images/saucelabs_logo.png)     ![TestingBot](./images/testingbot_logo.png)
-
-If you want to integrate another cloud testing solution, we are happy to receive PRs or requests via issues, don't
-forget to check the [guidelines](CONTRIBUTING.md) for contributing.
 
 License
 ===================
