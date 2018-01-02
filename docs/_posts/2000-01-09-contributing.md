@@ -14,7 +14,7 @@ If you need help, please open a GitHub Issue in this project. If you work at Zal
 
 #### Report a bug
 Reporting bugs is one of the best ways to contribute. Before creating a bug report, please check that an 
-<a target="_blank" href="https://github.com/zalando/zalenium/issues"><u>issue</u></a> reporting the same problem does 
+[issue](https://github.com/zalando/zalenium/issues/new){:target="_blank"} reporting the same problem does 
 not already exist. If there is an such an issue, you may add your information as a comment.
 
 To report a new bug, open an issue that summarizes the bug and set the label to "bug".
@@ -23,12 +23,12 @@ If you want to provide a fix along with your bug report: That is great! In this 
 described in section **Contribute Code**.
 
 #### Suggest a Feature
-To request a new feature, open an <a target="_blank" href="https://github.com/zalando/zalenium/issues/new"><u>issue</u></a> 
+To request a new feature, open an [issue](https://github.com/zalando/zalenium/issues/new){:target="_blank"} 
 and summarize the desired functionality and its use case. Set the issue label to "feature".
 
 #### Contribute Code
 This is a rough outline of what the workflow for code contributions looks like:
-- Check the list of open <a target="_blank" href="https://github.com/zalando/zalenium/issues"><u>issues</u></a>. Either 
+- Check the list of open [issues](https://github.com/zalando/zalenium/issues/new){:target="_blank"}. Either 
 assign an existing issue to yourself, or create a new one that you would like work on and discuss your ideas and use cases.
 - Fork the repository
 - Create a topic branch from where you want to base your work. This is usually master.
@@ -36,8 +36,8 @@ assign an existing issue to yourself, or create a new one that you would like wo
 - Write good commit messages (see below).
 - Push your changes to a topic branch in your fork of the repository.
 - Submit a pull request
-- Your pull request must receive a <i class="fa fa-thumbs-o-up" aria-hidden="true"></i> from two 
-<a target="_blank" href="https://github.com/zalando/zalenium/blob/master/MAINTAINERS"><u>maintainers</u></a>.
+- Your pull request must receive a <i class="fa fa-thumbs-o-up" aria-hidden="true"></i> from two
+[maintainers](https://github.com/zalando/zalenium/blob/master/MAINTAINERS){:target="_blank"} 
 
 Thanks for your contributions!
 
@@ -55,10 +55,11 @@ When creating a pull request, its comment should reference the corresponding iss
 
 We have adopted the Contributor Covenant as the code of conduct for this project:
 
-<a target="_blank" href="http://contributor-covenant.org/version/1/4/"><u>http://contributor-covenant.org/version/1/4/</u></a>
+[http://contributor-covenant.org/version/1/4/](http://contributor-covenant.org/version/1/4/){:target="_blank"}
 
+***
 
-#### Building and Testing
+### Building and Testing
 
 If you want to verify your changes locally with the existing tests (please double check that the Docker daemon is
 running):
