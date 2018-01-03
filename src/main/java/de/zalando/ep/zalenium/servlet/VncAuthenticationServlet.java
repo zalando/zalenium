@@ -1,6 +1,5 @@
 package de.zalando.ep.zalenium.servlet;
 
-import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Optional;
@@ -11,7 +10,6 @@ import java.util.regex.Pattern;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -44,7 +42,7 @@ public class VncAuthenticationServlet extends RegistryBasedServlet {
     }
     
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) {
         try {
             authenticate(req, resp);
         } catch (Exception e) {
@@ -53,7 +51,7 @@ public class VncAuthenticationServlet extends RegistryBasedServlet {
     }
     
     @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) {
         try {
             authenticate(req, resp);
         } catch (Exception e) {
@@ -62,7 +60,7 @@ public class VncAuthenticationServlet extends RegistryBasedServlet {
     }
     
     @Override
-    protected void doHead(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    protected void doHead(HttpServletRequest req, HttpServletResponse resp) {
         try {
             authenticate(req, resp);
         } catch (Exception e) {
@@ -70,7 +68,7 @@ public class VncAuthenticationServlet extends RegistryBasedServlet {
         }
     }
 
-    protected void authenticate(HttpServletRequest request, HttpServletResponse response) {
+    private void authenticate(HttpServletRequest request, HttpServletResponse response) {
         // We could get a null header, so we should handle this situation
         Optional<String> urlToAuthenticate = Optional.ofNullable(request.getHeader("X-Original-URI"));
         
@@ -84,7 +82,7 @@ public class VncAuthenticationServlet extends RegistryBasedServlet {
         });
         
         // Apply the regexes looking for the first one that matches
-        Optional<Matcher> matcher = path.flatMap(p -> getRegexStream().map(regex -> regex.matcher(p)).filter(m -> m.find()).findFirst());
+        Optional<Matcher> matcher = path.flatMap(p -> getRegexStream().map(regex -> regex.matcher(p)).filter(Matcher::find).findFirst());
         
         Optional<String> host = matcher.map(res -> res.group("host"));
         Optional<String> port = matcher.map(res -> res.group("port"));
@@ -101,7 +99,7 @@ public class VncAuthenticationServlet extends RegistryBasedServlet {
         response.setStatus(httpCode);
     }
     
-    protected Stream<Pattern> getRegexStream() {
+    private Stream<Pattern> getRegexStream() {
         return Stream.of(VNC_REGEX, WEB_SOCKET_REGEX);
     }
 }

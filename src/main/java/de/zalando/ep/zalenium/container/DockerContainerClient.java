@@ -15,14 +15,12 @@ import com.spotify.docker.client.messages.ContainerMount;
 import com.spotify.docker.client.messages.ExecCreation;
 import com.spotify.docker.client.messages.HostConfig;
 import com.spotify.docker.client.messages.Image;
-import com.spotify.docker.client.messages.PortBinding;
 import de.zalando.ep.zalenium.util.GoogleAnalyticsApi;
 
 import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -190,8 +188,8 @@ public class DockerContainerClient implements ContainerClient {
 
         // Allows "--net=host" work. Only supported for Linux.
         if (DOCKER_NETWORK_HOST_MODE_NAME.equalsIgnoreCase(networkMode)) {
-            envVars.put("SELENIUM_HUB_HOST", "localhost");
-            envVars.put("SELENIUM_NODE_HOST", "localhost");
+            envVars.put("SELENIUM_HUB_HOST", "127.0.0.1");
+            envVars.put("SELENIUM_NODE_HOST", "127.0.0.1");
             envVars.put("PICK_ALL_RANDOM_PORTS", "true");
             try {
                 String hostName = dockerClient.info().name();
