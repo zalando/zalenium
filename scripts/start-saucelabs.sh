@@ -40,9 +40,14 @@ until [ $i -ge $SAUCE_TUNNEL_MAX_RETRY_ATTEMPTS ]; do
     killall -SIGINT sc || true
     sleep 1
   fi
+  SAUCE_DNS_COMMAND=""
+  if [ ! -z "${SAUCE_TUNNEL_DNS}" ]; then
+    SAUCE_DNS_COMMAND="--dns ${SAUCE_TUNNEL_DNS}"
+  fi
   sc --se-port 4446 \
      --user "${SAUCE_USERNAME}" \
      --api-key "${SAUCE_ACCESS_KEY}" \
+    ${SAUCE_DNS_COMMAND} \
      --readyfile "${SAUCE_TUNNEL_READY_FILE}" \
      --tunnel-identifier "${SAUCE_TUNNEL_ID}" > ${SAUCE_LOG_FILE} &
   SAUCE_TUNNEL_PID=$!
