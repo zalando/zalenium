@@ -78,6 +78,10 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     static final String ZALENIUM_SCREEN_WIDTH = "ZALENIUM_SCREEN_WIDTH";
     @VisibleForTesting
     static final String ZALENIUM_SCREEN_HEIGHT = "ZALENIUM_SCREEN_HEIGHT";
+    @VisibleForTesting
+    static final String SELENIUM_NODE_PARAMS = "ZALENIUM_NODE_PARAMS";
+    @VisibleForTesting
+    static final String DEFAULT_SELENIUM_NODE_PARAMS = "";
     private static final String DEFAULT_ZALENIUM_CONTAINER_NAME = "zalenium";
     private static final String ZALENIUM_CONTAINER_NAME = "ZALENIUM_CONTAINER_NAME";
     private static final Logger LOGGER = Logger.getLogger(DockerSeleniumStarterRemoteProxy.class.getName());
@@ -97,6 +101,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     private static Environment env = defaultEnvironment;
     private static GoogleAnalyticsApi ga = new GoogleAnalyticsApi();
     private static String latestDownloadedImage = null;
+    private static String seleniumNodeParameters = DEFAULT_SELENIUM_NODE_PARAMS;
     private static int desiredContainersOnStartup;
     private static int maxDockerSeleniumContainers;
     private static int sleepIntervalMultiplier = 1000;
@@ -138,6 +143,9 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
 
         String seleniumImageName = env.getStringEnvVariable(ZALENIUM_SELENIUM_IMAGE_NAME, DEFAULT_DOCKER_SELENIUM_IMAGE);
         setDockerSeleniumImageName(seleniumImageName);
+
+        String seleniumNodeParams = env.getStringEnvVariable(SELENIUM_NODE_PARAMS, DEFAULT_SELENIUM_NODE_PARAMS);
+        setSeleniumNodeParameters(seleniumNodeParams);
     }
 
     /*
@@ -202,6 +210,14 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
 
     public static void setDockerSeleniumImageName(String dockerSeleniumImageName) {
         DockerSeleniumStarterRemoteProxy.dockerSeleniumImageName = dockerSeleniumImageName;
+    }
+
+    public static String getSeleniumNodeParameters() {
+        return seleniumNodeParameters;
+    }
+
+    public static void setSeleniumNodeParameters(String seleniumNodeParameters) {
+        DockerSeleniumStarterRemoteProxy.seleniumNodeParameters = seleniumNodeParameters;
     }
 
     @VisibleForTesting
@@ -423,6 +439,8 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
             String nodePolling = String.valueOf(RandomUtils.nextInt(90, 120) * 1000);
             String nodeRegisterCycle = String.valueOf(RandomUtils.nextInt(15, 25) * 1000);
 
+            String seleniumNodeParams = getSeleniumNodeParameters();
+
             int attempts = 0;
             int maxAttempts = 2;
             while (attempts < maxAttempts) {
@@ -430,7 +448,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
                 final int nodePort = findFreePortInRange(LOWER_PORT_BOUNDARY, UPPER_PORT_BOUNDARY);
 
                 Map<String, String> envVars = buildEnvVars(timeZone, screenSize, hostIpAddress, sendAnonymousUsageInfo,
-                        nodePolling, nodeRegisterCycle, nodePort);
+                        nodePolling, nodeRegisterCycle, nodePort, seleniumNodeParams);
 
                 String latestImage = getLatestDownloadedImage(getDockerSeleniumImageName());
                 ContainerCreationStatus creationStatus = containerClient
@@ -485,7 +503,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
 
     private Map<String, String> buildEnvVars(TimeZone timeZone, Dimension screenSize, String hostIpAddress,
                                              boolean sendAnonymousUsageInfo, String nodePolling,
-                                             String nodeRegisterCycle, int nodePort) {
+                                             String nodeRegisterCycle, int nodePort, String seleniumNodeParams) {
         final int noVncPort = nodePort + NO_VNC_PORT_GAP;
         final int vncPort = nodePort + VNC_PORT_GAP;
         Map<String, String> envVars = new HashMap<>();
@@ -513,6 +531,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
         envVars.put("SELENIUM_MULTINODE_PORT", String.valueOf(nodePort));
         envVars.put("CHROME", "false");
         envVars.put("FIREFOX", "false");
+        envVars.put("SELENIUM_NODE_PARAMS", seleniumNodeParams);
         return envVars;
     }
 

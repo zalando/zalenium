@@ -377,7 +377,9 @@ ENV ZAL_VER="${project.build.finalName}" \
     SAUCE_TUNNEL="false" \
     TESTINGBOT_TUNNEL_OPTS="--se-port 4447" \
     TESTINGBOT_TUNNEL="false" \
-    TESTINGBOT_WAIT_TIMEOUT="2m"
+    TESTINGBOT_WAIT_TIMEOUT="2m" \
+    SELENIUM_HUB_PARAMS="" \
+    SELENIUM_NODE_PARAMS=""
 
 COPY entry.sh log warn error /usr/bin/
 COPY nginx.conf /etc/nginx/

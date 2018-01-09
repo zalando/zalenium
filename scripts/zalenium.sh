@@ -362,6 +362,7 @@ StartUp()
     export ZALENIUM_SELENIUM_IMAGE_NAME=${SELENIUM_IMAGE_NAME}
     export ZALENIUM_MAX_TEST_SESSIONS=${MAX_TEST_SESSIONS}
     export ZALENIUM_KEEP_ONLY_FAILED_TESTS=${KEEP_ONLY_FAILED_TESTS}
+    export ZALENIUM_NODE_PARAMS=${SELENIUM_NODE_PARAMS}
 
     # Random ID used for Google Analytics
     # If it is running inside the Zalando Jenkins env, we pick the team name from the $BUILD_URL
@@ -429,6 +430,7 @@ StartUp()
     -servlet de.zalando.ep.zalenium.dashboard.DashboardCleanupServlet \
     -servlet de.zalando.ep.zalenium.servlet.VncAuthenticationServlet \
     -registry de.zalando.ep.zalenium.registry.ZaleniumRegistry \
+    ${SELENIUM_HUB_PARAMS} \
     ${DEBUG_FLAG} &
 
     echo $! > ${PID_PATH_SELENIUM}
