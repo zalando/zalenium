@@ -272,9 +272,14 @@ StartUp()
         log "Ensuring docker-selenium is available..."
         DOCKER_SELENIUM_IMAGE_COUNT=$(docker images ${SELENIUM_IMAGE_NAME} --quiet | wc -l)
         if [ ${DOCKER_SELENIUM_IMAGE_COUNT} -eq 0 ]; then
-            echo "Seems that docker-selenium's image has not been pulled yet"
-            echo "Please run 'docker pull elgalu/selenium', or use your own compatible image via --seleniumImageName"
-            exit 1
+            if [ ${PULL_SELENIUM_IMAGE:-false} == "true" ]; then
+                echo "Pulling docker-selenium's image: ${SELENIUM_IMAGE_NAME}"
+                docker pull ${SELENIUM_IMAGE_NAME}
+            else
+                echo "Seems that docker-selenium's image has not been pulled yet"
+                echo "Please run 'docker pull elgalu/selenium', or use your own compatible image via --seleniumImageName"
+                exit 1
+            fi
         fi
     fi
 
