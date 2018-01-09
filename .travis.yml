@@ -10,17 +10,20 @@ services:
 jobs:
   include:
     - stage: Integration and Unit Tests
+      if: type = pull_request
       env: step=sauceLabs
       script:
       - docker pull elgalu/selenium
       - travis_retry ./run_integration_tests.sh sauceLabs
 
     - env: step=browserStack_with_user1006
+      if: type = pull_request
       script:
         - docker pull elgalu/selenium
         - travis_retry ./run_integration_tests.sh browserStack
 
     - env: step=dockerCompose
+      if: type = pull_request
       script:
       - docker pull elgalu/selenium
       - curl -L https://github.com/docker/compose/releases/download/1.13.0/docker-compose-`uname -s`-`uname -m` > docker-compose
@@ -39,6 +42,7 @@ jobs:
       - java -cp ~/codacy-coverage-reporter-assembly-latest.jar com.codacy.CodacyCoverageReporter -l Java -r ./target/site/jacoco/jacoco.xml
 
     - env: step=minikube
+      if: type = pull_request
       script:
       - docker pull elgalu/selenium
       - travis_retry ./kubernetes/minikube-ci-initialize.sh
@@ -48,6 +52,7 @@ jobs:
       - ./run_integration_tests.sh minikube
 
     - stage: Push Image (only with a tag)
+      if: type != pull_request
       script:
       - ./gen-scm-source.sh
       - ./push_image.sh
