@@ -52,7 +52,7 @@ jobs:
       - ./run_integration_tests.sh minikube
 
     - stage: Push Image (only with a tag)
-      if: type != pull_request
+      if: type != pull_request AND tag IS present
       script:
       - ./gen-scm-source.sh
       - ./push_image.sh
