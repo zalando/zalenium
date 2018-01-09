@@ -17,7 +17,7 @@ jobs:
       - travis_retry ./run_integration_tests.sh sauceLabs
 
     - env: step=browserStack_with_user1006
-      if: type = pull_request
+      if: type != pull_request
       script:
         - docker pull elgalu/selenium
         - travis_retry ./run_integration_tests.sh browserStack
