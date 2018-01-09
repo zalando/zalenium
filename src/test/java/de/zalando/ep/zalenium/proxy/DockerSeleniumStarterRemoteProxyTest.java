@@ -334,6 +334,8 @@ public class DockerSeleniumStarterRemoteProxyTest {
                 DockerSeleniumStarterRemoteProxy.getConfiguredScreenSize().getWidth());
         Assert.assertEquals(DockerSeleniumStarterRemoteProxy.DEFAULT_TZ.getID(),
                 DockerSeleniumStarterRemoteProxy.getConfiguredTimeZone().getID());
+        Assert.assertEquals(DockerSeleniumStarterRemoteProxy.DEFAULT_SELENIUM_NODE_PARAMS,
+                DockerSeleniumStarterRemoteProxy.getSeleniumNodeParameters());
     }
 
     @Test
@@ -382,6 +384,7 @@ public class DockerSeleniumStarterRemoteProxyTest {
         int amountOfMaxContainers = 8;
         int screenWidth = 1440;
         int screenHeight = 810;
+        String seleniumNodeParams = "-debug";
         TimeZone timeZone = TimeZone.getTimeZone("America/Montreal");
         when(environment.getEnvVariable(DockerSeleniumStarterRemoteProxy.ZALENIUM_DESIRED_CONTAINERS))
                 .thenReturn(String.valueOf(amountOfDesiredContainers));
@@ -393,6 +396,8 @@ public class DockerSeleniumStarterRemoteProxyTest {
                 .thenReturn(String.valueOf(screenWidth));
         when(environment.getEnvVariable(DockerSeleniumStarterRemoteProxy.ZALENIUM_TZ))
                 .thenReturn(timeZone.getID());
+        when(environment.getEnvVariable(DockerSeleniumStarterRemoteProxy.SELENIUM_NODE_PARAMS))
+                .thenReturn(seleniumNodeParams);
         when(environment.getIntEnvVariable(any(String.class), any(Integer.class))).thenCallRealMethod();
         when(environment.getStringEnvVariable(any(String.class), any(String.class))).thenCallRealMethod();
         DockerSeleniumStarterRemoteProxy.setEnv(environment);
@@ -409,6 +414,7 @@ public class DockerSeleniumStarterRemoteProxyTest {
         Assert.assertEquals(screenHeight, DockerSeleniumStarterRemoteProxy.getConfiguredScreenSize().getHeight());
         Assert.assertEquals(screenWidth, DockerSeleniumStarterRemoteProxy.getConfiguredScreenSize().getWidth());
         Assert.assertEquals(timeZone.getID(), DockerSeleniumStarterRemoteProxy.getConfiguredTimeZone().getID());
+        Assert.assertEquals(seleniumNodeParams, DockerSeleniumStarterRemoteProxy.getSeleniumNodeParameters());
     }
 
     @Test
