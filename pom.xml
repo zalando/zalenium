@@ -51,7 +51,7 @@
         <selenium-server.major-minor.version>3.8</selenium-server.major-minor.version>
         <selenium-server.patch-level.version>1</selenium-server.patch-level.version>
         <docker-client.version>8.10.0</docker-client.version>
-        <kubernetes-client.version>3.1.5</kubernetes-client.version>
+        <kubernetes-client.version>3.1.8</kubernetes-client.version>
         <junit.version>4.12</junit.version>
         <mockito.version>2.13.0</mockito.version>
         <awaitility.version>3.0.0</awaitility.version>
