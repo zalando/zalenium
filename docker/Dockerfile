@@ -3,7 +3,7 @@
 # Layer size: big: ~130 MB
 FROM ubuntu:xenial-20171114
 ENV UBUNTU_FLAVOR="xenial" \
-    UBUNTU_DATE="20171114"
+    UBUNTU_DATE="20180112.1"
 
 #== Ubuntu flavors - common
 RUN  echo "deb http://archive.ubuntu.com/ubuntu ${UBUNTU_FLAVOR} main universe\n" > /etc/apt/sources.list \
@@ -251,34 +251,16 @@ RUN wget -nv -O /usr/bin/gosu \
 #=====================
 # Var `DOCKER` points to which binary to use at runtime
 ENV DOCKER_HOST="unix:///var/run/docker.sock" \
-    DOCKER_BUCKET="get.docker.com" \
-    DOCKER="17.06.2-ce"
+    DOCKER_BUCKET="download.docker.com" \
+    DOCKER="17.09.1-ce"
 
 #----------------------------
-# Docker 17.03.1-ce -- 15 MB
+# Docker 17.09.1-ce -- 15 MB
 #----------------------------
-# https://github.com/docker-library/docker/blob/master/17.03/Dockerfile
+# https://github.com/docker-library/docker/blob/master/17.09/Dockerfile
 # Note: Starting with 1.13, newer CLIs can talk to older daemons
 RUN set -x \
-  && DOCKER_VERSION="17.03.1-ce" \
-     DOCKER_SHA256="820d13b5699b5df63f7032c8517a5f118a44e2be548dd03271a86656a544af55" \
-  && curl -fSL "https://${DOCKER_BUCKET}/builds/Linux/x86_64/docker-${DOCKER_VERSION}.tgz" \
-          -o docker.tgz \
-  && echo "${DOCKER_SHA256} *docker.tgz" | sha256sum -c - \
-  && tar -xzvf docker.tgz \
-  && mv docker/docker /usr/bin/docker-${DOCKER_VERSION} \
-  && rm -rf docker/ && rm docker.tgz \
-  && docker-${DOCKER_VERSION} --version | grep "${DOCKER_VERSION}"
-
-ENV DOCKER_BUCKET="download.docker.com"
-
-#----------------------------
-# Docker 17.06.2-ce -- 15 MB
-#----------------------------
-# https://github.com/docker-library/docker/blob/master/17.06/Dockerfile
-# Note: Starting with 1.13, newer CLIs can talk to older daemons
-RUN set -x \
-  && DOCKER_VERSION="17.06.2-ce" \
+  && DOCKER_VERSION="17.09.1-ce" \
   && curl -fSL "https://${DOCKER_BUCKET}/linux/static/stable/x86_64/docker-${DOCKER_VERSION}.tgz" \
           -o docker.tgz \
   && tar -xzvf docker.tgz \
@@ -287,12 +269,12 @@ RUN set -x \
   && docker-${DOCKER_VERSION} --version | grep "${DOCKER_VERSION}"
 
 #----------------------------
-# Docker 17.09.0-ce -- 15 MB
+# Docker 17.12.0-ce -- 15 MB
 #----------------------------
 # https://github.com/docker-library/docker/blob/master/17.09/Dockerfile
 # Note: Starting with 1.13, newer CLIs can talk to older daemons
 RUN set -x \
-  && DOCKER_VERSION="17.09.0-ce" \
+  && DOCKER_VERSION="17.12.0-ce" \
   && curl -fSL "https://${DOCKER_BUCKET}/linux/static/stable/x86_64/docker-${DOCKER_VERSION}.tgz" \
           -o docker.tgz \
   && tar -xzvf docker.tgz \
