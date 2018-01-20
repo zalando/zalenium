@@ -361,7 +361,9 @@ ENV ZAL_VER="${project.build.finalName}" \
     TESTINGBOT_TUNNEL="false" \
     TESTINGBOT_WAIT_TIMEOUT="2m" \
     SELENIUM_HUB_PARAMS="" \
-    SELENIUM_NODE_PARAMS=""
+    SELENIUM_NODE_PARAMS="" \
+    SELENIUM_CONTAINER_LABELS="" \
+    SELENIUM_WAIT_FOR_CONTAINER="true"
 
 COPY entry.sh log warn error /usr/bin/
 COPY nginx.conf /etc/nginx/

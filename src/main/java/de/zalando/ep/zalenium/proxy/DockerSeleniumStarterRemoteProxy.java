@@ -105,6 +105,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     private static int desiredContainersOnStartup;
     private static int maxDockerSeleniumContainers;
     private static int sleepIntervalMultiplier = 1000;
+    private static boolean seleniumWaitForContainer = true;
     private static TimeZone configuredTimeZone;
     private static Dimension configuredScreenSize;
     private static String containerName;
@@ -146,6 +147,8 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
 
         String seleniumNodeParams = env.getStringEnvVariable(SELENIUM_NODE_PARAMS, DEFAULT_SELENIUM_NODE_PARAMS);
         setSeleniumNodeParameters(seleniumNodeParams);
+
+        seleniumWaitForContainer = env.getBooleanEnvVariable("SELENIUM_WAIT_FOR_CONTAINER", true);
     }
 
     /*
@@ -467,6 +470,10 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
 
     private boolean checkContainerStatus(ContainerCreationStatus creationStatus) {
         long sleepInterval = sleepIntervalMultiplier;
+        // In some environments we won't wait for the container to be ready since we can't get the IP. E.g Rancher.
+        if (!seleniumWaitForContainer) {
+            return true;
+        }
         if (ContainerFactory.getIsKubernetes().get()) {
             sleepInterval = sleepInterval * 3;
         }
