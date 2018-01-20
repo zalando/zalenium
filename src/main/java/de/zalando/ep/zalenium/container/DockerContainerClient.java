@@ -15,12 +15,14 @@ import com.spotify.docker.client.messages.ContainerMount;
 import com.spotify.docker.client.messages.ExecCreation;
 import com.spotify.docker.client.messages.HostConfig;
 import com.spotify.docker.client.messages.Image;
+import de.zalando.ep.zalenium.util.Environment;
 import de.zalando.ep.zalenium.util.GoogleAnalyticsApi;
 
 import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -53,6 +55,8 @@ public class DockerContainerClient implements ContainerClient {
             "zalenium_https_proxy",
             "zalenium_no_proxy"
     };
+    private static final Environment defaultEnvironment = new Environment();
+    private static Environment env = defaultEnvironment;
     private final Logger logger = Logger.getLogger(DockerContainerClient.class.getName());
     private final GoogleAnalyticsApi ga = new GoogleAnalyticsApi();
     private DockerClient dockerClient = new DefaultDockerClient("unix:///var/run/docker.sock");
@@ -61,7 +65,9 @@ public class DockerContainerClient implements ContainerClient {
     private List<String> zaleniumExtraHosts;
     private List<ContainerMount> mntFolders = new ArrayList<>();
     private List<String> zaleniumHttpEnvVars = new ArrayList<>();
+    private Map<String, String> seleniumContainerLabels = new HashMap<>();
     private AtomicBoolean mntFoldersAndHttpEnvVarsChecked = new AtomicBoolean(false);
+    private AtomicBoolean seleniumContainerLabelsChecked = new AtomicBoolean(false);
 
     @VisibleForTesting
     public void setContainerClient(final DockerClient client) {
@@ -175,6 +181,8 @@ public class DockerContainerClient implements ContainerClient {
         String containerName = generateContainerName(zaleniumContainerName, nodePort);
 
         loadMountedFolders(zaleniumContainerName);
+        // In some environments the created containers need to be labeled so the platform can handle them. E.g. Rancher.
+        loadSeleniumContainerLabels();
 
         List<String> binds = generateMountedFolderBinds();
         binds.add("/dev/shm:/dev/shm");
@@ -218,13 +226,19 @@ public class DockerContainerClient implements ContainerClient {
         flattenedEnvVars.addAll(zaleniumHttpEnvVars);
 
 
+        // labels.put("io.rancher.container.network", "true");
         final String[] exposedPorts = {nodePort, noVncPort};
-        final ContainerConfig containerConfig = ContainerConfig.builder()
+        ContainerConfig.Builder builder = ContainerConfig.builder()
                 .image(image)
                 .env(flattenedEnvVars)
                 .exposedPorts(exposedPorts)
-                .hostConfig(hostConfig)
-                .build();
+                .hostConfig(hostConfig);
+
+        if (seleniumContainerLabels.size() > 0) {
+            builder.labels(seleniumContainerLabels);
+        }
+
+        final ContainerConfig containerConfig = builder.build();
 
         try {
             final ContainerCreation container = dockerClient.createContainer(containerConfig, containerName);
@@ -235,11 +249,36 @@ public class DockerContainerClient implements ContainerClient {
             ga.trackException(e);
             return new ContainerCreationStatus(false);
         }
+}
+
+    @VisibleForTesting
+    protected static void setEnv(final Environment env) {
+        DockerContainerClient.env = env;
+    }
+
+    @VisibleForTesting
+    static void restoreEnvironment() {
+        env = defaultEnvironment;
     }
 
     private String generateContainerName(String zaleniumContainerName,
                                          String nodePort) {
         return String.format("%s_%s", zaleniumContainerName, nodePort);
+    }
+
+    private void loadSeleniumContainerLabels() {
+        if (!this.seleniumContainerLabelsChecked.getAndSet(true)) {
+            String containerLabels = env.getStringEnvVariable("SELENIUM_CONTAINER_LABELS", "");
+            try {
+                for (String label : containerLabels.split(";")) {
+                    String[] split = label.split("=");
+                    seleniumContainerLabels.put(split[0], split[1]);
+                }
+            } catch (Exception e) {
+                logger.log(Level.WARNING, nodeId + " Error while retrieving the added labels for the Selenium containers.", e);
+                ga.trackException(e);
+            }
+        }
     }
 
     private void loadMountedFolders(String zaleniumContainerName) {
