@@ -269,6 +269,9 @@ public class DockerContainerClient implements ContainerClient {
     private void loadSeleniumContainerLabels() {
         if (!this.seleniumContainerLabelsChecked.getAndSet(true)) {
             String containerLabels = env.getStringEnvVariable("SELENIUM_CONTAINER_LABELS", "");
+            if (containerLabels.length() == 0) {
+                return;
+            }
             try {
                 for (String label : containerLabels.split(";")) {
                     String[] split = label.split("=");
