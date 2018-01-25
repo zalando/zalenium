@@ -227,7 +227,10 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                 LOGGER.log(Level.FINE, getId() + " Checking for cookies..." + seleniumRequest.getBody());
                 JsonElement bodyRequest = new JsonParser().parse(seleniumRequest.getBody());
                 JsonObject cookie = bodyRequest.getAsJsonObject().getAsJsonObject("cookie");
-                if ("zaleniumTestPassed".equalsIgnoreCase(cookie.get("name").getAsString())) {
+                JsonObject emptyName = new JsonObject();
+                emptyName.addProperty("name", "");
+                String cookieName = Optional.ofNullable(cookie.get("name")).orElse(emptyName.get("name")).getAsString();
+                if ("zaleniumTestPassed".equalsIgnoreCase(cookieName)) {
                     boolean testPassed = Boolean.parseBoolean(cookie.get("value").getAsString());
                     if (testPassed) {
                         testInformation.setTestStatus(TestInformation.TestStatus.SUCCESS);
@@ -235,7 +238,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                         testInformation.setTestStatus(TestInformation.TestStatus.FAILED);
                     }
                 }
-                if ("zaleniumMessage".equalsIgnoreCase(cookie.get("name").getAsString())) {
+                if ("zaleniumMessage".equalsIgnoreCase(cookieName)) {
                     String message = cookie.get("value").getAsString();
                     String messageCommand = String.format(" 'Zalenium', '%s', --icon=/home/seluser/images/message.png",
                             message);
