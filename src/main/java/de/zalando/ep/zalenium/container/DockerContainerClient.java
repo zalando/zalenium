@@ -256,11 +256,6 @@ public class DockerContainerClient implements ContainerClient {
         DockerContainerClient.env = env;
     }
 
-    @VisibleForTesting
-    static void restoreEnvironment() {
-        env = defaultEnvironment;
-    }
-
     private String generateContainerName(String zaleniumContainerName,
                                          String nodePort) {
         return String.format("%s_%s", zaleniumContainerName, nodePort);
