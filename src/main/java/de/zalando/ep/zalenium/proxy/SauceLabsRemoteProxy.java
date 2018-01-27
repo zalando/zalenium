@@ -10,7 +10,6 @@ import org.openqa.selenium.remote.server.jmx.ManagedService;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -108,8 +107,9 @@ public class SauceLabsRemoteProxy extends CloudTestingRemoteProxy {
         JsonObject testData = getCommonProxyUtilities().readJSONFromUrl(sauceLabsTestUrl, SAUCE_LABS_USER_NAME,
                 SAUCE_LABS_ACCESS_KEY).getAsJsonObject();
         String testName = testData.get("name").isJsonNull() ? null : testData.get("name").getAsString();
-        String browser = testData.get("browser").getAsString();
-        String browserVersion = testData.get("browser_short_version").getAsString();
+        String browser = testData.get("browser").isJsonNull() ? "N/A" : testData.get("browser").getAsString();
+        String browserVersion = testData.get("browser_short_version").isJsonNull()
+                ? "N/A" : testData.get("browser_short_version").getAsString();
         String platform = testData.get("os").getAsString();
         List<String> logUrls = new ArrayList<>();
         logUrls.add(sauceLabsBrowserLogUrl);
