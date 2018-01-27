@@ -38,7 +38,7 @@ KUBECTL_UP="false"
 # Waiting for 5 minutes
 WAIT_UNTIL=$((SECONDS + 300))
 while [ $SECONDS -lt ${WAIT_UNTIL} ]; do
-    ./kubectl get po &> /dev/null
+    kubectl get po &> /dev/null
     if [ $? -ne 1 ]; then
       KUBECTL_UP="true"
       break
@@ -60,11 +60,11 @@ WAIT_UNTIL=$((SECONDS + 300))
 while [ $SECONDS -lt ${WAIT_UNTIL} ]; do
     # Here we are making sure that kubectl is returning the addon pods for the namespace kube-system
     # Without this check, the second if statement won't be in the proper state for execution
-    if [[ $(./kubectl get po -n kube-system -l k8s-app=kube-dns | tail -n +2 | grep "kube-dns") ]]; then
+    if [[ $(kubectl get po -n kube-system -l k8s-app=kube-dns | tail -n +2 | grep "kube-dns") ]]; then
         # Here we are taking the checking the number of running pods for the namespace kube-system
         # and making sure that the value on each side of the '/' is equal (ex: 3/3 pods running)
         # this is necessary to ensure that all addons have come up
-        if [[ ! $(./kubectl get po -n kube-system | tail -n +2 | awk '{print $2}' | grep -wEv '^([1-9]+)\/\1$') ]]; then
+        if [[ ! $(kubectl get po -n kube-system | tail -n +2 | awk '{print $2}' | grep -wEv '^([1-9]+)\/\1$') ]]; then
             echo "INIT SUCCESS: all kubernetes addons pods are up and running"
             KUBE_ADDONS_UP="true"
             break
