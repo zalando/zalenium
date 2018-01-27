@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 
-./kubectl create --validate=false -f kubernetes
-./kubectl get serviceAccounts
-./kubectl get pv
-./kubectl get pvc
-./kubectl get deployments
-./kubectl get services
+kubectl create --validate=false -f kubernetes
+kubectl get serviceAccounts
+kubectl get pv
+kubectl get pvc
+kubectl get deployments
+kubectl get services
 
 MINIKUBE_IP=$(minikube ip)
 ZALENIUM_GRID_PORT=$(kubectl get svc zalenium -o go-template='{{ index (index .spec.ports 0) "nodePort" }}{{ "\n" }}')
