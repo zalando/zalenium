@@ -33,7 +33,6 @@ touch $HOME/.kube/config
 
 export KUBECONFIG=$HOME/.kube/config
 sudo -E minikube start --vm-driver=none --extra-config=apiserver.InsecureServingOptions.BindAddress="127.0.0.1" --extra-config=apiserver.InsecureServingOptions.BindPort="8080" --kubernetes-version=v1.8.0
-minikube update-context
 
 # this for loop waits until kubectl can access the api server that minikube has created
 KUBECTL_UP="false"
