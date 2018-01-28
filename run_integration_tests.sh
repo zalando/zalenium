@@ -60,8 +60,8 @@ else
         fi
     fi
     if [ "$INTEGRATION_TO_TEST" = minikube ]; then
-        MINIKUBE_IP=$(./minikube ip)
-        export ZALENIUM_GRID_PORT=$(./kubectl get svc zalenium -o go-template='{{ index (index .spec.ports 0) "nodePort" }}{{ "\n" }}')
+        MINIKUBE_IP=$(minikube ip)
+        export ZALENIUM_GRID_PORT=$(kubectl get svc zalenium -o go-template='{{ index (index .spec.ports 0) "nodePort" }}{{ "\n" }}')
         export ZALENIUM_GRID_HOST=$MINIKUBE_IP
         mvn verify -Pintegration-test -DthreadCountProperty=2 -Dskip.surefire.tests=true -Dskip.failsafe.setup=true -Dgroups=minikube
     fi
