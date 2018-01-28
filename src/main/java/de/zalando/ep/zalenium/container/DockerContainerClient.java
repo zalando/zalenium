@@ -2,6 +2,7 @@ package de.zalando.ep.zalenium.container;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
+import com.spotify.docker.client.AnsiProgressHandler;
 import com.spotify.docker.client.DefaultDockerClient;
 import com.spotify.docker.client.DockerClient;
 import com.spotify.docker.client.LogStream;
@@ -66,6 +67,8 @@ public class DockerContainerClient implements ContainerClient {
     private List<ContainerMount> mntFolders = new ArrayList<>();
     private List<String> zaleniumHttpEnvVars = new ArrayList<>();
     private Map<String, String> seleniumContainerLabels = new HashMap<>();
+    private boolean pullSeleniumImage = false;
+    private AtomicBoolean pullSeleniumImageChecked = new AtomicBoolean(false);
     private AtomicBoolean mntFoldersAndHttpEnvVarsChecked = new AtomicBoolean(false);
     private AtomicBoolean seleniumContainerLabelsChecked = new AtomicBoolean(false);
 
@@ -183,6 +186,7 @@ public class DockerContainerClient implements ContainerClient {
         loadMountedFolders(zaleniumContainerName);
         // In some environments the created containers need to be labeled so the platform can handle them. E.g. Rancher.
         loadSeleniumContainerLabels();
+        loadPullSeleniumImageFlag();
 
         List<String> binds = generateMountedFolderBinds();
         binds.add("/dev/shm:/dev/shm");
@@ -241,6 +245,20 @@ public class DockerContainerClient implements ContainerClient {
         final ContainerConfig containerConfig = builder.build();
 
         try {
+            if (pullSeleniumImage) {
+                List<Image> images = dockerClient.listImages(DockerClient.ListImagesParam.byName(image));
+                if (images.size() == 0) {
+                    // If the image has no tag, we add latest, otherwise we end up pulling all the images with that name.
+                    String imageToPull = image.lastIndexOf(':') > 0 ? image : image.concat(":latest");
+                    dockerClient.pull(imageToPull, new AnsiProgressHandler());
+                }
+            }
+        } catch (DockerException | InterruptedException e) {
+            logger.log(Level.WARNING, nodeId + " Error while checking (and pulling) if the image is present", e);
+            ga.trackException(e);
+        }
+
+        try {
             final ContainerCreation container = dockerClient.createContainer(containerConfig, containerName);
             dockerClient.startContainer(container.id());
             return new ContainerCreationStatus(true, containerName, nodePort);
@@ -249,7 +267,7 @@ public class DockerContainerClient implements ContainerClient {
             ga.trackException(e);
             return new ContainerCreationStatus(false);
         }
-}
+    }
 
     @VisibleForTesting
     protected static void setEnv(final Environment env) {
@@ -276,6 +294,12 @@ public class DockerContainerClient implements ContainerClient {
                 logger.log(Level.WARNING, nodeId + " Error while retrieving the added labels for the Selenium containers.", e);
                 ga.trackException(e);
             }
+        }
+    }
+
+    private void loadPullSeleniumImageFlag() {
+        if (!this.pullSeleniumImageChecked.getAndSet(true)) {
+            pullSeleniumImage = env.getBooleanEnvVariable("PULL_SELENIUM_IMAGE", false);
         }
     }
 
