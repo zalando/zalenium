@@ -39,7 +39,7 @@ public class DockerContainerClient implements ContainerClient {
 
     // Allows access from the docker-selenium containers to a Mac host. Fix until docker for mac supports it natively.
     // See https://github.com/moby/moby/issues/22753
-    private static final String DOCKER_FOR_MAC_LOCALHOST_IP = "192.168.65.1";
+    private static final String DOCKER_FOR_MAC_LOCALHOST_IP = "192.168.65.2";
     private static final String DOCKER_FOR_MAC_LOCALHOST_NAME = "mac.host.local";
     private static final String DEFAULT_DOCKER_NETWORK_MODE = "default";
     private static final String DEFAULT_DOCKER_NETWORK_NAME = "bridge";
