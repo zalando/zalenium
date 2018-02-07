@@ -1,6 +1,5 @@
 package de.zalando.ep.zalenium.proxy;
 
-
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.timeout;
@@ -44,6 +43,7 @@ import org.openqa.selenium.remote.server.jmx.JMXHelper;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
+import de.zalando.ep.zalenium.dashboard.DashboardCollection;
 import de.zalando.ep.zalenium.dashboard.Dashboard;
 import de.zalando.ep.zalenium.dashboard.TestInformation;
 import de.zalando.ep.zalenium.util.CommonProxyUtilities;
@@ -278,7 +278,7 @@ public class TestingBotRemoteProxyTest {
             Dashboard.setCommonProxyUtilities(proxyUtilities);
 
             TestInformation testInformation = spyProxy.getTestInformation(mockSeleniumSessionId);
-            Dashboard.updateDashboard(testInformation);
+            DashboardCollection.updateDashboard(testInformation);
             File videosFolder = new File(temporaryFolder.getRoot().getAbsolutePath(), "videos");
             Assert.assertTrue(videosFolder.isDirectory());
             File amountOfRunTests = new File(videosFolder, "executedTestsInfo.json");

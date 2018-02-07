@@ -7,10 +7,11 @@ import com.google.gson.JsonParser;
 import de.zalando.ep.zalenium.container.ContainerClient;
 import de.zalando.ep.zalenium.container.ContainerClientRegistration;
 import de.zalando.ep.zalenium.container.ContainerFactory;
-import de.zalando.ep.zalenium.dashboard.Dashboard;
+import de.zalando.ep.zalenium.dashboard.DashboardCollection;
 import de.zalando.ep.zalenium.dashboard.TestInformation;
 import de.zalando.ep.zalenium.matcher.DockerSeleniumCapabilityMatcher;
 import de.zalando.ep.zalenium.matcher.ZaleniumCapabilityType;
+import de.zalando.ep.zalenium.util.CommonProxyUtilities;
 import de.zalando.ep.zalenium.util.Environment;
 import de.zalando.ep.zalenium.util.GoogleAnalyticsApi;
 import io.prometheus.client.Gauge;
@@ -308,6 +309,11 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                     processContainerAction(DockerSeleniumContainerAction.CLEAN_NOTIFICATION, getContainerId());
                     processContainerAction(DockerSeleniumContainerAction.SEND_NOTIFICATION, messageCommand,
                             getContainerId());
+                }
+                else if(CommonProxyUtilities.metadataCookieName.equalsIgnoreCase(cookieName)) {
+                    JsonParser jsonParser = new JsonParser();
+                    JsonObject metadata = jsonParser.parse(cookie.get("value").getAsString()).getAsJsonObject();
+                    testInformation.setMetadata(metadata);
                 }
             }
         }
@@ -671,8 +677,9 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
             videoRecording(DockerSeleniumContainerAction.STOP_RECORDING);
             processContainerAction(DockerSeleniumContainerAction.TRANSFER_LOGS, getContainerId());
             processContainerAction(DockerSeleniumContainerAction.CLEANUP_CONTAINER, getContainerId());
+
             if (testInformation != null && keepVideoAndLogs()) {
-                Dashboard.updateDashboard(testInformation);
+                DashboardCollection.updateDashboard(testInformation);
             }
         } finally {
             this.setCleaningUpBeforeNextSession(false);

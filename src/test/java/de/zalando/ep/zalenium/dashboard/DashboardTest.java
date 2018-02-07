@@ -49,25 +49,47 @@ public class DashboardTest {
 
     @Test
     public void testCountOne() {
-        Dashboard.updateDashboard(ti);
-        Assert.assertEquals(1, Dashboard.getExecutedTests());
-        Assert.assertEquals(1, Dashboard.getExecutedTestsWithVideo());
+        Dashboard dashboard = new Dashboard();
+        try {
+            dashboard.updateDashboard(ti);
+            Assert.assertEquals(1, Dashboard.getExecutedTests());
+            Assert.assertEquals(1, Dashboard.getExecutedTestsWithVideo());
+        }
+        catch(Exception e) {
+            Assert.fail(e.toString());
+        }
     }
 
     @Test
     public void testCountTwo() {
-        Dashboard.updateDashboard(ti);
-        Dashboard.updateDashboard(ti);
-        Assert.assertEquals(2, Dashboard.getExecutedTests());
-        Assert.assertEquals(2, Dashboard.getExecutedTestsWithVideo());
+        Dashboard dashboard = new Dashboard();
+        try {
+            dashboard.updateDashboard(ti);
+            dashboard.updateDashboard(ti);
+            Assert.assertEquals(2, Dashboard.getExecutedTests());
+            Assert.assertEquals(2, Dashboard.getExecutedTestsWithVideo());
+        } catch (Exception e) {
+            Assert.fail(e.toString());
+        }
     }
 
     @Test
-    public void missingExecutedTestsFile() throws IOException {
-        Dashboard.updateDashboard(ti);
+    public void missingExecutedTestsFile()  throws IOException {
+        Dashboard dashboard = new Dashboard();
+        try
+        {
+            dashboard.updateDashboard(ti);
+        } catch (Exception e) {
+            Assert.fail(e.toString());
+        }
+
         cleanTempVideosFolder();
         TestUtils.ensureRequiredInputFilesExist(temporaryFolder);
-        Dashboard.updateDashboard(ti);
+        try {
+            dashboard.updateDashboard(ti);
+        } catch (Exception e) {
+            Assert.fail(e.toString());
+        }
         Assert.assertEquals(1, Dashboard.getExecutedTests());
         Assert.assertEquals(1, Dashboard.getExecutedTestsWithVideo());
     }
@@ -81,7 +103,7 @@ public class DashboardTest {
         testQuantities.addProperty("executedTestsWithVideo", "Not-A-Number");
         FileUtils.writeStringToFile(testCountFile, testQuantities.toString(), UTF_8);
         Dashboard.setExecutedTests(0, 0);
-        Dashboard.updateDashboard(ti);
+        DashboardCollection.updateDashboard(ti);
         Assert.assertEquals(1, Dashboard.getExecutedTests());
         Assert.assertEquals(1, Dashboard.getExecutedTestsWithVideo());
     }
