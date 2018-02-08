@@ -8,6 +8,8 @@ import org.apache.commons.io.FileUtils;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -32,6 +34,7 @@ public class Dashboard {
     private static final String CSS_FOLDER = "/css";
     private static final String JS_FOLDER = "/js";
     private static final Logger LOGGER = Logger.getLogger(Dashboard.class.getName());
+    private static List<TestInformation> executedTestsInformation = new ArrayList<>();
     private static CommonProxyUtilities commonProxyUtilities = new CommonProxyUtilities();
     private static int executedTests = 0;
     private static int executedTestsWithVideo = 0;
@@ -120,6 +123,7 @@ public class Dashboard {
             if (!jsFolder.exists()) {
                 FileUtils.copyDirectory(new File(getCurrentLocalPath() + JS_FOLDER), jsFolder);
             }
+            executedTestsInformation.add(testInformation);
         } catch (IOException e) {
             LOGGER.log(Level.WARNING, "Error while updating the dashboard.", e);
         }
