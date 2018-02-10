@@ -115,7 +115,7 @@ public class BrowserStackRemoteProxyTest {
         // Capability which should result in a created session
         Map<String, Object> requestedCapability = new HashMap<>();
         requestedCapability.put(CapabilityType.BROWSER_NAME, BrowserType.SAFARI);
-        requestedCapability.put(CapabilityType.PLATFORM, Platform.MAC);
+        requestedCapability.put(CapabilityType.PLATFORM_NAME, Platform.MAC);
 
         TestSession testSession = browserStackProxy.getNewSession(requestedCapability);
 
@@ -127,7 +127,7 @@ public class BrowserStackRemoteProxyTest {
         // Capability which should result in a created session
         Map<String, Object> requestedCapability = new HashMap<>();
         requestedCapability.put(CapabilityType.BROWSER_NAME, BrowserType.IE);
-        requestedCapability.put(CapabilityType.PLATFORM, Platform.WIN8);
+        requestedCapability.put(CapabilityType.PLATFORM_NAME, Platform.WIN8);
 
         // Getting a test session in the sauce labs node
         TestSession testSession = browserStackProxy.getNewSession(requestedCapability);
@@ -146,7 +146,7 @@ public class BrowserStackRemoteProxyTest {
         Environment env = new Environment();
 
         // The body should now have the BrowserStack variables
-        String expectedBody = String.format("{\"desiredCapabilities\":{\"browserName\":\"internet explorer\",\"platform\":" +
+        String expectedBody = String.format("{\"desiredCapabilities\":{\"browserName\":\"internet explorer\",\"platformName\":" +
                                 "\"WIN8\",\"browserstack.user\":\"%s\",\"browserstack.key\":\"%s\"}}",
                         env.getStringEnvVariable("BROWSER_STACK_USER", ""),
                         env.getStringEnvVariable("BROWSER_STACK_KEY", ""));
@@ -159,7 +159,7 @@ public class BrowserStackRemoteProxyTest {
         try {
             Map<String, Object> requestedCapability = new HashMap<>();
             requestedCapability.put(CapabilityType.BROWSER_NAME, BrowserType.CHROME);
-            requestedCapability.put(CapabilityType.PLATFORM, Platform.WIN10);
+            requestedCapability.put(CapabilityType.PLATFORM_NAME, Platform.WIN10);
 
             JsonElement informationSample = TestUtils.getTestInformationSample("browserstack_testinformation.json");
             TestUtils.ensureRequiredInputFilesExist(temporaryFolder);
@@ -214,7 +214,7 @@ public class BrowserStackRemoteProxyTest {
         // Capability which should result in a created session
         Map<String, Object> requestedCapability = new HashMap<>();
         requestedCapability.put(CapabilityType.BROWSER_NAME, BrowserType.IE);
-        requestedCapability.put(CapabilityType.PLATFORM, Platform.WIN8);
+        requestedCapability.put(CapabilityType.PLATFORM_NAME, Platform.WIN8);
 
         // Getting a test session in the sauce labs node
         TestSession testSession = browserStackProxy.getNewSession(requestedCapability);
@@ -231,7 +231,7 @@ public class BrowserStackRemoteProxyTest {
         JsonObject jsonObject = new JsonObject();
         JsonObject desiredCapabilities = new JsonObject();
         desiredCapabilities.addProperty(CapabilityType.BROWSER_NAME, BrowserType.IE);
-        desiredCapabilities.addProperty(CapabilityType.PLATFORM, Platform.WIN8.name());
+        desiredCapabilities.addProperty(CapabilityType.PLATFORM_NAME, Platform.WIN8.name());
         jsonObject.add("desiredCapabilities", desiredCapabilities);
         when(request.getBody()).thenReturn(jsonObject.toString());
 

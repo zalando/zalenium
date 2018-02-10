@@ -127,7 +127,7 @@ public class TestingBotRemoteProxyTest {
         // Capability which should result in a created session
         Map<String, Object> requestedCapability = new HashMap<>();
         requestedCapability.put(CapabilityType.BROWSER_NAME, BrowserType.IE);
-        requestedCapability.put(CapabilityType.PLATFORM, Platform.WIN8);
+        requestedCapability.put(CapabilityType.PLATFORM_NAME, Platform.WIN8);
 
         TestSession testSession = testingBotProxy.getNewSession(requestedCapability);
 
@@ -139,7 +139,7 @@ public class TestingBotRemoteProxyTest {
         // Capability which should result in a created session
         Map<String, Object> requestedCapability = new HashMap<>();
         requestedCapability.put(CapabilityType.BROWSER_NAME, BrowserType.IE);
-        requestedCapability.put(CapabilityType.PLATFORM, Platform.WIN8);
+        requestedCapability.put(CapabilityType.PLATFORM_NAME, Platform.WIN8);
 
         // Getting a test session in the TestingBot node
         TestSession testSession = testingBotProxy.getNewSession(requestedCapability);
@@ -158,7 +158,7 @@ public class TestingBotRemoteProxyTest {
         Environment env = new Environment();
 
         // The body should now have the TestingBot variables
-        String expectedBody = String.format("{\"desiredCapabilities\":{\"browserName\":\"internet explorer\",\"platform\":" +
+        String expectedBody = String.format("{\"desiredCapabilities\":{\"browserName\":\"internet explorer\",\"platformName\":" +
                                 "\"WIN8\",\"key\":\"%s\",\"secret\":\"%s\",\"version\":\"latest\"}}",
                         env.getStringEnvVariable("TESTINGBOT_KEY", ""),
                         env.getStringEnvVariable("TESTINGBOT_SECRET", ""));
@@ -170,7 +170,7 @@ public class TestingBotRemoteProxyTest {
         // Capability which should result in a created session
         Map<String, Object> requestedCapability = new HashMap<>();
         requestedCapability.put(CapabilityType.BROWSER_NAME, BrowserType.IE);
-        requestedCapability.put(CapabilityType.PLATFORM, Platform.WIN8);
+        requestedCapability.put(CapabilityType.PLATFORM_NAME, Platform.WIN8);
 
         // Getting a test session in the TestingBot node
         TestSession testSession = testingBotProxy.getNewSession(requestedCapability);
@@ -187,7 +187,7 @@ public class TestingBotRemoteProxyTest {
         JsonObject jsonObject = new JsonObject();
         JsonObject desiredCapabilities = new JsonObject();
         desiredCapabilities.addProperty(CapabilityType.BROWSER_NAME, BrowserType.IE);
-        desiredCapabilities.addProperty(CapabilityType.PLATFORM, Platform.WIN8.name());
+        desiredCapabilities.addProperty(CapabilityType.PLATFORM_NAME, Platform.WIN8.name());
         jsonObject.add("desiredCapabilities", desiredCapabilities);
         when(request.getBody()).thenReturn(jsonObject.toString());
 
@@ -214,11 +214,11 @@ public class TestingBotRemoteProxyTest {
     }
 
     @Test
-    public void testInformationIsRetrievedWhenStoppingSession() throws IOException {
+    public void testInformationIsRetrievedWhenStoppingSession() {
         // Capability which should result in a created session
         Map<String, Object> requestedCapability = new HashMap<>();
         requestedCapability.put(CapabilityType.BROWSER_NAME, BrowserType.CHROME);
-        requestedCapability.put(CapabilityType.PLATFORM, Platform.MAC);
+        requestedCapability.put(CapabilityType.PLATFORM_NAME, Platform.MAC);
 
         // Getting a test session in the TestingBot node
         TestingBotRemoteProxy spyProxy = spy(testingBotProxy);
@@ -246,12 +246,12 @@ public class TestingBotRemoteProxyTest {
     }
 
     @Test
-    public void dashboardFilesGetCopied() throws IOException {
+    public void dashboardFilesGetCopied() {
         try {
             // Capability which should result in a created session
             Map<String, Object> requestedCapability = new HashMap<>();
             requestedCapability.put(CapabilityType.BROWSER_NAME, BrowserType.CHROME);
-            requestedCapability.put(CapabilityType.PLATFORM, Platform.MAC);
+            requestedCapability.put(CapabilityType.PLATFORM_NAME, Platform.MAC);
 
             // Getting a test session in the TestingBot node
             TestingBotRemoteProxy spyProxy = spy(testingBotProxy);

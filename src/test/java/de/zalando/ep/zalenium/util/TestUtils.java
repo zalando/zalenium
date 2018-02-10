@@ -53,7 +53,7 @@ public class TestUtils {
         JsonObject jsonObject = new JsonObject();
         JsonObject desiredCapabilities = new JsonObject();
         desiredCapabilities.addProperty(CapabilityType.BROWSER_NAME, browser);
-        desiredCapabilities.addProperty(CapabilityType.PLATFORM, platform.name());
+        desiredCapabilities.addProperty(CapabilityType.PLATFORM_NAME, platform.name());
         jsonObject.add("desiredCapabilities", desiredCapabilities);
         when(request.getBody()).thenReturn(jsonObject.toString());
 
@@ -70,7 +70,7 @@ public class TestUtils {
         List<MutableCapabilities> dsCapabilities = new ArrayList<>();
         MutableCapabilities firefoxCapabilities = new MutableCapabilities();
         firefoxCapabilities.setCapability(CapabilityType.BROWSER_NAME, BrowserType.FIREFOX);
-        firefoxCapabilities.setCapability(CapabilityType.PLATFORM, Platform.LINUX);
+        firefoxCapabilities.setCapability(CapabilityType.PLATFORM_NAME, Platform.LINUX);
         firefoxCapabilities.setCapability(CapabilityType.VERSION, "57.0");
         firefoxCapabilities.setCapability(RegistrationRequest.MAX_INSTANCES, 1);
         firefoxCapabilities.setCapability("screenResolution", screenResolution);
@@ -78,7 +78,7 @@ public class TestUtils {
         dsCapabilities.add(firefoxCapabilities);
         MutableCapabilities chromeCapabilities = new MutableCapabilities();
         chromeCapabilities.setCapability(CapabilityType.BROWSER_NAME, BrowserType.CHROME);
-        chromeCapabilities.setCapability(CapabilityType.PLATFORM, Platform.LINUX);
+        chromeCapabilities.setCapability(CapabilityType.PLATFORM_NAME, Platform.LINUX);
         chromeCapabilities.setCapability(CapabilityType.VERSION, "62.0.3202.94");
         chromeCapabilities.setCapability(RegistrationRequest.MAX_INSTANCES, 1);
         chromeCapabilities.setCapability("screenResolution", screenResolution);
@@ -121,7 +121,7 @@ public class TestUtils {
         };
     }
 
-    public static CommonProxyUtilities mockCommonProxyUtilitiesForDashboardTesting(TemporaryFolder temporaryFolder) throws IOException {
+    public static CommonProxyUtilities mockCommonProxyUtilitiesForDashboardTesting(TemporaryFolder temporaryFolder) {
         CommonProxyUtilities commonProxyUtilities = mock(CommonProxyUtilities.class);
         when(commonProxyUtilities.currentLocalPath()).thenReturn(temporaryFolder.getRoot().getAbsolutePath());
         when(commonProxyUtilities.getShortDateAndTime()).thenCallRealMethod();

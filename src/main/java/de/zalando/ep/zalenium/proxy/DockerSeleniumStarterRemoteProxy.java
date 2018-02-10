@@ -176,12 +176,12 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
         List<MutableCapabilities> dsCapabilities = new ArrayList<>();
         MutableCapabilities firefoxCapabilities = new MutableCapabilities();
         firefoxCapabilities.setCapability(CapabilityType.BROWSER_NAME, BrowserType.FIREFOX);
-        firefoxCapabilities.setCapability(CapabilityType.PLATFORM, Platform.LINUX);
+        firefoxCapabilities.setCapability(CapabilityType.PLATFORM_NAME, Platform.LINUX);
         firefoxCapabilities.setCapability(RegistrationRequest.MAX_INSTANCES, 1);
         dsCapabilities.add(firefoxCapabilities);
         MutableCapabilities chromeCapabilities = new MutableCapabilities();
         chromeCapabilities.setCapability(CapabilityType.BROWSER_NAME, BrowserType.CHROME);
-        chromeCapabilities.setCapability(CapabilityType.PLATFORM, Platform.LINUX);
+        chromeCapabilities.setCapability(CapabilityType.PLATFORM_NAME, Platform.LINUX);
         chromeCapabilities.setCapability(RegistrationRequest.MAX_INSTANCES, 1);
         dsCapabilities.add(chromeCapabilities);
 

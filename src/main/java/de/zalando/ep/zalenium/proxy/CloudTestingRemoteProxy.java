@@ -110,7 +110,7 @@ public class CloudTestingRemoteProxy extends DefaultRemoteProxy {
         MutableCapabilities desiredCapabilities = new MutableCapabilities();
         desiredCapabilities.setCapability(RegistrationRequest.MAX_INSTANCES, concurrency);
         desiredCapabilities.setCapability(CapabilityType.BROWSER_NAME, proxyName);
-        desiredCapabilities.setCapability(CapabilityType.PLATFORM, Platform.ANY);
+        desiredCapabilities.setCapability(CapabilityType.PLATFORM_NAME, Platform.ANY);
         registrationRequest.getConfiguration().capabilities.add(desiredCapabilities);
         registrationRequest.getConfiguration().maxSession = concurrency;
         return registrationRequest;

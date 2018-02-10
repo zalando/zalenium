@@ -197,7 +197,7 @@ public class DockerSeleniumRemoteProxyTest {
         // Non supported capabilities
         Map<String, Object> requestedCapability = new HashMap<>();
         requestedCapability.put(CapabilityType.BROWSER_NAME, BrowserType.IE);
-        requestedCapability.put(CapabilityType.PLATFORM, Platform.WIN10);
+        requestedCapability.put(CapabilityType.PLATFORM_NAME, Platform.WIN10);
 
         TestSession newSession = proxy.getNewSession(requestedCapability);
         Assert.assertNull(newSession);
@@ -580,7 +580,7 @@ public class DockerSeleniumRemoteProxyTest {
     private Map<String, Object> getCapabilitySupportedByDockerSelenium() {
         Map<String, Object> requestedCapability = new HashMap<>();
         requestedCapability.put(CapabilityType.BROWSER_NAME, BrowserType.CHROME);
-        requestedCapability.put(CapabilityType.PLATFORM, Platform.LINUX);
+        requestedCapability.put(CapabilityType.PLATFORM_NAME, Platform.LINUX);
         return requestedCapability;
     }
 }

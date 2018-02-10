@@ -92,7 +92,7 @@ public class ZaleniumConsoleServletTest {
         List<MutableCapabilities> capabilities = DockerSeleniumStarterRemoteProxy.getCapabilities();
         MutableCapabilities desiredCapabilities = new MutableCapabilities();
         desiredCapabilities.setCapability(CapabilityType.BROWSER_NAME, "NEW_BROWSER");
-        desiredCapabilities.setCapability(CapabilityType.PLATFORM, Platform.LINUX);
+        desiredCapabilities.setCapability(CapabilityType.PLATFORM_NAME, Platform.LINUX);
         desiredCapabilities.setCapability(RegistrationRequest.MAX_INSTANCES, 1);
         capabilities.add(desiredCapabilities);
         registrationRequest.getConfiguration().capabilities.addAll(capabilities);
