@@ -41,7 +41,7 @@ public class LiveNodeHtmlRenderer implements HtmlRenderer {
     }
 
     private static Platform getPlatform(TestSlot slot) {
-        return (Platform) slot.getCapabilities().get(CapabilityType.PLATFORM);
+        return (Platform) slot.getCapabilities().get(CapabilityType.PLATFORM_NAME);
     }
 
     private String getTemplateName() {

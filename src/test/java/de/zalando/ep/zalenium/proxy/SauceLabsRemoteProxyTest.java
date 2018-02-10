@@ -92,7 +92,7 @@ public class SauceLabsRemoteProxyTest {
         // This capability is supported by docker-selenium, so it should return a null session
         Map<String, Object> requestedCapability = new HashMap<>();
         requestedCapability.put(CapabilityType.BROWSER_NAME, BrowserType.CHROME);
-        requestedCapability.put(CapabilityType.PLATFORM, Platform.LINUX);
+        requestedCapability.put(CapabilityType.PLATFORM_NAME, Platform.LINUX);
 
         TestSession testSession = sauceLabsProxy.getNewSession(requestedCapability);
 
@@ -103,7 +103,7 @@ public class SauceLabsRemoteProxyTest {
     public void missingBrowserCapabilityDoesNotCreateSession() {
         // Non existent capability that should not create a session
         Map<String, Object> nonSupportedCapability = new HashMap<>();
-        nonSupportedCapability.put(CapabilityType.PLATFORM, Platform.EL_CAPITAN);
+        nonSupportedCapability.put(CapabilityType.PLATFORM_NAME, Platform.EL_CAPITAN);
 
         TestSession testSession = sauceLabsProxy.getNewSession(nonSupportedCapability);
 
@@ -115,7 +115,7 @@ public class SauceLabsRemoteProxyTest {
         // Capability which should result in a created session
         Map<String, Object> requestedCapability = new HashMap<>();
         requestedCapability.put(CapabilityType.BROWSER_NAME, BrowserType.EDGE);
-        requestedCapability.put(CapabilityType.PLATFORM, Platform.WIN10);
+        requestedCapability.put(CapabilityType.PLATFORM_NAME, Platform.WIN10);
 
         TestSession testSession = sauceLabsProxy.getNewSession(requestedCapability);
 
@@ -136,7 +136,7 @@ public class SauceLabsRemoteProxyTest {
         // Capability which should result in a created session
         Map<String, Object> requestedCapability = new HashMap<>();
         requestedCapability.put(CapabilityType.BROWSER_NAME, BrowserType.SAFARI);
-        requestedCapability.put(CapabilityType.PLATFORM, Platform.MAC);
+        requestedCapability.put(CapabilityType.PLATFORM_NAME, Platform.MAC);
 
         // Getting a test session in the sauce labs node
         TestSession testSession = sauceLabsProxy.getNewSession(requestedCapability);
@@ -155,7 +155,7 @@ public class SauceLabsRemoteProxyTest {
         Environment env = new Environment();
 
         // The body should now have the SauceLabs variables
-        String expectedBody = String.format("{\"desiredCapabilities\":{\"browserName\":\"safari\",\"platform\":" +
+        String expectedBody = String.format("{\"desiredCapabilities\":{\"browserName\":\"safari\",\"platformName\":" +
                         "\"MAC\",\"username\":\"%s\",\"accessKey\":\"%s\",\"version\":\"latest\"}}",
                 env.getStringEnvVariable("SAUCE_USERNAME", ""),
                 env.getStringEnvVariable("SAUCE_ACCESS_KEY", ""));
@@ -168,7 +168,7 @@ public class SauceLabsRemoteProxyTest {
             // Capability which should result in a created session
             Map<String, Object> requestedCapability = new HashMap<>();
             requestedCapability.put(CapabilityType.BROWSER_NAME, BrowserType.CHROME);
-            requestedCapability.put(CapabilityType.PLATFORM, Platform.MAC);
+            requestedCapability.put(CapabilityType.PLATFORM_NAME, Platform.MAC);
 
             // Getting a test session in the sauce labs node
             SauceLabsRemoteProxy sauceLabsSpyProxy = spy(sauceLabsProxy);
@@ -230,7 +230,7 @@ public class SauceLabsRemoteProxyTest {
             // Capability which should result in a created session
             Map<String, Object> requestedCapability = new HashMap<>();
             requestedCapability.put(CapabilityType.BROWSER_NAME, BrowserType.SAFARI);
-            requestedCapability.put(CapabilityType.PLATFORM, Platform.MAC);
+            requestedCapability.put(CapabilityType.PLATFORM_NAME, Platform.MAC);
 
             // Getting a test session in the sauce labs node
             TestSession testSession = sauceLabsProxy.getNewSession(requestedCapability);
@@ -279,7 +279,7 @@ public class SauceLabsRemoteProxyTest {
         // Supported desired capability for the test session
         Map<String, Object> requestedCapability = new HashMap<>();
         requestedCapability.put(CapabilityType.BROWSER_NAME, BrowserType.SAFARI);
-        requestedCapability.put(CapabilityType.PLATFORM, Platform.MAC);
+        requestedCapability.put(CapabilityType.PLATFORM_NAME, Platform.MAC);
 
         SauceLabsRemoteProxy sauceLabsSpyProxy = spy(sauceLabsProxy);
 

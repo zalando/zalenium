@@ -80,7 +80,7 @@ public class ParallelIT  {
 
         DesiredCapabilities desiredCapabilities = new DesiredCapabilities();
         desiredCapabilities.setCapability(CapabilityType.BROWSER_NAME, browserType);
-        desiredCapabilities.setCapability(CapabilityType.PLATFORM, platform);
+        desiredCapabilities.setCapability(CapabilityType.PLATFORM_NAME, platform);
         desiredCapabilities.setCapability("name", method.getName());
         if (localTesting) {
             desiredCapabilities.setCapability("tunnel", "true");

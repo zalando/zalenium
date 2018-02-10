@@ -148,7 +148,7 @@ public class CloudProxyHtmlRenderer implements HtmlRenderer {
     }
 
     private static Platform getPlatform(TestSlot slot) {
-        Object o = slot.getCapabilities().get(CapabilityType.PLATFORM);
+        Object o = slot.getCapabilities().get(CapabilityType.PLATFORM_NAME);
         if (o == null) {
             return Platform.ANY;
         }
