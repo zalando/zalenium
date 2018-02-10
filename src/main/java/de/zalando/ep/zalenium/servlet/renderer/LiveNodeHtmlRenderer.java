@@ -8,7 +8,6 @@ import org.openqa.grid.internal.utils.HtmlRenderer;
 import org.openqa.grid.web.servlet.beta.MiniCapability;
 import org.openqa.grid.web.servlet.beta.SlotsLines;
 import org.openqa.selenium.Platform;
-import org.openqa.selenium.remote.CapabilityType;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -31,17 +30,10 @@ public class LiveNodeHtmlRenderer implements HtmlRenderer {
 
     /**
      * Platform for docker-selenium will be always Linux.
-     *
-     * @param proxy remote proxy
-     * @return Either the platform name, "Unknown", "mixed OS", or "not specified".
      */
     @SuppressWarnings("WeakerAccess")
-    public static String getPlatform(DockerSeleniumRemoteProxy proxy) {
-        return getPlatform(proxy.getTestSlots().get(0)).toString();
-    }
-
-    private static Platform getPlatform(TestSlot slot) {
-        return (Platform) slot.getCapabilities().get(CapabilityType.PLATFORM_NAME);
+    public static String getPlatform() {
+        return Platform.LINUX.toString();
     }
 
     private String getTemplateName() {
@@ -70,7 +62,7 @@ public class LiveNodeHtmlRenderer implements HtmlRenderer {
         renderSummaryValues.put("{{proxyName}}", proxy.getClass().getSimpleName());
         renderSummaryValues.put("{{proxyVersion}}", getHtmlNodeVersion());
         renderSummaryValues.put("{{proxyId}}", proxy.getId());
-        renderSummaryValues.put("{{proxyPlatform}}", getPlatform(proxy));
+        renderSummaryValues.put("{{proxyPlatform}}", getPlatform());
         renderSummaryValues.put("{{testName}}", testName.toString());
         renderSummaryValues.put("{{testBuild}}", testBuild.toString());
         renderSummaryValues.put("{{tabBrowsers}}", tabBrowsers());
