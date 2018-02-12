@@ -145,7 +145,7 @@ public class DockerSeleniumStarterRemoteProxyTest {
         // Non supported desired capability for the test session
         Map<String, Object> nonSupportedCapability = new HashMap<>();
         nonSupportedCapability.put(CapabilityType.BROWSER_NAME, BrowserType.SAFARI);
-        nonSupportedCapability.put(CapabilityType.PLATFORM, Platform.MAC);
+        nonSupportedCapability.put(CapabilityType.PLATFORM_NAME, Platform.MAC);
         TestSession testSession = spyProxy.getNewSession(nonSupportedCapability);
 
         Assert.assertNull(testSession);
@@ -157,7 +157,7 @@ public class DockerSeleniumStarterRemoteProxyTest {
         // Non supported desired capability for the test session
         Map<String, Object> nonSupportedCapability = new HashMap<>();
         nonSupportedCapability.put(CapabilityType.BROWSER_NAME, BrowserType.CHROME);
-        nonSupportedCapability.put(CapabilityType.PLATFORM, Platform.WINDOWS);
+        nonSupportedCapability.put(CapabilityType.PLATFORM_NAME, Platform.WINDOWS);
         TestSession testSession = spyProxy.getNewSession(nonSupportedCapability);
 
         Assert.assertNull(testSession);
@@ -170,7 +170,7 @@ public class DockerSeleniumStarterRemoteProxyTest {
         // Supported desired capability for the test session
         Map<String, Object> supportedCapability = new HashMap<>();
         supportedCapability.put(CapabilityType.BROWSER_NAME, BrowserType.CHROME);
-        supportedCapability.put(CapabilityType.PLATFORM, Platform.LINUX);
+        supportedCapability.put(CapabilityType.PLATFORM_NAME, Platform.LINUX);
         TestSession testSession = spyProxy.getNewSession(supportedCapability);
 
         Assert.assertNull(testSession);
@@ -183,7 +183,7 @@ public class DockerSeleniumStarterRemoteProxyTest {
         Dimension customScreenSize = new Dimension(1280, 760);
         Map<String, Object> supportedCapability = new HashMap<>();
         supportedCapability.put(CapabilityType.BROWSER_NAME, BrowserType.FIREFOX);
-        supportedCapability.put(CapabilityType.PLATFORM, Platform.ANY);
+        supportedCapability.put(CapabilityType.PLATFORM_NAME, Platform.ANY);
         String screenResolution = String.format("%sx%s", customScreenSize.getWidth(), customScreenSize.getHeight());
         supportedCapability.put("screenResolution", screenResolution);
         TestSession testSession = spyProxy.getNewSession(supportedCapability);
@@ -197,7 +197,7 @@ public class DockerSeleniumStarterRemoteProxyTest {
         Dimension customScreenSize = new Dimension(1300, 900);
         Map<String, Object> supportedCapability = new HashMap<>();
         supportedCapability.put(CapabilityType.BROWSER_NAME, BrowserType.CHROME);
-        supportedCapability.put(CapabilityType.PLATFORM, Platform.ANY);
+        supportedCapability.put(CapabilityType.PLATFORM_NAME, Platform.ANY);
         String screenResolution = String.format("%sx%s", customScreenSize.getWidth(), customScreenSize.getHeight());
         supportedCapability.put("resolution", screenResolution);
         TestSession testSession = spyProxy.getNewSession(supportedCapability);
@@ -211,7 +211,7 @@ public class DockerSeleniumStarterRemoteProxyTest {
         Dimension customScreenSize = new Dimension(1500, 1000);
         Map<String, Object> supportedCapability = new HashMap<>();
         supportedCapability.put(CapabilityType.BROWSER_NAME, BrowserType.FIREFOX);
-        supportedCapability.put(CapabilityType.PLATFORM, Platform.ANY);
+        supportedCapability.put(CapabilityType.PLATFORM_NAME, Platform.ANY);
         String screenResolution = String.format("%sx%s", customScreenSize.getWidth(), customScreenSize.getHeight());
         supportedCapability.put("screen-resolution", screenResolution);
         TestSession testSession = spyProxy.getNewSession(supportedCapability);
@@ -225,7 +225,7 @@ public class DockerSeleniumStarterRemoteProxyTest {
         TimeZone timeZone = TimeZone.getTimeZone("America/Montreal");
         Map<String, Object> supportedCapability = new HashMap<>();
         supportedCapability.put(CapabilityType.BROWSER_NAME, BrowserType.FIREFOX);
-        supportedCapability.put(CapabilityType.PLATFORM, Platform.ANY);
+        supportedCapability.put(CapabilityType.PLATFORM_NAME, Platform.ANY);
         supportedCapability.put("tz", timeZone.getID());
         TestSession testSession = spyProxy.getNewSession(supportedCapability);
         Assert.assertNull(testSession);
@@ -237,7 +237,7 @@ public class DockerSeleniumStarterRemoteProxyTest {
         // Supported desired capability for the test session
         Map<String, Object> supportedCapability = new HashMap<>();
         supportedCapability.put(CapabilityType.BROWSER_NAME, BrowserType.CHROME);
-        supportedCapability.put(CapabilityType.PLATFORM, Platform.ANY);
+        supportedCapability.put(CapabilityType.PLATFORM_NAME, Platform.ANY);
         supportedCapability.put("resolution", "-1300x800");
         TestSession testSession = spyProxy.getNewSession(supportedCapability);
         Assert.assertNull(testSession);
@@ -249,7 +249,7 @@ public class DockerSeleniumStarterRemoteProxyTest {
         // Supported desired capability for the test session
         Map<String, Object> supportedCapability = new HashMap<>();
         supportedCapability.put(CapabilityType.BROWSER_NAME, BrowserType.CHROME);
-        supportedCapability.put(CapabilityType.PLATFORM, Platform.ANY);
+        supportedCapability.put(CapabilityType.PLATFORM_NAME, Platform.ANY);
         supportedCapability.put("screenResolution", "notAValidScreenResolution");
         TestSession testSession = spyProxy.getNewSession(supportedCapability);
         Assert.assertNull(testSession);
@@ -262,7 +262,7 @@ public class DockerSeleniumStarterRemoteProxyTest {
         // Supported desired capability for the test session
         Map<String, Object> supportedCapability = new HashMap<>();
         supportedCapability.put(CapabilityType.BROWSER_NAME, BrowserType.FIREFOX);
-        supportedCapability.put(CapabilityType.PLATFORM, Platform.LINUX);
+        supportedCapability.put(CapabilityType.PLATFORM_NAME, Platform.LINUX);
         TestSession testSession = spyProxy.getNewSession(supportedCapability);
 
         Assert.assertNull(testSession);
@@ -273,7 +273,7 @@ public class DockerSeleniumStarterRemoteProxyTest {
     public void noContainerIsStartedWhenBrowserCapabilityIsAbsent() {
         // Browser is absent
         Map<String, Object> nonSupportedCapability = new HashMap<>();
-        nonSupportedCapability.put(CapabilityType.PLATFORM, Platform.LINUX);
+        nonSupportedCapability.put(CapabilityType.PLATFORM_NAME, Platform.LINUX);
         TestSession testSession = spyProxy.getNewSession(nonSupportedCapability);
 
         Assert.assertNull(testSession);
@@ -285,7 +285,7 @@ public class DockerSeleniumStarterRemoteProxyTest {
     public void noContainerIsStartedForAlreadyProcessedRequest() {
         Map<String, Object> requestedCapability = new HashMap<>();
         requestedCapability.put(CapabilityType.BROWSER_NAME, BrowserType.CHROME);
-        requestedCapability.put(CapabilityType.PLATFORM, Platform.LINUX);
+        requestedCapability.put(CapabilityType.PLATFORM_NAME, Platform.LINUX);
         ProcessedCapabilities processedCapabilities = new ProcessedCapabilities(requestedCapability,
                 System.identityHashCode(requestedCapability));
         DockerSeleniumStarterRemoteProxy.processedCapabilitiesList.add(processedCapabilities);
@@ -298,7 +298,7 @@ public class DockerSeleniumStarterRemoteProxyTest {
     public void containerIsStartedForRequestProcessedMoreThan30Times() {
         Map<String, Object> requestedCapability = new HashMap<>();
         requestedCapability.put(CapabilityType.BROWSER_NAME, BrowserType.FIREFOX);
-        requestedCapability.put(CapabilityType.PLATFORM, Platform.LINUX);
+        requestedCapability.put(CapabilityType.PLATFORM_NAME, Platform.LINUX);
         ProcessedCapabilities processedCapabilities = new ProcessedCapabilities(requestedCapability,
                 System.identityHashCode(requestedCapability));
         processedCapabilities.setProcessedTimes(31);

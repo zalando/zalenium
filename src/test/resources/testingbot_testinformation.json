@@ -20,7 +20,7 @@
   "steps": [
     {
       "command": "/session",
-      "arguments": "{\"capabilities\":{\"desiredCapabilities\":{\"name\":\"loadZalandoPageAndCheckTitle\",\"browserName\":\"safari\",\"platform\":\"MAC\"},\"requiredCapabilities\":{}},\"desiredCapabilities\":{\"platform\":\"CAPITAN\",\"browserName\":\"safari\",\"version\":\"9\",\"name\":\"loadZalandoPageAndCheckTitle\",\"key\":\"8ff5cac2d26bd1c3873d776cc3969a1f\",\"secret\":\"389af5998bd06d263c5a2278e95f4cd9\"},\"requiredCapabilities\":{}}",
+      "arguments": "{\"capabilities\":{\"desiredCapabilities\":{\"name\":\"loadZalandoPageAndCheckTitle\",\"browserName\":\"safari\",\"platformName\":\"MAC\"},\"requiredCapabilities\":{}},\"desiredCapabilities\":{\"platformName\":\"CAPITAN\",\"browserName\":\"safari\",\"version\":\"9\",\"name\":\"loadZalandoPageAndCheckTitle\",\"key\":\"8ff5cac2d26bd1c3873d776cc3969a1f\",\"secret\":\"389af5998bd06d263c5a2278e95f4cd9\"},\"requiredCapabilities\":{}}",
       "response": "2cf5d115-ca6f-4bc4-bc06-a4fca00836ce",
       "time": 1488894779373
     },
