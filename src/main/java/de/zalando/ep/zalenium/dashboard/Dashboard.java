@@ -39,6 +39,10 @@ public class Dashboard {
     private static int executedTests = 0;
     private static int executedTestsWithVideo = 0;
 
+    public static List<TestInformation> getExecutedTestsInformation() {
+        return executedTestsInformation;
+    }
+
     public static String getCurrentLocalPath() {
         return commonProxyUtilities.currentLocalPath();
     }
@@ -150,18 +154,18 @@ public class Dashboard {
     }
 
     @VisibleForTesting
-    public static void synchronizeExecutedTestsValues(File testCountFile) throws IOException {
+    public static synchronized void synchronizeExecutedTestsValues(File testCountFile) {
         if (testCountFile.exists()) {
-            JsonObject executedTestData = new JsonParser()
-                    .parse(FileUtils.readFileToString(testCountFile, UTF_8))
-                    .getAsJsonObject();
-            String executedTestsInFile = executedTestData.get(EXECUTED_TESTS_FIELD).getAsString();
-            String executedTestsWithVideoInFile = executedTestData.get(EXECUTED_TESTS_WITH_VIDEO_FIELD).getAsString();
             try {
+                JsonObject executedTestData = new JsonParser()
+                        .parse(FileUtils.readFileToString(testCountFile, UTF_8))
+                        .getAsJsonObject();
+                String executedTestsInFile = executedTestData.get(EXECUTED_TESTS_FIELD).getAsString();
+                String executedTestsWithVideoInFile = executedTestData.get(EXECUTED_TESTS_WITH_VIDEO_FIELD).getAsString();
                 executedTests = Integer.parseInt(executedTestsInFile);
                 executedTestsWithVideo = Integer.parseInt(executedTestsWithVideoInFile);
             } catch (Exception e) {
-                LOGGER.log(Level.FINE, e.toString(), e);
+                LOGGER.log(Level.WARNING, e.toString(), e);
             }
         } else {
             executedTests = 0;
