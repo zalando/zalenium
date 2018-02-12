@@ -35,11 +35,15 @@ public class TestUtils {
 
     public static RegistrationRequest getRegistrationRequestForTesting(final int port, String proxyClass) {
         GridNodeConfiguration nodeConfiguration = new GridNodeConfiguration();
+        nodeConfiguration.role = "wd";
+        nodeConfiguration.hub = "http://localhost:4444";
+        nodeConfiguration.host = "localhost";
+        nodeConfiguration.port = port;
+        nodeConfiguration.proxy = proxyClass;
+        nodeConfiguration.registerCycle = 5000;
         nodeConfiguration.cleanUpCycle = 5000;
-        new JCommander(nodeConfiguration, "-role", "wd", "-hubHost", "localhost", "-hubPort", "4444",
-                "-host","localhost", "-port", String.valueOf(port), "-proxy", proxyClass, "-registerCycle", "5000",
-                "-cleanUpCycle", "5000", "-maxSession", "5");
-
+        nodeConfiguration.maxSession = 5;
+        new JCommander(nodeConfiguration);
         return RegistrationRequest.build(nodeConfiguration);
     }
 
