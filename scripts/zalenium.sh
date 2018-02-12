@@ -433,6 +433,7 @@ StartUp()
     -servlet de.zalando.ep.zalenium.servlet.ZaleniumConsoleServlet \
     -servlet de.zalando.ep.zalenium.servlet.ZaleniumResourceServlet \
     -servlet de.zalando.ep.zalenium.dashboard.DashboardCleanupServlet \
+    -servlet de.zalando.ep.zalenium.dashboard.DashboardInformationServlet \
     -servlet de.zalando.ep.zalenium.servlet.VncAuthenticationServlet \
     -registry de.zalando.ep.zalenium.registry.ZaleniumRegistry \
     ${SELENIUM_HUB_PARAMS} \
