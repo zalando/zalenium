@@ -4,6 +4,7 @@ import com.google.common.annotations.VisibleForTesting;
 import de.zalando.ep.zalenium.container.ContainerClient;
 import de.zalando.ep.zalenium.container.ContainerCreationStatus;
 import de.zalando.ep.zalenium.container.ContainerFactory;
+import de.zalando.ep.zalenium.dashboard.Dashboard;
 import de.zalando.ep.zalenium.matcher.DockerSeleniumCapabilityMatcher;
 import de.zalando.ep.zalenium.matcher.ZaleniumCapabilityType;
 import de.zalando.ep.zalenium.util.Environment;
@@ -405,6 +406,8 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     @Override
     public void beforeRegistration() {
         containerClient.initialiseContainerEnvironment();
+        Dashboard.loadTestInformationFromFile();
+        Dashboard.setShutDownHook();
         createContainersOnStartup();
     }
 

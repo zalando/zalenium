@@ -230,7 +230,6 @@ public class DockerContainerClient implements ContainerClient {
         flattenedEnvVars.addAll(zaleniumHttpEnvVars);
 
 
-        // labels.put("io.rancher.container.network", "true");
         final String[] exposedPorts = {nodePort, noVncPort};
         ContainerConfig.Builder builder = ContainerConfig.builder()
                 .image(image)

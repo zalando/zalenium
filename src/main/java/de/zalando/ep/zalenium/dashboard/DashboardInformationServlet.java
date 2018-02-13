@@ -1,6 +1,7 @@
 package de.zalando.ep.zalenium.dashboard;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServlet;
@@ -22,7 +23,8 @@ public class DashboardInformationServlet extends HttpServlet {
     @SuppressWarnings("unused")
     protected void process(HttpServletRequest request, HttpServletResponse response) throws IOException {
         List<TestInformation> executedTestsInformation = Dashboard.getExecutedTestsInformation();
-        byte[] testInformation = new Gson().toJson(executedTestsInformation).getBytes(UTF_8);
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        byte[] testInformation = gson.toJson(executedTestsInformation).getBytes(UTF_8);
         response.setStatus(HTTP_OK);
         response.setContentType(JSON_UTF_8.toString());
         response.setContentLength(testInformation.length);
