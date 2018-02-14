@@ -436,21 +436,21 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     @VisibleForTesting
     public boolean startDockerSeleniumContainer(TimeZone timeZone, Dimension screenSize, boolean forceCreation) {
 
-        if (forceCreation || validateAmountOfDockerSeleniumContainers()) {
+        int attempts = 0;
+        int maxAttempts = 2;
+        while (attempts < maxAttempts) {
+            attempts++;
+            if (forceCreation || validateAmountOfDockerSeleniumContainers()) {
 
-            NetworkUtils networkUtils = new NetworkUtils();
-            String hostIpAddress = networkUtils.getIp4NonLoopbackAddressOfThisMachine().getHostAddress();
+                NetworkUtils networkUtils = new NetworkUtils();
+                String hostIpAddress = networkUtils.getIp4NonLoopbackAddressOfThisMachine().getHostAddress();
 
-            boolean sendAnonymousUsageInfo = env.getBooleanEnvVariable("ZALENIUM_SEND_ANONYMOUS_USAGE_INFO", false);
-            String nodePolling = String.valueOf(RandomUtils.nextInt(90, 120) * 1000);
-            String nodeRegisterCycle = String.valueOf(RandomUtils.nextInt(15, 25) * 1000);
+                boolean sendAnonymousUsageInfo = env.getBooleanEnvVariable("ZALENIUM_SEND_ANONYMOUS_USAGE_INFO", false);
+                String nodePolling = String.valueOf(RandomUtils.nextInt(90, 120) * 1000);
+                String nodeRegisterCycle = String.valueOf(RandomUtils.nextInt(15, 25) * 1000);
 
-            String seleniumNodeParams = getSeleniumNodeParameters();
+                String seleniumNodeParams = getSeleniumNodeParameters();
 
-            int attempts = 0;
-            int maxAttempts = 2;
-            while (attempts < maxAttempts) {
-                attempts++;
                 final int nodePort = findFreePortInRange(LOWER_PORT_BOUNDARY, UPPER_PORT_BOUNDARY);
 
                 Map<String, String> envVars = buildEnvVars(timeZone, screenSize, hostIpAddress, sendAnonymousUsageInfo,
@@ -464,10 +464,18 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
                 } else {
                     LOGGER.log(Level.FINE, String.format("%sContainer creation failed, retrying...", LOGGING_PREFIX));
                 }
+            } else {
+                LOGGER.log(Level.INFO, String.format("%sNo container was created, will try again in a moment...",
+                        LOGGING_PREFIX));
+                try {
+                    Thread.sleep(10000);
+                } catch (InterruptedException e) {
+                    LOGGER.log(Level.FINE, "Exception while making a pause during container creation.", e);
+                }
             }
         }
-        LOGGER.log(Level.INFO, String.format("%sNo container was created, will try again in a moment...",
-                LOGGING_PREFIX));
+        LOGGER.log(Level.INFO, String.format("%sNo container was created after 3 attempts, will wait until request is " +
+                        "processed again...", LOGGING_PREFIX));
         return false;
     }
 
