@@ -4,6 +4,7 @@ import com.google.common.annotations.VisibleForTesting;
 import de.zalando.ep.zalenium.container.ContainerClient;
 import de.zalando.ep.zalenium.container.ContainerCreationStatus;
 import de.zalando.ep.zalenium.container.ContainerFactory;
+import de.zalando.ep.zalenium.dashboard.Dashboard;
 import de.zalando.ep.zalenium.matcher.DockerSeleniumCapabilityMatcher;
 import de.zalando.ep.zalenium.matcher.ZaleniumCapabilityType;
 import de.zalando.ep.zalenium.util.Environment;
@@ -106,6 +107,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     private static int maxDockerSeleniumContainers;
     private static int sleepIntervalMultiplier = 1000;
     private static boolean seleniumWaitForContainer = true;
+    private static boolean sendAnonymousUsageInfo = false;
     private static TimeZone configuredTimeZone;
     private static Dimension configuredScreenSize;
     private static String containerName;
@@ -149,6 +151,8 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
         setSeleniumNodeParameters(seleniumNodeParams);
 
         seleniumWaitForContainer = env.getBooleanEnvVariable("SELENIUM_WAIT_FOR_CONTAINER", true);
+
+        sendAnonymousUsageInfo = env.getBooleanEnvVariable("ZALENIUM_SEND_ANONYMOUS_USAGE_INFO", false);
     }
 
     /*
@@ -405,6 +409,8 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     @Override
     public void beforeRegistration() {
         containerClient.initialiseContainerEnvironment();
+        Dashboard.loadTestInformationFromFile();
+        Dashboard.setShutDownHook();
         createContainersOnStartup();
     }
 
@@ -433,27 +439,24 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     @VisibleForTesting
     public boolean startDockerSeleniumContainer(TimeZone timeZone, Dimension screenSize, boolean forceCreation) {
 
-        if (forceCreation || validateAmountOfDockerSeleniumContainers()) {
+        NetworkUtils networkUtils = new NetworkUtils();
+        String hostIpAddress = networkUtils.getIp4NonLoopbackAddressOfThisMachine().getHostAddress();
+        String nodePolling = String.valueOf(RandomUtils.nextInt(90, 120) * 1000);
+        String nodeRegisterCycle = String.valueOf(RandomUtils.nextInt(15, 25) * 1000);
+        String seleniumNodeParams = getSeleniumNodeParameters();
+        String latestImage = getLatestDownloadedImage(getDockerSeleniumImageName());
 
-            NetworkUtils networkUtils = new NetworkUtils();
-            String hostIpAddress = networkUtils.getIp4NonLoopbackAddressOfThisMachine().getHostAddress();
+        int attempts = 0;
+        int maxAttempts = 2;
+        while (attempts < maxAttempts) {
+            attempts++;
+            if (forceCreation || validateAmountOfDockerSeleniumContainers()) {
 
-            boolean sendAnonymousUsageInfo = env.getBooleanEnvVariable("ZALENIUM_SEND_ANONYMOUS_USAGE_INFO", false);
-            String nodePolling = String.valueOf(RandomUtils.nextInt(90, 120) * 1000);
-            String nodeRegisterCycle = String.valueOf(RandomUtils.nextInt(15, 25) * 1000);
-
-            String seleniumNodeParams = getSeleniumNodeParameters();
-
-            int attempts = 0;
-            int maxAttempts = 2;
-            while (attempts < maxAttempts) {
-                attempts++;
                 final int nodePort = findFreePortInRange(LOWER_PORT_BOUNDARY, UPPER_PORT_BOUNDARY);
 
                 Map<String, String> envVars = buildEnvVars(timeZone, screenSize, hostIpAddress, sendAnonymousUsageInfo,
                         nodePolling, nodeRegisterCycle, nodePort, seleniumNodeParams);
 
-                String latestImage = getLatestDownloadedImage(getDockerSeleniumImageName());
                 ContainerCreationStatus creationStatus = containerClient
                         .createContainer(getContainerName(), latestImage, envVars, String.valueOf(nodePort));
                 if (creationStatus.isCreated() && checkContainerStatus(creationStatus)) {
@@ -461,10 +464,18 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
                 } else {
                     LOGGER.log(Level.FINE, String.format("%sContainer creation failed, retrying...", LOGGING_PREFIX));
                 }
+            } else {
+                LOGGER.log(Level.INFO, String.format("%sNo container was created, will try again in a moment...",
+                        LOGGING_PREFIX));
+                try {
+                    Thread.sleep(10000);
+                } catch (InterruptedException e) {
+                    LOGGER.log(Level.FINE, "Exception while making a pause during container creation.", e);
+                }
             }
         }
-        LOGGER.log(Level.INFO, String.format("%sNo container was created, will try again in a moment...",
-                LOGGING_PREFIX));
+        LOGGER.log(Level.INFO, String.format("%sNo container was created after 3 attempts, will wait until request is " +
+                        "processed again...", LOGGING_PREFIX));
         return false;
     }
 

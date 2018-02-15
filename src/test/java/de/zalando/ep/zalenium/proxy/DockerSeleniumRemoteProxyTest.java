@@ -273,7 +273,7 @@ public class DockerSeleniumRemoteProxyTest {
     }
 
     @Test
-    public void pollerThreadTearsDownNodeAfterTestIsCompleted() throws IOException {
+    public void pollingThreadTearsDownNodeAfterTestIsCompleted() throws IOException {
 
         try {
             CommonProxyUtilities commonProxyUtilities = TestUtils.mockCommonProxyUtilitiesForDashboardTesting(temporaryFolder);
@@ -283,7 +283,7 @@ public class DockerSeleniumRemoteProxyTest {
             // Supported desired capability for the test session
             Map<String, Object> requestedCapability = getCapabilitySupportedByDockerSelenium();
 
-            // Start poller thread
+            // Start polling thread
             proxy.startPolling();
 
             // Get a test session
@@ -318,7 +318,7 @@ public class DockerSeleniumRemoteProxyTest {
         // Supported desired capability for the test session
         Map<String, Object> requestedCapability = getCapabilitySupportedByDockerSelenium();
 
-        // Start poller thread
+        // Start polling thread
         proxy.startPolling();
 
         // Get a test session
@@ -348,7 +348,7 @@ public class DockerSeleniumRemoteProxyTest {
         // Supported desired capability for the test session
         Map<String, Object> requestedCapability = getCapabilitySupportedByDockerSelenium();
 
-        // Start poller thread
+        // Start polling thread
         proxy.startPolling();
 
         // Get a test session
@@ -384,7 +384,7 @@ public class DockerSeleniumRemoteProxyTest {
 
         DockerSeleniumRemoteProxy spyProxy = spy(proxy);
 
-        // Start poller thread
+        // Start pulling thread
         spyProxy.startPolling();
 
         // Get a test session
@@ -446,7 +446,7 @@ public class DockerSeleniumRemoteProxyTest {
             // Creating a spy proxy to verify the invoked methods
             DockerSeleniumRemoteProxy spyProxy = spy(proxy);
 
-            // Start poller thread
+            // Start pulling thread
             spyProxy.startPolling();
 
             // Get a test session
@@ -522,7 +522,7 @@ public class DockerSeleniumRemoteProxyTest {
             DockerSeleniumRemoteProxy.readEnvVars();
 
 
-            // Start poller thread
+            // Start pulling thread
             spyProxy.startPolling();
 
             // Get a test session
