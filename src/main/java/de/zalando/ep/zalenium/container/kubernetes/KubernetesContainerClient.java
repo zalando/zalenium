@@ -309,7 +309,7 @@ public class KubernetesContainerClient implements ContainerClient {
                                 String nodePort) {
         String containerIdPrefix = String.format("%s-%s-", zaleniumAppName, nodePort);
 
-        // Convert the environment variables into the kubernetes format.
+        // Convert the environment variables into the Kubernetes format.
         List<EnvVar> flattenedEnvVars = envVars.entrySet().stream()
                                             .map(e -> new EnvVar(e.getKey(), e.getValue(), null))
                                             .collect(Collectors.toList());
@@ -336,6 +336,10 @@ public class KubernetesContainerClient implements ContainerClient {
 
         // Create the container
         Pod createdPod = doneablePod.done();
+        if (createdPod.getMetadata() == null) {
+            logger.info("createdPod.getMetadata() is NULL");
+        }
+        logger.info("createdPod.getMetadata().getName(); -> " + createdPod.getMetadata().getName());
         String containerName = createdPod.getMetadata().getName();
         return new ContainerCreationStatus(true, containerName, nodePort);
     }
@@ -471,7 +475,7 @@ public class KubernetesContainerClient implements ContainerClient {
     }
 
     @SuppressWarnings("unused")
-    private static enum Resources {
+    private enum Resources {
 
         CPU_REQUEST(ResourceType.REQUEST, "cpu", "ZALENIUM_KUBERNETES_CPU_REQUEST"),
         CPU_LIMIT(ResourceType.LIMIT, "cpu", "ZALENIUM_KUBERNETES_CPU_LIMIT"),
@@ -482,7 +486,7 @@ public class KubernetesContainerClient implements ContainerClient {
         private String requestType;
         private String envVar;
 
-        private Resources(ResourceType resourceType, String requestType, String envVar) {
+        Resources(ResourceType resourceType, String requestType, String envVar) {
             this.resourceType = resourceType;
             this.requestType = requestType;
             this.envVar = envVar;
@@ -501,8 +505,8 @@ public class KubernetesContainerClient implements ContainerClient {
         }
     }
 
-    private static enum ResourceType {
-        REQUEST, LIMIT;
+    private enum ResourceType {
+        REQUEST, LIMIT
     }
 
     public static DoneablePod createDoneablePodDefaultImpl(PodConfiguration config) {
