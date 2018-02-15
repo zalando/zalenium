@@ -107,6 +107,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     private static int maxDockerSeleniumContainers;
     private static int sleepIntervalMultiplier = 1000;
     private static boolean seleniumWaitForContainer = true;
+    private static boolean sendAnonymousUsageInfo = false;
     private static TimeZone configuredTimeZone;
     private static Dimension configuredScreenSize;
     private static String containerName;
@@ -150,6 +151,8 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
         setSeleniumNodeParameters(seleniumNodeParams);
 
         seleniumWaitForContainer = env.getBooleanEnvVariable("SELENIUM_WAIT_FOR_CONTAINER", true);
+
+        sendAnonymousUsageInfo = env.getBooleanEnvVariable("ZALENIUM_SEND_ANONYMOUS_USAGE_INFO", false);
     }
 
     /*
@@ -436,27 +439,24 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     @VisibleForTesting
     public boolean startDockerSeleniumContainer(TimeZone timeZone, Dimension screenSize, boolean forceCreation) {
 
+        NetworkUtils networkUtils = new NetworkUtils();
+        String hostIpAddress = networkUtils.getIp4NonLoopbackAddressOfThisMachine().getHostAddress();
+        String nodePolling = String.valueOf(RandomUtils.nextInt(90, 120) * 1000);
+        String nodeRegisterCycle = String.valueOf(RandomUtils.nextInt(15, 25) * 1000);
+        String seleniumNodeParams = getSeleniumNodeParameters();
+        String latestImage = getLatestDownloadedImage(getDockerSeleniumImageName());
+
         int attempts = 0;
         int maxAttempts = 2;
         while (attempts < maxAttempts) {
             attempts++;
             if (forceCreation || validateAmountOfDockerSeleniumContainers()) {
 
-                NetworkUtils networkUtils = new NetworkUtils();
-                String hostIpAddress = networkUtils.getIp4NonLoopbackAddressOfThisMachine().getHostAddress();
-
-                boolean sendAnonymousUsageInfo = env.getBooleanEnvVariable("ZALENIUM_SEND_ANONYMOUS_USAGE_INFO", false);
-                String nodePolling = String.valueOf(RandomUtils.nextInt(90, 120) * 1000);
-                String nodeRegisterCycle = String.valueOf(RandomUtils.nextInt(15, 25) * 1000);
-
-                String seleniumNodeParams = getSeleniumNodeParameters();
-
                 final int nodePort = findFreePortInRange(LOWER_PORT_BOUNDARY, UPPER_PORT_BOUNDARY);
 
                 Map<String, String> envVars = buildEnvVars(timeZone, screenSize, hostIpAddress, sendAnonymousUsageInfo,
                         nodePolling, nodeRegisterCycle, nodePort, seleniumNodeParams);
 
-                String latestImage = getLatestDownloadedImage(getDockerSeleniumImageName());
                 ContainerCreationStatus creationStatus = containerClient
                         .createContainer(getContainerName(), latestImage, envVars, String.valueOf(nodePort));
                 if (creationStatus.isCreated() && checkContainerStatus(creationStatus)) {
