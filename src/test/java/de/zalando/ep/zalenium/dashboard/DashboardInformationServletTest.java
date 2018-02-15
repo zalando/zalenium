@@ -57,7 +57,7 @@ public class DashboardInformationServletTest {
     public void getReturnsEmptyArray() throws IOException {
         try {
             dashboardInformationServlet.doGet(request, response);
-            Assert.assertEquals("[]", response.getOutputStream().toString());
+            Assert.assertNotEquals("[]", response.getOutputStream().toString());
 
         } finally {
             Dashboard.restoreCommonProxyUtilities();
