@@ -19,7 +19,7 @@ if [ "${BROWSER_STACK_TUNNEL}" = "true" ]; then
   echo "Waiting for BrowserStack tunnel to start..."
   # Required params
   [ -z "${BROWSER_STACK_LOG_FILE}" ] && die "Required env var BROWSER_STACK_LOG_FILE"
-  while ! grep "${DONE_MSG}" ${BROWSER_STACK_LOG_FILE} >/dev/null; do
+  while ! grep -s "${DONE_MSG}" ${BROWSER_STACK_LOG_FILE} >/dev/null; do
     echo -n '.'
     sleep 0.2;
   done
