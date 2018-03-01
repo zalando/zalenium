@@ -37,7 +37,6 @@ import io.fabric8.kubernetes.api.model.VolumeMount;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.ExecListener;
 import io.fabric8.kubernetes.client.dsl.ExecWatch;
-import io.fabric8.openshift.client.OpenShiftClient;
 import okhttp3.Response;
 
 public class KubernetesContainerClient implements ContainerClient {
@@ -50,8 +49,6 @@ public class KubernetesContainerClient implements ContainerClient {
     private static final Logger logger = Logger.getLogger(KubernetesContainerClient.class.getName());
 
     private KubernetesClient client;
-    @SuppressWarnings("unused")
-    private OpenShiftClient oClient;
 
     private String zaleniumAppName;
 
@@ -80,15 +77,6 @@ public class KubernetesContainerClient implements ContainerClient {
         this.createDoneablePod = createDoneablePod;
         try {
             this.client = client;
-            String kubernetesFlavour;
-            if (client.isAdaptable(OpenShiftClient.class)) {
-                oClient = client.adapt(OpenShiftClient.class);
-                kubernetesFlavour = "OpenShift";
-            }
-            else {
-                kubernetesFlavour = "Vanilla Kubernetes";
-                oClient = null;
-            }
 
             // Lookup our current hostname, this lets us lookup ourselves via the kubernetes api
             String hostname = findHostname();
@@ -115,10 +103,9 @@ public class KubernetesContainerClient implements ContainerClient {
                             + "\tPod name: {0}\n"
                             + "\tapp label: {1}\n"
                             + "\tzalenium service name: {2}\n"
-                            + "\tKubernetes flavour: {3}\n"
-                            + "\tSelenium Pod Resource Limits: {4}\n"
-                            + "\tSelenium Pod Resource Requests: {5}",
-                    new Object[] {hostname, appName, zaleniumAppName, kubernetesFlavour,
+                            + "\tSelenium Pod Resource Limits: {3}\n"
+                            + "\tSelenium Pod Resource Requests: {4}",
+                    new Object[] {hostname, appName, zaleniumAppName,
                             seleniumPodLimits.toString(), seleniumPodRequests.toString() });
         } catch (Exception e) {
             logger.log(Level.WARNING, "Error initialising Kubernetes support.", e);
@@ -470,7 +457,6 @@ public class KubernetesContainerClient implements ContainerClient {
         }
     }
 
-    @SuppressWarnings("unused")
     private enum Resources {
 
         CPU_REQUEST(ResourceType.REQUEST, "cpu", "ZALENIUM_KUBERNETES_CPU_REQUEST"),
