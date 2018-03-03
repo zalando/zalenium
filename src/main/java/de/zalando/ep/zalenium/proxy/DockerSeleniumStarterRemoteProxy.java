@@ -20,7 +20,7 @@ import org.openqa.grid.internal.listeners.RegistrationListener;
 import org.openqa.grid.internal.utils.CapabilityMatcher;
 import org.openqa.grid.internal.utils.HtmlRenderer;
 import org.openqa.grid.selenium.proxy.DefaultRemoteProxy;
-import org.openqa.grid.web.servlet.beta.WebProxyHtmlRendererBeta;
+import org.openqa.grid.web.servlet.console.DefaultProxyHtmlRenderer;
 import org.openqa.selenium.Dimension;
 import org.openqa.selenium.MutableCapabilities;
 import org.openqa.selenium.Platform;
@@ -113,7 +113,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     private static String containerName;
     private static String dockerSeleniumImageName;
     private static ThreadPoolExecutor poolExecutor;
-    private final HtmlRenderer renderer = new WebProxyHtmlRendererBeta(this);
+    private final HtmlRenderer renderer = new DefaultProxyHtmlRenderer(this);
     private CapabilityMatcher capabilityHelper;
 
     @SuppressWarnings("WeakerAccess")

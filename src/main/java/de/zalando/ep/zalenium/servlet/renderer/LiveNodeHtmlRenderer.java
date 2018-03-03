@@ -5,10 +5,10 @@ import de.zalando.ep.zalenium.proxy.DockerSeleniumRemoteProxy;
 import org.openqa.grid.internal.TestSession;
 import org.openqa.grid.internal.TestSlot;
 import org.openqa.grid.internal.utils.HtmlRenderer;
-import org.openqa.grid.web.servlet.beta.MiniCapability;
-import org.openqa.grid.web.servlet.beta.SlotsLines;
 import org.openqa.selenium.Platform;
+import org.openqa.selenium.remote.DesiredCapabilities;
 
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -74,15 +74,11 @@ public class LiveNodeHtmlRenderer implements HtmlRenderer {
 
     // content of the browsers tab
     private String tabBrowsers() {
-        SlotsLines wdLines = new SlotsLines();
-        for (TestSlot testSlot : proxy.getTestSlots()) {
-            wdLines.add(testSlot);
-        }
         StringBuilder browserSection = new StringBuilder();
-        for (MiniCapability miniCapability : wdLines.getLinesType()) {
-            String icon = miniCapability.getIcon();
-            String version = miniCapability.getVersion();
-            TestSlot testSlot = wdLines.getLine(miniCapability).get(0);
+        for (TestSlot testSlot : proxy.getTestSlots()) {
+            DesiredCapabilities desiredCapabilities = new DesiredCapabilities(testSlot.getCapabilities());
+            String icon = getConsoleIconPath(desiredCapabilities);
+            String version = desiredCapabilities.getVersion();
             TestSession session = testSlot.getSession();
             String slotClass = "";
             String slotTitle;
@@ -100,6 +96,13 @@ public class LiveNodeHtmlRenderer implements HtmlRenderer {
             browserSection.append(templateRenderer.renderSection("{{tabBrowsers}}", browserValues));
         }
         return browserSection.toString();
+    }
+
+    private String getConsoleIconPath(DesiredCapabilities cap) {
+        String name = cap.getBrowserName().toLowerCase();
+        String path = "org/openqa/grid/images/";
+        InputStream in = Thread.currentThread().getContextClassLoader().getResourceAsStream(path + name + ".png");
+        return in == null ? null : "/grid/resources/" + path + name + ".png";
     }
 
     private String getHtmlNodeVersion() {

@@ -9,10 +9,9 @@ import org.openqa.grid.internal.RemoteProxy;
 import org.openqa.grid.internal.TestSession;
 import org.openqa.grid.internal.TestSlot;
 import org.openqa.grid.internal.utils.HtmlRenderer;
-import org.openqa.grid.web.servlet.beta.MiniCapability;
-import org.openqa.grid.web.servlet.beta.SlotsLines;
 import org.openqa.selenium.Platform;
 import org.openqa.selenium.remote.CapabilityType;
+import org.openqa.selenium.remote.DesiredCapabilities;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -65,34 +64,25 @@ public class CloudProxyHtmlRenderer implements HtmlRenderer {
 
     // content of the browsers tab
     private String tabBrowsers() {
-        SlotsLines wdLines = new SlotsLines();
-        for (TestSlot slot : proxy.getTestSlots()) {
-            wdLines.add(slot);
-        }
         StringBuilder webDriverLines = new StringBuilder();
-        if (wdLines.getLinesType().size() != 0) {
-            webDriverLines.append(getLines(wdLines));
+        for (TestSlot slot : proxy.getTestSlots()) {
+            webDriverLines.append(getLines(slot));
         }
         return webDriverLines.toString();
     }
 
     // the lines of icon representing the possible slots
-    private String getLines(SlotsLines lines) {
+    private String getLines(TestSlot testSlot) {
         StringBuilder slotLines = new StringBuilder();
-        for (MiniCapability cap : lines.getLinesType()) {
-            String version = cap.getVersion();
-            if (version != null) {
-                version = "v:" + version;
-            }
-            StringBuilder singleSlotsHtml = new StringBuilder();
-            for (TestSlot s : lines.getLine(cap)) {
-                singleSlotsHtml.append(getSingleSlotHtml(s));
-            }
-            Map<String, String> linesValues = new HashMap<>();
-            linesValues.put("{{browserVersion}}", version);
-            linesValues.put("{{singleSlots}}", singleSlotsHtml.toString());
-            slotLines.append(templateRenderer.renderSection("{{tabBrowsers}}", linesValues));
+        DesiredCapabilities desiredCapabilities = new DesiredCapabilities(testSlot.getCapabilities());
+        String version = desiredCapabilities.getVersion();
+        if (version != null) {
+            version = "v:" + version;
         }
+        Map<String, String> linesValues = new HashMap<>();
+        linesValues.put("{{browserVersion}}", version);
+        linesValues.put("{{singleSlots}}", getSingleSlotHtml(testSlot));
+        slotLines.append(templateRenderer.renderSection("{{tabBrowsers}}", linesValues));
         return slotLines.toString();
     }
 
