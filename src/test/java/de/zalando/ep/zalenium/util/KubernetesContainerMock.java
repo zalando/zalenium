@@ -61,7 +61,9 @@ public class KubernetesContainerMock {
         Pod zaleniumPod = new PodBuilder()
                 .withNewMetadata()
                 .withLabels(zaleniumPodLabels)
+                .addToLabels(zaleniumPodLabels)
                 .withNamespace("test")
+                .withGenerateName(hostName)
                 .withName(hostName)
                 .and().build();
 
