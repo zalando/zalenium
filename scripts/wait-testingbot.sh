@@ -19,7 +19,7 @@ if [ "${TESTINGBOT_TUNNEL}" = "true" ]; then
   echo "Waiting for TestingBot tunnel to start..."
   # Required params
   [ -z "${TESTINGBOT_LOG_FILE}" ] && die "Required env var TESTINGBOT_LOG_FILE"
-  while ! grep "${DONE_MSG}" ${TESTINGBOT_LOG_FILE} >/dev/null; do
+  while ! grep -s "${DONE_MSG}" ${TESTINGBOT_LOG_FILE} >/dev/null; do
     echo -n '.'
     sleep 0.2;
   done

@@ -25,7 +25,7 @@ import org.openqa.grid.internal.TestSlot;
 import org.openqa.grid.internal.utils.CapabilityMatcher;
 import org.openqa.grid.internal.utils.HtmlRenderer;
 import org.openqa.grid.selenium.proxy.DefaultRemoteProxy;
-import org.openqa.grid.web.servlet.beta.WebProxyHtmlRendererBeta;
+import org.openqa.grid.web.servlet.console.DefaultProxyHtmlRenderer;
 import org.openqa.grid.web.servlet.handler.RequestType;
 import org.openqa.grid.web.servlet.handler.WebDriverRequest;
 import org.openqa.selenium.Platform;
@@ -67,7 +67,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     private static boolean keepOnlyFailedTests;
     private static boolean videoRecordingEnabledGlobal;
     private static Environment env = defaultEnvironment;
-    private final HtmlRenderer renderer = new WebProxyHtmlRendererBeta(this);
+    private final HtmlRenderer renderer = new DefaultProxyHtmlRenderer(this);
     private final ContainerClientRegistration registration;
     private boolean videoRecordingEnabledSession;
     private boolean videoRecordingEnabledConfigured = false;
