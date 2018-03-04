@@ -1,6 +1,5 @@
 package de.zalando.ep.zalenium.servlet.renderer;
 
-import com.google.gson.JsonObject;
 import de.zalando.ep.zalenium.proxy.DockerSeleniumRemoteProxy;
 import org.openqa.grid.internal.TestSession;
 import org.openqa.grid.internal.TestSlot;
@@ -12,12 +11,8 @@ import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class LiveNodeHtmlRenderer implements HtmlRenderer {
-
-    private static final Logger LOGGER = Logger.getLogger(LiveNodeHtmlRenderer.class.getName());
 
     private DockerSeleniumRemoteProxy proxy;
     private TemplateRenderer templateRenderer;
@@ -107,13 +102,12 @@ public class LiveNodeHtmlRenderer implements HtmlRenderer {
 
     private String getHtmlNodeVersion() {
         try {
-            JsonObject object = proxy.getStatus();
-            String version = object.get("value").getAsJsonObject()
-                    .get("build").getAsJsonObject()
-                    .get("version").getAsString();
+            Map<String, Object> proxyStatus = proxy.getProxyStatus();
+            String version = ((Map)(((Map)proxyStatus.get("value"))
+                    .get("build")))
+                    .get("version").toString();
             return " (version : " + version + ")";
-        } catch (Exception e) {
-            LOGGER.log(Level.FINE, e.toString(), e);
+        }catch (Exception e) {
             return " unknown version, " + e.getMessage();
         }
     }

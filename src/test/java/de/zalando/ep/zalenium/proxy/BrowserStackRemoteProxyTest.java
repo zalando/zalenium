@@ -134,7 +134,7 @@ public class BrowserStackRemoteProxyTest {
         Assert.assertNotNull(testSession);
 
         // We need to mock all the needed objects to forward the session and see how in the beforeMethod
-        // the SauceLabs user and api key get added to the body request.
+        // the BrowserStack user and api key get added to the body request.
         WebDriverRequest request = TestUtils.getMockedWebDriverRequestStartSession(BrowserType.IE, Platform.WIN8);
 
         HttpServletResponse response = mock(HttpServletResponse.class);
