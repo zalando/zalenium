@@ -1,6 +1,5 @@
 package de.zalando.ep.zalenium.servlet.renderer;
 
-import com.google.gson.JsonObject;
 import de.zalando.ep.zalenium.proxy.BrowserStackRemoteProxy;
 import de.zalando.ep.zalenium.proxy.SauceLabsRemoteProxy;
 import de.zalando.ep.zalenium.proxy.TestingBotRemoteProxy;
@@ -14,6 +13,7 @@ import org.openqa.selenium.remote.CapabilityType;
 import org.openqa.selenium.remote.DesiredCapabilities;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class CloudProxyHtmlRenderer implements HtmlRenderer {
@@ -46,13 +46,13 @@ public class CloudProxyHtmlRenderer implements HtmlRenderer {
 
     private String getHtmlNodeVersion() {
         try {
-            JsonObject object = proxy.getStatus();
-            String version = object.get("value").getAsJsonObject()
-                    .get("build").getAsJsonObject()
-                    .get("version").getAsString();
-            return " (version : "+version+ ")";
+            Map<String, Object> proxyStatus = proxy.getProxyStatus();
+            String version = ((Map)(((Map)proxyStatus.get("value"))
+                    .get("build")))
+                    .get("version").toString();
+            return " (version : " + version + ")";
         }catch (Exception e) {
-            return " unknown version,"+e.getMessage();
+            return " unknown version, " + e.getMessage();
         }
     }
 
@@ -64,24 +64,21 @@ public class CloudProxyHtmlRenderer implements HtmlRenderer {
 
     // content of the browsers tab
     private String tabBrowsers() {
-        StringBuilder webDriverLines = new StringBuilder();
-        for (TestSlot slot : proxy.getTestSlots()) {
-            webDriverLines.append(getLines(slot));
-        }
-        return webDriverLines.toString();
-    }
-
-    // the lines of icon representing the possible slots
-    private String getLines(TestSlot testSlot) {
+        List<TestSlot> testSlots = proxy.getTestSlots();
         StringBuilder slotLines = new StringBuilder();
-        DesiredCapabilities desiredCapabilities = new DesiredCapabilities(testSlot.getCapabilities());
+        DesiredCapabilities desiredCapabilities = new DesiredCapabilities(testSlots.get(0).getCapabilities());
         String version = desiredCapabilities.getVersion();
         if (version != null) {
             version = "v:" + version;
         }
         Map<String, String> linesValues = new HashMap<>();
         linesValues.put("{{browserVersion}}", version);
-        linesValues.put("{{singleSlots}}", getSingleSlotHtml(testSlot));
+        // the lines of icons representing the possible slots
+        StringBuilder singleSlotsHtml = new StringBuilder();
+        for (TestSlot testSlot : testSlots) {
+            singleSlotsHtml.append(getSingleSlotHtml(testSlot));
+        }
+        linesValues.put("{{singleSlots}}", singleSlotsHtml.toString());
         slotLines.append(templateRenderer.renderSection("{{tabBrowsers}}", linesValues));
         return slotLines.toString();
     }
