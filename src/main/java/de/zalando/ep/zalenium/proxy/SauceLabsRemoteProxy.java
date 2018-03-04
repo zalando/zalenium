@@ -23,7 +23,7 @@ public class SauceLabsRemoteProxy extends CloudTestingRemoteProxy {
     private static final String SAUCE_LABS_ACCOUNT_INFO = "https://saucelabs.com/rest/v1/users/%s";
     private static final String SAUCE_LABS_USER_NAME = getEnv().getStringEnvVariable("SAUCE_USERNAME", "");
     private static final String SAUCE_LABS_ACCESS_KEY = getEnv().getStringEnvVariable("SAUCE_ACCESS_KEY", "");
-    private static final String SAUCE_LABS_URL = "https://ondemand.saucelabs.com:443";
+    private static final String SAUCE_LABS_URL = "http://ondemand.saucelabs.com:80";
     private static final Logger LOGGER = Logger.getLogger(SauceLabsRemoteProxy.class.getName());
     private static final String SAUCE_LABS_PROXY_NAME = "SauceLabs";
 
