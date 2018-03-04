@@ -1,6 +1,5 @@
 package de.zalando.ep.zalenium.servlet.renderer;
 
-import com.google.gson.JsonObject;
 import de.zalando.ep.zalenium.proxy.BrowserStackRemoteProxy;
 import de.zalando.ep.zalenium.proxy.SauceLabsRemoteProxy;
 import de.zalando.ep.zalenium.proxy.TestingBotRemoteProxy;
@@ -9,12 +8,12 @@ import org.openqa.grid.internal.RemoteProxy;
 import org.openqa.grid.internal.TestSession;
 import org.openqa.grid.internal.TestSlot;
 import org.openqa.grid.internal.utils.HtmlRenderer;
-import org.openqa.grid.web.servlet.beta.MiniCapability;
-import org.openqa.grid.web.servlet.beta.SlotsLines;
 import org.openqa.selenium.Platform;
 import org.openqa.selenium.remote.CapabilityType;
+import org.openqa.selenium.remote.DesiredCapabilities;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class CloudProxyHtmlRenderer implements HtmlRenderer {
@@ -47,13 +46,13 @@ public class CloudProxyHtmlRenderer implements HtmlRenderer {
 
     private String getHtmlNodeVersion() {
         try {
-            JsonObject object = proxy.getStatus();
-            String version = object.get("value").getAsJsonObject()
-                    .get("build").getAsJsonObject()
-                    .get("version").getAsString();
-            return " (version : "+version+ ")";
+            Map<String, Object> proxyStatus = proxy.getProxyStatus();
+            String version = ((Map)(((Map)proxyStatus.get("value"))
+                    .get("build")))
+                    .get("version").toString();
+            return " (version : " + version + ")";
         }catch (Exception e) {
-            return " unknown version,"+e.getMessage();
+            return " unknown version, " + e.getMessage();
         }
     }
 
@@ -65,34 +64,22 @@ public class CloudProxyHtmlRenderer implements HtmlRenderer {
 
     // content of the browsers tab
     private String tabBrowsers() {
-        SlotsLines wdLines = new SlotsLines();
-        for (TestSlot slot : proxy.getTestSlots()) {
-            wdLines.add(slot);
-        }
-        StringBuilder webDriverLines = new StringBuilder();
-        if (wdLines.getLinesType().size() != 0) {
-            webDriverLines.append(getLines(wdLines));
-        }
-        return webDriverLines.toString();
-    }
-
-    // the lines of icon representing the possible slots
-    private String getLines(SlotsLines lines) {
+        List<TestSlot> testSlots = proxy.getTestSlots();
         StringBuilder slotLines = new StringBuilder();
-        for (MiniCapability cap : lines.getLinesType()) {
-            String version = cap.getVersion();
-            if (version != null) {
-                version = "v:" + version;
-            }
-            StringBuilder singleSlotsHtml = new StringBuilder();
-            for (TestSlot s : lines.getLine(cap)) {
-                singleSlotsHtml.append(getSingleSlotHtml(s));
-            }
-            Map<String, String> linesValues = new HashMap<>();
-            linesValues.put("{{browserVersion}}", version);
-            linesValues.put("{{singleSlots}}", singleSlotsHtml.toString());
-            slotLines.append(templateRenderer.renderSection("{{tabBrowsers}}", linesValues));
+        DesiredCapabilities desiredCapabilities = new DesiredCapabilities(testSlots.get(0).getCapabilities());
+        String version = desiredCapabilities.getVersion();
+        if (version != null) {
+            version = "v:" + version;
         }
+        Map<String, String> linesValues = new HashMap<>();
+        linesValues.put("{{browserVersion}}", version);
+        // the lines of icons representing the possible slots
+        StringBuilder singleSlotsHtml = new StringBuilder();
+        for (TestSlot testSlot : testSlots) {
+            singleSlotsHtml.append(getSingleSlotHtml(testSlot));
+        }
+        linesValues.put("{{singleSlots}}", singleSlotsHtml.toString());
+        slotLines.append(templateRenderer.renderSection("{{tabBrowsers}}", linesValues));
         return slotLines.toString();
     }
 

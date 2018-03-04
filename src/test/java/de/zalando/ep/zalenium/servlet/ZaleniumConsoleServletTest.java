@@ -27,7 +27,6 @@ import org.openqa.selenium.remote.server.jmx.JMXHelper;
 import javax.management.InstanceNotFoundException;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -145,7 +144,7 @@ public class ZaleniumConsoleServletTest {
     }
 
     @Test
-    public void checkResourcesInConsoleServlet() throws ServletException, IOException {
+    public void checkResourcesInConsoleServlet() throws IOException {
         HttpServletRequest httpServletRequest;
         HttpServletResponse httpServletResponse;
 

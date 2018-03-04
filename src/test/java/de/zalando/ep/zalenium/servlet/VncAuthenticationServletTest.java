@@ -88,7 +88,7 @@ public class VncAuthenticationServletTest {
     }
 
     @Test
-    public void testAuthenticationSucceedsForNoVnc() throws Exception {
+    public void testAuthenticationSucceedsForNoVnc() {
         VncAuthenticationServlet vncAuthenticationServlet = new VncAuthenticationServlet(registry);
         
         ArgumentCaptor<Integer> statusCaptor = ArgumentCaptor.forClass(Integer.class);
@@ -102,7 +102,7 @@ public class VncAuthenticationServletTest {
     }
     
     @Test
-    public void testAuthenticationSucceedsForWebsockify() throws Exception {
+    public void testAuthenticationSucceedsForWebsockify() {
         VncAuthenticationServlet vncAuthenticationServlet = new VncAuthenticationServlet(registry);
         
         ArgumentCaptor<Integer> statusCaptor = ArgumentCaptor.forClass(Integer.class);
@@ -116,7 +116,7 @@ public class VncAuthenticationServletTest {
     }
     
     @Test
-    public void testAuthenticationFailsForWebsockify() throws Exception {
+    public void testAuthenticationFailsForWebsockify() {
         VncAuthenticationServlet vncAuthenticationServlet = new VncAuthenticationServlet(registry);
         
         ArgumentCaptor<Integer> statusCaptor = ArgumentCaptor.forClass(Integer.class);
@@ -130,7 +130,7 @@ public class VncAuthenticationServletTest {
     }
     
     @Test
-    public void testAuthenticationFailsForVncWithBadPort() throws Exception {
+    public void testAuthenticationFailsForVncWithBadPort() {
         VncAuthenticationServlet vncAuthenticationServlet = new VncAuthenticationServlet(registry);
         
         ArgumentCaptor<Integer> statusCaptor = ArgumentCaptor.forClass(Integer.class);
@@ -144,7 +144,7 @@ public class VncAuthenticationServletTest {
     }
     
     @Test
-    public void testAuthenticationFailsForVncWithBadHost() throws Exception {
+    public void testAuthenticationFailsForVncWithBadHost() {
         VncAuthenticationServlet vncAuthenticationServlet = new VncAuthenticationServlet(registry);
         
         ArgumentCaptor<Integer> statusCaptor = ArgumentCaptor.forClass(Integer.class);
@@ -158,7 +158,7 @@ public class VncAuthenticationServletTest {
     }
 
     @Test
-    public void testAuthenticationFailsWithNoHeader() throws Exception {
+    public void testAuthenticationFailsWithNoHeader() {
         VncAuthenticationServlet vncAuthenticationServlet = new VncAuthenticationServlet(registry);
         
         ArgumentCaptor<Integer> statusCaptor = ArgumentCaptor.forClass(Integer.class);
