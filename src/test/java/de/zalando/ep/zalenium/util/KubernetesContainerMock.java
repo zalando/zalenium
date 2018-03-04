@@ -52,6 +52,9 @@ public class KubernetesContainerMock {
         } catch (UnknownHostException e) {
             hostName = "";
         }
+        if (hostName == null) {
+            hostName = "localhost";
+        }
         KubernetesServer server = new KubernetesServer();
         server.before();
 
