@@ -323,7 +323,18 @@ public class KubernetesContainerClient implements ContainerClient {
 
         // Create the container
         Pod createdPod = doneablePod.done();
-        String containerName = createdPod.getMetadata().getName();
+        String containerName;
+        if (createdPod.getMetadata() != null) {
+            if (createdPod.getMetadata().getName() != null) {
+                containerName = createdPod.getMetadata().getName();
+            } else {
+                containerName = "localhost";
+                logger.warning("Container name is NULL");
+            }
+        } else {
+            containerName = "localhost";
+            logger.warning("Metadata is NULL");
+        }
         return new ContainerCreationStatus(true, containerName, nodePort);
     }
 
