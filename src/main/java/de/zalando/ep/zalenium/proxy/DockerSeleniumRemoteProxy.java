@@ -321,6 +321,15 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         return true;
     }
 
+    /*
+        When we shutdown the node because a test finished with a timeout, then we also set the test counter to the
+        max amount, otherwise there is a risk where a test is accepted while the node is shutting down.
+        This should only be invoked from the shutdownNode() method when the test had been idle.
+     */
+    private synchronized void stopReceivingTests() {
+        amountOfExecutedTests = maxTestSessions;
+    }
+
     private String getCapability(Map<String, Object> requestedCapability, String capabilityName, String defaultValue) {
         return Optional.ofNullable(requestedCapability.get(capabilityName)).orElse(defaultValue).toString();
     }
@@ -545,6 +554,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
 
         if (isTestIdle) {
             terminateIdleTest();
+            stopReceivingTests();
             shutdownReason = String.format("%s Marking the node as down because the test has been idle for more than %s seconds.",
                     getId(), getMaxTestIdleTimeSecs());
         }
