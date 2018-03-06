@@ -58,16 +58,6 @@ public class ZaleniumRegistry extends BaseGridRegistry implements GridRegistry {
     }
 
     /**
-     * Creates a new {@link GridRegistry} that is not associated with a Hub and starts it.
-     *
-     * @return the registry
-     */
-    @SuppressWarnings({"NullableProblems"})
-    public static GridRegistry newInstance() {
-        return newInstance(null);
-    }
-
-    /**
      * Creates a new {@link GridRegistry} and starts it.
      *
      * @param hub the {@link Hub} to associate this registry with
