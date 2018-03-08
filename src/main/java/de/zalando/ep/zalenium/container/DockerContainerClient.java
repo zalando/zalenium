@@ -68,7 +68,9 @@ public class DockerContainerClient implements ContainerClient {
     private List<String> zaleniumHttpEnvVars = new ArrayList<>();
     private Map<String, String> seleniumContainerLabels = new HashMap<>();
     private boolean pullSeleniumImage = false;
+    private boolean isZaleniumPrivileged = true;
     private AtomicBoolean pullSeleniumImageChecked = new AtomicBoolean(false);
+    private AtomicBoolean isZaleniumPrivilegedChecked = new AtomicBoolean(false);
     private AtomicBoolean mntFoldersAndHttpEnvVarsChecked = new AtomicBoolean(false);
     private AtomicBoolean seleniumContainerLabelsChecked = new AtomicBoolean(false);
 
@@ -187,6 +189,7 @@ public class DockerContainerClient implements ContainerClient {
         // In some environments the created containers need to be labeled so the platform can handle them. E.g. Rancher.
         loadSeleniumContainerLabels();
         loadPullSeleniumImageFlag();
+        loadIsZaleniumPrivileged(zaleniumContainerName);
 
         List<String> binds = generateMountedFolderBinds();
         binds.add("/dev/shm:/dev/shm");
@@ -220,7 +223,7 @@ public class DockerContainerClient implements ContainerClient {
                 .networkMode(networkMode)
                 .extraHosts(extraHosts)
                 .autoRemove(true)
-                .privileged(true)
+                .privileged(isZaleniumPrivileged)
                 .build();
 
 
@@ -299,6 +302,25 @@ public class DockerContainerClient implements ContainerClient {
     private void loadPullSeleniumImageFlag() {
         if (!this.pullSeleniumImageChecked.getAndSet(true)) {
             pullSeleniumImage = env.getBooleanEnvVariable("PULL_SELENIUM_IMAGE", false);
+        }
+    }
+
+    private void loadIsZaleniumPrivileged(String zaleniumContainerName) {
+        if (!this.isZaleniumPrivilegedChecked.getAndSet(true)) {
+            String containerId = getContainerId(zaleniumContainerName);
+            if (containerId == null) {
+                return;
+            }
+
+            ContainerInfo containerInfo = null;
+
+            try {
+                containerInfo = dockerClient.inspectContainer(containerId);
+                isZaleniumPrivileged = containerInfo.hostConfig().privileged();
+            } catch (DockerException | InterruptedException e) {
+                logger.log(Level.WARNING, nodeId + " Error while getting value to check if Zalenium is running in privileged mode.", e);
+                ga.trackException(e);
+            }
         }
     }
 
