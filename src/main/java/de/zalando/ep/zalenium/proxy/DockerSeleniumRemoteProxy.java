@@ -242,6 +242,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                     String message = cookie.get("value").getAsString();
                     String messageCommand = String.format(" 'Zalenium', '%s', --icon=/home/seluser/images/message.png",
                             message);
+                    processContainerAction(DockerSeleniumContainerAction.CLEAN_NOTIFICATION, getContainerId());
                     processContainerAction(DockerSeleniumContainerAction.SEND_NOTIFICATION, messageCommand,
                             getContainerId());
                 }
@@ -569,7 +570,8 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         STOP_RECORDING("stop-video", true),
         TRANSFER_LOGS("transfer-logs.sh", true),
         CLEANUP_CONTAINER("cleanup-container.sh", true),
-        SEND_NOTIFICATION("notify", true);
+        SEND_NOTIFICATION("notify", true),
+        CLEAN_NOTIFICATION("killall --ignore-case --quiet --regexp \"xfce4-notifyd.*\"", true);
 
         private String containerAction;
         private boolean waitForExecution;
