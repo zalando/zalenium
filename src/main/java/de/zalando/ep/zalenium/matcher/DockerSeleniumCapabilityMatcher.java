@@ -42,6 +42,12 @@ public class DockerSeleniumCapabilityMatcher extends DefaultCapabilityMatcher {
         logger.log(Level.FINE, ()-> String.format("Validating %s in node with capabilities %s", requestedCapability,
                 nodeCapability));
 
+        if (!requestedCapability.containsKey(CapabilityType.BROWSER_NAME)) {
+            logger.log(Level.FINE, () -> String.format("%s Capability %s does no contain %s key, a docker-selenium " +
+                    "node cannot be started without it", proxy.getId(), requestedCapability, CapabilityType.BROWSER_NAME));
+            return false;
+        }
+
         // We do this because the starter node does not have the browser versions when Zalenium starts
         if (proxy instanceof DockerSeleniumStarterRemoteProxy) {
             Map<String, Object> requestedCapabilityCopy = copyMap(requestedCapability);
