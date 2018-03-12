@@ -324,7 +324,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
         }
 
         if (!requestedCapability.containsKey(CapabilityType.BROWSER_NAME)) {
-            LOGGER.log(Level.FINE, () -> String.format("%s Capability %s does no contain %s key, a docker-selenium " +
+            LOGGER.log(Level.FINE, () -> String.format("%s Capability %s does not contain %s key, a docker-selenium " +
                     "node cannot be started without it", LOGGING_PREFIX, requestedCapability, CapabilityType.BROWSER_NAME));
             return null;
         }

@@ -155,7 +155,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         }
 
         if (!requestedCapability.containsKey(CapabilityType.BROWSER_NAME)) {
-            LOGGER.log(Level.FINE, () -> String.format("%s Capability %s does no contain %s key, a browser test cannot " +
+            LOGGER.log(Level.FINE, () -> String.format("%s Capability %s does not contain %s key, a browser test cannot " +
                             "start without it.", getId(), requestedCapability, CapabilityType.BROWSER_NAME));
             return null;
         }

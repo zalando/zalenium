@@ -43,7 +43,7 @@ public class DockerSeleniumCapabilityMatcher extends DefaultCapabilityMatcher {
                 nodeCapability));
 
         if (!requestedCapability.containsKey(CapabilityType.BROWSER_NAME)) {
-            logger.log(Level.FINE, () -> String.format("%s Capability %s does no contain %s key, a docker-selenium " +
+            logger.log(Level.FINE, () -> String.format("%s Capability %s does not contain %s key, a docker-selenium " +
                     "node cannot be started without it", proxy.getId(), requestedCapability, CapabilityType.BROWSER_NAME));
             return false;
         }
