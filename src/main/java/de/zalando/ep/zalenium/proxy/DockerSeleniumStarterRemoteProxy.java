@@ -108,6 +108,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     private static int sleepIntervalMultiplier = 1000;
     private static boolean seleniumWaitForContainer = true;
     private static boolean sendAnonymousUsageInfo = false;
+    private static boolean waitForAvailableNodes = true;
     private static TimeZone configuredTimeZone;
     private static Dimension configuredScreenSize;
     private static String containerName;
@@ -153,6 +154,8 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
         seleniumWaitForContainer = env.getBooleanEnvVariable("SELENIUM_WAIT_FOR_CONTAINER", true);
 
         sendAnonymousUsageInfo = env.getBooleanEnvVariable("ZALENIUM_SEND_ANONYMOUS_USAGE_INFO", false);
+
+        waitForAvailableNodes = env.getBooleanEnvVariable("WAIT_FOR_AVAILABLE_NODES", true);
     }
 
     /*
@@ -622,6 +625,10 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     }
 
     private boolean nodesAvailable(Map<String, Object> requestedCapability) {
+        if (!waitForAvailableNodes) {
+            LOGGER.log(Level.FINE, LOGGING_PREFIX + "Not waiting for available slots, creating nodes when possible.");
+            return false;
+        }
         for (RemoteProxy remoteProxy : this.getRegistry().getAllProxies()) {
             if (remoteProxy instanceof DockerSeleniumRemoteProxy) {
                 DockerSeleniumRemoteProxy proxy = (DockerSeleniumRemoteProxy) remoteProxy;
@@ -633,7 +640,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
                 }
             }
         }
-        LOGGER.log(Level.FINE, LOGGING_PREFIX + "No sessions available, a new node will be created.");
+        LOGGER.log(Level.FINE, LOGGING_PREFIX + "No slots available, a new node will be created.");
         return false;
     }
 
