@@ -161,8 +161,6 @@ public class ZaleniumRegistry extends BaseGridRegistry implements GridRegistry {
         matcherThread.interrupt();
         newSessionQueue.stop();
         proxies.teardown();
-        httpClientFactory.close();
-
     }
 
     /**
