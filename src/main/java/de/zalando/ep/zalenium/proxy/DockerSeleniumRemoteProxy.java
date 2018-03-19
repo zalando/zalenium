@@ -274,6 +274,11 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         try {
             // This means that the shutdown command was triggered before receiving this afterSession command
             if (!TestInformation.TestStatus.TIMEOUT.equals(testInformation.getTestStatus())) {
+                long executionTime = (System.currentTimeMillis() - session.getSlot().getLastSessionStart()) / 1000;
+                ga.testEvent(DockerSeleniumRemoteProxy.class.getName(), session.getRequestedCapabilities().toString(),
+                        executionTime);
+                // This avoids shutting down the node by timeout in case the file copying takes too long.
+                stopPolling();
                 if (isTestSessionLimitReached()) {
                     String message = String.format("%s AFTER_SESSION command received. Node should shutdown soon...", getId());
                     LOGGER.log(Level.INFO, message);
@@ -285,10 +290,9 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                             getAmountOfExecutedTests(), maxTestSessions);
                     LOGGER.log(Level.INFO, message);
                     cleanupNode(false);
+                    // Enabling polling again since the node is still alive.
+                    startPolling();
                 }
-                long executionTime = (System.currentTimeMillis() - session.getSlot().getLastSessionStart()) / 1000;
-                ga.testEvent(DockerSeleniumRemoteProxy.class.getName(), session.getRequestedCapabilities().toString(),
-                        executionTime);
             }
         } catch (Exception e) {
             LOGGER.log(Level.WARNING, getId() + " " + e.toString(), e);
