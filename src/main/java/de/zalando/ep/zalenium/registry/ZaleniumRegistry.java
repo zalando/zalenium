@@ -1,5 +1,6 @@
 package de.zalando.ep.zalenium.registry;
 
+import de.zalando.ep.zalenium.util.Environment;
 import net.jcip.annotations.ThreadSafe;
 
 import org.openqa.grid.internal.ActiveTestSessions;
@@ -45,6 +46,8 @@ public class ZaleniumRegistry extends BaseGridRegistry implements GridRegistry {
     private final Matcher matcherThread = new Matcher();
     private final List<RemoteProxy> registeringProxies = new CopyOnWriteArrayList<>();
     private volatile boolean stop = false;
+    // Value in minutes
+    private final int maxRequestAge;
 
     public ZaleniumRegistry() {
         this(null);
@@ -55,6 +58,8 @@ public class ZaleniumRegistry extends BaseGridRegistry implements GridRegistry {
         this.newSessionQueue = new NewSessionRequestQueue();
         proxies = new ProxySet((hub != null) ? hub.getConfiguration().throwOnCapabilityNotPresent : true);
         this.matcherThread.setUncaughtExceptionHandler(new UncaughtExceptionHandler());
+        Environment environment = new Environment();
+        maxRequestAge = environment.getIntEnvVariable("ZALENIUM_MAX_REQUEST_AGE", 5);
     }
 
     /**
@@ -201,6 +206,14 @@ public class ZaleniumRegistry extends BaseGridRegistry implements GridRegistry {
     }
 
     private boolean takeRequestHandler(RequestHandler handler) {
+        // If a request has been in the queue over maxRequestAge minutes, it is probably dead on the client side.
+        long requestAge = (System.currentTimeMillis() - handler.getRequest().getCreationTime()) / 1000;
+        if (requestAge > (60 * maxRequestAge)) {
+            LOG.info(String.format("Removing request %s, has been in the queue for %s minutes.",
+                    handler.getRequest().getDesiredCapabilities(), maxRequestAge));
+            removeNewSessionRequest(handler);
+            return false;
+        }
         final TestSession session = proxies.getNewSession(handler.getRequest().getDesiredCapabilities());
         final boolean sessionCreated = session != null;
         if (sessionCreated) {
