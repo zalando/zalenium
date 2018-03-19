@@ -279,7 +279,7 @@ public class KubernetesContainerClient implements ContainerClient {
     @Override
     public int getRunningContainers(String image) {
         PodList list = client.pods().withLabels(createdByZaleniumMap).list();
-        logger.log(Level.INFO, "Pods in the list " + list.getItems().size());
+        logger.log(Level.FINE, "Pods in the list " + list.getItems().size());
         int count=0;
         for (Pod pod : list.getItems()) {
             String phase = pod.getStatus().getPhase();
