@@ -51,10 +51,6 @@ public class ZaleniumRegistry extends BaseGridRegistry implements GridRegistry {
     // Value in seconds
     private final int maxRequestAge;
 
-    public ZaleniumRegistry() {
-        this(null);
-    }
-
     public ZaleniumRegistry(Hub hub) {
         super(hub);
         this.newSessionQueue = new NewSessionRequestQueue();
