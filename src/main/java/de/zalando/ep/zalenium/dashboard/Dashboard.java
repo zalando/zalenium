@@ -211,7 +211,7 @@ public class Dashboard {
 
     public static void setShutDownHook() {
         if (!shutdownHookAdded.getAndSet(true)) {
-            Runtime.getRuntime().addShutdownHook(new Thread(Dashboard::dumpTestInformationToFile));
+            Runtime.getRuntime().addShutdownHook(new Thread(Dashboard::dumpTestInformationToFile, "Dashboard dumpTestInformationToFile shutdown hook"));
         }
     }
 

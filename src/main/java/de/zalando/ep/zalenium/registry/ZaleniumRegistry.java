@@ -20,6 +20,8 @@ import org.openqa.grid.web.servlet.handler.RequestHandler;
 import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.remote.server.log.LoggingManager;
 
+import de.zalando.ep.zalenium.proxy.DockerSeleniumRemoteProxy;
+
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -98,7 +100,12 @@ public class ZaleniumRegistry extends BaseGridRegistry implements GridRegistry {
      */
     public void terminate(final TestSession session, final SessionTerminationReason reason) {
         // Thread safety reviewed
-        new Thread(() -> _release(session.getSlot(), reason)).start();
+        String remoteName = "";
+        if (session.getSlot().getProxy() instanceof DockerSeleniumRemoteProxy) {
+            remoteName = ((DockerSeleniumRemoteProxy)session.getSlot().getProxy()).getRegistration().getContainerId();
+        }
+        new Thread(() -> _release(session.getSlot(), reason), "Terminate Test Session int id: ["
+                + session.getInternalKey() + "] ext id: [" + session.getExternalKey().getKey() + "] container: [" + remoteName + "]").start();
     }
 
     /**
@@ -217,6 +224,17 @@ public class ZaleniumRegistry extends BaseGridRegistry implements GridRegistry {
         final TestSession session = proxies.getNewSession(handler.getRequest().getDesiredCapabilities());
         final boolean sessionCreated = session != null;
         if (sessionCreated) {
+            String remoteName = "";
+            if (session.getSlot().getProxy() instanceof DockerSeleniumRemoteProxy) {
+                remoteName = ((DockerSeleniumRemoteProxy)session.getSlot().getProxy()).getRegistration().getContainerId();
+            }
+            long timeToAssignProxy = System.currentTimeMillis() - handler.getRequest().getCreationTime();
+            LOG.log(Level.INFO,
+                    String.format("Test session with internal key %s assigned to remote (%s) after %s seconds (%s ms).",
+                                  session.getInternalKey(),
+                                  remoteName,
+                                  timeToAssignProxy / 1000,
+                                  timeToAssignProxy));
             activeTestSessions.add(session);
             handler.bindSession(session);
         }

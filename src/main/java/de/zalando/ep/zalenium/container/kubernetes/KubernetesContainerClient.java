@@ -304,6 +304,7 @@ public class KubernetesContainerClient implements ContainerClient {
         Map<String, String> podSelector = new HashMap<>();
 
         PodConfiguration config = new PodConfiguration();
+        config.setNodePort(nodePort);
         config.setClient(client);
         config.setContainerIdPrefix(containerIdPrefix);
         config.setImage(image);
@@ -333,7 +334,7 @@ public class KubernetesContainerClient implements ContainerClient {
         deleteSeleniumPods();
 
         // Register a shutdown hook to cleanup pods
-        Runtime.getRuntime().addShutdownHook(new Thread(this::deleteSeleniumPods));
+        Runtime.getRuntime().addShutdownHook(new Thread(this::deleteSeleniumPods, "KubernetsContainerClient shutdown hook"));
     }
 
     @Override
@@ -520,6 +521,18 @@ public class KubernetesContainerClient implements ContainerClient {
                             .addToLimits(config.getPodLimits())
                             .addToRequests(config.getPodRequests())
                         .endResources()
+                        // Add a readiness health check so that we can know when the selenium pod is ready to accept requests
+                        // so then we can initiate a registration.
+                        .withNewReadinessProbe()
+                            .withNewExec()
+                                .addToCommand(new String[] {"/bin/sh", "-c", "curl -s http://localhost:" + config.getNodePort() + "/wd/hub/status | jq .value.ready | grep true"})
+                            .endExec()
+                            .withInitialDelaySeconds(5)
+                            .withFailureThreshold(60)
+                            .withPeriodSeconds(1)
+                            .withTimeoutSeconds(1)
+                            .withSuccessThreshold(1)
+                        .endReadinessProbe()
                     .endContainer()
                     .withRestartPolicy("Never")
                 .endSpec();

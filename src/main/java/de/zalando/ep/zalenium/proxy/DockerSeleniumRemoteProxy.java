@@ -264,6 +264,16 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         if (request instanceof WebDriverRequest && "POST".equalsIgnoreCase(request.getMethod())) {
             WebDriverRequest seleniumRequest = (WebDriverRequest) request;
             if (RequestType.START_SESSION.equals(seleniumRequest.getRequestType())) {
+                
+                String remoteName = "";
+                if (session.getSlot().getProxy() instanceof DockerSeleniumRemoteProxy) {
+                    remoteName = ((DockerSeleniumRemoteProxy)session.getSlot().getProxy()).getRegistration().getContainerId();
+                }
+                LOGGER.log(Level.INFO,
+                        String.format("Test session started with internal key %s and external key %s assigned to remote %s.",
+                              session.getInternalKey(),
+                              session.getExternalKey().getKey(),
+                              remoteName));
                 videoRecording(DockerSeleniumContainerAction.START_RECORDING);
             }
         }
@@ -304,7 +314,9 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     @Override
     public void startPolling() {
         super.startPolling();
-        dockerSeleniumNodePollerThread = new DockerSeleniumNodePoller(this);
+        String containerId = this.getRegistration().getContainerId();
+        
+        dockerSeleniumNodePollerThread = new DockerSeleniumNodePoller(this, containerId);
         dockerSeleniumNodePollerThread.start();
     }
 
@@ -608,7 +620,8 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
 
         private static long sleepTimeBetweenChecks = 500;
         private DockerSeleniumRemoteProxy dockerSeleniumRemoteProxy;
-        DockerSeleniumNodePoller(DockerSeleniumRemoteProxy dockerSeleniumRemoteProxy) {
+        DockerSeleniumNodePoller(DockerSeleniumRemoteProxy dockerSeleniumRemoteProxy, String containerName) {
+            super("DockerSeleniumNodePoller container [" + containerName + "]");
             this.dockerSeleniumRemoteProxy = dockerSeleniumRemoteProxy;
         }
 
