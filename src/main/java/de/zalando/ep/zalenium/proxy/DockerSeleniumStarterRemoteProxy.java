@@ -44,8 +44,10 @@ import java.util.TimeZone;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The idea of this proxy instance is:
@@ -85,7 +87,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     static final String DEFAULT_SELENIUM_NODE_PARAMS = "";
     private static final String DEFAULT_ZALENIUM_CONTAINER_NAME = "zalenium";
     private static final String ZALENIUM_CONTAINER_NAME = "ZALENIUM_CONTAINER_NAME";
-    private static final Logger LOGGER = Logger.getLogger(DockerSeleniumStarterRemoteProxy.class.getName());
+    private static final Logger LOGGER = LoggerFactory.getLogger(DockerSeleniumStarterRemoteProxy.class.getName());
     private static final String DEFAULT_DOCKER_SELENIUM_IMAGE = "elgalu/selenium";
     private static final String ZALENIUM_SELENIUM_IMAGE_NAME = "ZALENIUM_SELENIUM_IMAGE_NAME";
     private static final int LOWER_PORT_BOUNDARY = 40000;
@@ -286,7 +288,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
 
     public static void setConfiguredTimeZone(String configuredTimeZone) {
         if (!Arrays.asList(TimeZone.getAvailableIDs()).contains(configuredTimeZone)) {
-            LOGGER.log(Level.WARNING, () -> String.format("%s is not a real time zone.", configuredTimeZone));
+            LOGGER.warn(String.format("%s is not a real time zone.", configuredTimeZone));
             DockerSeleniumStarterRemoteProxy.configuredTimeZone = DEFAULT_TZ;
         } else {
             DockerSeleniumStarterRemoteProxy.configuredTimeZone = TimeZone.getTimeZone(configuredTimeZone);
@@ -322,12 +324,12 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     public TestSession getNewSession(Map<String, Object> requestedCapability) {
 
         if (!hasCapability(requestedCapability)) {
-            LOGGER.log(Level.FINE, LOGGING_PREFIX + "Capability not supported {0}", requestedCapability);
+            LOGGER.debug(LOGGING_PREFIX + "Capability not supported {0}", requestedCapability);
             return null;
         }
 
         if (!requestedCapability.containsKey(CapabilityType.BROWSER_NAME)) {
-            LOGGER.log(Level.FINE, () -> String.format("%s Capability %s does not contain %s key, a docker-selenium " +
+            LOGGER.debug(String.format("%s Capability %s does not contain %s key, a docker-selenium " +
                     "node cannot be started without it", LOGGING_PREFIX, requestedCapability, CapabilityType.BROWSER_NAME));
             return null;
         }
@@ -342,21 +344,21 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
             Reusing nodes, rejecting requests when a node is cleaning up and will be ready again soon.
          */
         if (nodesAvailable(requestedCapability)) {
-            LOGGER.log(Level.FINE, LOGGING_PREFIX + "A node is coming up soon for {0}, won't start a new node yet.",
+            LOGGER.debug(LOGGING_PREFIX + "A node is coming up soon for {0}, won't start a new node yet.",
                     requestedCapability);
             return null;
         }
 
         // Checking if this request has been processed based on its id, contents, and attempts
         if (hasRequestBeenProcessed(requestedCapability)) {
-            LOGGER.log(Level.FINE, LOGGING_PREFIX + "Request {0}, has been processed and it is waiting for a node.",
+            LOGGER.debug(LOGGING_PREFIX + "Request {0}, has been processed and it is waiting for a node.",
                     requestedCapability);
             return null;
         }
         ProcessedCapabilities processedCapabilities = new ProcessedCapabilities(requestedCapability,
                 System.identityHashCode(requestedCapability));
         processedCapabilitiesList.add(processedCapabilities);
-        LOGGER.log(Level.INFO, LOGGING_PREFIX + "Starting new node for {0}.", requestedCapability);
+        LOGGER.debug(LOGGING_PREFIX + "Starting new node for {0}.", requestedCapability);
         poolExecutor.execute(() -> startDockerSeleniumContainer(timeZone, screenSize));
         cleanProcessedCapabilities();
 
@@ -367,9 +369,9 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
         int requestedCapabilityHashCode = System.identityHashCode(requestedCapability);
         for (ProcessedCapabilities processedCapability : processedCapabilitiesList) {
 
-            LOGGER.log(Level.FINE, LOGGING_PREFIX + "System.identityHashCode(requestedCapability) -> "
+            LOGGER.debug(LOGGING_PREFIX + "System.identityHashCode(requestedCapability) -> "
                     + System.identityHashCode(requestedCapability) + ", " + requestedCapability);
-            LOGGER.log(Level.FINE, LOGGING_PREFIX + "processedCapability.getIdentityHashCode() -> "
+            LOGGER.debug(LOGGING_PREFIX + "processedCapability.getIdentityHashCode() -> "
                     + processedCapability.getIdentityHashCode() + ", " + processedCapability.getRequestedCapability());
 
             if (processedCapability.getIdentityHashCode() == requestedCapabilityHashCode) {
@@ -380,7 +382,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
 
                 if (processedTimes >= 30) {
                     processedCapability.setProcessedTimes(1);
-                    LOGGER.log(Level.INFO, LOGGING_PREFIX + "Request has waited 30 attempts for a node, something " +
+                    LOGGER.info(LOGGING_PREFIX + "Request has waited 30 attempts for a node, something " +
                             "went wrong with the previous attempts, creating a new node for {0}.", requestedCapability);
                     return false;
                 }
@@ -465,19 +467,19 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
                 if (creationStatus.isCreated() && checkContainerStatus(creationStatus)) {
                     return true;
                 } else {
-                    LOGGER.log(Level.FINE, String.format("%sContainer creation failed, retrying...", LOGGING_PREFIX));
+                    LOGGER.debug(String.format("%sContainer creation failed, retrying...", LOGGING_PREFIX));
                 }
             } else {
-                LOGGER.log(Level.INFO, String.format("%sNo container was created, will try again in a moment...",
+                LOGGER.info(String.format("%sNo container was created, will try again in a moment...",
                         LOGGING_PREFIX));
                 try {
                     Thread.sleep(10000);
                 } catch (InterruptedException e) {
-                    LOGGER.log(Level.FINE, "Exception while making a pause during container creation.", e);
+                    LOGGER.debug("Exception while making a pause during container creation.", e);
                 }
             }
         }
-        LOGGER.log(Level.INFO, String.format("%sNo container was created after 3 attempts, will wait until request is " +
+        LOGGER.info(String.format("%sNo container was created after 3 attempts, will wait until request is " +
                         "processed again...", LOGGING_PREFIX));
         return false;
     }
@@ -504,21 +506,21 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
                     String status = IOUtils.toString(statusUrl, StandardCharsets.UTF_8);
                     String successMessage = "\"Node is running\"";
                     if (status.contains(successMessage)) {
-                        LOGGER.log(Level.INFO, String.format("%sContainer %s is up after ~%s seconds...",
+                        LOGGER.info(String.format("%sContainer %s is up after ~%s seconds...",
                                 LOGGING_PREFIX, createdContainerName, i * (sleepInterval / 1000)));
                         return true;
                     }
                 } catch (IOException e) {
-                    LOGGER.log(Level.FINE, "Error while getting node status, probably the node is still starting up...");
+                    LOGGER.debug("Error while getting node status, probably the node is still starting up...");
                 }
             } catch (MalformedURLException | InterruptedException e) {
-                LOGGER.log(Level.WARNING, "Malformed status url.", e);
+                LOGGER.warn("Malformed status url.", e);
             }
         }
         String message = String.format("%sContainer %s took longer than 60 seconds to be up and ready, this might be " +
                         "a signal that you have reached the hardware limits for the number of concurrent threads " +
                         "that you want to execute.", LOGGING_PREFIX, createdContainerName);
-        LOGGER.log(Level.INFO, message);
+        LOGGER.info(message);
         return false;
     }
 
@@ -559,19 +561,19 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     private void createContainersOnStartup() {
         int containersToCreate = getDesiredContainersOnStartup() > getMaxDockerSeleniumContainers() ?
                 getMaxDockerSeleniumContainers() : getDesiredContainersOnStartup();
-        LOGGER.log(Level.INFO, String.format("%s Setting up %s nodes...", LOGGING_PREFIX, getDesiredContainersOnStartup()));
+        LOGGER.info(String.format("%s Setting up %s nodes...", LOGGING_PREFIX, getDesiredContainersOnStartup()));
         // Thread.sleep() is to avoid having containers starting at the same time
         for (int i = 0; i < containersToCreate; i++) {
             new Thread(() -> {
                 try {
                     Thread.sleep(RandomUtils.nextInt(1, (containersToCreate / 2) + 1) * sleepIntervalMultiplier);
                 } catch (InterruptedException e) {
-                    LOGGER.log(Level.WARNING, getId() + " Error sleeping before starting a container", e);
+                    LOGGER.warn(getId() + " Error sleeping before starting a container", e);
                 }
                 startDockerSeleniumContainer(getConfiguredTimeZone(), getConfiguredScreenSize(), true);
             }).start();
         }
-        LOGGER.log(Level.INFO, String.format("%s containers were created, it will take a bit more until all get registered.", containersToCreate));
+        LOGGER.info(String.format("%s containers were created, it will take a bit more until all get registered.", containersToCreate));
     }
 
     /*
@@ -592,11 +594,11 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
                     if (screenWidth > 0 && screenHeight > 0) {
                         screenSize = new Dimension(screenWidth, screenHeight);
                     } else {
-                        LOGGER.log(Level.FINE, "One of the values provided for screenResolution is negative, " +
+                        LOGGER.debug("One of the values provided for screenResolution is negative, " +
                                 "defaults will be used. Passed value -> " + screenResolution);
                     }
                 } catch (Exception e) {
-                    LOGGER.log(Level.FINE, "Values provided for screenResolution are not valid integers or " +
+                    LOGGER.debug("Values provided for screenResolution are not valid integers or " +
                             "either the width or the height is missing, defaults will be used. Passed value -> "
                             + screenResolution);
                 }
@@ -626,7 +628,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
 
     private boolean nodesAvailable(Map<String, Object> requestedCapability) {
         if (!waitForAvailableNodes) {
-            LOGGER.log(Level.FINE, LOGGING_PREFIX + "Not waiting for available slots, creating nodes when possible.");
+            LOGGER.debug(LOGGING_PREFIX + "Not waiting for available slots, creating nodes when possible.");
             return false;
         }
         for (RemoteProxy remoteProxy : this.getRegistry().getAllProxies()) {
@@ -635,12 +637,12 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
                 // If a node is cleaning up it will be available soon
                 // It is faster and more resource wise to wait for the node to be ready
                 if (proxy.isCleaningUpBeforeNextSession() && proxy.hasCapability(requestedCapability)) {
-                    LOGGER.log(Level.FINE, LOGGING_PREFIX + "A node is coming up to handle this request.");
+                    LOGGER.debug(LOGGING_PREFIX + "A node is coming up to handle this request.");
                     return true;
                 }
             }
         }
-        LOGGER.log(Level.FINE, LOGGING_PREFIX + "No slots available, a new node will be created.");
+        LOGGER.debug(LOGGING_PREFIX + "No slots available, a new node will be created.");
         return false;
     }
 
@@ -648,15 +650,15 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
         try {
             int numberOfDockerSeleniumContainers = containerClient.getRunningContainers(getDockerSeleniumImageName());
             if (numberOfDockerSeleniumContainers >= getMaxDockerSeleniumContainers()) {
-                LOGGER.log(Level.WARNING, LOGGING_PREFIX + "Max. number of docker-selenium containers has been reached, " +
+                LOGGER.warn(LOGGING_PREFIX + "Max. number of docker-selenium containers has been reached, " +
                         "no more will be created until the number decreases below {0}.", getMaxDockerSeleniumContainers());
                 return false;
             }
-            LOGGER.log(Level.FINE, () -> String.format("%s %s docker-selenium containers running", LOGGING_PREFIX,
+            LOGGER.debug(String.format("%s %s docker-selenium containers running", LOGGING_PREFIX,
                     numberOfDockerSeleniumContainers));
             return true;
         } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, LOGGING_PREFIX + e.toString(), e);
+            LOGGER.error(LOGGING_PREFIX + e.toString(), e);
             ga.trackException(e);
         }
         return false;
@@ -675,7 +677,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
         synchronized (allocatedPorts){
             if (allocatedPorts.size() > (upperBoundary - lowerBoundary - 200)) {
                 allocatedPorts.clear();
-                LOGGER.log(Level.INFO, () -> LOGGING_PREFIX + "Cleaning allocated ports list.");
+                LOGGER.info(LOGGING_PREFIX + "Cleaning allocated ports list.");
             }
             for (int portNumber = lowerBoundary; portNumber <= upperBoundary; portNumber++) {
                 int noVncPortNumber = portNumber + NO_VNC_PORT_GAP;

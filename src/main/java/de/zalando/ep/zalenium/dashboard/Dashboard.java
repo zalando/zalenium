@@ -15,8 +15,10 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static java.nio.charset.StandardCharsets.*;
 
@@ -39,7 +41,7 @@ public class Dashboard {
     private static final String ZALANDO_ICO = "zalando.ico";
     private static final String CSS_FOLDER = "/css";
     private static final String JS_FOLDER = "/js";
-    private static final Logger LOGGER = Logger.getLogger(Dashboard.class.getName());
+    private static final Logger LOGGER = LoggerFactory.getLogger(Dashboard.class.getName());
     private static List<TestInformation> executedTestsInformation = new ArrayList<>();
     private static CommonProxyUtilities commonProxyUtilities = new CommonProxyUtilities();
     private static int executedTests = 0;
@@ -107,8 +109,8 @@ public class Dashboard {
                 executedTestsWithVideo++;
             }
 
-            LOGGER.log(Level.FINE, "Test count: " + executedTests);
-            LOGGER.log(Level.FINE, "Test count with video: " + executedTestsWithVideo);
+            LOGGER.debug("Test count: " + executedTests);
+            LOGGER.debug("Test count with video: " + executedTestsWithVideo);
             JsonObject testQuantities = new JsonObject();
             testQuantities.addProperty(EXECUTED_TESTS_FIELD, executedTests);
             testQuantities.addProperty(EXECUTED_TESTS_WITH_VIDEO_FIELD, executedTestsWithVideo);
@@ -136,7 +138,7 @@ public class Dashboard {
             }
             executedTestsInformation.add(testInformation);
         } catch (IOException e) {
-            LOGGER.log(Level.WARNING, "Error while updating the dashboard.", e);
+            LOGGER.warn("Error while updating the dashboard.", e);
         }
     }
 
@@ -172,7 +174,7 @@ public class Dashboard {
                 executedTests = Integer.parseInt(executedTestsInFile);
                 executedTestsWithVideo = Integer.parseInt(executedTestsWithVideoInFile);
             } catch (Exception e) {
-                LOGGER.log(Level.WARNING, e.toString(), e);
+                LOGGER.warn(e.toString(), e);
             }
         } else {
             executedTests = 0;
@@ -192,7 +194,7 @@ public class Dashboard {
                 }
             }
         } catch (Exception e) {
-            LOGGER.log(Level.WARNING, e.toString(), e);
+            LOGGER.warn(e.toString(), e);
         }
     }
 
@@ -205,7 +207,7 @@ public class Dashboard {
                 FileUtils.writeStringToFile(testInformationFile, gson.toJson(executedTestsInformation), UTF_8);
             }
         } catch (Exception e) {
-            LOGGER.log(Level.WARNING, e.toString(), e);
+            LOGGER.warn(e.toString(), e);
         }
     }
 

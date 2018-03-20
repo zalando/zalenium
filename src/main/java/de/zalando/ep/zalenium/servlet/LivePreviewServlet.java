@@ -25,12 +25,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class LivePreviewServlet extends RegistryBasedServlet {
 
-    private static final Logger LOGGER = Logger.getLogger(LivePreviewServlet.class.getName());
+    private static final Logger LOGGER = LoggerFactory.getLogger(LivePreviewServlet.class.getName());
 
     @SuppressWarnings("unused")
     public LivePreviewServlet(){
@@ -46,7 +48,7 @@ public class LivePreviewServlet extends RegistryBasedServlet {
         try {
             process(request, response);
         } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, e.toString(), e);
+            LOGGER.error(e.toString(), e);
         }
     }
 
@@ -55,7 +57,7 @@ public class LivePreviewServlet extends RegistryBasedServlet {
         try {
             process(request, response);
         } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, e.toString(), e);
+            LOGGER.error(e.toString(), e);
         }
     }
 
@@ -70,7 +72,7 @@ public class LivePreviewServlet extends RegistryBasedServlet {
             refresh = Optional.ofNullable(request.getParameter("refresh")).orElse(refresh);
             testBuild = Optional.ofNullable(request.getParameter("build")).orElse(testBuild);
         } catch (Exception e) {
-            LOGGER.log(Level.FINE, e.toString(), e);
+            LOGGER.debug(e.toString(), e);
         }
 
         List<String> nodes = new ArrayList<>();

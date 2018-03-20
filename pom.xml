@@ -58,6 +58,7 @@
         <testng.version>6.14.2</testng.version>
         <slf4j.version>1.7.25</slf4j.version>
         <maven.compiler.source>1.8</maven.compiler.source>
+        <ch.qos.logback.version>1.2.3</ch.qos.logback.version>
         <maven.compiler.target>1.8</maven.compiler.target>
         <maven.compiler.plugin>3.7.0</maven.compiler.plugin>
         <maven-resources-plugin.version>3.0.2</maven-resources-plugin.version>
@@ -113,9 +114,34 @@
             </exclusions>
         </dependency>
         <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-log4j12</artifactId>
-            <version>${slf4j.version}</version>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-core</artifactId>
+            <version>${ch.qos.logback.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>${ch.qos.logback.version}</version>
+            <!--
+               Required for logging regular ILoggingEvents with a Logger.
+               Not needed if only logging IAccessEvents for access logs.
+            -->
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-access</artifactId>
+            <version>${ch.qos.logback.version}</version>
+            <!--
+               Required for logging IAccessEvents for access logs.
+               Not needed if only logging regular ILoggingEvents with a Logger.
+            -->
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>net.logstash.logback</groupId>
+            <artifactId>logstash-logback-encoder</artifactId>
+            <version>5.0</version>
         </dependency>
         <dependency>
             <groupId>io.fabric8</groupId>

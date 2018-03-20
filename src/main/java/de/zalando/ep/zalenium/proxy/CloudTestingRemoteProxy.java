@@ -40,8 +40,10 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @SuppressWarnings("WeakerAccess")
 @ManagedService(description = "CloudTesting TestSlots")
@@ -51,7 +53,7 @@ public class CloudTestingRemoteProxy extends DefaultRemoteProxy {
     public static final long DEFAULT_MAX_TEST_IDLE_TIME_SECS = 90L;
     @VisibleForTesting
     public static boolean addToDashboardCalled = false;
-    private static final Logger logger = Logger.getLogger(CloudTestingRemoteProxy.class.getName());
+    private static final Logger logger = LoggerFactory.getLogger(CloudTestingRemoteProxy.class.getName());
     private static final GoogleAnalyticsApi defaultGA = new GoogleAnalyticsApi();
     private static final CommonProxyUtilities defaultCommonProxyUtilities = new CommonProxyUtilities();
     private static final Environment defaultEnvironment = new Environment();
@@ -134,8 +136,8 @@ public class CloudTestingRemoteProxy extends DefaultRemoteProxy {
         if (!hasCapability(requestedCapability)) {
             return null;
         }
-        logger.log(Level.INFO, () ->"Test will be forwarded to " + getProxyName() + ", " + requestedCapability);
-        logger.log(Level.INFO, () ->"Currently using " + getNumberOfSessions() + " paralell sessions towards " + getProxyName() + ". Attempt to start one more.");
+        logger.info("Test will be forwarded to " + getProxyName() + ", " + requestedCapability);
+        logger.info("Currently using " + getNumberOfSessions() + " paralell sessions towards " + getProxyName() + ". Attempt to start one more.");
         return super.getNewSession(requestedCapability);
     }
 
@@ -155,7 +157,7 @@ public class CloudTestingRemoteProxy extends DefaultRemoteProxy {
                 try {
                     seleniumRequest.setBody(jsonObject.toString());
                 } catch (UnsupportedEncodingException e) {
-                    logger.log(Level.SEVERE, () ->"Error while setting the body request in " + getProxyName()
+                    logger.error("Error while setting the body request in " + getProxyName()
                             + ", " + jsonObject.toString());
                 }
             }
@@ -254,7 +256,7 @@ public class CloudTestingRemoteProxy extends DefaultRemoteProxy {
                 Dashboard.updateDashboard(testInformation);
                 addToDashboardCalled = true;
             } catch (Exception e) {
-                logger.log(Level.SEVERE, e.toString(), e);
+                logger.error(e.toString(), e);
             }
         }).start();
     }
@@ -281,7 +283,7 @@ public class CloudTestingRemoteProxy extends DefaultRemoteProxy {
         try {
             return new URL(getCloudTestingServiceUrl());
         } catch (MalformedURLException e) {
-            logger.log(Level.SEVERE, e.toString(), e);
+            logger.error(e.toString(), e);
             getGa().trackException(e);
         }
         return null;
@@ -294,7 +296,7 @@ public class CloudTestingRemoteProxy extends DefaultRemoteProxy {
             String textToWrite = String.format("Feature not implemented for %s, we are happy to receive PRs", getProxyName());
             FileUtils.writeStringToFile(notImplemented, textToWrite, StandardCharsets.UTF_8);
         } catch (IOException e) {
-            logger.log(Level.INFO, e.toString(), e);
+            logger.info(e.toString(), e);
         }
 
     }
@@ -345,7 +347,7 @@ public class CloudTestingRemoteProxy extends DefaultRemoteProxy {
                         executionTime);
                 addTestToDashboard(testSlot.getSession().getExternalKey().getKey(), false);
                 getRegistry().forceRelease(testSlot, SessionTerminationReason.ORPHAN);
-                logger.log(Level.INFO, getProxyName() + " Releasing slot and terminating session due to inactivity.");
+                logger.info(getProxyName() + " Releasing slot and terminating session due to inactivity.");
             }
         }
     }
@@ -378,7 +380,7 @@ public class CloudTestingRemoteProxy extends DefaultRemoteProxy {
                 try {
                     Thread.sleep(getSleepTimeBetweenChecks());
                 } catch (InterruptedException e) {
-                    logger.log(Level.FINE, cloudProxy.getProxyName() + " Error while sleeping the thread.", e);
+                    logger.debug(cloudProxy.getProxyName() + " Error while sleeping the thread.", e);
                     return;
                 }
             }

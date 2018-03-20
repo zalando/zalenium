@@ -3,8 +3,10 @@ package de.zalando.ep.zalenium.dashboard;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -19,7 +21,7 @@ public class DashboardCleanupServlet extends RegistryBasedServlet {
     private static final String DO_CLEANUP_ALL = "doCleanupAll";
 
     private static final long serialVersionUID = 1L;
-    private static final Logger LOGGER = Logger.getLogger(DashboardCleanupServlet.class.getName());
+    private static final Logger LOGGER = LoggerFactory.getLogger(DashboardCleanupServlet.class.getName());
 
     @SuppressWarnings("unused")
     public DashboardCleanupServlet() {
@@ -45,7 +47,7 @@ public class DashboardCleanupServlet extends RegistryBasedServlet {
         try {
             action = request.getParameter("action");
         } catch (Exception e) {
-            LOGGER.log(Level.FINE, e.toString(), e);
+            LOGGER.debug(e.toString(), e);
         }
 
         String resultMsg;

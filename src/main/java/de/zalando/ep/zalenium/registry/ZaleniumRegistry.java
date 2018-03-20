@@ -25,8 +25,10 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Kernel of the grid. Keeps track of what's happening, what's free/used and assigns resources to
@@ -34,7 +36,7 @@ import java.util.logging.Logger;
  */
 @ThreadSafe
 public class ZaleniumRegistry extends BaseGridRegistry implements GridRegistry {
-    private static final Logger LOG = Logger.getLogger(ZaleniumRegistry.class.getName());
+    private static final Logger LOG = LoggerFactory.getLogger(ZaleniumRegistry.class.getName());
     // lock for anything modifying the tests session currently running on this
     // registry.
     private final ReentrantLock lock = new ReentrantLock();
@@ -131,7 +133,7 @@ public class ZaleniumRegistry extends BaseGridRegistry implements GridRegistry {
         // an empty TestSlot list, which doesn't figure into the proxy equivalence check.  Since we want to free up
         // those test sessions, we need to operate on that original object.
         if (proxies.contains(proxy)) {
-            LOG.warning(String.format(
+            LOG.warn(String.format(
                     "Cleaning up stale test sessions on the unregistered node %s", proxy));
 
             final RemoteProxy p = proxies.remove(proxy);
@@ -194,7 +196,7 @@ public class ZaleniumRegistry extends BaseGridRegistry implements GridRegistry {
             } catch (InterruptedException e) {
                 LOG.info("Shutting down registry.");
             } catch (Throwable t) {
-                LOG.log(Level.SEVERE, "Unhandled exception in Matcher thread.", t);
+                LOG.error("Unhandled exception in Matcher thread.", t);
             }
         }
 
@@ -238,7 +240,7 @@ public class ZaleniumRegistry extends BaseGridRegistry implements GridRegistry {
             release(session1, reason);
             return;
         }
-        LOG.warning("Tried to release session with internal key " + internalKey +
+        LOG.warn("Tried to release session with internal key " + internalKey +
                 " but couldn't find it.");
     }
 
@@ -256,7 +258,7 @@ public class ZaleniumRegistry extends BaseGridRegistry implements GridRegistry {
             removeIfPresent(proxy);
 
             if (registeringProxies.contains(proxy)) {
-                LOG.warning(String.format("Proxy '%s' is already queued for registration.", proxy));
+                LOG.warn(String.format("Proxy '%s' is already queued for registration.", proxy));
 
                 return;
             }
@@ -273,7 +275,7 @@ public class ZaleniumRegistry extends BaseGridRegistry implements GridRegistry {
                 ((RegistrationListener) proxy).beforeRegistration();
             }
         } catch (Throwable t) {
-            LOG.severe("Error running the registration listener on " + proxy + ", " + t.getMessage());
+            LOG.error("Error running the registration listener on " + proxy + ", " + t.getMessage());
             t.printStackTrace();
             listenerOk = false;
         }
@@ -373,13 +375,13 @@ public class ZaleniumRegistry extends BaseGridRegistry implements GridRegistry {
      * @see GridRegistry#getProxyById(String)
      */
     public RemoteProxy getProxyById(String id) {
-        LOG.log(Level.FINE, "Getting proxy " + id);
+        LOG.debug("Getting proxy " + id);
         return proxies.getProxyById(id);
     }
 
     protected static class UncaughtExceptionHandler implements Thread.UncaughtExceptionHandler {
         public void uncaughtException(Thread t, Throwable e) {
-            LOG.log(Level.SEVERE, "Matcher thread dying due to unhandled exception.", e);
+            LOG.debug("Matcher thread dying due to unhandled exception.", e);
         }
     }
 

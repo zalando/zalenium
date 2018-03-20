@@ -10,8 +10,10 @@ import org.openqa.selenium.remote.server.jmx.ManagedService;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /*
     Almost all concepts and ideas for this part of the implementation are taken from the open source project seen here:
@@ -24,7 +26,7 @@ public class SauceLabsRemoteProxy extends CloudTestingRemoteProxy {
     private static final String SAUCE_LABS_USER_NAME = getEnv().getStringEnvVariable("SAUCE_USERNAME", "");
     private static final String SAUCE_LABS_ACCESS_KEY = getEnv().getStringEnvVariable("SAUCE_ACCESS_KEY", "");
     private static final String SAUCE_LABS_URL = "http://ondemand.saucelabs.com:80";
-    private static final Logger LOGGER = Logger.getLogger(SauceLabsRemoteProxy.class.getName());
+    private static final Logger LOGGER = LoggerFactory.getLogger(SauceLabsRemoteProxy.class.getName());
     private static final String SAUCE_LABS_PROXY_NAME = "SauceLabs";
 
     public SauceLabsRemoteProxy(RegistrationRequest request, GridRegistry registry) {
@@ -46,11 +48,11 @@ public class SauceLabsRemoteProxy extends CloudTestingRemoteProxy {
                 sauceLabsAccountConcurrency = slAccountInfo.getAsJsonObject().getAsJsonObject("concurrency_limit").
                         get("overall").getAsInt();
             }
-            LOGGER.log(Level.INFO, logMessage);
+            LOGGER.info(logMessage);
             return addCapabilitiesToRegistrationRequest(registrationRequest, sauceLabsAccountConcurrency,
                     SAUCE_LABS_PROXY_NAME);
         } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, e.toString(), e);
+            LOGGER.warn(e.toString(), e);
             getGa().trackException(e);
         }
         return addCapabilitiesToRegistrationRequest(registrationRequest, 1, SAUCE_LABS_PROXY_NAME);

@@ -7,12 +7,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @SuppressWarnings("WeakerAccess")
 public class TemplateRenderer {
-    private final Logger logger = Logger.getLogger(LivePreviewServlet.class.getName());
+    private final Logger logger = LoggerFactory.getLogger(LivePreviewServlet.class.getName());
     private String templateFile;
     private String templateContents;
 
@@ -28,7 +30,7 @@ public class TemplateRenderer {
                 templateContents = IOUtils.toString(inputStream, StandardCharsets.UTF_8);
             } catch (IOException e) {
                 templateContents = "";
-                logger.log(Level.SEVERE, e.toString(), e);
+                logger.error(e.toString(), e);
             }
         }
     }

@@ -6,8 +6,10 @@ import org.openqa.grid.internal.utils.DefaultCapabilityMatcher;
 import org.openqa.grid.selenium.proxy.DefaultRemoteProxy;
 
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The purpose of this class is to check if the capabilities cannot be supplied by docker-selenium so they can be just
@@ -16,7 +18,7 @@ import java.util.logging.Logger;
 
 public class ZaleniumCapabilityMatcher extends DefaultCapabilityMatcher {
 
-    private static final Logger logger = Logger.getLogger(ZaleniumCapabilityMatcher.class.getName());
+    private static final Logger logger = LoggerFactory.getLogger(ZaleniumCapabilityMatcher.class.getName());
 
     private DefaultRemoteProxy proxy;
 
@@ -27,13 +29,13 @@ public class ZaleniumCapabilityMatcher extends DefaultCapabilityMatcher {
 
     @Override
     public boolean matches(Map<String, Object> nodeCapability, Map<String, Object> requestedCapability) {
-        logger.log(Level.FINE, ()-> String.format("Validating %s in node with capabilities %s", requestedCapability,
+        logger.debug(String.format("Validating %s in node with capabilities %s", requestedCapability,
                 nodeCapability));
 
         for (RemoteProxy remoteProxy : proxy.getRegistry().getAllProxies()) {
             if ((remoteProxy instanceof DockerSeleniumStarterRemoteProxy) &&
                     remoteProxy.hasCapability(requestedCapability)) {
-                logger.log(Level.FINE, "Capability supported by docker-selenium, should not be processed by " +
+                logger.debug("Capability supported by docker-selenium, should not be processed by " +
                         "a Cloud Testing Provider: {0}", requestedCapability);
                 return false;
             }
