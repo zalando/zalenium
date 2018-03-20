@@ -57,7 +57,7 @@ public class ZaleniumRegistry extends BaseGridRegistry implements GridRegistry {
         proxies = new ProxySet((hub != null) ? hub.getConfiguration().throwOnCapabilityNotPresent : true);
         this.matcherThread.setUncaughtExceptionHandler(new UncaughtExceptionHandler());
         Environment environment = new Environment();
-        maxRequestAge = environment.getIntEnvVariable("ZALENIUM_MAX_REQUEST_AGE", 30);
+        maxRequestAge = environment.getIntEnvVariable("ZALENIUM_MAX_REQUEST_AGE", 300);
     }
 
     /**
@@ -212,7 +212,7 @@ public class ZaleniumRegistry extends BaseGridRegistry implements GridRegistry {
         // If a request has been in the queue over maxRequestAge seconds, it is probably dead on the client side.
         long requestAge = (System.currentTimeMillis() - handler.getRequest().getCreationTime()) / 1000;
         if (requestAge > maxRequestAge) {
-            LOG.info(String.format("Removing request %s, has been in the queue for %s seconds.",
+            LOG.info(String.format("Removing request %s, has been in the queue for more than %s seconds.",
                     handler.getRequest().getDesiredCapabilities(), maxRequestAge));
             removeNewSessionRequest(handler);
             return false;
