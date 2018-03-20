@@ -1,6 +1,8 @@
 package de.zalando.ep.zalenium.proxy;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
+
 import de.zalando.ep.zalenium.container.ContainerClient;
 import de.zalando.ep.zalenium.container.ContainerCreationStatus;
 import de.zalando.ep.zalenium.container.ContainerFactory;
@@ -42,6 +44,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.TimeZone;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
@@ -133,7 +136,8 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
         int maxDSContainers = env.getIntEnvVariable(ZALENIUM_MAX_DOCKER_SELENIUM_CONTAINERS,
                 DEFAULT_AMOUNT_DOCKER_SELENIUM_CONTAINERS_RUNNING);
         setMaxDockerSeleniumContainers(maxDSContainers);
-        poolExecutor = new ThreadPoolExecutor(maxDSContainers, maxDSContainers, 20, TimeUnit.SECONDS, new LinkedBlockingQueue<>());
+        ThreadFactory threadFactory = new ThreadFactoryBuilder().setNameFormat("DockerSeleniumStarterRemoteProxy container starter pool-%d").build();
+        poolExecutor = new ThreadPoolExecutor(maxDSContainers, maxDSContainers, 20, TimeUnit.SECONDS, new LinkedBlockingQueue<>(), threadFactory);
 
         int sWidth = env.getIntEnvVariable(ZALENIUM_SCREEN_WIDTH, DEFAULT_SCREEN_SIZE.getWidth());
         int sHeight = env.getIntEnvVariable(ZALENIUM_SCREEN_HEIGHT, DEFAULT_SCREEN_SIZE.getHeight());
@@ -569,7 +573,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
                     LOGGER.log(Level.WARNING, getId() + " Error sleeping before starting a container", e);
                 }
                 startDockerSeleniumContainer(getConfiguredTimeZone(), getConfiguredScreenSize(), true);
-            }).start();
+            }, "DockerSeleniumStarterRemoteProxy createContainersOnStartup #" + i).start();
         }
         LOGGER.log(Level.INFO, String.format("%s containers were created, it will take a bit more until all get registered.", containersToCreate));
     }
