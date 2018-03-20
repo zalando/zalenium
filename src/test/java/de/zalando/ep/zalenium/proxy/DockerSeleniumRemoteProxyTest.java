@@ -22,6 +22,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 import org.openqa.grid.common.RegistrationRequest;
+import org.openqa.grid.internal.ExternalSessionKey;
 import org.openqa.grid.internal.GridRegistry;
 import org.openqa.grid.internal.TestSession;
 import org.openqa.grid.internal.utils.configuration.GridHubConfiguration;
@@ -451,6 +452,7 @@ public class DockerSeleniumRemoteProxyTest {
 
             // Get a test session
             TestSession newSession = spyProxy.getNewSession(getCapabilitySupportedByDockerSelenium());
+            newSession.setExternalKey(new ExternalSessionKey("DockerSeleniumRemoteProxy Test"));
             Assert.assertNotNull(newSession);
 
             // We start the session, in order to start recording
@@ -527,6 +529,7 @@ public class DockerSeleniumRemoteProxyTest {
 
             // Get a test session
             TestSession newSession = spyProxy.getNewSession(getCapabilitySupportedByDockerSelenium());
+            newSession.setExternalKey(new ExternalSessionKey("DockerSeleniumRemoteProxy Test"));
             Assert.assertNotNull(newSession);
 
             // We start the session, in order to start recording

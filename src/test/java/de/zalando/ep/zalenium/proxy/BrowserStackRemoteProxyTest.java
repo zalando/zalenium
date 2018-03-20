@@ -141,6 +141,7 @@ public class BrowserStackRemoteProxyTest {
         ServletOutputStream stream = mock(ServletOutputStream.class);
         when(response.getOutputStream()).thenReturn(stream);
 
+        testSession.setExternalKey(new ExternalSessionKey("BrowserStack Test"));
         testSession.forward(request, response, true);
 
         Environment env = new Environment();
@@ -242,6 +243,7 @@ public class BrowserStackRemoteProxyTest {
         ServletOutputStream stream = mock(ServletOutputStream.class);
         when(response.getOutputStream()).thenReturn(stream);
 
+        testSession.setExternalKey(new ExternalSessionKey("BrowserStack Test"));
         testSession.forward(request, response, true);
 
         // The body should not be affected and not contain the BrowserStack variables
