@@ -117,10 +117,14 @@ public class BrowserStackRemoteProxyTest {
         requestedCapability.put(CapabilityType.BROWSER_NAME, BrowserType.SAFARI);
         requestedCapability.put(CapabilityType.PLATFORM_NAME, Platform.MAC);
 
+        Assert.assertEquals(0, browserStackProxy.getNumberOfSessions());
         TestSession testSession = browserStackProxy.getNewSession(requestedCapability);
 
         Assert.assertNotNull(testSession);
+        Assert.assertEquals(1, browserStackProxy.getNumberOfSessions());
     }
+
+
 
     @Test
     public void credentialsAreAddedInSessionCreation() throws IOException {
