@@ -135,6 +135,7 @@ public class CloudTestingRemoteProxy extends DefaultRemoteProxy {
             return null;
         }
         logger.log(Level.INFO, () ->"Test will be forwarded to " + getProxyName() + ", " + requestedCapability);
+        logger.log(Level.INFO, () ->"Currently using " + getNumberOfSessions() + " paralell sessions towards " + getProxyName() + ". Attempt to start one more.");
         return super.getNewSession(requestedCapability);
     }
 
@@ -315,6 +316,20 @@ public class CloudTestingRemoteProxy extends DefaultRemoteProxy {
     public void teardown() {
         super.teardown();
         stopPolling();
+    }
+
+    /*
+      Method to check for number of active Test Sessions
+    */
+    @VisibleForTesting
+    public int getNumberOfSessions() {
+      int numberOfSessions = 0;
+      for (TestSlot testSlot : getTestSlots()) {
+        if(testSlot.getSession() != null){
+          numberOfSessions++;
+        }
+      }
+      return numberOfSessions;
     }
 
     /*
