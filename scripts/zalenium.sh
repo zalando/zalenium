@@ -21,6 +21,7 @@ SEND_ANONYMOUS_USAGE_INFO=true
 START_TUNNEL=false
 DEBUG_ENABLED=false
 KEEP_ONLY_FAILED_TESTS=false
+LOG_JSON=false
 
 GA_TRACKING_ID="UA-88441352-3"
 GA_ENDPOINT=https://www.google-analytics.com/collect
@@ -422,11 +423,17 @@ StartUp()
 
     DEBUG_MODE=info
     if [ "$DEBUG_ENABLED" = true ]; then
-        DEBUG_MODE=fine
+        DEBUG_MODE=debug
         DEBUG_FLAG=-debug
     fi
 
-    java ${ZALENIUM_EXTRA_JVM_PARAMS} -Djava.util.logging.config.file=logging_${DEBUG_MODE}.properties \
+    LOGBACK_APPENDER=STDOUT
+
+    if [ "$LOG_JSON" == true ]; then
+        LOGBACK_APPENDER=JSON
+    fi
+
+    java ${ZALENIUM_EXTRA_JVM_PARAMS} -Dlogback.loglevel=${DEBUG_MODE} -Dlogback.appender=${LOGBACK_APPENDER} \
     -Dlogback.configurationFile=logback.xml \
     -cp ${SELENIUM_ARTIFACT}:${ZALENIUM_ARTIFACT} org.openqa.grid.selenium.GridLauncherV3 \
     -role hub -port 4445 -servlet de.zalando.ep.zalenium.servlet.LivePreviewServlet \
@@ -450,7 +457,7 @@ StartUp()
 
     echo "Starting DockerSeleniumStarter node..."
 
-    java -Djava.util.logging.config.file=logging_${DEBUG_MODE}.properties \
+    java -Dlogback.loglevel=${DEBUG_MODE} -Dlogback.appender=${LOGBACK_APPENDER} \
      -jar ${SELENIUM_ARTIFACT} -role node -hub http://localhost:4444/grid/register \
      -registerCycle 0 -proxy de.zalando.ep.zalenium.proxy.DockerSeleniumStarterRemoteProxy \
      -nodePolling 90000 -port 30000 ${DEBUG_FLAG} &
@@ -475,7 +482,7 @@ StartUp()
 
     if [ "$SAUCE_LABS_ENABLED" = true ]; then
         echo "Starting Sauce Labs node..."
-        java -Djava.util.logging.config.file=logging_${DEBUG_MODE}.properties \
+        java -Dlogback.loglevel=${DEBUG_MODE} -Dlogback.appender=${LOGBACK_APPENDER} \
          -jar ${SELENIUM_ARTIFACT} -role node -hub http://localhost:4444/grid/register \
          -registerCycle 0 -proxy de.zalando.ep.zalenium.proxy.SauceLabsRemoteProxy \
          -nodePolling 90000 -port 30001 ${DEBUG_FLAG} &
@@ -502,7 +509,7 @@ StartUp()
 
     if [ "$BROWSER_STACK_ENABLED" = true ]; then
         echo "Starting Browser Stack node..."
-        java -Djava.util.logging.config.file=logging_${DEBUG_MODE}.properties \
+        java -Dlogback.loglevel=${DEBUG_MODE} -Dlogback.appender=${LOGBACK_APPENDER} \
          -jar ${SELENIUM_ARTIFACT} -role node -hub http://localhost:4444/grid/register \
          -registerCycle 0 -proxy de.zalando.ep.zalenium.proxy.BrowserStackRemoteProxy \
          -nodePolling 90000 -port 30002 ${DEBUG_FLAG} &
@@ -528,7 +535,7 @@ StartUp()
 
     if [ "$TESTINGBOT_ENABLED" = true ]; then
         echo "Starting TestingBot node..."
-        java -Djava.util.logging.config.file=logging_${DEBUG_MODE}.properties \
+        java -Dlogback.loglevel=${DEBUG_MODE} -Dlogback.appender=${LOGBACK_APPENDER} \
          -jar ${SELENIUM_ARTIFACT} -role node -hub http://localhost:4444/grid/register \
          -registerCycle 0 -proxy de.zalando.ep.zalenium.proxy.TestingBotRemoteProxy \
          -nodePolling 90000 -port 30003 ${DEBUG_FLAG} &
@@ -845,6 +852,9 @@ case ${SCRIPT_ACTION} in
                     ;;
                 --debugEnabled)
                     DEBUG_ENABLED=${VALUE}
+                    ;;
+                --logJson)
+                    LOG_JSON=${VALUE}
                     ;;
                 --seleniumImageName)
                     SELENIUM_IMAGE_NAME=${VALUE}
