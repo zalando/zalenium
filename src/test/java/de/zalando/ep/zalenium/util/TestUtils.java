@@ -11,7 +11,9 @@ import org.openqa.grid.common.RegistrationRequest;
 import org.openqa.grid.internal.GridRegistry;
 import org.openqa.grid.internal.utils.configuration.GridNodeConfiguration;
 import com.beust.jcommander.JCommander;
+import org.openqa.grid.web.servlet.handler.RequestHandler;
 import org.openqa.grid.web.servlet.handler.RequestType;
+import org.openqa.grid.web.servlet.handler.SeleniumBasedRequest;
 import org.openqa.grid.web.servlet.handler.WebDriverRequest;
 import org.openqa.selenium.MutableCapabilities;
 import org.openqa.selenium.Platform;
@@ -21,6 +23,7 @@ import org.openqa.selenium.remote.DesiredCapabilities;
 
 import javax.servlet.ServletOutputStream;
 import javax.servlet.WriteListener;
+import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -30,6 +33,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.Map;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -177,4 +181,13 @@ public class TestUtils {
         return remoteProxy;
     }
 
+    public static RequestHandler createNewSessionHandler(GridRegistry registry,
+                                                         Map<String, Object> desiredCapability) {
+        SeleniumBasedRequest request = mock(SeleniumBasedRequest.class);
+        when(request.getDesiredCapabilities()).thenReturn(desiredCapability);
+        when(request.getRequestType()).thenReturn(RequestType.START_SESSION);
+        when(request.getCreationTime()).thenReturn(System.currentTimeMillis());
+        HttpServletResponse response = mock(HttpServletResponse.class);
+        return new MockedRequestHandler(request, response, registry);
+    }
 }
