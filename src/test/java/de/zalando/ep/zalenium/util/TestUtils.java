@@ -3,29 +3,37 @@ package de.zalando.ep.zalenium.util;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import de.zalando.ep.zalenium.proxy.DockerSeleniumRemoteProxy;
 import de.zalando.ep.zalenium.proxy.DockerSeleniumStarterRemoteProxy;
 import org.apache.commons.io.FileUtils;
 import org.junit.rules.TemporaryFolder;
 import org.openqa.grid.common.RegistrationRequest;
+import org.openqa.grid.internal.GridRegistry;
 import org.openqa.grid.internal.utils.configuration.GridNodeConfiguration;
 import com.beust.jcommander.JCommander;
+import org.openqa.grid.web.servlet.handler.RequestHandler;
 import org.openqa.grid.web.servlet.handler.RequestType;
+import org.openqa.grid.web.servlet.handler.SeleniumBasedRequest;
 import org.openqa.grid.web.servlet.handler.WebDriverRequest;
 import org.openqa.selenium.MutableCapabilities;
 import org.openqa.selenium.Platform;
 import org.openqa.selenium.remote.BrowserType;
 import org.openqa.selenium.remote.CapabilityType;
+import org.openqa.selenium.remote.DesiredCapabilities;
 
 import javax.servlet.ServletOutputStream;
 import javax.servlet.WriteListener;
+import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.Map;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -147,5 +155,39 @@ public class TestUtils {
         temporaryFolder.newFile("videos/list.html");
         temporaryFolder.newFile("videos/executedTestsInfo.json");
         temporaryFolder.newFile("videos/dashboard.html");
+    }
+
+    public static DockerSeleniumRemoteProxy getNewBasicRemoteProxy(String browser, String url, GridRegistry registry) throws MalformedURLException {
+
+        GridNodeConfiguration config = new GridNodeConfiguration();
+        URL u = new URL(url);
+        config.host = u.getHost();
+        config.port = u.getPort();
+        config.role = "webdriver";
+        RegistrationRequest req = RegistrationRequest.build(config);
+        req.getConfiguration().capabilities.clear();
+
+        DesiredCapabilities capability = new DesiredCapabilities();
+        capability.setBrowserName(browser);
+        req.getConfiguration().capabilities.add(capability);
+
+        return createProxy(registry, req);
+
+    }
+
+    private static DockerSeleniumRemoteProxy createProxy(GridRegistry registry, RegistrationRequest req) {
+        final DockerSeleniumRemoteProxy remoteProxy = new DockerSeleniumRemoteProxy(req, registry);
+        remoteProxy.setupTimeoutListener();
+        return remoteProxy;
+    }
+
+    public static RequestHandler createNewSessionHandler(GridRegistry registry,
+                                                         Map<String, Object> desiredCapability) {
+        SeleniumBasedRequest request = mock(SeleniumBasedRequest.class);
+        when(request.getDesiredCapabilities()).thenReturn(desiredCapability);
+        when(request.getRequestType()).thenReturn(RequestType.START_SESSION);
+        when(request.getCreationTime()).thenReturn(System.currentTimeMillis());
+        HttpServletResponse response = mock(HttpServletResponse.class);
+        return new MockedRequestHandler(request, response, registry);
     }
 }

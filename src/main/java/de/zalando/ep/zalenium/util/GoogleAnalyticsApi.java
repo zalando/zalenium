@@ -73,7 +73,7 @@ public class GoogleAnalyticsApi {
             } catch (Exception e) {
                 logger.log(Level.FINE, e.getMessage(), e);
             }
-        }).start();
+        }, "GoogleAnalytics doPost").start();
     }
 
 
