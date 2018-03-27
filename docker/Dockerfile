@@ -318,11 +318,7 @@ RUN cd /tmp \
 # TestingBot Tunneling #
 # -----------------------#
 # https://testingbot.com/support/other/tunnel
-ENV TB_TUNNEL_URL="https://testingbot.com/tunnel/testingbot-tunnel.jar"
-RUN cd /tmp \
-  && wget -nv "${TB_TUNNEL_URL}" \
-  && mv testingbot-tunnel.jar /usr/local/bin \
-  && java -jar /usr/local/bin/testingbot-tunnel.jar --version
+
 
 #===================================================
 # Run the following commands as non-privileged user

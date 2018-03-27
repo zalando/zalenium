@@ -19,6 +19,7 @@ import org.openqa.grid.web.servlet.handler.RequestHandler;
 import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.remote.server.log.LoggingManager;
 
+import de.zalando.ep.zalenium.proxy.AutoStartProxySet;
 import de.zalando.ep.zalenium.proxy.DockerSeleniumRemoteProxy;
 
 import java.util.List;
@@ -44,7 +45,7 @@ public class ZaleniumRegistry extends BaseGridRegistry implements GridRegistry {
     // registry.
     private final ReentrantLock lock = new ReentrantLock();
     private final Condition testSessionAvailable = lock.newCondition();
-    private final ProxySet proxies;
+    private final AutoStartProxySet proxies;
     private final ActiveTestSessions activeTestSessions = new ActiveTestSessions();
     private final NewSessionRequestQueue newSessionQueue;
     private final Matcher matcherThread = new Matcher();
@@ -58,7 +59,7 @@ public class ZaleniumRegistry extends BaseGridRegistry implements GridRegistry {
     public ZaleniumRegistry(Hub hub) {
         super(hub);
         this.newSessionQueue = new NewSessionRequestQueue();
-        proxies = new ProxySet((hub != null) ? hub.getConfiguration().throwOnCapabilityNotPresent : true);
+        proxies = new AutoStartProxySet(false);
         this.matcherThread.setUncaughtExceptionHandler(new UncaughtExceptionHandler());
     }
 
@@ -274,7 +275,9 @@ public class ZaleniumRegistry extends BaseGridRegistry implements GridRegistry {
         if (proxy == null) {
             return;
         }
-        LOG.info("Registered a node " + proxy);
+
+    	LOG.info("Registered a node " + proxy);
+
         try {
             lock.lock();
 

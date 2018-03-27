@@ -80,14 +80,11 @@ public class BrowserStackRemoteProxyTest {
         BrowserStackRemoteProxy.setCommonProxyUtilities(commonProxyUtilities);
         browserStackProxy = BrowserStackRemoteProxy.getNewInstance(request, registry);
 
-        // we need to register a DockerSeleniumStarter proxy to have a proper functioning BrowserStackProxy
         request = TestUtils.getRegistrationRequestForTesting(30000,
                 DockerSeleniumStarterRemoteProxy.class.getCanonicalName());
-        DockerSeleniumStarterRemoteProxy dsStarterProxy = DockerSeleniumStarterRemoteProxy.getNewInstance(request, registry);
 
         // We add both nodes to the registry
         registry.add(browserStackProxy);
-        registry.add(dsStarterProxy);
     }
 
     @After

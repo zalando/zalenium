@@ -57,6 +57,7 @@ public class LiveNodeHtmlRenderer implements HtmlRenderer {
         renderSummaryValues.put("{{proxyName}}", proxy.getClass().getSimpleName());
         renderSummaryValues.put("{{proxyVersion}}", getHtmlNodeVersion());
         renderSummaryValues.put("{{proxyId}}", proxy.getId());
+        renderSummaryValues.put("{{containerId}}", proxy.getRegistration().getContainerId());
         renderSummaryValues.put("{{proxyPlatform}}", getPlatform());
         renderSummaryValues.put("{{testName}}", testName.toString());
         renderSummaryValues.put("{{testBuild}}", testBuild.toString());

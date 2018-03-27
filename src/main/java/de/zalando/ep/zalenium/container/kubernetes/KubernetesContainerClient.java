@@ -8,9 +8,11 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -19,6 +21,7 @@ import java.util.function.Supplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -26,6 +29,8 @@ import de.zalando.ep.zalenium.container.ContainerClient;
 import de.zalando.ep.zalenium.container.ContainerClientRegistration;
 import de.zalando.ep.zalenium.container.ContainerCreationStatus;
 import de.zalando.ep.zalenium.util.Environment;
+import io.fabric8.kubernetes.api.model.ContainerStateTerminated;
+import io.fabric8.kubernetes.api.model.ContainerStatus;
 import io.fabric8.kubernetes.api.model.DoneablePod;
 import io.fabric8.kubernetes.api.model.EnvVar;
 import io.fabric8.kubernetes.api.model.HostAlias;
@@ -47,6 +52,13 @@ public class KubernetesContainerClient implements ContainerClient {
     };
 
     private static final Logger logger = LoggerFactory.getLogger(KubernetesContainerClient.class.getName());
+    
+    private static final Set<String> TERMINAL_STATES = new HashSet<String>();
+    static {
+    	TERMINAL_STATES.add("ContainerCannotRun");
+    	TERMINAL_STATES.add("PodCompleted");
+    	TERMINAL_STATES.add("Error");
+    }
 
     private KubernetesClient client;
 
@@ -255,7 +267,8 @@ public class KubernetesContainerClient implements ContainerClient {
                 exec.close();
             }
 
-            logger.info(String.format("%s %s", containerId, baos.toString()));
+            logger.info(String.format("%s completed %s", containerId, Arrays.toString(command)));
+            logger.debug(String.format("%s %s", containerId, baos.toString()));
 
             return null;
         };
@@ -348,6 +361,39 @@ public class KubernetesContainerClient implements ContainerClient {
         }
         else {
             return null;
+        }
+    }
+    
+    public boolean isReady(ContainerCreationStatus container) {
+        Pod pod = client.pods().withName(container.getContainerName()).get();
+        if (pod == null) {
+            return false;
+        }
+        else {
+            return pod.getStatus().getConditions().stream()
+                    .filter(condition -> condition.getType().equals("Ready"))
+                    .map(condition -> condition.getStatus().equals("True"))
+                    .findFirst()
+                    .orElse(false);
+        }
+    }
+
+    public boolean isTerminated(ContainerCreationStatus container) {
+        Pod pod = client.pods().withName(container.getContainerName()).get();
+        if (pod == null) {
+        	logger.info("Container {} has no pod - terminal.", container);
+            return true;
+        }
+        else {
+        	List<ContainerStatus> containerStatuses = pod.getStatus().getContainerStatuses();
+        	Optional<ContainerStateTerminated> terminated = containerStatuses.stream()
+        		.flatMap(status -> Optional.ofNullable(status.getState()).map(Stream::of).orElse(Stream.empty()))
+        		.flatMap(state -> Optional.ofNullable(state.getTerminated()).map(Stream::of).orElse(Stream.empty()))
+        		.findFirst();
+        	
+        	terminated.ifPresent(state -> logger.info("Container {} is {} - terminal.", container, state));
+        	
+        	return terminated.isPresent();
         }
     }
 

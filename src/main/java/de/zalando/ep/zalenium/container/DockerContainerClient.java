@@ -19,8 +19,10 @@ import com.spotify.docker.client.messages.Image;
 import de.zalando.ep.zalenium.util.Environment;
 import de.zalando.ep.zalenium.util.GoogleAnalyticsApi;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -31,6 +33,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.stream.Collectors;
+
+import org.apache.commons.io.IOUtils;
 
 import de.zalando.ep.zalenium.proxy.DockerSeleniumStarterRemoteProxy;
 
@@ -102,9 +106,13 @@ public class DockerContainerClient implements ContainerClient {
             ga.trackException(e);
         }
 
-        return containerList.stream()
-                .filter(container -> containerNameSearch.equalsIgnoreCase(container.names().get(0)))
-                .findFirst().map(Container::id).orElse(null);
+        if (containerList != null) {
+	        return containerList.stream()
+	                .filter(container -> containerNameSearch.equalsIgnoreCase(container.names().get(0)))
+	                .findFirst().map(Container::id).orElse(null);
+        } else {
+        	return null;
+        }
     }
 
     public InputStream copyFiles(String containerId, String folderName) {
@@ -481,6 +489,29 @@ public class DockerContainerClient implements ContainerClient {
             ga.trackException(e);
         }
         return null;
+    }
+    
+    @Override
+    public boolean isReady(ContainerCreationStatus container) {
+        String containerIp = this.getContainerIp(container.getContainerName());
+        if (containerIp != null) {
+	        try {
+	            URL statusUrl = new URL(String.format("http://%s:%s/wd/hub/status", containerIp, container.getNodePort()));
+	            String status = IOUtils.toString(statusUrl, StandardCharsets.UTF_8);
+	            String successMessage = "\"Node is running\"";
+	            if (status.contains(successMessage)) {
+	                return true;
+	            }
+	        } catch (IOException e) {
+	            logger.debug("Error while getting node status, probably the node is still starting up...", e);
+	        }
+        }
+        return false;
+    }
+    
+    @Override
+    public boolean isTerminated(ContainerCreationStatus container) {
+    	return false;
     }
 }
 

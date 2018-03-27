@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,22 +47,6 @@ public class DockerSeleniumCapabilityMatcher extends DefaultCapabilityMatcher {
             logger.debug(String.format("%s Capability %s does not contain %s key, a docker-selenium " +
                     "node cannot be started without it", proxy.getId(), requestedCapability, CapabilityType.BROWSER_NAME));
             return false;
-        }
-
-        // We do this because the starter node does not have the browser versions when Zalenium starts
-        if (proxy instanceof DockerSeleniumStarterRemoteProxy) {
-            Map<String, Object> requestedCapabilityCopy = copyMap(requestedCapability);
-            if (browserVersionsFetched.get()) {
-                String browser = nodeCapability.get(CapabilityType.BROWSER_NAME).toString();
-                if (BrowserType.FIREFOX.equalsIgnoreCase(browser)) {
-                    nodeCapability.put(CapabilityType.VERSION, firefoxVersion);
-                } else if (BrowserType.CHROME.equalsIgnoreCase(browser)) {
-                    nodeCapability.put(CapabilityType.VERSION, chromeVersion);
-                }
-            } else {
-                requestedCapabilityCopy.remove(CapabilityType.VERSION);
-            }
-            return super.matches(nodeCapability, requestedCapabilityCopy);
         }
 
         // DockerSeleniumRemoteProxy part

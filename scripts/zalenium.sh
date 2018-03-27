@@ -21,6 +21,7 @@ START_TUNNEL=${START_TUNNEL:-false}
 DEBUG_ENABLED=${DEBUG_ENABLED:-false}
 KEEP_ONLY_FAILED_TESTS=${KEEP_ONLY_FAILED_TESTS:-false}
 LOG_JSON=${LOG_JSON:-false}
+NEW_SESSION_WAIT_TIMEOUT=${NEW_SESSION_WAIT_TIMEOUT:-300000}
 LOGBACK_PATH=${LOGBACK_PATH:-logback.xml}
 NEW_SESSION_WAIT_TIMEOUT=${NEW_SESSION_WAIT_TIMEOUT:-600000}
 
@@ -451,28 +452,6 @@ StartUp()
         exit 11
     fi
     echo "Selenium Hub started!"
-
-    echo "Starting DockerSeleniumStarter node..."
-
-    java -Dlogback.loglevel=${DEBUG_MODE} -Dlogback.appender=${LOGBACK_APPENDER} \
-     -Djava.util.logging.config.file=logging_${DEBUG_MODE}.properties \
-     -Dlogback.configurationFile=${LOGBACK_PATH} \
-     -cp ${ZALENIUM_ARTIFACT} org.openqa.grid.selenium.GridLauncherV3 -role node -hub http://localhost:4444/grid/register \
-     -registerCycle 0 -proxy de.zalando.ep.zalenium.proxy.DockerSeleniumStarterRemoteProxy \
-     -nodePolling 90000 -port 30000 ${DEBUG_FLAG} &
-    echo $! > ${PID_PATH_DOCKER_SELENIUM_NODE}
-
-    if ! timeout --foreground "${OVERRIDE_WAIT_TIME:-30s}" bash -c WaitStarterProxy; then
-        echo "StarterRemoteProxy failed to start after ${OVERRIDE_WAIT_TIME:-30s} seconds, failing..."
-        curl "http://localhost:30000/wd/hub/status"
-        exit 12
-    fi
-
-    if ! timeout --foreground "${OVERRIDE_WAIT_TIME:-30s}" bash -c WaitStarterProxyToRegister; then
-        echo "StarterRemoteProxy failed to register to the hub after ${OVERRIDE_WAIT_TIME:-30s} seconds, failing..."
-        exit 13
-    fi
-    echo "DockerSeleniumStarter node started!"
 
     if ! curl -sSL "http://localhost:4444" | grep Grid >/dev/null; then
         echo "Error: The Grid is not listening at port 4444"

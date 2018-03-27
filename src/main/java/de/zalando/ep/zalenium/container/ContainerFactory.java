@@ -35,6 +35,7 @@ public class ContainerFactory {
                     kubernetesContainerClient = new KubernetesContainerClient(new Environment(),
                             KubernetesContainerClient::createDoneablePodDefaultImpl,
                             new DefaultKubernetesClient());
+                    kubernetesContainerClient.initialiseContainerEnvironment();
                 }
             }
         }
