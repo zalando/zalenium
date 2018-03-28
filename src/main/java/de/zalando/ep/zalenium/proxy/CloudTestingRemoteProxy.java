@@ -258,7 +258,8 @@ public class CloudTestingRemoteProxy extends DefaultRemoteProxy {
             } catch (Exception e) {
                 logger.error(e.toString(), e);
             }
-        }).start();
+        }, "CloudTestingRemoteProxy addTestToDashboard seleniumSessionId [" + seleniumSessionId + "] testCompleted ["
+                + testCompleted + "]").start();
     }
 
     @Override

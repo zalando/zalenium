@@ -23,7 +23,15 @@ public class PodConfiguration {
     private Map<String, Quantity> podLimits;
     private Map<String, Quantity> podRequests;
     private Map<String, String> nodeSelector;
+    
+    private String nodePort;
 
+    public String getNodePort() {
+        return nodePort;
+    }
+    public void setNodePort(String nodePort) {
+        this.nodePort = nodePort;
+    }
     public KubernetesClient getClient() {
         return client;
     }

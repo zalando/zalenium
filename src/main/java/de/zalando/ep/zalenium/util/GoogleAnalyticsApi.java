@@ -75,7 +75,7 @@ public class GoogleAnalyticsApi {
             } catch (Exception e) {
                 logger.debug(e.getMessage(), e);
             }
-        }).start();
+        }, "GoogleAnalytics doPost").start();
     }
 
 

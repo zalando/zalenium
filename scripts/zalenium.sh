@@ -22,6 +22,7 @@ START_TUNNEL=false
 DEBUG_ENABLED=false
 KEEP_ONLY_FAILED_TESTS=false
 LOG_JSON=false
+NEW_SESSION_WAIT_TIMEOUT=${NEW_SESSION_WAIT_TIMEOUT:-300000}
 
 GA_TRACKING_ID="UA-88441352-3"
 GA_ENDPOINT=https://www.google-analytics.com/collect
@@ -433,10 +434,12 @@ StartUp()
         LOGBACK_APPENDER=JSON
     fi
 
-    java ${ZALENIUM_EXTRA_JVM_PARAMS} -Dlogback.loglevel=${DEBUG_MODE} -Dlogback.appender=${LOGBACK_APPENDER} \
+    java ${ZALENIUM_EXTRA_JVM_PARAMS} -Dlogback.loglevel=${DEBUG_MODE} \
+    -Dlogback.appender=${LOGBACK_APPENDER} \
     -Djava.util.logging.config.file=logging_${DEBUG_MODE}.properties \
     -cp ${ZALENIUM_ARTIFACT} org.openqa.grid.selenium.GridLauncherV3 \
-    -role hub -port 4445 -servlet de.zalando.ep.zalenium.servlet.LivePreviewServlet \
+    -role hub -port 4445 -newSessionWaitTimeout ${NEW_SESSION_WAIT_TIMEOUT} \
+    -servlet de.zalando.ep.zalenium.servlet.LivePreviewServlet \
     -servlet de.zalando.ep.zalenium.servlet.ZaleniumConsoleServlet \
     -servlet de.zalando.ep.zalenium.servlet.ZaleniumResourceServlet \
     -servlet de.zalando.ep.zalenium.dashboard.DashboardCleanupServlet \
