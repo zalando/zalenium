@@ -139,6 +139,16 @@
             <optional>true</optional>
         </dependency>
         <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>jul-to-slf4j</artifactId>
+            <version>1.7.25</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <version>1.7.25</version>
+        </dependency>
+        <dependency>
             <groupId>net.logstash.logback</groupId>
             <artifactId>logstash-logback-encoder</artifactId>
             <version>5.0</version>
@@ -224,7 +234,7 @@
                                     <directory>src/main/resources</directory>
                                     <includes>
                                         <include>logging_info.properties</include>
-                                        <include>logging_fine.properties</include>
+                                        <include>logging_debug.properties</include>
                                         <include>logback.xml</include>
                                     </includes>
                                 </resource>

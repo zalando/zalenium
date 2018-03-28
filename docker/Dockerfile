@@ -383,7 +383,7 @@ COPY zalenium.sh \
  index.html \
  zalando.ico \
  logging_info.properties \
- logging_fine.properties \
+ logging_debug.properties \
  logback.xml \
  /home/seluser/
 COPY scm-source.json /
