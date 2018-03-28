@@ -435,7 +435,7 @@ StartUp()
 
     java ${ZALENIUM_EXTRA_JVM_PARAMS} -Dlogback.loglevel=${DEBUG_MODE} -Dlogback.appender=${LOGBACK_APPENDER} \
     -Dlogback.configurationFile=logback.xml \
-    -cp ${SELENIUM_ARTIFACT}:${ZALENIUM_ARTIFACT} org.openqa.grid.selenium.GridLauncherV3 \
+    -cp ${ZALENIUM_ARTIFACT} org.openqa.grid.selenium.GridLauncherV3 \
     -role hub -port 4445 -servlet de.zalando.ep.zalenium.servlet.LivePreviewServlet \
     -servlet de.zalando.ep.zalenium.servlet.ZaleniumConsoleServlet \
     -servlet de.zalando.ep.zalenium.servlet.ZaleniumResourceServlet \
@@ -774,6 +774,7 @@ function usage()
     echo -e "\t --timeZone -> Sets the time zone in the containers. Defaults to \"Europe/Berlin\""
     echo -e "\t --sendAnonymousUsageInfo -> Collects anonymous usage of the tool. Defaults to 'true'"
     echo -e "\t --debugEnabled -> enables LogLevel.FINE. Defaults to 'false'"
+    echo -e "\t --logJson -> output logs in json format. Defaults to 'false'
     echo -e "\t --seleniumImageName -> enables overriding of the Docker selenium image to use. Defaults to \"elgalu/selenium\""
     echo -e "\t --gridUser -> allows you to specify a user to enable basic auth protection, --gridPassword must be provided also."
     echo -e "\t --gridPassword -> allows you to specify a password to enable basic auth protection, --gridUser must be provided also."

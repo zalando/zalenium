@@ -286,32 +286,7 @@
                                 </filter>
                             </filters>
                             <artifactSet>
-                                <excludes>
-                                    <exclude>org.seleniumhq.selenium:*</exclude>
-                                    <exclude>com.beust:*</exclude>
-                                    <exclude>net.bytebuddy:*</exclude>
-                                    <!--exclude>org.apache.commons:*</exclude-->
-                                    <exclude>org.w3c.css:*</exclude>
-                                    <exclude>net.sourceforge.cssparser:*</exclude>
-                                    <exclude>net.sourceforge.htmlunit:*</exclude>
-                                    <exclude>org.eclipse.jetty:*</exclude>
-                                    <exclude>org.eclipse.jetty.websocket:*</exclude>
-                                    <exclude>commons-codec:*</exclude>
-                                    <exclude>commons-io:*</exclude>
-                                    <exclude>commons-logging:*</exclude>
-                                    <exclude>commons-net:*</exclude>
-                                    <exclude>com.google.guava:*</exclude>
-                                    <exclude>com.google.code.findbugs:*</exclude>
-                                    <exclude>com.google.errorprone:*</exclude>
-                                    <exclude>com.google.j2objc:*</exclude>
-                                    <exclude>org.codehaus.mojo:*</exclude>
-                                    <exclude>org.apache.httpcomponents:*</exclude>
-                                    <exclude>net.jcip:*</exclude>
-                                    <exclude>xalan:*</exclude>
-                                    <exclude>xerces:*</exclude>
-                                    <exclude>xml-apis:*</exclude>
-                                    <exclude>org.yaml:*</exclude>
-                                </excludes>
+
                             </artifactSet>
                         </configuration>
                     </execution>
