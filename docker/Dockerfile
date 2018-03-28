@@ -330,16 +330,6 @@ RUN cd /tmp \
 USER seluser
 WORKDIR /home/seluser
 
-#==========
-# Selenium
-#==========
-# Layer size: medium: 21.23 MB
-ENV SEL_MAJOR_VER="${selenium-server.major-minor.version}" \
-    SEL_PATCH_LEVEL_VER="${selenium-server.patch-level.version}"
-ENV SEL_VER="${SEL_MAJOR_VER}.${SEL_PATCH_LEVEL_VER}"
-RUN  export SELBASE="https://selenium-release.storage.googleapis.com" \
-  && export SELPATH="${SEL_MAJOR_VER}/selenium-server-standalone-${SEL_VER}.jar" \
-  && wget -nv ${SELBASE}/${SELPATH}
 
 #==========
 # Zalenium

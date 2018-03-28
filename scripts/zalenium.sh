@@ -7,7 +7,6 @@ CHROME_CONTAINERS=1
 FIREFOX_CONTAINERS=1
 DESIRED_CONTAINERS=2
 MAX_DOCKER_SELENIUM_CONTAINERS=10
-SELENIUM_ARTIFACT="$(pwd)/selenium-server-standalone-${selenium-server.major-minor.version}.${selenium-server.patch-level.version}.jar"
 ZALENIUM_ARTIFACT="$(pwd)/${project.build.finalName}.jar"
 DEPRECATED_PARAMETERS=false
 SAUCE_LABS_ENABLED=false
@@ -283,13 +282,6 @@ StartUp()
                 exit 1
             fi
         fi
-    fi
-
-    log "Running additional checks..."
-    if [ ! -f ${SELENIUM_ARTIFACT} ];
-    then
-        echo "Selenium JAR not present, exiting start script."
-        exit 2
     fi
 
     if [ ! -f ${ZALENIUM_ARTIFACT} ];
