@@ -28,8 +28,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.util.stream.Collectors;
 
 import de.zalando.ep.zalenium.proxy.DockerSeleniumStarterRemoteProxy;
@@ -58,7 +60,7 @@ public class DockerContainerClient implements ContainerClient {
     };
     private static final Environment defaultEnvironment = new Environment();
     private static Environment env = defaultEnvironment;
-    private final Logger logger = Logger.getLogger(DockerContainerClient.class.getName());
+    private final Logger logger = LoggerFactory.getLogger(DockerContainerClient.class.getName());
     private final GoogleAnalyticsApi ga = new GoogleAnalyticsApi();
     private DockerClient dockerClient = new DefaultDockerClient("unix:///var/run/docker.sock");
     private String nodeId;
@@ -91,7 +93,7 @@ public class DockerContainerClient implements ContainerClient {
         try {
             containerList = dockerClient.listContainers(DockerClient.ListContainersParam.allContainers());
         } catch (DockerException | InterruptedException e) {
-            logger.log(Level.FINE, nodeId + " Error while getting containerId", e);
+            logger.debug(nodeId + " Error while getting containerId", e);
             ga.trackException(e);
         }
 
@@ -104,7 +106,7 @@ public class DockerContainerClient implements ContainerClient {
         try {
             return dockerClient.archiveContainer(containerId, folderName);
         } catch (DockerException | InterruptedException e) {
-            logger.log(Level.WARNING, nodeId + " Something happened while copying the folder " + folderName + ", " +
+            logger.warn(nodeId + " Something happened while copying the folder " + folderName + ", " +
                     "most of the time it is an issue while closing the input/output stream, which is usually OK.", e);
         }
         return null;
@@ -114,7 +116,7 @@ public class DockerContainerClient implements ContainerClient {
         try {
             dockerClient.stopContainer(containerId, 5);
         } catch (DockerException | InterruptedException e) {
-            logger.log(Level.WARNING, nodeId + " Error while stopping the container", e);
+            logger.warn(nodeId + " Error while stopping the container", e);
             ga.trackException(e);
         }
     }
@@ -126,18 +128,18 @@ public class DockerContainerClient implements ContainerClient {
                     DockerClient.ExecCreateParam.attachStdout(), DockerClient.ExecCreateParam.attachStderr(),
                     DockerClient.ExecCreateParam.attachStdin());
             final LogStream output = dockerClient.execStart(execCreation.id());
-            logger.log(Level.INFO, () -> String.format("%s %s", nodeId, Arrays.toString(command)));
+            logger.info(String.format("%s %s", nodeId, Arrays.toString(command)));
             if (waitForExecution) {
                 try {
                     String commandOutput = output.readFully();
-                    logger.log(Level.FINE, () -> String.format("%s %s", nodeId, commandOutput));
+                    logger.debug(String.format("%s %s", nodeId, commandOutput));
                 } catch (Exception e) {
-                    logger.log(Level.FINE, nodeId + " Error while executing the output.readFully()", e);
+                    logger.debug(nodeId + " Error while executing the output.readFully()", e);
                     ga.trackException(e);
                 }
             }
         } catch (DockerException | InterruptedException e) {
-            logger.log(Level.FINE, nodeId + " Error while executing the command", e);
+            logger.debug(nodeId + " Error while executing the command", e);
             ga.trackException(e);
         }
     }
@@ -147,7 +149,7 @@ public class DockerContainerClient implements ContainerClient {
         try {
             images = dockerClient.listImages(DockerClient.ListImagesParam.byName(imageName));
             if (images.isEmpty()) {
-                logger.log(Level.SEVERE, nodeId + " A downloaded docker-selenium image was not found!");
+                logger.error(nodeId + " A downloaded docker-selenium image was not found!");
                 return imageName;
             }
             for (int i = images.size() - 1; i >= 0; i--) {
@@ -158,7 +160,7 @@ public class DockerContainerClient implements ContainerClient {
             images.sort((o1, o2) -> o2.created().compareTo(o1.created()));
             return images.get(0).repoTags().get(0);
         } catch (DockerException | InterruptedException e) {
-            logger.log(Level.WARNING, nodeId + " Error while executing the command", e);
+            logger.warn(nodeId + " Error while executing the command", e);
             ga.trackException(e);
         }
         return imageName;
@@ -175,7 +177,7 @@ public class DockerContainerClient implements ContainerClient {
             }
             return numberOfDockerSeleniumContainers;
         } catch (InterruptedException | DockerException e) {
-            logger.log(Level.WARNING, nodeId + " Error while getting number of running containers", e);
+            logger.warn(nodeId + " Error while getting number of running containers", e);
             ga.trackException(e);
         }
         return 0;
@@ -210,7 +212,7 @@ public class DockerContainerClient implements ContainerClient {
                 String hostName = dockerClient.info().name();
                 extraHosts.add(String.format("%s:%s", hostName, "127.0.1.0"));
             } catch (DockerException | InterruptedException e) {
-                logger.log(Level.FINE, nodeId + " Error while getting host name", e);
+                logger.debug(nodeId + " Error while getting host name", e);
             }
         }
 
@@ -256,7 +258,7 @@ public class DockerContainerClient implements ContainerClient {
                 }
             }
         } catch (DockerException | InterruptedException e) {
-            logger.log(Level.WARNING, nodeId + " Error while checking (and pulling) if the image is present", e);
+            logger.warn(nodeId + " Error while checking (and pulling) if the image is present", e);
             ga.trackException(e);
         }
 
@@ -265,7 +267,7 @@ public class DockerContainerClient implements ContainerClient {
             dockerClient.startContainer(container.id());
             return new ContainerCreationStatus(true, containerName, nodePort);
         } catch (DockerException | InterruptedException e) {
-            logger.log(Level.WARNING, nodeId + " Error while starting a new container", e);
+            logger.warn(nodeId + " Error while starting a new container", e);
             ga.trackException(e);
             return new ContainerCreationStatus(false);
         }
@@ -293,7 +295,7 @@ public class DockerContainerClient implements ContainerClient {
                     seleniumContainerLabels.put(split[0], split[1]);
                 }
             } catch (Exception e) {
-                logger.log(Level.WARNING, nodeId + " Error while retrieving the added labels for the Selenium containers.", e);
+                logger.warn(nodeId + " Error while retrieving the added labels for the Selenium containers.", e);
                 ga.trackException(e);
             }
         }
@@ -318,7 +320,7 @@ public class DockerContainerClient implements ContainerClient {
                 containerInfo = dockerClient.inspectContainer(containerId);
                 isZaleniumPrivileged = containerInfo.hostConfig().privileged();
             } catch (DockerException | InterruptedException e) {
-                logger.log(Level.WARNING, nodeId + " Error while getting value to check if Zalenium is running in privileged mode.", e);
+                logger.warn(nodeId + " Error while getting value to check if Zalenium is running in privileged mode.", e);
                 ga.trackException(e);
             }
         }
@@ -336,7 +338,7 @@ public class DockerContainerClient implements ContainerClient {
             try {
                 containerInfo = dockerClient.inspectContainer(containerId);
             } catch (DockerException | InterruptedException e) {
-                logger.log(Level.WARNING, nodeId + " Error while getting mounted folders and env vars.", e);
+                logger.warn(nodeId + " Error while getting mounted folders and env vars.", e);
                 ga.trackException(e);
             }
 
@@ -393,7 +395,7 @@ public class DockerContainerClient implements ContainerClient {
             containerInfo = dockerClient.inspectContainer(containerId);
             zaleniumExtraHosts = containerInfo.hostConfig().extraHosts();
         } catch (DockerException | InterruptedException e) {
-            logger.log(Level.WARNING, nodeId + " Error while getting Zalenium extra hosts.", e);
+            logger.warn(nodeId + " Error while getting Zalenium extra hosts.", e);
             ga.trackException(e);
         }
         return Optional.ofNullable(zaleniumExtraHosts).orElse(DEFAULT_DOCKER_EXTRA_HOSTS);
@@ -433,7 +435,7 @@ public class DockerContainerClient implements ContainerClient {
                 }
             }
         } catch (DockerException | InterruptedException e) {
-            logger.log(Level.FINE, nodeId + " Error while getting Zalenium network.", e);
+            logger.debug(nodeId + " Error while getting Zalenium network.", e);
             ga.trackException(e);
         }
         zaleniumNetwork = DEFAULT_DOCKER_NETWORK_MODE;
@@ -454,7 +456,7 @@ public class DockerContainerClient implements ContainerClient {
             }
             return containerInfo.networkSettings().ipAddress();
         } catch (DockerException | InterruptedException e) {
-            logger.log(Level.FINE, nodeId + " Error while getting the container IP.", e);
+            logger.debug(nodeId + " Error while getting the container IP.", e);
             ga.trackException(e);
         }
         return null;

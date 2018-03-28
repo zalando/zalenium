@@ -8,8 +8,10 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.impl.client.HttpClientBuilder;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Small class to create hits in Google Analytics
@@ -17,7 +19,7 @@ import java.util.logging.Logger;
  */
 public class GoogleAnalyticsApi {
 
-    private final Logger logger = Logger.getLogger(GoogleAnalyticsApi.class.getName());
+    private final Logger logger = LoggerFactory.getLogger(GoogleAnalyticsApi.class.getName());
 
     private HttpClient httpClient;
 
@@ -71,7 +73,7 @@ public class GoogleAnalyticsApi {
                 httpPost.setEntity(httpEntity);
                 httpClient.execute(httpPost);
             } catch (Exception e) {
-                logger.log(Level.FINE, e.getMessage(), e);
+                logger.debug(e.getMessage(), e);
             }
         }, "GoogleAnalytics doPost").start();
     }

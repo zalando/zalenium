@@ -57,7 +57,9 @@
         <awaitility.version>3.1.0</awaitility.version>
         <testng.version>6.14.2</testng.version>
         <slf4j.version>1.7.25</slf4j.version>
+        <logstash-logback-encoder.version>5.0</logstash-logback-encoder.version>
         <maven.compiler.source>1.8</maven.compiler.source>
+        <ch.qos.logback.version>1.2.3</ch.qos.logback.version>
         <maven.compiler.target>1.8</maven.compiler.target>
         <maven.compiler.plugin>3.7.0</maven.compiler.plugin>
         <maven-resources-plugin.version>3.0.2</maven-resources-plugin.version>
@@ -113,9 +115,34 @@
             </exclusions>
         </dependency>
         <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-core</artifactId>
+            <version>${ch.qos.logback.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>${ch.qos.logback.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-access</artifactId>
+            <version>${ch.qos.logback.version}</version>
+        </dependency>
+        <dependency>
             <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-log4j12</artifactId>
+            <artifactId>jul-to-slf4j</artifactId>
             <version>${slf4j.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <version>${slf4j.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>net.logstash.logback</groupId>
+            <artifactId>logstash-logback-encoder</artifactId>
+            <version>${logstash-logback-encoder.version}</version>
         </dependency>
         <dependency>
             <groupId>io.fabric8</groupId>
@@ -198,7 +225,7 @@
                                     <directory>src/main/resources</directory>
                                     <includes>
                                         <include>logging_info.properties</include>
-                                        <include>logging_fine.properties</include>
+                                        <include>logging_debug.properties</include>
                                         <include>logback.xml</include>
                                     </includes>
                                 </resource>
@@ -260,32 +287,7 @@
                                 </filter>
                             </filters>
                             <artifactSet>
-                                <excludes>
-                                    <exclude>org.seleniumhq.selenium:*</exclude>
-                                    <exclude>com.beust:*</exclude>
-                                    <exclude>net.bytebuddy:*</exclude>
-                                    <!--exclude>org.apache.commons:*</exclude-->
-                                    <exclude>org.w3c.css:*</exclude>
-                                    <exclude>net.sourceforge.cssparser:*</exclude>
-                                    <exclude>net.sourceforge.htmlunit:*</exclude>
-                                    <exclude>org.eclipse.jetty:*</exclude>
-                                    <exclude>org.eclipse.jetty.websocket:*</exclude>
-                                    <exclude>commons-codec:*</exclude>
-                                    <exclude>commons-io:*</exclude>
-                                    <exclude>commons-logging:*</exclude>
-                                    <exclude>commons-net:*</exclude>
-                                    <exclude>com.google.guava:*</exclude>
-                                    <exclude>com.google.code.findbugs:*</exclude>
-                                    <exclude>com.google.errorprone:*</exclude>
-                                    <exclude>com.google.j2objc:*</exclude>
-                                    <exclude>org.codehaus.mojo:*</exclude>
-                                    <exclude>org.apache.httpcomponents:*</exclude>
-                                    <exclude>net.jcip:*</exclude>
-                                    <exclude>xalan:*</exclude>
-                                    <exclude>xerces:*</exclude>
-                                    <exclude>xml-apis:*</exclude>
-                                    <exclude>org.yaml:*</exclude>
-                                </excludes>
+
                             </artifactSet>
                         </configuration>
                     </execution>

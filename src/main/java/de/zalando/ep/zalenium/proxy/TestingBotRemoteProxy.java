@@ -10,8 +10,10 @@ import org.openqa.selenium.remote.server.jmx.ManagedService;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /*
     This class should work in a similar way as its sibling, SauceLabsRemoteProxy
@@ -23,7 +25,7 @@ public class TestingBotRemoteProxy extends CloudTestingRemoteProxy {
     private static final String TESTINGBOT_ACCOUNT_INFO = "https://api.testingbot.com/v1/user";
     private static final String TESTINGBOT_KEY = getEnv().getStringEnvVariable("TESTINGBOT_KEY", "");
     private static final String TESTINGBOT_SECRET = getEnv().getStringEnvVariable("TESTINGBOT_SECRET", "");
-    private static final Logger logger = Logger.getLogger(TestingBotRemoteProxy.class.getName());
+    private static final Logger logger = LoggerFactory.getLogger(TestingBotRemoteProxy.class.getName());
     private static final String TESTINGBOT_PROXY_NAME = "TestingBot";
 
     public TestingBotRemoteProxy(RegistrationRequest request, GridRegistry registry) {
@@ -43,11 +45,11 @@ public class TestingBotRemoteProxy extends CloudTestingRemoteProxy {
             } else {
                 testingBotAccountConcurrency = testingBotAccountInfo.getAsJsonObject().get("max_concurrent").getAsInt();
             }
-            logger.log(Level.INFO, logMessage);
+            logger.info(logMessage);
             return addCapabilitiesToRegistrationRequest(registrationRequest, testingBotAccountConcurrency,
                     TESTINGBOT_PROXY_NAME);
         } catch (Exception e) {
-            logger.log(Level.SEVERE, e.toString(), e);
+            logger.error(e.toString(), e);
             getGa().trackException(e);
         }
         return addCapabilitiesToRegistrationRequest(registrationRequest, 1, TESTINGBOT_PROXY_NAME);
@@ -117,7 +119,7 @@ public class TestingBotRemoteProxy extends CloudTestingRemoteProxy {
                 try {
                     Thread.sleep(1000 * 5);
                 } catch (InterruptedException e) {
-                    logger.log(Level.FINE, e.toString(), e);
+                    logger.debug(e.toString(), e);
                 }
             }
         }

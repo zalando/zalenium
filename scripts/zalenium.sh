@@ -7,7 +7,6 @@ CHROME_CONTAINERS=1
 FIREFOX_CONTAINERS=1
 DESIRED_CONTAINERS=2
 MAX_DOCKER_SELENIUM_CONTAINERS=10
-SELENIUM_ARTIFACT="$(pwd)/selenium-server-standalone-${selenium-server.major-minor.version}.${selenium-server.patch-level.version}.jar"
 ZALENIUM_ARTIFACT="$(pwd)/${project.build.finalName}.jar"
 DEPRECATED_PARAMETERS=false
 SAUCE_LABS_ENABLED=false
@@ -21,6 +20,7 @@ SEND_ANONYMOUS_USAGE_INFO=true
 START_TUNNEL=false
 DEBUG_ENABLED=false
 KEEP_ONLY_FAILED_TESTS=false
+LOG_JSON=false
 NEW_SESSION_WAIT_TIMEOUT=${NEW_SESSION_WAIT_TIMEOUT:-300000}
 
 GA_TRACKING_ID="UA-88441352-3"
@@ -284,13 +284,6 @@ StartUp()
         fi
     fi
 
-    log "Running additional checks..."
-    if [ ! -f ${SELENIUM_ARTIFACT} ];
-    then
-        echo "Selenium JAR not present, exiting start script."
-        exit 2
-    fi
-
     if [ ! -f ${ZALENIUM_ARTIFACT} ];
     then
         echo "Zalenium JAR not present, exiting start script."
@@ -423,13 +416,20 @@ StartUp()
 
     DEBUG_MODE=info
     if [ "$DEBUG_ENABLED" = true ]; then
-        DEBUG_MODE=fine
+        DEBUG_MODE=debug
         DEBUG_FLAG=-debug
     fi
 
-    java ${ZALENIUM_EXTRA_JVM_PARAMS} -Djava.util.logging.config.file=logging_${DEBUG_MODE}.properties \
-    -Dlogback.configurationFile=logback.xml \
-    -cp ${SELENIUM_ARTIFACT}:${ZALENIUM_ARTIFACT} org.openqa.grid.selenium.GridLauncherV3 \
+    LOGBACK_APPENDER=STDOUT
+
+    if [ "$LOG_JSON" == true ]; then
+        LOGBACK_APPENDER=JSON
+    fi
+
+    java ${ZALENIUM_EXTRA_JVM_PARAMS} -Dlogback.loglevel=${DEBUG_MODE} \
+    -Dlogback.appender=${LOGBACK_APPENDER} \
+    -Djava.util.logging.config.file=logging_${DEBUG_MODE}.properties \
+    -cp ${ZALENIUM_ARTIFACT} org.openqa.grid.selenium.GridLauncherV3 \
     -role hub -port 4445 -newSessionWaitTimeout ${NEW_SESSION_WAIT_TIMEOUT} \
     -servlet de.zalando.ep.zalenium.servlet.LivePreviewServlet \
     -servlet de.zalando.ep.zalenium.servlet.ZaleniumConsoleServlet \
@@ -452,8 +452,9 @@ StartUp()
 
     echo "Starting DockerSeleniumStarter node..."
 
-    java -Djava.util.logging.config.file=logging_${DEBUG_MODE}.properties \
-     -jar ${SELENIUM_ARTIFACT} -role node -hub http://localhost:4444/grid/register \
+    java -Dlogback.loglevel=${DEBUG_MODE} -Dlogback.appender=${LOGBACK_APPENDER} \
+     -Djava.util.logging.config.file=logging_${DEBUG_MODE}.properties \
+     -cp ${ZALENIUM_ARTIFACT} org.openqa.grid.selenium.GridLauncherV3 -role node -hub http://localhost:4444/grid/register \
      -registerCycle 0 -proxy de.zalando.ep.zalenium.proxy.DockerSeleniumStarterRemoteProxy \
      -nodePolling 90000 -port 30000 ${DEBUG_FLAG} &
     echo $! > ${PID_PATH_DOCKER_SELENIUM_NODE}
@@ -477,8 +478,9 @@ StartUp()
 
     if [ "$SAUCE_LABS_ENABLED" = true ]; then
         echo "Starting Sauce Labs node..."
-        java -Djava.util.logging.config.file=logging_${DEBUG_MODE}.properties \
-         -jar ${SELENIUM_ARTIFACT} -role node -hub http://localhost:4444/grid/register \
+        java -Dlogback.loglevel=${DEBUG_MODE} -Dlogback.appender=${LOGBACK_APPENDER} \
+         -Djava.util.logging.config.file=logging_${DEBUG_MODE}.properties \
+         -cp ${ZALENIUM_ARTIFACT} org.openqa.grid.selenium.GridLauncherV3 -role node -hub http://localhost:4444/grid/register \
          -registerCycle 0 -proxy de.zalando.ep.zalenium.proxy.SauceLabsRemoteProxy \
          -nodePolling 90000 -port 30001 ${DEBUG_FLAG} &
         echo $! > ${PID_PATH_SAUCE_LABS_NODE}
@@ -504,8 +506,9 @@ StartUp()
 
     if [ "$BROWSER_STACK_ENABLED" = true ]; then
         echo "Starting Browser Stack node..."
-        java -Djava.util.logging.config.file=logging_${DEBUG_MODE}.properties \
-         -jar ${SELENIUM_ARTIFACT} -role node -hub http://localhost:4444/grid/register \
+        java -Dlogback.loglevel=${DEBUG_MODE} -Dlogback.appender=${LOGBACK_APPENDER} \
+         -Djava.util.logging.config.file=logging_${DEBUG_MODE}.properties \
+         -cp ${ZALENIUM_ARTIFACT} org.openqa.grid.selenium.GridLauncherV3 -role node -hub http://localhost:4444/grid/register \
          -registerCycle 0 -proxy de.zalando.ep.zalenium.proxy.BrowserStackRemoteProxy \
          -nodePolling 90000 -port 30002 ${DEBUG_FLAG} &
         echo $! > ${PID_PATH_BROWSER_STACK_NODE}
@@ -530,8 +533,9 @@ StartUp()
 
     if [ "$TESTINGBOT_ENABLED" = true ]; then
         echo "Starting TestingBot node..."
-        java -Djava.util.logging.config.file=logging_${DEBUG_MODE}.properties \
-         -jar ${SELENIUM_ARTIFACT} -role node -hub http://localhost:4444/grid/register \
+        java -Dlogback.loglevel=${DEBUG_MODE} -Dlogback.appender=${LOGBACK_APPENDER} \
+         -Djava.util.logging.config.file=logging_${DEBUG_MODE}.properties \
+         -cp ${ZALENIUM_ARTIFACT} org.openqa.grid.selenium.GridLauncherV3 -role node -hub http://localhost:4444/grid/register \
          -registerCycle 0 -proxy de.zalando.ep.zalenium.proxy.TestingBotRemoteProxy \
          -nodePolling 90000 -port 30003 ${DEBUG_FLAG} &
         echo $! > ${PID_PATH_TESTINGBOT_NODE}
@@ -769,6 +773,7 @@ function usage()
     echo -e "\t --timeZone -> Sets the time zone in the containers. Defaults to \"Europe/Berlin\""
     echo -e "\t --sendAnonymousUsageInfo -> Collects anonymous usage of the tool. Defaults to 'true'"
     echo -e "\t --debugEnabled -> enables LogLevel.FINE. Defaults to 'false'"
+    echo -e "\t --logJson -> output logs in json format. Defaults to 'false'"
     echo -e "\t --seleniumImageName -> enables overriding of the Docker selenium image to use. Defaults to \"elgalu/selenium\""
     echo -e "\t --gridUser -> allows you to specify a user to enable basic auth protection, --gridPassword must be provided also."
     echo -e "\t --gridPassword -> allows you to specify a password to enable basic auth protection, --gridUser must be provided also."
@@ -847,6 +852,9 @@ case ${SCRIPT_ACTION} in
                     ;;
                 --debugEnabled)
                     DEBUG_ENABLED=${VALUE}
+                    ;;
+                --logJson)
+                    LOG_JSON=${VALUE}
                     ;;
                 --seleniumImageName)
                     SELENIUM_IMAGE_NAME=${VALUE}

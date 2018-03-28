@@ -12,8 +12,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class DockerSeleniumCapabilityMatcher extends DefaultCapabilityMatcher {
     private static final List<String> ZALENIUM_CUSTOM_CAPABILITIES_NO_PREFIX = Arrays.asList(
@@ -29,7 +31,7 @@ public class DockerSeleniumCapabilityMatcher extends DefaultCapabilityMatcher {
     private static String chromeVersion = null;
     private static String firefoxVersion = null;
     private static AtomicBoolean browserVersionsFetched = new AtomicBoolean(false);
-    private final Logger logger = Logger.getLogger(DockerSeleniumCapabilityMatcher.class.getName());
+    private final Logger logger = LoggerFactory.getLogger(DockerSeleniumCapabilityMatcher.class.getName());
     private DefaultRemoteProxy proxy;
 
     public DockerSeleniumCapabilityMatcher(DefaultRemoteProxy defaultRemoteProxy) {
@@ -39,11 +41,11 @@ public class DockerSeleniumCapabilityMatcher extends DefaultCapabilityMatcher {
 
     @Override
     public boolean matches(Map<String, Object> nodeCapability, Map<String, Object> requestedCapability) {
-        logger.log(Level.FINE, ()-> String.format("Validating %s in node with capabilities %s", requestedCapability,
+        logger.debug(String.format("Validating %s in node with capabilities %s", requestedCapability,
                 nodeCapability));
 
         if (!requestedCapability.containsKey(CapabilityType.BROWSER_NAME)) {
-            logger.log(Level.FINE, () -> String.format("%s Capability %s does not contain %s key, a docker-selenium " +
+            logger.debug(String.format("%s Capability %s does not contain %s key, a docker-selenium " +
                     "node cannot be started without it", proxy.getId(), requestedCapability, CapabilityType.BROWSER_NAME));
             return false;
         }
