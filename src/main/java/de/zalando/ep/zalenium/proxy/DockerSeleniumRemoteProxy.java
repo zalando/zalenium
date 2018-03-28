@@ -269,8 +269,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                 if (session.getSlot().getProxy() instanceof DockerSeleniumRemoteProxy) {
                     remoteName = ((DockerSeleniumRemoteProxy)session.getSlot().getProxy()).getRegistration().getContainerId();
                 }
-                LOGGER.log(Level.INFO,
-                        String.format("Test session started with internal key %s and external key %s assigned to remote %s.",
+                LOGGER.info(String.format("Test session started with internal key %s and external key %s assigned to remote %s.",
                               session.getInternalKey(),
                               session.getExternalKey().getKey(),
                               remoteName));

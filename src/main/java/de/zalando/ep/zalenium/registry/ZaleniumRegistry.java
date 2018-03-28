@@ -217,8 +217,7 @@ public class ZaleniumRegistry extends BaseGridRegistry implements GridRegistry {
                 remoteName = ((DockerSeleniumRemoteProxy)session.getSlot().getProxy()).getRegistration().getContainerId();
             }
             long timeToAssignProxy = System.currentTimeMillis() - handler.getRequest().getCreationTime();
-            LOG.log(Level.INFO,
-                    String.format("Test session with internal key %s assigned to remote (%s) after %s seconds (%s ms).",
+            LOG.info(String.format("Test session with internal key %s assigned to remote (%s) after %s seconds (%s ms).",
                                   session.getInternalKey(),
                                   remoteName,
                                   timeToAssignProxy / 1000,
