@@ -16,8 +16,10 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang.StringUtils;
@@ -46,7 +48,7 @@ public class KubernetesContainerClient implements ContainerClient {
             "/dev/shm"
     };
 
-    private static final Logger logger = Logger.getLogger(KubernetesContainerClient.class.getName());
+    private static final Logger logger = LoggerFactory.getLogger(KubernetesContainerClient.class.getName());
 
     private KubernetesClient client;
 
@@ -71,7 +73,7 @@ public class KubernetesContainerClient implements ContainerClient {
     public KubernetesContainerClient(Environment environment,
                                      Function<PodConfiguration, DoneablePod> createDoneablePod,
                                      KubernetesClient client) {
-        logger.log(Level.INFO, "Initialising Kubernetes support");
+        logger.info("Initialising Kubernetes support");
 
         this.environment = environment;
         this.createDoneablePod = createDoneablePod;
@@ -98,7 +100,7 @@ public class KubernetesContainerClient implements ContainerClient {
 
             buildResourceMaps();
 
-            logger.log(Level.INFO,
+            logger.info(
                     "Kubernetes support initialised.\n"
                             + "\tPod name: {0}\n"
                             + "\tapp label: {1}\n"
@@ -108,7 +110,7 @@ public class KubernetesContainerClient implements ContainerClient {
                     new Object[] {hostname, appName, zaleniumAppName,
                             seleniumPodLimits.toString(), seleniumPodRequests.toString() });
         } catch (Exception e) {
-            logger.log(Level.WARNING, "Error initialising Kubernetes support.", e);
+            logger.warn("Error initialising Kubernetes support.", e);
         }
     }
 
@@ -224,7 +226,7 @@ public class KubernetesContainerClient implements ContainerClient {
         final CountDownLatch latch = new CountDownLatch(1);
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
-        logger.log(Level.INFO, () -> String.format("%s %s", containerId, Arrays.toString(command)));
+        logger.info(String.format("%s %s", containerId, Arrays.toString(command)));
         ExecWatch exec = client.pods().withName(containerId).writingOutput(baos).writingError(baos).usingListener(new ExecListener() {
 
             @Override
@@ -234,7 +236,7 @@ public class KubernetesContainerClient implements ContainerClient {
             @Override
             public void onFailure(Throwable t,
                                   Response response) {
-                logger.log(Level.SEVERE, t, () -> String.format("%s Failed to execute command %s", containerId, Arrays.toString(command)));
+                logger.error(String.format("%s Failed to execute command %s", containerId, Arrays.toString(command)), t);
                 latch.countDown();
             }
 
@@ -250,12 +252,12 @@ public class KubernetesContainerClient implements ContainerClient {
             try {
                 latch.await();
             } catch (InterruptedException e) {
-                logger.log(Level.SEVERE, e, () -> String.format("%s Failed to execute command %s", containerId, Arrays.toString(command)));
+                logger.error(String.format("%s Failed to execute command %s", containerId, Arrays.toString(command)), e);
             } finally {
                 exec.close();
             }
 
-            logger.log(Level.INFO, () -> String.format("%s %s", containerId, baos.toString()));
+            logger.info(String.format("%s %s", containerId, baos.toString()));
 
             return null;
         };
@@ -279,7 +281,8 @@ public class KubernetesContainerClient implements ContainerClient {
     @Override
     public int getRunningContainers(String image) {
         PodList list = client.pods().withLabels(createdByZaleniumMap).list();
-        logger.log(Level.FINE, "Pods in the list " + list.getItems().size());
+        logger.debug("Pods in the list " + list.getItems().size());
+
         int count=0;
         for (Pod pod : list.getItems()) {
             String phase = pod.getStatus().getPhase();
@@ -342,7 +345,7 @@ public class KubernetesContainerClient implements ContainerClient {
         Pod pod = client.pods().withName(containerName).get();
         if (pod != null) {
             String podIP = pod.getStatus().getPodIP();
-            logger.log(Level.FINE, String.format("Pod %s, IP -> %s", containerName, podIP));
+            logger.debug(String.format("Pod %s, IP -> %s", containerName, podIP));
             return podIP;
         }
         else {
@@ -351,7 +354,7 @@ public class KubernetesContainerClient implements ContainerClient {
     }
 
     private void deleteSeleniumPods() {
-        logger.log(Level.INFO, "About to clean up any left over selenium pods created by Zalenium");
+        logger.info("About to clean up any left over selenium pods created by Zalenium");
         client.pods().withLabels(createdByZaleniumMap).delete();
     }
 
@@ -387,7 +390,7 @@ public class KubernetesContainerClient implements ContainerClient {
             registration.setNoVncPort(noVncPortInt);
         }
         else {
-            logger.log(Level.WARNING, "{0} Couldn't find NOVNC_PORT, live preview will not work.", containerId);
+            logger.warn("{0} Couldn't find NOVNC_PORT, live preview will not work.", containerId);
         }
 
         registration.setIpAddress(currentPod.getStatus().getPodIP());
@@ -424,9 +427,7 @@ public class KubernetesContainerClient implements ContainerClient {
         @Override
         public void onFailure(Throwable t,
                               Response response) {
-            logger.log(Level.SEVERE,
-                       t,
-                       () -> String.format("%s Failed to execute command %s", containerId, Arrays.toString(command)));
+            logger.error(String.format("%s Failed to execute command %s", containerId, Arrays.toString(command)), t);
         }
 
         @Override
@@ -438,7 +439,7 @@ public class KubernetesContainerClient implements ContainerClient {
             boolean isClosed = closedResource.getAndSet(true);
             boolean hasErrors = stderr.size() > 0;
             if (!isClosed && hasErrors) {
-                logger.log(Level.SEVERE,() -> String.format("%s Copy files command failed with:\n\tcommand: %s\n\t stderr:\n%s",
+                logger.error(String.format("%s Copy files command failed with:\n\tcommand: %s\n\t stderr:\n%s",
                                         containerId,
                                         Arrays.toString(command),
                                         stderr.toString()));
@@ -451,9 +452,7 @@ public class KubernetesContainerClient implements ContainerClient {
                 this.openLatch.await();
             }
             catch (InterruptedException e) {
-                logger.log(Level.SEVERE,
-                        e,
-                        () -> String.format("%s Failed to execute command %s", containerId, Arrays.toString(command)));
+                logger.error( String.format("%s Failed to execute command %s", containerId, Arrays.toString(command)), e);
             }
         }
     }

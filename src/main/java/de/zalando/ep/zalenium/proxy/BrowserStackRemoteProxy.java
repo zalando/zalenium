@@ -10,8 +10,10 @@ import org.openqa.selenium.remote.server.jmx.ManagedService;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /*
     This class should work in a similar way as its sibling, SauceLabsRemoteProxy
@@ -21,7 +23,7 @@ public class BrowserStackRemoteProxy extends CloudTestingRemoteProxy {
 
     private static final String BROWSER_STACK_URL = "http://hub-cloud.browserstack.com:80";
     private static final String BROWSER_STACK_ACCOUNT_INFO = "https://www.browserstack.com/automate/plan.json";
-    private static final Logger logger = Logger.getLogger(BrowserStackRemoteProxy.class.getName());
+    private static final Logger logger = LoggerFactory.getLogger(BrowserStackRemoteProxy.class.getName());
     private static final String BROWSER_STACK_USER = getEnv().getStringEnvVariable("BROWSER_STACK_USER", "");
     private static final String BROWSER_STACK_KEY = getEnv().getStringEnvVariable("BROWSER_STACK_KEY", "");
     private static final String BROWSER_STACK_PROXY_NAME = "BrowserStack";
@@ -43,11 +45,11 @@ public class BrowserStackRemoteProxy extends CloudTestingRemoteProxy {
             } else {
                 browserStackAccountConcurrency = bsAccountInfo.getAsJsonObject().get("parallel_sessions_max_allowed").getAsInt();
             }
-            logger.log(Level.INFO, logMessage);
+            logger.info(logMessage);
             return addCapabilitiesToRegistrationRequest(registrationRequest, browserStackAccountConcurrency,
                     BROWSER_STACK_PROXY_NAME);
         } catch (Exception e) {
-            logger.log(Level.SEVERE, e.toString(), e);
+            logger.error(e.toString(), e);
             getGa().trackException(e);
         }
         return addCapabilitiesToRegistrationRequest(registrationRequest, 1, BROWSER_STACK_PROXY_NAME);

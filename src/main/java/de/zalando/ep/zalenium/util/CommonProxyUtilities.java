@@ -17,12 +17,14 @@ import java.nio.charset.Charset;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class CommonProxyUtilities {
 
-    private static final Logger LOG = Logger.getLogger(CommonProxyUtilities.class.getName());
+    private static final Logger LOG = LoggerFactory.getLogger(CommonProxyUtilities.class.getName());
 
     /*
         Reading a JSON with DockerSelenium capabilities from a given URL
@@ -47,15 +49,15 @@ public class CommonProxyUtilities {
                 return new JsonParser().parse(jsonText);
             } catch (Exception e) {
                 currentAttempts++;
-                LOG.log(Level.SEVERE, e.toString(), e);
+                LOG.error(e.toString(), e);
                 if (currentAttempts >= maxAttempts) {
-                    LOG.log(Level.SEVERE, e.toString(), e);
+                    LOG.error(e.toString(), e);
                 } else {
-                    LOG.log(Level.INFO, "Trying download once again from " + jsonUrl);
+                    LOG.info("Trying download once again from " + jsonUrl);
                     try {
                         Thread.sleep(1000 * 5);
                     } catch (InterruptedException iE) {
-                        LOG.log(Level.FINE, iE.toString(), iE);
+                        LOG.debug(iE.toString(), iE);
                     }
                 }
             }
@@ -69,7 +71,7 @@ public class CommonProxyUtilities {
                     .getLocation().toURI().getPath());
             return jarLocation.getParent();
         } catch (URISyntaxException e) {
-            LOG.log(Level.SEVERE, e.toString(), e);
+            LOG.error(e.toString(), e);
         }
         return null;
     }
@@ -118,19 +120,19 @@ public class CommonProxyUtilities {
                 fos.close();
                 //End download code
                 currentAttempts = maxAttempts + 1;
-                LOG.log(Level.INFO, "File downloaded to " + fileNameWithFullPath);
+                LOG.info("File downloaded to " + fileNameWithFullPath);
             } catch (IOException e) {
                 // Catching this exception generally means that the file was not ready, so we try again.
                 currentAttempts++;
                 if (currentAttempts >= maxAttempts) {
-                    LOG.log(Level.SEVERE, e.toString(), e);
+                    LOG.info(e.toString(), e);
                 } else {
-                    LOG.log(Level.INFO, "Trying download once again from " + fileUrl);
+                    LOG.info("Trying download once again from " + fileUrl);
                     Thread.sleep(currentAttempts * 5 * 1000);
                 }
             } catch (Exception e) {
                 currentAttempts = maxAttempts + 1;
-                LOG.log(Level.SEVERE, e.toString(), e);
+                LOG.error(e.toString(), e);
             }
         }
     }
@@ -153,11 +155,11 @@ public class CommonProxyUtilities {
         try {
             int exitValue = defaultExecutor.execute(commandLine);
             if (exitValue != 0) {
-                LOG.log(Level.WARNING, () -> "File " + flvVideoFile + " could not be converted to MP4. Exit value: " +
+                LOG.warn("File " + flvVideoFile + " could not be converted to MP4. Exit value: " +
                 exitValue);
             }
         } catch (IOException e) {
-            LOG.log(Level.SEVERE, e.toString(), e);
+            LOG.error(e.toString(), e);
         }
 
         // Deleting the FLV file

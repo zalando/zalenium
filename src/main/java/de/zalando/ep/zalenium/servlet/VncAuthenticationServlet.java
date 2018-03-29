@@ -3,8 +3,10 @@ package de.zalando.ep.zalenium.servlet;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Optional;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -31,7 +33,7 @@ public class VncAuthenticationServlet extends RegistryBasedServlet {
     private static Pattern VNC_REGEX = Pattern.compile("^\\/vnc\\/host\\/(?<host>[^\\/]+)\\/port\\/(?<port>\\d+)\\/");
     private static Pattern WEB_SOCKET_REGEX = Pattern.compile("^\\/proxy\\/(?<host>[^:]+):(?<port>\\d+)\\/websockify");
     
-    private static final Logger LOGGER = Logger.getLogger(VncAuthenticationServlet.class.getName());
+    private static final Logger LOGGER = LoggerFactory.getLogger(VncAuthenticationServlet.class.getName());
 
     public VncAuthenticationServlet() {
         super(null);
@@ -46,7 +48,7 @@ public class VncAuthenticationServlet extends RegistryBasedServlet {
         try {
             authenticate(req, resp);
         } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, e.toString(), e);
+            LOGGER.error(e.toString(), e);
         }
     }
     
@@ -55,7 +57,7 @@ public class VncAuthenticationServlet extends RegistryBasedServlet {
         try {
             authenticate(req, resp);
         } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, e.toString(), e);
+            LOGGER.error(e.toString(), e);
         }
     }
     
@@ -64,7 +66,7 @@ public class VncAuthenticationServlet extends RegistryBasedServlet {
         try {
             authenticate(req, resp);
         } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, e.toString(), e);
+            LOGGER.error(e.toString(), e);
         }
     }
 
@@ -76,7 +78,7 @@ public class VncAuthenticationServlet extends RegistryBasedServlet {
             try {
                 return Optional.of(new URI(s).getPath());
             } catch (URISyntaxException e) {
-                LOGGER.log(Level.SEVERE, "Failed to parse url [" + s + "]", e);
+                LOGGER.error("Failed to parse url [" + s + "]", e);
                 return Optional.empty();
             }
         });
