@@ -42,8 +42,6 @@ import java.util.Map;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /*
     The implementation of this class was inspired on https://gist.github.com/krmahadevan/4649607
@@ -196,7 +194,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
             maxTestIdleTimeSecs = getConfiguredIdleTimeout(requestedCapability);
             return newSession;
         }
-        LOGGER.debug("{0} No more sessions allowed", getId());
+        LOGGER.debug(String.format("%s No more sessions allowed", getId()));
         return null;
     }
 
@@ -484,15 +482,15 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                 IOUtils.copy(tarStream, outputStream);
                 outputStream.close();
                 videoWasCopied = true;
-                LOGGER.info("{0} Video file copied to: {1}/{2}", new Object[]{getId(),
-                        testInformation.getVideoFolderPath(), testInformation.getFileName()});
+                LOGGER.info(String.format("%s Video file copied to: %s/%s", getId(),
+                        testInformation.getVideoFolderPath(), testInformation.getFileName()));
             }
         } catch (IOException e) {
             // This error happens in k8s, but the file is ok, nevertheless the size is not accurate
             boolean isPipeClosed = e.getMessage().toLowerCase().contains("pipe closed");
             if (ContainerFactory.getIsKubernetes().get() && isPipeClosed) {
-                LOGGER.info("{0} Video file copied to: {1}/{2}", new Object[]{getId(),
-                        testInformation.getVideoFolderPath(), testInformation.getFileName()});
+                LOGGER.info(String.format("%s Video file copied to: %s/%s", getId(),
+                        testInformation.getVideoFolderPath(), testInformation.getFileName()));
             } else {
                 LOGGER.warn(getId() + " Error while copying the video", e);
             }
@@ -524,12 +522,12 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                 IOUtils.copy(tarStream, outputStream);
                 outputStream.close();
             }
-            LOGGER.info("{0} Logs copied to: {1}", new Object[]{getId(), testInformation.getLogsFolderPath()});
+            LOGGER.info(String.format("%s Logs copied to: %s", getId(), testInformation.getLogsFolderPath()));
         } catch (IOException e) {
             // This error happens in k8s, but the file is ok, nevertheless the size is not accurate
             boolean isPipeClosed = e.getMessage().toLowerCase().contains("pipe closed");
             if (ContainerFactory.getIsKubernetes().get() && isPipeClosed) {
-                LOGGER.info("{0} Logs copied to: {1}", new Object[]{getId(), testInformation.getLogsFolderPath()});
+                LOGGER.info(String.format("%s Logs copied to: %s", getId(), testInformation.getLogsFolderPath()));
             } else {
                 LOGGER.warn(getId() + " Error while copying the logs", e);
             }
@@ -644,8 +642,6 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                 try {
                     Thread.sleep(getSleepTimeBetweenChecks());
                 } catch (InterruptedException e) {
-                    LOGGER.info(dockerSeleniumRemoteProxy.getId() + " Error while sleeping the " +
-                            "thread, stopping thread execution.", e);
                     return;
                 }
             }

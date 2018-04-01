@@ -42,8 +42,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 @SuppressWarnings("WeakerAccess")
 @ManagedService(description = "CloudTesting TestSlots")
