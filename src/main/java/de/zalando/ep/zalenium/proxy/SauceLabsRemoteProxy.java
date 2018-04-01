@@ -12,8 +12,6 @@ import java.util.ArrayList;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /*
     Almost all concepts and ideas for this part of the implementation are taken from the open source project seen here:

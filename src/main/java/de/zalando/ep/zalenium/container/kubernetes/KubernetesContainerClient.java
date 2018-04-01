@@ -18,8 +18,6 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang.StringUtils;
@@ -100,15 +98,15 @@ public class KubernetesContainerClient implements ContainerClient {
 
             buildResourceMaps();
 
-            logger.info(
+            logger.info(String.format(
                     "Kubernetes support initialised.\n"
-                            + "\tPod name: {0}\n"
-                            + "\tapp label: {1}\n"
-                            + "\tzalenium service name: {2}\n"
-                            + "\tSelenium Pod Resource Limits: {3}\n"
-                            + "\tSelenium Pod Resource Requests: {4}",
-                    new Object[] {hostname, appName, zaleniumAppName,
-                            seleniumPodLimits.toString(), seleniumPodRequests.toString() });
+                            + "\tPod name: %s\n"
+                            + "\tapp label: %s\n"
+                            + "\tzalenium service name: %s\n"
+                            + "\tSelenium Pod Resource Limits: %s\n"
+                            + "\tSelenium Pod Resource Requests: %s",
+                    hostname, appName, zaleniumAppName,
+                            seleniumPodLimits.toString(), seleniumPodRequests.toString()));
         } catch (Exception e) {
             logger.warn("Error initialising Kubernetes support.", e);
         }
@@ -390,7 +388,7 @@ public class KubernetesContainerClient implements ContainerClient {
             registration.setNoVncPort(noVncPortInt);
         }
         else {
-            logger.warn("{0} Couldn't find NOVNC_PORT, live preview will not work.", containerId);
+            logger.warn(String.format("%s Couldn't find NOVNC_PORT, live preview will not work.", containerId));
         }
 
         registration.setIpAddress(currentPod.getStatus().getPodIP());

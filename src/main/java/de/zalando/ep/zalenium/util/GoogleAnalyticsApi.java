@@ -10,8 +10,6 @@ import org.apache.http.impl.client.HttpClientBuilder;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Small class to create hits in Google Analytics

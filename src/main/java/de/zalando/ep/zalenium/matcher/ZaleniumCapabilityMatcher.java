@@ -8,8 +8,6 @@ import org.openqa.grid.selenium.proxy.DefaultRemoteProxy;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * The purpose of this class is to check if the capabilities cannot be supplied by docker-selenium so they can be just
@@ -35,8 +33,8 @@ public class ZaleniumCapabilityMatcher extends DefaultCapabilityMatcher {
         for (RemoteProxy remoteProxy : proxy.getRegistry().getAllProxies()) {
             if ((remoteProxy instanceof DockerSeleniumStarterRemoteProxy) &&
                     remoteProxy.hasCapability(requestedCapability)) {
-                logger.debug("Capability supported by docker-selenium, should not be processed by " +
-                        "a Cloud Testing Provider: {0}", requestedCapability);
+                logger.debug(String.format("Capability supported by docker-selenium, should not be processed by " +
+                        "a Cloud Testing Provider: %s", requestedCapability));
                 return false;
             }
         }

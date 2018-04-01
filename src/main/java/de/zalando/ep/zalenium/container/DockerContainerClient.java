@@ -30,8 +30,6 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import java.util.stream.Collectors;
 
 import de.zalando.ep.zalenium.proxy.DockerSeleniumStarterRemoteProxy;
@@ -314,7 +312,7 @@ public class DockerContainerClient implements ContainerClient {
                 return;
             }
 
-            ContainerInfo containerInfo = null;
+            ContainerInfo containerInfo;
 
             try {
                 containerInfo = dockerClient.inspectContainer(containerId);
