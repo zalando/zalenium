@@ -22,6 +22,7 @@ import org.openqa.selenium.remote.server.log.LoggingManager;
 import de.zalando.ep.zalenium.proxy.DockerSeleniumRemoteProxy;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
@@ -99,8 +100,10 @@ public class ZaleniumRegistry extends BaseGridRegistry implements GridRegistry {
         if (session.getSlot().getProxy() instanceof DockerSeleniumRemoteProxy) {
             remoteName = ((DockerSeleniumRemoteProxy)session.getSlot().getProxy()).getRegistration().getContainerId();
         }
+        String internalKey = Optional.ofNullable(session.getInternalKey()).orElse("No internal key");
+        ExternalSessionKey externalKey = Optional.ofNullable(session.getExternalKey()).orElse(new ExternalSessionKey("No external key was assigned"));
         new Thread(() -> _release(session.getSlot(), reason), "Terminate Test Session int id: ["
-                + session.getInternalKey() + "] ext id: [" + session.getExternalKey().getKey() + "] container: [" + remoteName + "]").start();
+                + internalKey + "] ext id: [" + externalKey + "] container: [" + remoteName + "]").start();
     }
 
     /**
