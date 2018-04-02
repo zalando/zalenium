@@ -69,10 +69,17 @@ public class DockerContainerClient implements ContainerClient {
     private Map<String, String> seleniumContainerLabels = new HashMap<>();
     private boolean pullSeleniumImage = false;
     private boolean isZaleniumPrivileged = true;
+    private ImmutableMap<String, String> storageOpt;
     private AtomicBoolean pullSeleniumImageChecked = new AtomicBoolean(false);
     private AtomicBoolean isZaleniumPrivilegedChecked = new AtomicBoolean(false);
+    private AtomicBoolean storageOptsLoaded = new AtomicBoolean(false);
     private AtomicBoolean mntFoldersAndHttpEnvVarsChecked = new AtomicBoolean(false);
     private AtomicBoolean seleniumContainerLabelsChecked = new AtomicBoolean(false);
+
+    @VisibleForTesting
+    protected static void setEnv(final Environment env) {
+        DockerContainerClient.env = env;
+    }
 
     @VisibleForTesting
     public void setContainerClient(final DockerClient client) {
@@ -190,6 +197,7 @@ public class DockerContainerClient implements ContainerClient {
         loadSeleniumContainerLabels();
         loadPullSeleniumImageFlag();
         loadIsZaleniumPrivileged(zaleniumContainerName);
+        loadStorageOpts(zaleniumContainerName);
 
         List<String> binds = generateMountedFolderBinds();
         binds.add("/dev/shm:/dev/shm");
@@ -271,11 +279,6 @@ public class DockerContainerClient implements ContainerClient {
         }
     }
 
-    @VisibleForTesting
-    protected static void setEnv(final Environment env) {
-        DockerContainerClient.env = env;
-    }
-
     private String generateContainerName(String zaleniumContainerName,
                                          String nodePort) {
         return String.format("%s_%s", zaleniumContainerName, nodePort);
@@ -319,6 +322,25 @@ public class DockerContainerClient implements ContainerClient {
                 isZaleniumPrivileged = containerInfo.hostConfig().privileged();
             } catch (DockerException | InterruptedException e) {
                 logger.warn(nodeId + " Error while getting value to check if Zalenium is running in privileged mode.", e);
+                ga.trackException(e);
+            }
+        }
+    }
+
+    private void loadStorageOpts(String zaleniumContainerName) {
+        if (!this.storageOptsLoaded.getAndSet(true)) {
+            String containerId = getContainerId(zaleniumContainerName);
+            if (containerId == null) {
+                return;
+            }
+
+            ContainerInfo containerInfo;
+
+            try {
+                containerInfo = dockerClient.inspectContainer(containerId);
+                storageOpt = containerInfo.hostConfig().storageOpt();
+            } catch (DockerException | InterruptedException e) {
+                logger.warn(nodeId + " Error while getting value to use passed storageOpts.", e);
                 ga.trackException(e);
             }
         }
