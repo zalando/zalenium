@@ -231,6 +231,7 @@ public class DockerContainerClient implements ContainerClient {
                 .networkMode(networkMode)
                 .extraHosts(extraHosts)
                 .autoRemove(true)
+                .storageOpt(storageOpt)
                 .privileged(isZaleniumPrivileged)
                 .build();
 
