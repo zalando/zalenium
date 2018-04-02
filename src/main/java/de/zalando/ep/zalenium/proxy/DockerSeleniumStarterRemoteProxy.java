@@ -507,7 +507,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
                     String status = IOUtils.toString(statusUrl, StandardCharsets.UTF_8);
                     String successMessage = "\"Node is running\"";
                     if (status.contains(successMessage)) {
-                        LOGGER.info(String.format("%sContainer %s is up after ~%s seconds...",
+                        LOGGER.info(String.format("%s Container %s is up after ~%s seconds...",
                                 getId(), createdContainerName, i * (sleepInterval / 1000)));
                         return true;
                     }

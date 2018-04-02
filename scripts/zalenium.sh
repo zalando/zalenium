@@ -162,7 +162,7 @@ WaitForVideosTransferred() {
                 done
             fi
 
-            __amount_of_mp4_files=$(ls -1q /home/seluser/videos/*.mp4 | wc -l)
+            __amount_of_mp4_files=$(find /home/seluser/videos/ -name '*.mp4' | wc -l)
         done
     fi
 }

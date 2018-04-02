@@ -18,6 +18,7 @@ import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.compress.utils.IOUtils;
 import org.openqa.grid.common.RegistrationRequest;
 import org.openqa.grid.common.exception.RemoteUnregisterException;
+import org.openqa.grid.internal.ExternalSessionKey;
 import org.openqa.grid.internal.GridRegistry;
 import org.openqa.grid.internal.SessionTerminationReason;
 import org.openqa.grid.internal.TestSession;
@@ -267,9 +268,10 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                 if (session.getSlot().getProxy() instanceof DockerSeleniumRemoteProxy) {
                     remoteName = ((DockerSeleniumRemoteProxy)session.getSlot().getProxy()).getRegistration().getContainerId();
                 }
+                ExternalSessionKey externalKey = Optional.ofNullable(session.getExternalKey()).orElse(new ExternalSessionKey("[No external key present]"));
                 LOGGER.info(String.format("Test session started with internal key %s and external key %s assigned to remote %s.",
                               session.getInternalKey(),
-                              session.getExternalKey().getKey(),
+                              externalKey.getKey(),
                               remoteName));
                 videoRecording(DockerSeleniumContainerAction.START_RECORDING);
             }
