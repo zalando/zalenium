@@ -42,6 +42,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
 @SuppressWarnings("WeakerAccess")
 @ManagedService(description = "CloudTesting TestSlots")
@@ -134,8 +135,8 @@ public class CloudTestingRemoteProxy extends DefaultRemoteProxy {
         if (!hasCapability(requestedCapability)) {
             return null;
         }
+
         logger.info("Test will be forwarded to " + getProxyName() + ", " + requestedCapability);
-        logger.info("Currently using " + getNumberOfSessions() + " paralell sessions towards " + getProxyName() + ". Attempt to start one more.");
         return super.getNewSession(requestedCapability);
     }
 
@@ -144,6 +145,11 @@ public class CloudTestingRemoteProxy extends DefaultRemoteProxy {
         if (request instanceof WebDriverRequest && "POST".equalsIgnoreCase(request.getMethod())) {
             WebDriverRequest seleniumRequest = (WebDriverRequest) request;
             if (seleniumRequest.getRequestType().equals(RequestType.START_SESSION)) {
+                int numberOfParallelCloudSessions = getNumberOfSessions();
+                MDC.put("numberOfParallelCloudSessions",String.valueOf(numberOfParallelCloudSessions));
+                logger.info("Currently using " + numberOfParallelCloudSessions + " parallel sessions towards " + getProxyName() + ". Attempt to start one more.");
+                MDC.clear();
+
                 String body = seleniumRequest.getBody();
                 JsonObject jsonObject = new JsonParser().parse(body).getAsJsonObject();
                 JsonObject desiredCapabilities = jsonObject.getAsJsonObject("desiredCapabilities");

@@ -21,6 +21,7 @@ START_TUNNEL=${START_TUNNEL:-false}
 DEBUG_ENABLED=${DEBUG_ENABLED:-false}
 KEEP_ONLY_FAILED_TESTS=${KEEP_ONLY_FAILED_TESTS:-false}
 LOG_JSON=${LOG_JSON:-false}
+LOGBACK_PATH=${LOGBACK_PATH:-logback.xml}
 NEW_SESSION_WAIT_TIMEOUT=${NEW_SESSION_WAIT_TIMEOUT:-300000}
 
 GA_TRACKING_ID="UA-88441352-3"
@@ -428,6 +429,7 @@ StartUp()
 
     java ${ZALENIUM_EXTRA_JVM_PARAMS} -Dlogback.loglevel=${DEBUG_MODE} \
     -Dlogback.appender=${LOGBACK_APPENDER} \
+    -Dlogback.configurationFile=${LOGBACK_PATH} \
     -Djava.util.logging.config.file=logging_${DEBUG_MODE}.properties \
     -cp ${ZALENIUM_ARTIFACT} org.openqa.grid.selenium.GridLauncherV3 \
     -role hub -port 4445 -newSessionWaitTimeout ${NEW_SESSION_WAIT_TIMEOUT} \
@@ -454,6 +456,7 @@ StartUp()
 
     java -Dlogback.loglevel=${DEBUG_MODE} -Dlogback.appender=${LOGBACK_APPENDER} \
      -Djava.util.logging.config.file=logging_${DEBUG_MODE}.properties \
+     -Dlogback.configurationFile=${LOGBACK_PATH} \
      -cp ${ZALENIUM_ARTIFACT} org.openqa.grid.selenium.GridLauncherV3 -role node -hub http://localhost:4444/grid/register \
      -registerCycle 0 -proxy de.zalando.ep.zalenium.proxy.DockerSeleniumStarterRemoteProxy \
      -nodePolling 90000 -port 30000 ${DEBUG_FLAG} &
@@ -479,6 +482,7 @@ StartUp()
     if [ "$SAUCE_LABS_ENABLED" = true ]; then
         echo "Starting Sauce Labs node..."
         java -Dlogback.loglevel=${DEBUG_MODE} -Dlogback.appender=${LOGBACK_APPENDER} \
+         -Dlogback.configurationFile=${LOGBACK_PATH} \
          -Djava.util.logging.config.file=logging_${DEBUG_MODE}.properties \
          -cp ${ZALENIUM_ARTIFACT} org.openqa.grid.selenium.GridLauncherV3 -role node -hub http://localhost:4444/grid/register \
          -registerCycle 0 -proxy de.zalando.ep.zalenium.proxy.SauceLabsRemoteProxy \
@@ -507,6 +511,7 @@ StartUp()
     if [ "$BROWSER_STACK_ENABLED" = true ]; then
         echo "Starting Browser Stack node..."
         java -Dlogback.loglevel=${DEBUG_MODE} -Dlogback.appender=${LOGBACK_APPENDER} \
+         -Dlogback.configurationFile=${LOGBACK_PATH} \
          -Djava.util.logging.config.file=logging_${DEBUG_MODE}.properties \
          -cp ${ZALENIUM_ARTIFACT} org.openqa.grid.selenium.GridLauncherV3 -role node -hub http://localhost:4444/grid/register \
          -registerCycle 0 -proxy de.zalando.ep.zalenium.proxy.BrowserStackRemoteProxy \
@@ -534,6 +539,7 @@ StartUp()
     if [ "$TESTINGBOT_ENABLED" = true ]; then
         echo "Starting TestingBot node..."
         java -Dlogback.loglevel=${DEBUG_MODE} -Dlogback.appender=${LOGBACK_APPENDER} \
+         -Dlogback.configurationFile=${LOGBACK_PATH} \
          -Djava.util.logging.config.file=logging_${DEBUG_MODE}.properties \
          -cp ${ZALENIUM_ARTIFACT} org.openqa.grid.selenium.GridLauncherV3 -role node -hub http://localhost:4444/grid/register \
          -registerCycle 0 -proxy de.zalando.ep.zalenium.proxy.TestingBotRemoteProxy \
@@ -774,6 +780,7 @@ function usage()
     echo -e "\t --sendAnonymousUsageInfo -> Collects anonymous usage of the tool. Defaults to 'true'"
     echo -e "\t --debugEnabled -> enables LogLevel.FINE. Defaults to 'false'"
     echo -e "\t --logJson -> output logs in json format. Defaults to 'false'"
+    echo -e "\t --logbackConfigFilePath -> path to a custom logback config file. Defaults to 'logback.xml'"
     echo -e "\t --seleniumImageName -> enables overriding of the Docker selenium image to use. Defaults to \"elgalu/selenium\""
     echo -e "\t --gridUser -> allows you to specify a user to enable basic auth protection, --gridPassword must be provided also."
     echo -e "\t --gridPassword -> allows you to specify a password to enable basic auth protection, --gridUser must be provided also."
@@ -855,6 +862,9 @@ case ${SCRIPT_ACTION} in
                     ;;
                 --logJson)
                     LOG_JSON=${VALUE}
+                    ;;
+                --logbackConfigFilePath)
+                    LOGBACK_PATH=${VALUE}
                     ;;
                 --seleniumImageName)
                     SELENIUM_IMAGE_NAME=${VALUE}
