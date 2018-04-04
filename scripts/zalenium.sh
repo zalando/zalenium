@@ -780,6 +780,7 @@ function usage()
     echo -e "\t --sendAnonymousUsageInfo -> Collects anonymous usage of the tool. Defaults to 'true'"
     echo -e "\t --debugEnabled -> enables LogLevel.FINE. Defaults to 'false'"
     echo -e "\t --logJson -> output logs in json format. Defaults to 'false'"
+    echo -e "\t --logbackConfigFilePath -> path to a custom logback config file. Defaults to 'logback.xml'"
     echo -e "\t --seleniumImageName -> enables overriding of the Docker selenium image to use. Defaults to \"elgalu/selenium\""
     echo -e "\t --gridUser -> allows you to specify a user to enable basic auth protection, --gridPassword must be provided also."
     echo -e "\t --gridPassword -> allows you to specify a password to enable basic auth protection, --gridUser must be provided also."
@@ -861,6 +862,9 @@ case ${SCRIPT_ACTION} in
                     ;;
                 --logJson)
                     LOG_JSON=${VALUE}
+                    ;;
+                --logbackConfigFilePath)
+                    LOGBACK_PATH=${VALUE}
                     ;;
                 --seleniumImageName)
                     SELENIUM_IMAGE_NAME=${VALUE}
