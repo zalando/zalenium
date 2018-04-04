@@ -22,6 +22,7 @@ import org.openqa.selenium.remote.server.log.LoggingManager;
 import de.zalando.ep.zalenium.proxy.DockerSeleniumRemoteProxy;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -30,6 +31,7 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
 /**
  * Kernel of the grid. Keeps track of what's happening, what's free/used and assigns resources to
@@ -179,10 +181,14 @@ public class ZaleniumRegistry extends BaseGridRegistry implements GridRegistry {
     public void addNewSessionRequest(RequestHandler handler) {
         try {
             lock.lock();
-            proxies.verifyAbilityToHandleDesiredCapabilities(handler.getRequest().getDesiredCapabilities());
+            Map<String, Object> requestedCapabilities = handler.getRequest().getDesiredCapabilities();
+            proxies.verifyAbilityToHandleDesiredCapabilities(requestedCapabilities);
+            requestedCapabilities.forEach((k, v) -> MDC.put(k,v.toString()));
+            LOG.info("Adding sessionRequest for " + requestedCapabilities.toString());
             newSessionQueue.add(handler);
             fireMatcherStateChanged();
         } finally {
+            MDC.clear();
             lock.unlock();
         }
 
