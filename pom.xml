@@ -264,6 +264,24 @@
                     <showWarnings>true</showWarnings>
                 </configuration>
             </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <manifestSections>
+                            <manifestSection>
+                                <Name>Build-Info</Name>
+                                <manifestEntries>
+                                    <Selenium-Version>${selenium-server.major-minor.version}.${selenium-server.patch-level.version}</Selenium-Version>
+                                </manifestEntries>
+                            </manifestSection>
+                        </manifestSections>
+                    </archive>
+                </configuration>
+
+            </plugin>
             <!-- Plugin to build the fat jar -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
