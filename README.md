@@ -105,8 +105,7 @@ started, please join the #zalenium channel on [Slack](https://seleniumhq.herokua
 * Stop it: `docker stop zalenium`
 
 ## Additional features
-* [Dashboard](http://localhost:4444/dashboard), see all the videos and aggregated logs after your tests completed. 
-Check a live demo [here](http://zalenium.bitballoon.com/dashboard)
+* [Dashboard](http://localhost:4444/dashboard), see all the videos and aggregated logs after your tests completed.
   <p align="center">
     <img id="dashboard" width="600" src="docs/img/dashboard.gif" />
   </p>
