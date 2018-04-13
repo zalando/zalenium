@@ -111,6 +111,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
     private static boolean seleniumWaitForContainer = true;
     private static boolean sendAnonymousUsageInfo = false;
     private static boolean waitForAvailableNodes = true;
+    private static String browserTimeout = "16000";
     private static TimeZone configuredTimeZone;
     private static Dimension configuredScreenSize;
     private static String containerName;
@@ -159,6 +160,8 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
         sendAnonymousUsageInfo = env.getBooleanEnvVariable("ZALENIUM_SEND_ANONYMOUS_USAGE_INFO", false);
 
         waitForAvailableNodes = env.getBooleanEnvVariable("WAIT_FOR_AVAILABLE_NODES", true);
+
+        browserTimeout = env.getStringEnvVariable("SEL_BROWSER_TIMEOUT_SECS", "16000");
     }
 
     /*
@@ -556,6 +559,7 @@ public class DockerSeleniumStarterRemoteProxy extends DefaultRemoteProxy impleme
         envVars.put("CHROME", "false");
         envVars.put("FIREFOX", "false");
         envVars.put("SELENIUM_NODE_PARAMS", seleniumNodeParams);
+        envVars.put("SEL_BROWSER_TIMEOUT_SECS", browserTimeout);
         return envVars;
     }
 
