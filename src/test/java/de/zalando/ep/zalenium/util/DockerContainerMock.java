@@ -88,11 +88,25 @@ public class DockerContainerMock {
         when(container_40000.id()).thenReturn(containerId);
         when(container_40000.status()).thenReturn("running");
         when(container_40000.image()).thenReturn("elgalu/selenium");
+        NetworkSettings container_40000NetworkSettings = mock(NetworkSettings.class);
+        when(container_40000NetworkSettings.ipAddress()).thenReturn("localhost");
+        AttachedNetwork container_40000Attached = mock(AttachedNetwork.class);
+        when(container_40000Attached.ipAddress()).thenReturn("localhost");
+        when(container_40000NetworkSettings.networks()).thenReturn(ImmutableMap.of("network", container_40000Attached));
+        when(container_40000.networkSettings()).thenReturn(container_40000NetworkSettings);
+        
         Container container_40001 = mock(Container.class);
         when(container_40001.names()).thenReturn(ImmutableList.copyOf(Collections.singletonList("/zalenium_40001")));
         when(container_40001.id()).thenReturn(containerId);
         when(container_40001.status()).thenReturn("running");
         when(container_40001.image()).thenReturn("elgalu/selenium");
+        NetworkSettings container_40001NetworkSettings = mock(NetworkSettings.class);
+        when(container_40001NetworkSettings.ipAddress()).thenReturn("localhost");
+        AttachedNetwork container_40001Attached = mock(AttachedNetwork.class);
+        when(container_40001Attached.ipAddress()).thenReturn("localhost");
+        when(container_40001NetworkSettings.networks()).thenReturn(ImmutableMap.of("network", container_40001Attached));
+        when(container_40001.networkSettings()).thenReturn(container_40001NetworkSettings);
+        
         String zaleniumContainerId = RandomStringUtils.randomAlphabetic(30).toLowerCase();
         Container zalenium = mock(Container.class);
         when(zalenium.names()).thenReturn(ImmutableList.copyOf(Collections.singletonList("/zalenium")));

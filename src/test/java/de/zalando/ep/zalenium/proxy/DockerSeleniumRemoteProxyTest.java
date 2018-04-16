@@ -27,7 +27,6 @@ import org.openqa.grid.internal.GridRegistry;
 import org.openqa.grid.internal.TestSession;
 import org.openqa.grid.internal.utils.configuration.GridHubConfiguration;
 import org.openqa.grid.web.Hub;
-import org.openqa.grid.web.servlet.handler.RequestHandler;
 import org.openqa.grid.web.servlet.handler.RequestType;
 import org.openqa.grid.web.servlet.handler.WebDriverRequest;
 import org.openqa.selenium.Dimension;

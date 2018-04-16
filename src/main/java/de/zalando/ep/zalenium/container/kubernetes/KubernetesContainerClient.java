@@ -8,11 +8,9 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -332,7 +330,7 @@ public class KubernetesContainerClient implements ContainerClient {
         // Create the container
         Pod createdPod = doneablePod.done();
         String containerName = createdPod.getMetadata() == null ? containerIdPrefix : createdPod.getMetadata().getName();
-        return new ContainerCreationStatus(true, containerName, nodePort);
+        return new ContainerCreationStatus(true, containerName, containerName, nodePort);
     }
 
     @Override

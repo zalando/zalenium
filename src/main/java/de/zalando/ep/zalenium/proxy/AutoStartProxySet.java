@@ -225,7 +225,7 @@ public class AutoStartProxySet extends ProxySet implements Iterable<RemoteProxy>
 		
 		synchronized (this) {
 			for (Entry<ContainerCreationStatus, ContainerStatus> container : this.startedContainers.entrySet()) {
-				if (Objects.equals(container.getKey().getContainerName(), containerId)) {
+				if (Objects.equals(container.getKey().getContainerName(), containerId) || Objects.equals(container.getKey().getContainerId(), containerId)) {
 					container.getValue().setProxy(Optional.of(proxy));
 					containerStatus = container.getValue();
 					break;
