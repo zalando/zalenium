@@ -44,7 +44,7 @@ import static org.mockito.Mockito.*;
 
 public class SauceLabsRemoteProxyTest {
 
-	private DockerSeleniumRemoteProxy proxy;
+    private DockerSeleniumRemoteProxy proxy;
     private SauceLabsRemoteProxy sauceLabsProxy;
     private GridRegistry registry;
 

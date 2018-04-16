@@ -3,7 +3,7 @@ package de.zalando.ep.zalenium.proxy;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
-@RunWith(value = Parameterized.class)
+//@RunWith(value = Parameterized.class)
 public class DockerSeleniumStarterRemoteProxyTest {
 
 //    private DockerSeleniumStarterRemoteProxy spyProxy;

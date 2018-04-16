@@ -52,13 +52,6 @@ public class KubernetesContainerClient implements ContainerClient {
     };
 
     private static final Logger logger = LoggerFactory.getLogger(KubernetesContainerClient.class.getName());
-    
-    private static final Set<String> TERMINAL_STATES = new HashSet<String>();
-    static {
-    	TERMINAL_STATES.add("ContainerCannotRun");
-    	TERMINAL_STATES.add("PodCompleted");
-    	TERMINAL_STATES.add("Error");
-    }
 
     private KubernetesClient client;
 

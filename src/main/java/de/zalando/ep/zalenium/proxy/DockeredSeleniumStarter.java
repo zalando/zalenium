@@ -1,54 +1,32 @@
 package de.zalando.ep.zalenium.proxy;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.TimeZone;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-import de.zalando.ep.zalenium.container.ContainerClient;
-import de.zalando.ep.zalenium.container.ContainerCreationStatus;
-import de.zalando.ep.zalenium.container.ContainerFactory;
-import de.zalando.ep.zalenium.dashboard.Dashboard;
-import de.zalando.ep.zalenium.matcher.DockerSeleniumCapabilityMatcher;
-import de.zalando.ep.zalenium.matcher.ZaleniumCapabilityType;
-import de.zalando.ep.zalenium.util.Environment;
-import de.zalando.ep.zalenium.util.GoogleAnalyticsApi;
-import de.zalando.ep.zalenium.util.ProcessedCapabilities;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.RandomUtils;
 import org.openqa.grid.common.RegistrationRequest;
-import org.openqa.grid.internal.GridRegistry;
-import org.openqa.grid.internal.RemoteProxy;
-import org.openqa.grid.internal.TestSession;
-import org.openqa.grid.internal.listeners.RegistrationListener;
-import org.openqa.grid.internal.utils.CapabilityMatcher;
-import org.openqa.grid.internal.utils.HtmlRenderer;
-import org.openqa.grid.selenium.proxy.DefaultRemoteProxy;
-import org.openqa.grid.web.servlet.console.DefaultProxyHtmlRenderer;
 import org.openqa.selenium.Dimension;
 import org.openqa.selenium.MutableCapabilities;
 import org.openqa.selenium.Platform;
 import org.openqa.selenium.net.NetworkUtils;
 import org.openqa.selenium.remote.BrowserType;
 import org.openqa.selenium.remote.CapabilityType;
-import org.openqa.selenium.remote.server.jmx.ManagedService;
 
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.TimeZone;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import com.google.common.annotations.VisibleForTesting;
+
+import de.zalando.ep.zalenium.container.ContainerClient;
+import de.zalando.ep.zalenium.container.ContainerCreationStatus;
+import de.zalando.ep.zalenium.container.ContainerFactory;
+import de.zalando.ep.zalenium.matcher.ZaleniumCapabilityType;
+import de.zalando.ep.zalenium.util.Environment;
+import de.zalando.ep.zalenium.util.GoogleAnalyticsApi;
 
 public class DockeredSeleniumStarter {
 

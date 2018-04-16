@@ -2,24 +2,16 @@ package de.zalando.ep.zalenium.proxy;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.TimeZone;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
-import org.openqa.grid.internal.utils.CapabilityMatcher;
 import org.openqa.selenium.Dimension;
-import org.openqa.selenium.MutableCapabilities;
 import org.openqa.selenium.remote.server.jmx.ManagedService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import de.zalando.ep.zalenium.container.ContainerClient;
 import de.zalando.ep.zalenium.container.ContainerFactory;

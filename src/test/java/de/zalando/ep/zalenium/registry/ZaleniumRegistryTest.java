@@ -72,6 +72,8 @@ public class ZaleniumRegistryTest {
 
         try {
             registry.add(p1);
+            
+            await().pollInterval(Duration.FIVE_HUNDRED_MILLISECONDS).atMost(Duration.TWO_SECONDS).until(() -> registry.getAllProxies().size() == 1);
 
             RequestHandler newSessionRequest = TestUtils.createNewSessionHandler(registry, requestedCapability);
             newSessionRequest.process();

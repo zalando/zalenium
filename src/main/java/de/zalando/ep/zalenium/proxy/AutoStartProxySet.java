@@ -49,28 +49,94 @@ import de.zalando.ep.zalenium.container.ContainerCreationStatus;
 import net.jcip.annotations.ThreadSafe;
 
 /**
- * A set of RemoteProxies.
- *
- * Obeys the iteration guarantees of CopyOnWriteArraySet
+ * Automatically starts remote proxies in response to demand for test sessions.
+ * 
+ * On startup, will start a configurable minimum number of proxies, and will attempt to maintain that minimum.
+ * 
+ * Monitors the state of containers to automatically remove proxies from the set as the containers are shutdown.
+ * 
+ * Generally, the lifecycle of a container is:
+ * 1. a new proxy is requested. The container is started and added to the startedContainers map.
+ * 2. the container starts and that fact is recorded in the map.
+ * 3. the proxy in the container registers with the grid, and the proxy is added to the set and recorded 
+ *    in the map (this may happen before step 2.).
+ * 4. the proxy is no longer needed so it is marked unavailable and a request is sent to stop the container.
+ * 5. the proxy deregisters - another attempt will be made to stop the container and it will be removed from the set.
+ * 6. the container stops and is removed from the map.
+ * 
+ * In some cases, a stopping container's proxy may re-register with the grid so care is taken to ensure that:
+ * 1. the proxy will not be allocated a test (it will fail when the container actually stops)
+ * 2. proxies are always tracked and shutdown when appropriate.
  */
 @ThreadSafe
 public class AutoStartProxySet extends ProxySet implements Iterable<RemoteProxy> {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(AutoStartProxySet.class.getName());
 
-	private final Pool pool = new Pool(DockerSeleniumStarterRemoteProxy.getDesiredContainersOnStartup(),
-			DockerSeleniumStarterRemoteProxy.getMaxDockerSeleniumContainers(), 180000, true, this);
+	private final Map<ContainerCreationStatus, ContainerStatus> startedContainers = new ConcurrentHashMap<>();
+	
+	private final DockeredSeleniumStarter starter = new DockeredSeleniumStarter();
 
+	private final SessionRequestFilter filter = new SessionRequestFilter();
+	
+	private final long minContainers = DockerSeleniumStarterRemoteProxy.getDesiredContainersOnStartup();
+	private final long maxContainers = DockerSeleniumStarterRemoteProxy.getMaxDockerSeleniumContainers();
+	private final long timeToWaitToStart = 180000;
+	private final boolean waitForAvailableNodes = true;
+	
+	private final Thread poller;
+	
+	private long timeOfLastReport = 0;
+	
 	public AutoStartProxySet(boolean throwOnCapabilityNotPresent) {
 		super(throwOnCapabilityNotPresent);
+		
+		poller = new Thread(new Runnable() {
+			@Override
+			public void run() {
+				LOGGER.info("Starting poller.");
+				while (true) {
+					
+					long now = System.currentTimeMillis();
+					if (now - timeOfLastReport > 30000) {
+						dumpStatus();
+						timeOfLastReport = now;
+					}
+					
+					LOGGER.debug("Checking containers...");
+					try {
+						checkContainers();
+					} catch (Exception e) {
+						LOGGER.error("Failed checking containers.", e);
+					}
+					LOGGER.debug("Checked containers.");
+					
+					try {
+						Thread.sleep(1000);
+					} catch (InterruptedException e) {
+						LOGGER.info("Stopping polling thread.");
+						LOGGER.debug("Stopping polling thread.", e);
+					}
+				}
+			}
+		});
+
+		poller.setName("AutoStartProxyPoolPoller");
+
+		poller.start();
 	}
 
 	@Override
 	public void teardown() {
-		pool.teardown();
+		poller.interrupt();
 		super.teardown();
 	}
 
+	/**
+	 * Creates a new session (if possible) on a proxy.
+	 * 
+	 * If no session can be created, returns null and requests the creation of a new proxy.
+	 */
 	public TestSession getNewSession(Map<String, Object> desiredCapabilities) {
 		int busy = super.getBusyProxies().size();
 		int total = super.size();
@@ -86,7 +152,7 @@ public class AutoStartProxySet extends ProxySet implements Iterable<RemoteProxy>
 
 		TestSession newSession = super.getNewSession(desiredCapabilities);
 		if (newSession == null) {
-			pool.start(desiredCapabilities);
+			this.start(desiredCapabilities);
 		}
 		return newSession;
 	}
@@ -94,232 +160,16 @@ public class AutoStartProxySet extends ProxySet implements Iterable<RemoteProxy>
 	public void add(RemoteProxy proxy) {
 		if (proxy instanceof DockerSeleniumRemoteProxy) {
 			DockerSeleniumRemoteProxy dockerSeleniumRemoteProxy = (DockerSeleniumRemoteProxy) proxy;
-			pool.register(dockerSeleniumRemoteProxy);
+			this.register(dockerSeleniumRemoteProxy);
 		}
 		super.add(proxy);
 	}
-
+	
 	public RemoteProxy remove(RemoteProxy proxy) {
 		if (proxy instanceof DockerSeleniumRemoteProxy) {
 			DockerSeleniumRemoteProxy dockerSeleniumRemoteProxy = (DockerSeleniumRemoteProxy) proxy;
 			// Always try to remove the proxy from the pool - this will stop the container.
-			pool.remove(dockerSeleniumRemoteProxy);
-		}
-		return super.remove(proxy);
-	}
-
-	private static final class Pool {
-		private final Map<ContainerCreationStatus, ContainerStatus> startedContainers = new ConcurrentHashMap<>();
-		
-		private final long minContainers;
-		private final long maxContainers;
-		private final long timeToWaitToStart;
-		private final boolean waitForAvailableNodes;
-
-		private final DockeredSeleniumStarter starter = new DockeredSeleniumStarter();
-
-		private final SessionRequestFilter filter = new SessionRequestFilter();
-		
-		private final Thread poller;
-		
-		private long timeOfLastReport = 0;
-		private ProxySet proxySet;
-
-		public Pool(long minContainers, long maxContainers, long timeToWaitToStart, boolean waitForAvailableNodes, ProxySet proxySet) {
-			super();
-			this.minContainers = minContainers;
-			this.maxContainers = maxContainers;
-			this.timeToWaitToStart = timeToWaitToStart;
-			this.waitForAvailableNodes = waitForAvailableNodes;
-			this.proxySet = proxySet;
-
-			poller = new Thread(new Runnable() {
-				@Override
-				public void run() {
-					LOGGER.info("Starting poller.");
-					while (true) {
-						
-						long now = System.currentTimeMillis();
-						if (now - timeOfLastReport > 30000) {
-							dumpStatus();
-							timeOfLastReport = now;
-						}
-						
-						LOGGER.debug("Checking containers...");
-						try {
-							checkContainers();
-						} catch (Exception e) {
-							LOGGER.error("Failed checking containers.", e);
-						}
-						LOGGER.debug("Checked containers.");
-						
-						try {
-							Thread.sleep(1000);
-						} catch (InterruptedException e) {
-							e.printStackTrace();
-						}
-					}
-				}
-			});
-
-			poller.setName("AutoStartProxyPoolPoller");
-
-			poller.start();
-		}
-
-		public void register(DockerSeleniumRemoteProxy proxy) {
-			String containerId = proxy.getContainerId();
-
-			ContainerStatus containerStatus = null;
-			
-			synchronized (this) {
-				for (Entry<ContainerCreationStatus, ContainerStatus> container : this.startedContainers.entrySet()) {
-					if (Objects.equals(container.getKey().getContainerName(), containerId)) {
-						container.getValue().setProxy(Optional.of(proxy));
-						containerStatus = container.getValue();
-						break;
-					}
-				}
-			}
-			
-			if (containerStatus == null) {
-				LOGGER.warn("Registered (or re-registered) a container {} {} that is not tracked by the pool, marking down.", containerId, proxy);
-				proxy.markDown();
-			}
-			else if (containerStatus.isShuttingDown()) {
-				LOGGER.warn("Registered (or re-registered) a container {} {} that is shutting down, marking down.", containerId, proxy);
-				proxy.markDown();
-			}
-			else {
-				LOGGER.info("Registered a container {} {}.", containerId, proxy);
-			}
-		}
-
-		public synchronized void start(Map<String, Object> desiredCapabilities) {
-
-			if (startedContainers.size() >= this.maxContainers) {
-				LOGGER.info("Not starting new container, there are [{}] of max [{}] created.", startedContainers.size(),
-						this.maxContainers);
-				return;
-			}
-
-			if (nodesAvailable(desiredCapabilities)) {
-				LOGGER.debug(String.format("A node is coming up soon for %s, won't start a new node yet.",
-						desiredCapabilities));
-				return;
-			}
-
-			if (filter.hasRequestBeenProcessed(desiredCapabilities)) {
-				LOGGER.debug("Request {}, has been processed and it is waiting for a node.", desiredCapabilities);
-				return;
-			}
-
-			LOGGER.info("No proxy available for new session, starting new.");
-
-			this.startContainer(desiredCapabilities);
-
-			filter.cleanProcessedCapabilities();
-		}
-
-		public synchronized void teardown() {
-			poller.interrupt();
-		}
-
-	    // Synchronize so that we record the container creation status before register can be called
-		private synchronized void startContainer(Map<String, Object> desiredCapabilities) {
-			ContainerCreationStatus startedContainer = starter.startDockerSeleniumContainer(desiredCapabilities);
-			if (startedContainer == null) {
-				LOGGER.info(String.format("Failed to start container."));
-			} else {
-				filter.requestHasBeenProcesssed(desiredCapabilities);
-				startedContainers.put(startedContainer,
-						new ContainerStatus(startedContainer.getContainerName(), System.currentTimeMillis()));
-				LOGGER.info("Created {}.", startedContainer);
-			}
-		}
-
-		public void checkContainers() {
-			LOGGER.debug("Checking {} containers.", startedContainers.size());
-			synchronized (this) {
-				if (startedContainers.size() < this.minContainers) {
-					LOGGER.info("Autostarting container, because {} is less than min {}", startedContainers.size(),
-							this.minContainers);
-					long outstanding = this.minContainers - startedContainers.size();
-					for (int i = 0; i < outstanding; i++) {
-						this.startContainer(Collections.emptyMap());
-					}
-				}
-			}
-
-			Set<ContainerCreationStatus> idleProxies = new HashSet<>();
-			
-			Set<ContainerCreationStatus> deadProxies = 
-					this.startedContainers.keySet().stream().filter(starter::containerHasFinished).collect(Collectors.toSet());
-			
-			for (ContainerCreationStatus containerCreationStatus : deadProxies) {
-				LOGGER.info("Container {} is terminated. Removing from tracked set.", containerCreationStatus);
-				ContainerStatus removedProxy = this.startedContainers.remove(containerCreationStatus);
-				Optional.ofNullable(removedProxy).flatMap(ContainerStatus::getProxy).ifPresent(DockerSeleniumRemoteProxy::markDown);
-			}
-
-			for (Entry<ContainerCreationStatus, ContainerStatus> container : this.startedContainers.entrySet()) {
-				ContainerCreationStatus creationStatus = container.getKey();
-				ContainerStatus containerStatus = container.getValue();
-
-				if (containerStatus.isStarted()) {
-					// No need to check.
-				} else {
-					if (starter.containerHasStarted(creationStatus)) {
-						long started = System.currentTimeMillis();
-						containerStatus.setTimeStarted(Optional.of(started));
-						LOGGER.info("Container {} started after {}.", creationStatus.getContainerName(),
-								(started - containerStatus.getTimeCreated()));
-					} else {
-						long timeWaitingToStart = System.currentTimeMillis() - containerStatus.getTimeCreated();
-						if (timeWaitingToStart > this.timeToWaitToStart) {
-							LOGGER.warn("Waited {} for {} to start, which is longer than {}.", timeWaitingToStart,
-									containerStatus, this.timeToWaitToStart);
-						}
-					}
-				}
-			}
-			
-			this.startedContainers.entrySet().
-				stream().
-				filter(entry -> !entry.getValue().isShuttingDown()). // Do not count already terminating proxies.
-				flatMap(entry -> 
-					entry.getValue().getProxy().filter(DockerSeleniumRemoteProxy::shutdownIfStale).map(proxy -> Stream.of(Pair.of(entry, proxy))).orElse(Stream.empty())).
-				forEach(pair -> {
-					idleProxies.add(pair.getLeft().getKey());
-					pair.getLeft().getValue().setShuttingDown(true);
-				});
-			
-			long runningCount = this.startedContainers.values().stream().filter(container -> !container.isShuttingDown()).count();
-			
-			if (runningCount > this.minContainers) {
-				LOGGER.debug("Timing out containers because active container count {} is greater than min {}.", runningCount, this.minContainers);
-				long extra = runningCount - minContainers;
-				
-					this.startedContainers.entrySet().
-						stream().
-						filter(entry -> !entry.getValue().isShuttingDown()). // Do not count already terminating proxies.
-						flatMap(entry -> 
-							entry.getValue().getProxy().filter(DockerSeleniumRemoteProxy::shutdownIfIdle).map(proxy -> Stream.of(Pair.of(entry, proxy))).orElse(Stream.empty())).
-						limit(extra).
-						forEach(pair -> {
-							idleProxies.add(pair.getLeft().getKey());
-							pair.getLeft().getValue().setShuttingDown(true);
-						});
-			}
-			
-			
-			
-			
-			LOGGER.debug(String.format("[%d] proxies are idle and will be removed.", idleProxies.size()));
-		}
-
-		public void remove(DockerSeleniumRemoteProxy proxy) {
-			String containerId = proxy.getContainerId();
+			String containerId = dockerSeleniumRemoteProxy.getContainerId();
 			
 			try {
 				starter.stopContainer(containerId);
@@ -327,39 +177,198 @@ public class AutoStartProxySet extends ProxySet implements Iterable<RemoteProxy>
 				LOGGER.error("Failed to stop container [" + containerId + "].", e);
 			}
 		}
+		return super.remove(proxy);
+	}
+	
+	/**
+	 * If possible, starts a new proxy that can satisfy the requested capabilities.
+	 * 
+	 * If too many proxies are already running, then a new proxy will not be started.
+	 * 
+	 * If the request has been made previously, then a new proxy will not be started.
+	 * 
+	 * If a proxy that would otherwise be able to service the request is currently cleaning up
+	 * and will be available shortly, then a new proxy will not be started.
+	 * 
+	 * @param desiredCapabilities capabilities of the proxy to be started.
+	 */
+	public synchronized void start(Map<String, Object> desiredCapabilities) {
 
-		private boolean nodesAvailable(Map<String, Object> requestedCapability) {
-			if (!waitForAvailableNodes) {
-				LOGGER.debug(String.format("Not waiting for available slots, creating nodes when possible."));
-				return false;
+		if (startedContainers.size() >= this.maxContainers) {
+			LOGGER.info("Not starting new container, there are [{}] of max [{}] created.", startedContainers.size(),
+					this.maxContainers);
+			return;
+		}
+
+		if (nodesAvailable(desiredCapabilities)) {
+			LOGGER.debug(String.format("A node is coming up soon for %s, won't start a new node yet.",
+					desiredCapabilities));
+			return;
+		}
+
+		if (filter.hasRequestBeenProcessed(desiredCapabilities)) {
+			LOGGER.debug("Request {}, has been processed and it is waiting for a node.", desiredCapabilities);
+			return;
+		}
+
+		LOGGER.info("No proxy available for new session, starting new.");
+
+		this.startContainer(desiredCapabilities);
+
+		filter.cleanProcessedCapabilities();
+	}
+	
+	private void register(DockerSeleniumRemoteProxy proxy) {
+		String containerId = proxy.getContainerId();
+
+		ContainerStatus containerStatus = null;
+		
+		synchronized (this) {
+			for (Entry<ContainerCreationStatus, ContainerStatus> container : this.startedContainers.entrySet()) {
+				if (Objects.equals(container.getKey().getContainerName(), containerId)) {
+					container.getValue().setProxy(Optional.of(proxy));
+					containerStatus = container.getValue();
+					break;
+				}
 			}
+		}
+		
+		if (containerStatus == null) {
+			LOGGER.warn("Registered (or re-registered) a container {} {} that is not tracked by the pool, marking down.", containerId, proxy);
+			proxy.markDown();
+		}
+		else if (containerStatus.isShuttingDown()) {
+			LOGGER.warn("Registered (or re-registered) a container {} {} that is shutting down, marking down.", containerId, proxy);
+			proxy.markDown();
+		}
+		else {
+			LOGGER.info("Registered a container {} {}.", containerId, proxy);
+		}
+	}
+	
+	public void checkContainers() {
+		LOGGER.debug("Checking {} containers.", startedContainers.size());
+		synchronized (this) {
+			if (startedContainers.size() < this.minContainers) {
+				LOGGER.info("Autostarting container, because {} is less than min {}", startedContainers.size(),
+						this.minContainers);
+				long outstanding = this.minContainers - startedContainers.size();
+				for (int i = 0; i < outstanding; i++) {
+					this.startContainer(Collections.emptyMap());
+				}
+			}
+		}
 
-			// If a node is cleaning up it will be available soon
-			// It is faster and more resource wise to wait for the node to be ready
+		Set<ContainerCreationStatus> idleProxies = new HashSet<>();
+		
+		Set<ContainerCreationStatus> deadProxies = 
+				this.startedContainers.keySet().stream().filter(starter::containerHasFinished).collect(Collectors.toSet());
+		
+		for (ContainerCreationStatus containerCreationStatus : deadProxies) {
+			LOGGER.info("Container {} is terminated. Removing from tracked set.", containerCreationStatus);
+			ContainerStatus removedProxy = this.startedContainers.remove(containerCreationStatus);
+			Optional.ofNullable(removedProxy).flatMap(ContainerStatus::getProxy).ifPresent(DockerSeleniumRemoteProxy::markDown);
+		}
 
-			boolean available = this.startedContainers.values().stream().anyMatch(status -> {
-				return status.getProxy()
-						.filter(p -> p.isCleaningUpBeforeNextSession() && p.hasCapability(requestedCapability))
-						.isPresent();
+		for (Entry<ContainerCreationStatus, ContainerStatus> container : this.startedContainers.entrySet()) {
+			ContainerCreationStatus creationStatus = container.getKey();
+			ContainerStatus containerStatus = container.getValue();
+
+			if (containerStatus.isStarted()) {
+				// No need to check.
+			} else {
+				if (starter.containerHasStarted(creationStatus)) {
+					long started = System.currentTimeMillis();
+					containerStatus.setTimeStarted(Optional.of(started));
+					LOGGER.info("Container {} started after {}.", creationStatus.getContainerName(),
+							(started - containerStatus.getTimeCreated()));
+				} else {
+					long timeWaitingToStart = System.currentTimeMillis() - containerStatus.getTimeCreated();
+					if (timeWaitingToStart > this.timeToWaitToStart) {
+						LOGGER.warn("Waited {} for {} to start, which is longer than {}.", timeWaitingToStart,
+								containerStatus, this.timeToWaitToStart);
+					}
+				}
+			}
+		}
+		
+		this.startedContainers.entrySet().
+			stream().
+			filter(entry -> !entry.getValue().isShuttingDown()). // Do not count already terminating proxies.
+			flatMap(entry -> 
+				entry.getValue().getProxy().filter(DockerSeleniumRemoteProxy::shutdownIfStale).map(proxy -> Stream.of(Pair.of(entry, proxy))).orElse(Stream.empty())).
+			forEach(pair -> {
+				idleProxies.add(pair.getLeft().getKey());
+				pair.getLeft().getValue().setShuttingDown(true);
 			});
+		
+		long runningCount = this.startedContainers.values().stream().filter(container -> !container.isShuttingDown()).count();
+		
+		if (runningCount > this.minContainers) {
+			LOGGER.debug("Timing out containers because active container count {} is greater than min {}.", runningCount, this.minContainers);
+			long extra = runningCount - minContainers;
+			
+				this.startedContainers.entrySet().
+					stream().
+					filter(entry -> !entry.getValue().isShuttingDown()). // Do not count already terminating proxies.
+					flatMap(entry -> 
+						entry.getValue().getProxy().filter(DockerSeleniumRemoteProxy::shutdownIfIdle).map(proxy -> Stream.of(Pair.of(entry, proxy))).orElse(Stream.empty())).
+					limit(extra).
+					forEach(pair -> {
+						idleProxies.add(pair.getLeft().getKey());
+						pair.getLeft().getValue().setShuttingDown(true);
+					});
+		}
+		
+		
+		
+		
+		LOGGER.debug(String.format("[%d] proxies are idle and will be removed.", idleProxies.size()));
+	}
+	
+    /**
+     * Starts a container. Records that a request has been processed so that a retried request will not
+     * cause extra proxies to be started.
+     */
+	private synchronized void startContainer(Map<String, Object> desiredCapabilities) {
+		// Synchronized so that we record the container creation status before register can be called
+		ContainerCreationStatus startedContainer = starter.startDockerSeleniumContainer(desiredCapabilities);
+		if (startedContainer == null) {
+			LOGGER.info(String.format("Failed to start container."));
+		} else {
+			filter.requestHasBeenProcesssed(desiredCapabilities);
+			startedContainers.put(startedContainer,
+					new ContainerStatus(startedContainer.getContainerName(), System.currentTimeMillis()));
+			LOGGER.info("Created {}.", startedContainer);
+		}
+	}
 
-			if (available) {
-				LOGGER.debug(String.format("A node is coming up to handle this request."));
-				return true;
-			}
-
-			LOGGER.debug("No slots available, a new node will be created.");
+	private boolean nodesAvailable(Map<String, Object> requestedCapability) {
+		if (!waitForAvailableNodes) {
+			LOGGER.debug(String.format("Not waiting for available slots, creating nodes when possible."));
 			return false;
 		}
 
-		private static String dateTime(long epochMillis) {
-			DateTimeFormatter formatter = DateTimeFormatter.ISO_DATE_TIME;
-			LocalDateTime date = Instant.ofEpochMilli(epochMillis).atZone(ZoneId.systemDefault()).toLocalDateTime();
-			return formatter.format(date);
+		// If a node is cleaning up it will be available soon
+		// It is faster and more resource wise to wait for the node to be ready
+
+		boolean available = this.startedContainers.values().stream().anyMatch(status -> {
+			return status.getProxy()
+					.filter(p -> p.isCleaningUpBeforeNextSession() && p.hasCapability(requestedCapability))
+					.isPresent();
+		});
+
+		if (available) {
+			LOGGER.debug(String.format("A node is coming up to handle this request."));
+			return true;
 		}
-		
-		private void dumpStatus() {
-			
+
+		LOGGER.debug("No slots available, a new node will be created.");
+		return false;
+	}
+	
+	private void dumpStatus() {
+		if (LOGGER.isInfoEnabled()) {
 			final AsciiTable at = new AsciiTable();
 			
 			at.addRule();
@@ -376,9 +385,9 @@ public class AutoStartProxySet extends ProxySet implements Iterable<RemoteProxy>
 				final String proxyId = containerStatus.getProxy().map(p -> p.getId()).orElse("-");
 				final String containerId = creationStatus.getContainerName();
 				final String timeCreated = dateTime(containerStatus.getTimeCreated());
-				final String timeStarted = containerStatus.getTimeStarted().map(Pool::dateTime).orElse("-");
-				final String lastUsed = containerStatus.getProxy().map(DockerSeleniumRemoteProxy::getLastCommandTime).map(Pool::dateTime).orElse("-");
-				final String lastSession = containerStatus.getProxy().map(DockerSeleniumRemoteProxy::getLastSessionStart).map(Pool::dateTime).orElse("-");
+				final String timeStarted = containerStatus.getTimeStarted().map(AutoStartProxySet::dateTime).orElse("-");
+				final String lastUsed = containerStatus.getProxy().map(DockerSeleniumRemoteProxy::getLastCommandTime).map(AutoStartProxySet::dateTime).orElse("-");
+				final String lastSession = containerStatus.getProxy().map(DockerSeleniumRemoteProxy::getLastSessionStart).map(AutoStartProxySet::dateTime).orElse("-");
 				final Boolean isBusy = containerStatus.getProxy().map(DockerSeleniumRemoteProxy::isBusy).orElse(false);
 				final Boolean isTimedOut = containerStatus.getProxy().map(DockerSeleniumRemoteProxy::isTimedOut).orElse(false);
 				final Boolean isShuttingDown = containerStatus.isShuttingDown();
@@ -396,9 +405,14 @@ public class AutoStartProxySet extends ProxySet implements Iterable<RemoteProxy>
 			CWC_LongestLine cwc = new CWC_LongestLine();
 			at.getRenderer().setCWC(cwc);
 			
-			System.out.println(at.render(200));
+			LOGGER.info("Status:\n" + at.render(200));
 		}
+	}
 
+	private static String dateTime(long epochMillis) {
+		DateTimeFormatter formatter = DateTimeFormatter.ISO_DATE_TIME;
+		LocalDateTime date = Instant.ofEpochMilli(epochMillis).atZone(ZoneId.systemDefault()).toLocalDateTime();
+		return formatter.format(date);
 	}
 
 	private static final class ContainerStatus {
