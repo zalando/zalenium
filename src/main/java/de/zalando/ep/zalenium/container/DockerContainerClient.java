@@ -25,6 +25,7 @@ import com.spotify.docker.client.AnsiProgressHandler;
 import com.spotify.docker.client.DefaultDockerClient;
 import com.spotify.docker.client.DockerClient;
 import com.spotify.docker.client.LogStream;
+import com.spotify.docker.client.exceptions.ContainerNotFoundException;
 import com.spotify.docker.client.exceptions.DockerException;
 import com.spotify.docker.client.exceptions.DockerRequestException;
 import com.spotify.docker.client.messages.AttachedNetwork;
@@ -565,7 +566,23 @@ public class DockerContainerClient implements ContainerClient {
     
     @Override
     public boolean isTerminated(ContainerCreationStatus container) {
-    	return false;
+        try {
+            final ContainerInfo info = dockerClient.inspectContainer(container.getContainerId());
+            if (info.state().status().equalsIgnoreCase("exited") || info.state().status().equalsIgnoreCase("dead")) {
+                logger.info("Container {} exited with status {} - it is terminated.", container, info.state().status());
+                return true;
+            }
+            return false;
+        } catch (ContainerNotFoundException e) {
+            logger.info("Container {} not found - it is terminated.", container);
+            return true;
+        } catch (DockerException e) {
+            logger.warn("Failed to fetch container status [" + container + "].", e);
+            return false;
+        } catch (InterruptedException e) {
+            logger.warn("Failed to fetch container status [" + container + "].", e);
+            return false;
+        }
     }
 }
 
