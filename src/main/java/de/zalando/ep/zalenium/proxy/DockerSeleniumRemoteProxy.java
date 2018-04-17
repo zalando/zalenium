@@ -96,7 +96,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         this.amountOfExecutedTests = 0;
         readEnvVars();
         containerClient.setNodeId(getId());
-        registration = containerClient.registerNode(DockerSeleniumProxyConfiguration.getContainerName(), this.getRemoteHost());
+        registration = containerClient.registerNode(DockeredSeleniumStarter.getContainerName(), this.getRemoteHost());
         }
         catch (Exception e) {
         	LOGGER.error("Failed to create", e);
@@ -352,22 +352,6 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         } finally {
             super.afterSession(session);
         }
-    }
-
-    @Override
-    public void startPolling() {
-        super.startPolling();
-    }
-
-    @Override
-    public void stopPolling() {
-        super.stopPolling();
-    }
-
-    @Override
-    public void teardown() {
-        super.teardown();
-        stopPolling();
     }
 
     /*

@@ -26,23 +26,16 @@ import de.zalando.ep.zalenium.container.ContainerCreationStatus;
 import de.zalando.ep.zalenium.container.ContainerFactory;
 import de.zalando.ep.zalenium.matcher.ZaleniumCapabilityType;
 import de.zalando.ep.zalenium.util.Environment;
-import de.zalando.ep.zalenium.util.GoogleAnalyticsApi;
 
 public class DockeredSeleniumStarter {
 
     public static final int NO_VNC_PORT_GAP = 10000;
-    @VisibleForTesting
-    static final int DEFAULT_AMOUNT_DESIRED_CONTAINERS = 0;
-    @VisibleForTesting
-    static final int DEFAULT_AMOUNT_DOCKER_SELENIUM_CONTAINERS_RUNNING = 10;
+    private static final int VNC_PORT_GAP = 20000;
+
     @VisibleForTesting
     static final TimeZone DEFAULT_TZ = TimeZone.getTimeZone("Europe/Berlin");
     @VisibleForTesting
     static final Dimension DEFAULT_SCREEN_SIZE = new Dimension(1920, 1080);
-    @VisibleForTesting
-    static final String ZALENIUM_DESIRED_CONTAINERS = "ZALENIUM_DESIRED_CONTAINERS";
-    @VisibleForTesting
-    static final String ZALENIUM_MAX_DOCKER_SELENIUM_CONTAINERS = "ZALENIUM_MAX_DOCKER_SELENIUM_CONTAINERS";
     @VisibleForTesting
     static final String ZALENIUM_TZ = "ZALENIUM_TZ";
     @VisibleForTesting
@@ -56,10 +49,9 @@ public class DockeredSeleniumStarter {
     private static final String DEFAULT_ZALENIUM_CONTAINER_NAME = "zalenium";
     private static final String ZALENIUM_CONTAINER_NAME = "ZALENIUM_CONTAINER_NAME";
     private static final Logger LOGGER = Logger.getLogger(DockeredSeleniumStarter.class.getName());
-    private static final String DEFAULT_DOCKER_SELENIUM_IMAGE = "zalenium/selenium";
+    private static final String DEFAULT_DOCKER_SELENIUM_IMAGE = "elgalu/selenium";
     private static final String ZALENIUM_SELENIUM_IMAGE_NAME = "ZALENIUM_SELENIUM_IMAGE_NAME";
     private static final int LOWER_PORT_BOUNDARY = 40000;
-    private static final int VNC_PORT_GAP = 20000;
     private static final ContainerClient defaultContainerClient = ContainerFactory.getContainerClient();
     private static final Environment defaultEnvironment = new Environment();
     private static final String LOGGING_PREFIX = "[DS] ";
@@ -67,13 +59,8 @@ public class DockeredSeleniumStarter {
     private static List<MutableCapabilities> dockerSeleniumCapabilities = new ArrayList<>();
     private static ContainerClient containerClient = defaultContainerClient;
     private static Environment env = defaultEnvironment;
-    private static GoogleAnalyticsApi ga = new GoogleAnalyticsApi();
     private static String latestDownloadedImage = null;
     private static String seleniumNodeParameters = DEFAULT_SELENIUM_NODE_PARAMS;
-    private static int desiredContainersOnStartup;
-    private static int maxDockerSeleniumContainers;
-    private static int sleepIntervalMultiplier = 1000;
-    private static boolean seleniumWaitForContainer = true;
     private static boolean sendAnonymousUsageInfo = false;
     private static TimeZone configuredTimeZone;
     private static Dimension configuredScreenSize;
@@ -84,13 +71,6 @@ public class DockeredSeleniumStarter {
      * Reading configuration values from the env variables, if a value was not provided it falls back to defaults.
      */
     private static void readConfigurationFromEnvVariables() {
-
-        int desiredContainers = env.getIntEnvVariable(ZALENIUM_DESIRED_CONTAINERS, DEFAULT_AMOUNT_DESIRED_CONTAINERS);
-        setDesiredContainersOnStartup(desiredContainers);
-
-        int maxDSContainers = env.getIntEnvVariable(ZALENIUM_MAX_DOCKER_SELENIUM_CONTAINERS,
-                DEFAULT_AMOUNT_DOCKER_SELENIUM_CONTAINERS_RUNNING);
-        setMaxDockerSeleniumContainers(maxDSContainers);
 
         int sWidth = env.getIntEnvVariable(ZALENIUM_SCREEN_WIDTH, DEFAULT_SCREEN_SIZE.getWidth());
         int sHeight = env.getIntEnvVariable(ZALENIUM_SCREEN_HEIGHT, DEFAULT_SCREEN_SIZE.getHeight());
@@ -107,8 +87,6 @@ public class DockeredSeleniumStarter {
 
         String seleniumNodeParams = env.getStringEnvVariable(SELENIUM_NODE_PARAMS, DEFAULT_SELENIUM_NODE_PARAMS);
         setSeleniumNodeParameters(seleniumNodeParams);
-
-        seleniumWaitForContainer = env.getBooleanEnvVariable("SELENIUM_WAIT_FOR_CONTAINER", true);
 
         sendAnonymousUsageInfo = env.getBooleanEnvVariable("ZALENIUM_SEND_ANONYMOUS_USAGE_INFO", false);
     }
@@ -189,33 +167,6 @@ public class DockeredSeleniumStarter {
         DockeredSeleniumStarter.seleniumNodeParameters = seleniumNodeParameters;
     }
 
-    @VisibleForTesting
-    public static void setSleepIntervalMultiplier(int sleepIntervalMultiplier) {
-        DockeredSeleniumStarter.sleepIntervalMultiplier = sleepIntervalMultiplier;
-    }
-
-    @VisibleForTesting
-    protected static int getDesiredContainersOnStartup() {
-        return desiredContainersOnStartup;
-    }
-
-    @VisibleForTesting
-    protected static void setDesiredContainersOnStartup(int desiredContainersOnStartup) {
-        DockeredSeleniumStarter.desiredContainersOnStartup = desiredContainersOnStartup < 0 ?
-                DEFAULT_AMOUNT_DESIRED_CONTAINERS : desiredContainersOnStartup;
-    }
-
-    @VisibleForTesting
-    protected static int getMaxDockerSeleniumContainers() {
-        return maxDockerSeleniumContainers;
-    }
-
-    @VisibleForTesting
-    protected static void setMaxDockerSeleniumContainers(int maxDockerSeleniumContainers) {
-        DockeredSeleniumStarter.maxDockerSeleniumContainers = maxDockerSeleniumContainers < 0 ?
-                DEFAULT_AMOUNT_DOCKER_SELENIUM_CONTAINERS_RUNNING : maxDockerSeleniumContainers;
-    }
-
     private static String getLatestDownloadedImage(String dockerSeleniumImageName) {
         if (latestDownloadedImage == null) {
             latestDownloadedImage = containerClient.getLatestDownloadedImage(dockerSeleniumImageName);
@@ -284,11 +235,11 @@ public class DockeredSeleniumStarter {
     public ContainerCreationStatus startDockerSeleniumContainer(TimeZone timeZone, Dimension screenSize) {
 
         if (timeZone == null) {
-            timeZone = DockerSeleniumProxyConfiguration.DEFAULT_TZ;
+            timeZone = DEFAULT_TZ;
         }
         
         if (screenSize == null) {
-            screenSize = DockerSeleniumProxyConfiguration.DEFAULT_SCREEN_SIZE;
+            screenSize = DEFAULT_SCREEN_SIZE;
         }
         
         NetworkUtils networkUtils = new NetworkUtils();
@@ -298,13 +249,46 @@ public class DockeredSeleniumStarter {
         String seleniumNodeParams = getSeleniumNodeParameters();
         String latestImage = getLatestDownloadedImage(getDockerSeleniumImageName());
 
-        Map<String, String> envVars = DockerSeleniumProxyConfiguration.buildEnvVars(timeZone, screenSize, hostIpAddress, sendAnonymousUsageInfo,
-                nodePolling, nodeRegisterCycle, seleniumNodeParams);
+        Map<String, String> envVars = buildEnvVars(timeZone, screenSize, hostIpAddress, sendAnonymousUsageInfo, nodePolling, nodeRegisterCycle, seleniumNodeParams);
 
         ContainerCreationStatus creationStatus = containerClient
                 .createContainer(getContainerName(), latestImage, envVars, String.valueOf(LOWER_PORT_BOUNDARY));
-        
+
         return creationStatus;
+    }
+
+    private Map<String, String> buildEnvVars(TimeZone timeZone, Dimension screenSize, String hostIpAddress,
+            boolean sendAnonymousUsageInfo, String nodePolling,
+            String nodeRegisterCycle, String seleniumNodeParams) {
+            final int noVncPort = LOWER_PORT_BOUNDARY + NO_VNC_PORT_GAP;
+            final int vncPort = LOWER_PORT_BOUNDARY + VNC_PORT_GAP;
+            Map<String, String> envVars = new HashMap<>();
+            envVars.put("ZALENIUM", "true");
+            envVars.put("SELENIUM_HUB_HOST", hostIpAddress);
+            envVars.put("SELENIUM_HUB_PORT", "4445");
+            envVars.put("SELENIUM_NODE_HOST", "{{CONTAINER_IP}}");
+            envVars.put("GRID", "false");
+            envVars.put("WAIT_TIMEOUT", "120s");
+            envVars.put("PICK_ALL_RANDOM_PORTS", "false");
+            envVars.put("VIDEO_STOP_SLEEP_SECS", "1");
+            envVars.put("WAIT_TIME_OUT_VIDEO_STOP", "20s");
+            envVars.put("SEND_ANONYMOUS_USAGE_INFO", String.valueOf(sendAnonymousUsageInfo));
+            envVars.put("BUILD_URL", env.getStringEnvVariable("BUILD_URL", ""));
+            envVars.put("NOVNC", "true");
+            envVars.put("NOVNC_PORT", String.valueOf(noVncPort));
+            envVars.put("VNC_PORT", String.valueOf(vncPort));
+            envVars.put("SCREEN_WIDTH", String.valueOf(screenSize.getWidth()));
+            envVars.put("SCREEN_HEIGHT", String.valueOf(screenSize.getHeight()));
+            envVars.put("TZ", timeZone.getID());
+            envVars.put("SELENIUM_NODE_REGISTER_CYCLE", nodeRegisterCycle);
+            envVars.put("SEL_NODEPOLLING_MS", nodePolling);
+            envVars.put("SELENIUM_NODE_PROXY_PARAMS", "de.zalando.ep.zalenium.proxy.DockerSeleniumRemoteProxy");
+            envVars.put("MULTINODE", "true");
+            envVars.put("SELENIUM_MULTINODE_PORT", String.valueOf(LOWER_PORT_BOUNDARY));
+            envVars.put("CHROME", "false");
+            envVars.put("FIREFOX", "false");
+            envVars.put("SELENIUM_NODE_PARAMS", seleniumNodeParams);
+            return envVars;
     }
 
     public boolean containerHasStarted(ContainerCreationStatus creationStatus) {
