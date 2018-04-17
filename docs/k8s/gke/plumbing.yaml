@@ -14,9 +14,9 @@ apiVersion: rbac.authorization.k8s.io/v1beta1
 metadata:
   name: zalenium-role
 rules:
-  - verbs: ["create", "list", "get", "delete", "exec"]
+  - verbs: ["create", "list", "get", "delete"]
     apiGroups: [""]
-    resources: ["pods"]
+    resources: ["pods", "pods/exec"]
   - verbs: ["list", "create", "delete", "get"]
     apiGroups: [""]
     resources: ["services"]
