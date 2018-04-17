@@ -399,7 +399,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     public boolean shutdownIfIdle() {
         boolean testIdle = isTestIdle();
         boolean testSessionLimitReached = isTestSessionLimitReached();
-        if (testIdle || testSessionLimitReached) {
+        if (testIdle || (testSessionLimitReached && !isBusy())) {
             LOGGER.info(String.format("[%s] is idle.", getContainerId()));
             timeout("proxy being idle after test.", (testSessionLimitReached? ShutdownType.MAX_TEST_SESSIONS_REACHED : ShutdownType.IDLE));
             return true;
