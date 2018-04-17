@@ -1,23 +1,19 @@
 package de.zalando.ep.zalenium.proxy;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.TimeZone;
 
 import org.openqa.selenium.Dimension;
-import org.openqa.selenium.remote.server.jmx.ManagedService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 
-import de.zalando.ep.zalenium.container.ContainerClient;
-import de.zalando.ep.zalenium.container.ContainerFactory;
 import de.zalando.ep.zalenium.util.Environment;
 import de.zalando.ep.zalenium.util.GoogleAnalyticsApi;
-import de.zalando.ep.zalenium.util.ProcessedCapabilities;
 
 /**
  * The idea of this proxy instance is:
@@ -28,9 +24,7 @@ import de.zalando.ep.zalenium.util.ProcessedCapabilities;
  * the process will flow as normal.
  */
 
-@SuppressWarnings("WeakerAccess")
-@ManagedService(description = "DockerSeleniumStarter TestSlots")
-public class DockerSeleniumStarterRemoteProxy {
+public class DockerSeleniumProxyConfiguration {
 
     public static final int NO_VNC_PORT_GAP = 10000;
     @VisibleForTesting
@@ -57,13 +51,13 @@ public class DockerSeleniumStarterRemoteProxy {
     static final String DEFAULT_SELENIUM_NODE_PARAMS = "";
     private static final String DEFAULT_ZALENIUM_CONTAINER_NAME = "zalenium";
     private static final String ZALENIUM_CONTAINER_NAME = "ZALENIUM_CONTAINER_NAME";
-    private static final Logger LOGGER = LoggerFactory.getLogger(DockerSeleniumStarterRemoteProxy.class.getName());
+    private static final int LOWER_PORT_BOUNDARY = 40000;
+    private static final Logger LOGGER = LoggerFactory.getLogger(DockerSeleniumProxyConfiguration.class.getName());
     private static final String DEFAULT_DOCKER_SELENIUM_IMAGE = "elgalu/selenium";
     private static final String ZALENIUM_SELENIUM_IMAGE_NAME = "ZALENIUM_SELENIUM_IMAGE_NAME";
-    private static final ContainerClient defaultContainerClient = ContainerFactory.getContainerClient();
     private static final Environment defaultEnvironment = new Environment();
+    
     @VisibleForTesting
-    static List<ProcessedCapabilities> processedCapabilitiesList = new ArrayList<>();
     private static Environment env = defaultEnvironment;
     private static GoogleAnalyticsApi ga = new GoogleAnalyticsApi();
     private static String seleniumNodeParameters = DEFAULT_SELENIUM_NODE_PARAMS;
@@ -118,13 +112,47 @@ public class DockerSeleniumStarterRemoteProxy {
     static {
     	readConfigurationFromEnvVariables();
     }
+    
+    private Map<String, String> buildEnvVars(TimeZone timeZone, Dimension screenSize, String hostIpAddress,
+            boolean sendAnonymousUsageInfo, String nodePolling,
+            String nodeRegisterCycle, String seleniumNodeParams) {
+            final int noVncPort = LOWER_PORT_BOUNDARY + NO_VNC_PORT_GAP;
+            final int vncPort = LOWER_PORT_BOUNDARY + VNC_PORT_GAP;
+            Map<String, String> envVars = new HashMap<>();
+            envVars.put("ZALENIUM", "true");
+            envVars.put("SELENIUM_HUB_HOST", hostIpAddress);
+            envVars.put("SELENIUM_HUB_PORT", "4445");
+            envVars.put("SELENIUM_NODE_HOST", "{{CONTAINER_IP}}");
+            envVars.put("GRID", "false");
+            envVars.put("WAIT_TIMEOUT", "120s");
+            envVars.put("PICK_ALL_RANDOM_PORTS", "false");
+            envVars.put("VIDEO_STOP_SLEEP_SECS", "1");
+            envVars.put("WAIT_TIME_OUT_VIDEO_STOP", "20s");
+            envVars.put("SEND_ANONYMOUS_USAGE_INFO", String.valueOf(sendAnonymousUsageInfo));
+            envVars.put("BUILD_URL", env.getStringEnvVariable("BUILD_URL", ""));
+            envVars.put("NOVNC", "true");
+            envVars.put("NOVNC_PORT", String.valueOf(noVncPort));
+            envVars.put("VNC_PORT", String.valueOf(vncPort));
+            envVars.put("SCREEN_WIDTH", String.valueOf(screenSize.getWidth()));
+            envVars.put("SCREEN_HEIGHT", String.valueOf(screenSize.getHeight()));
+            envVars.put("TZ", timeZone.getID());
+            envVars.put("SELENIUM_NODE_REGISTER_CYCLE", nodeRegisterCycle);
+            envVars.put("SEL_NODEPOLLING_MS", nodePolling);
+            envVars.put("SELENIUM_NODE_PROXY_PARAMS", "de.zalando.ep.zalenium.proxy.DockerSeleniumRemoteProxy");
+            envVars.put("MULTINODE", "true");
+            envVars.put("SELENIUM_MULTINODE_PORT", String.valueOf(LOWER_PORT_BOUNDARY));
+            envVars.put("CHROME", "false");
+            envVars.put("FIREFOX", "false");
+            envVars.put("SELENIUM_NODE_PARAMS", seleniumNodeParams);
+            return envVars;
+    }
  
     public static String getContainerName() {
         return Optional.ofNullable(containerName).orElse(DEFAULT_ZALENIUM_CONTAINER_NAME);
     }
     
     private static void setContainerName(String containerName) {
-        DockerSeleniumStarterRemoteProxy.containerName = containerName;
+        DockerSeleniumProxyConfiguration.containerName = containerName;
     }
     
     public static String getDockerSeleniumImageName() {
@@ -132,7 +160,7 @@ public class DockerSeleniumStarterRemoteProxy {
     }
 
     public static void setDockerSeleniumImageName(String dockerSeleniumImageName) {
-        DockerSeleniumStarterRemoteProxy.dockerSeleniumImageName = dockerSeleniumImageName;
+        DockerSeleniumProxyConfiguration.dockerSeleniumImageName = dockerSeleniumImageName;
     }
 
     public static String getSeleniumNodeParameters() {
@@ -140,7 +168,7 @@ public class DockerSeleniumStarterRemoteProxy {
     }
 
     public static void setSeleniumNodeParameters(String seleniumNodeParameters) {
-        DockerSeleniumStarterRemoteProxy.seleniumNodeParameters = seleniumNodeParameters;
+        DockerSeleniumProxyConfiguration.seleniumNodeParameters = seleniumNodeParameters;
     }
 
     @VisibleForTesting
@@ -150,7 +178,7 @@ public class DockerSeleniumStarterRemoteProxy {
 
     @VisibleForTesting
     protected static void setDesiredContainersOnStartup(int desiredContainersOnStartup) {
-        DockerSeleniumStarterRemoteProxy.desiredContainersOnStartup = desiredContainersOnStartup < 0 ?
+        DockerSeleniumProxyConfiguration.desiredContainersOnStartup = desiredContainersOnStartup < 0 ?
                 DEFAULT_AMOUNT_DESIRED_CONTAINERS : desiredContainersOnStartup;
     }
 
@@ -161,7 +189,7 @@ public class DockerSeleniumStarterRemoteProxy {
 
     @VisibleForTesting
     protected static void setMaxDockerSeleniumContainers(int maxDockerSeleniumContainers) {
-        DockerSeleniumStarterRemoteProxy.maxDockerSeleniumContainers = maxDockerSeleniumContainers < 0 ?
+        DockerSeleniumProxyConfiguration.maxDockerSeleniumContainers = maxDockerSeleniumContainers < 0 ?
                 DEFAULT_AMOUNT_DOCKER_SELENIUM_CONTAINERS_RUNNING : maxDockerSeleniumContainers;
     }
 
@@ -170,14 +198,14 @@ public class DockerSeleniumStarterRemoteProxy {
                 configuredScreenSize.getWidth() <= 0 || configuredScreenSize.getHeight() <= 0) {
             return DEFAULT_SCREEN_SIZE;
         }
-        return DockerSeleniumStarterRemoteProxy.configuredScreenSize;
+        return DockerSeleniumProxyConfiguration.configuredScreenSize;
     }
 
     public static void setConfiguredScreenSize(Dimension configuredScreenSize) {
         if (configuredScreenSize.getWidth() <= 0 || configuredScreenSize.getHeight() <= 0) {
-            DockerSeleniumStarterRemoteProxy.configuredScreenSize = DEFAULT_SCREEN_SIZE;
+            DockerSeleniumProxyConfiguration.configuredScreenSize = DEFAULT_SCREEN_SIZE;
         } else {
-            DockerSeleniumStarterRemoteProxy.configuredScreenSize = configuredScreenSize;
+            DockerSeleniumProxyConfiguration.configuredScreenSize = configuredScreenSize;
         }
     }
 
@@ -188,9 +216,9 @@ public class DockerSeleniumStarterRemoteProxy {
     public static void setConfiguredTimeZone(String configuredTimeZone) {
         if (!Arrays.asList(TimeZone.getAvailableIDs()).contains(configuredTimeZone)) {
             LOGGER.warn(String.format("%s is not a real time zone.", configuredTimeZone));
-            DockerSeleniumStarterRemoteProxy.configuredTimeZone = DEFAULT_TZ;
+            DockerSeleniumProxyConfiguration.configuredTimeZone = DEFAULT_TZ;
         } else {
-            DockerSeleniumStarterRemoteProxy.configuredTimeZone = TimeZone.getTimeZone(configuredTimeZone);
+            DockerSeleniumProxyConfiguration.configuredTimeZone = TimeZone.getTimeZone(configuredTimeZone);
         }
     }
 

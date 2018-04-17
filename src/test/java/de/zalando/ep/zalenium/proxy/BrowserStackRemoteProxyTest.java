@@ -82,7 +82,7 @@ public class BrowserStackRemoteProxyTest {
         browserStackProxy = BrowserStackRemoteProxy.getNewInstance(request, registry);
 
         request = TestUtils.getRegistrationRequestForTesting(30000,
-                DockerSeleniumStarterRemoteProxy.class.getCanonicalName());
+                DockerSeleniumProxyConfiguration.class.getCanonicalName());
 
         // We add both nodes to the registry
         registry.add(browserStackProxy);
@@ -105,7 +105,7 @@ public class BrowserStackRemoteProxyTest {
         // Checking that the DockerSeleniumStarterProxy should come before SauceLabsProxy
         List<RemoteProxy> sorted = registry.getAllProxies().getSorted();
         Assert.assertEquals(2, sorted.size());
-        Assert.assertEquals(DockerSeleniumStarterRemoteProxy.class, sorted.get(0).getClass());
+        Assert.assertEquals(DockerSeleniumProxyConfiguration.class, sorted.get(0).getClass());
         Assert.assertEquals(BrowserStackRemoteProxy.class, sorted.get(1).getClass());
     }
 

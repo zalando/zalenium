@@ -284,11 +284,11 @@ public class DockeredSeleniumStarter {
     public ContainerCreationStatus startDockerSeleniumContainer(TimeZone timeZone, Dimension screenSize) {
 
         if (timeZone == null) {
-            timeZone = DockerSeleniumStarterRemoteProxy.DEFAULT_TZ;
+            timeZone = DockerSeleniumProxyConfiguration.DEFAULT_TZ;
         }
         
         if (screenSize == null) {
-            screenSize = DockerSeleniumStarterRemoteProxy.DEFAULT_SCREEN_SIZE;
+            screenSize = DockerSeleniumProxyConfiguration.DEFAULT_SCREEN_SIZE;
         }
         
         NetworkUtils networkUtils = new NetworkUtils();
@@ -298,7 +298,7 @@ public class DockeredSeleniumStarter {
         String seleniumNodeParams = getSeleniumNodeParameters();
         String latestImage = getLatestDownloadedImage(getDockerSeleniumImageName());
 
-        Map<String, String> envVars = buildEnvVars(timeZone, screenSize, hostIpAddress, sendAnonymousUsageInfo,
+        Map<String, String> envVars = DockerSeleniumProxyConfiguration.buildEnvVars(timeZone, screenSize, hostIpAddress, sendAnonymousUsageInfo,
                 nodePolling, nodeRegisterCycle, seleniumNodeParams);
 
         ContainerCreationStatus creationStatus = containerClient
@@ -317,40 +317,6 @@ public class DockeredSeleniumStarter {
     
     public void stopContainer(String containerId) {
     	containerClient.stopContainer(containerId);
-    }
-
-    private Map<String, String> buildEnvVars(TimeZone timeZone, Dimension screenSize, String hostIpAddress,
-                                             boolean sendAnonymousUsageInfo, String nodePolling,
-                                             String nodeRegisterCycle, String seleniumNodeParams) {
-        final int noVncPort = LOWER_PORT_BOUNDARY + NO_VNC_PORT_GAP;
-        final int vncPort = LOWER_PORT_BOUNDARY + VNC_PORT_GAP;
-        Map<String, String> envVars = new HashMap<>();
-        envVars.put("ZALENIUM", "true");
-        envVars.put("SELENIUM_HUB_HOST", hostIpAddress);
-        envVars.put("SELENIUM_HUB_PORT", "4445");
-        envVars.put("SELENIUM_NODE_HOST", "{{CONTAINER_IP}}");
-        envVars.put("GRID", "false");
-        envVars.put("WAIT_TIMEOUT", "120s");
-        envVars.put("PICK_ALL_RANDOM_PORTS", "false");
-        envVars.put("VIDEO_STOP_SLEEP_SECS", "1");
-        envVars.put("WAIT_TIME_OUT_VIDEO_STOP", "20s");
-        envVars.put("SEND_ANONYMOUS_USAGE_INFO", String.valueOf(sendAnonymousUsageInfo));
-        envVars.put("BUILD_URL", env.getStringEnvVariable("BUILD_URL", ""));
-        envVars.put("NOVNC", "true");
-        envVars.put("NOVNC_PORT", String.valueOf(noVncPort));
-        envVars.put("VNC_PORT", String.valueOf(vncPort));
-        envVars.put("SCREEN_WIDTH", String.valueOf(screenSize.getWidth()));
-        envVars.put("SCREEN_HEIGHT", String.valueOf(screenSize.getHeight()));
-        envVars.put("TZ", timeZone.getID());
-        envVars.put("SELENIUM_NODE_REGISTER_CYCLE", nodeRegisterCycle);
-        envVars.put("SEL_NODEPOLLING_MS", nodePolling);
-        envVars.put("SELENIUM_NODE_PROXY_PARAMS", "de.zalando.ep.zalenium.proxy.DockerSeleniumRemoteProxy");
-        envVars.put("MULTINODE", "true");
-        envVars.put("SELENIUM_MULTINODE_PORT", String.valueOf(LOWER_PORT_BOUNDARY));
-        envVars.put("CHROME", "false");
-        envVars.put("FIREFOX", "false");
-        envVars.put("SELENIUM_NODE_PARAMS", seleniumNodeParams);
-        return envVars;
     }
 
     /*

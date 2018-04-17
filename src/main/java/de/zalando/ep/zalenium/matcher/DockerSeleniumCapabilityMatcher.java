@@ -1,6 +1,6 @@
 package de.zalando.ep.zalenium.matcher;
 
-import de.zalando.ep.zalenium.proxy.DockerSeleniumStarterRemoteProxy;
+import de.zalando.ep.zalenium.proxy.DockerSeleniumProxyConfiguration;
 import org.openqa.grid.internal.TestSlot;
 import org.openqa.grid.internal.utils.DefaultCapabilityMatcher;
 import org.openqa.grid.selenium.proxy.DefaultRemoteProxy;
@@ -118,8 +118,8 @@ public class DockerSeleniumCapabilityMatcher extends DefaultCapabilityMatcher {
             then this validation prevents requests using nodes that were created with specific screen sizes
          */
         String defaultScreenResolution = String.format("%sx%s",
-                DockerSeleniumStarterRemoteProxy.getConfiguredScreenSize().getWidth(),
-                DockerSeleniumStarterRemoteProxy.getConfiguredScreenSize().getHeight());
+                DockerSeleniumProxyConfiguration.getConfiguredScreenSize().getWidth(),
+                DockerSeleniumProxyConfiguration.getConfiguredScreenSize().getHeight());
         String nodeScreenResolution = nodeCapability.get(ZaleniumCapabilityType.SCREEN_RESOLUTION).toString();
         if (!screenSizeCapabilityIsRequested && !defaultScreenResolution.equalsIgnoreCase(nodeScreenResolution)) {
             screenResolutionCapabilityMatches = false;
@@ -130,7 +130,7 @@ public class DockerSeleniumCapabilityMatcher extends DefaultCapabilityMatcher {
     private boolean isTimeZoneMatching(Map<String, Object> nodeCapability, Map<String, Object> requestedCapability) {
         boolean timeZoneCapabilityMatches;
 
-        String defaultTimeZone = DockerSeleniumStarterRemoteProxy.getConfiguredTimeZone().getID();
+        String defaultTimeZone = DockerSeleniumProxyConfiguration.getConfiguredTimeZone().getID();
         String nodeTimeZone = nodeCapability.get(ZaleniumCapabilityType.TIME_ZONE).toString();
 
         /*

@@ -43,6 +43,24 @@ import de.zalando.ep.zalenium.proxy.DockerSeleniumStarterRemoteProxy;
 import de.zalando.ep.zalenium.util.Environment;
 import de.zalando.ep.zalenium.util.GoogleAnalyticsApi;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import java.util.stream.Collectors;
+
+import org.apache.commons.io.IOUtils;
+
+import de.zalando.ep.zalenium.proxy.DockerSeleniumProxyConfiguration;
 @SuppressWarnings("ConstantConditions")
 public class DockerContainerClient implements ContainerClient {
 
@@ -490,7 +508,7 @@ public class DockerContainerClient implements ContainerClient {
     public ContainerClientRegistration registerNode(String zaleniumContainerName, URL remoteHost) {
         ContainerClientRegistration registration = new ContainerClientRegistration();
 
-        Integer noVncPort = remoteHost.getPort() + DockerSeleniumStarterRemoteProxy.NO_VNC_PORT_GAP;
+        Integer noVncPort = remoteHost.getPort() + DockerSeleniumProxyConfiguration.NO_VNC_PORT_GAP;
         
         String containerId = this.getContainerId(remoteHost);
 
