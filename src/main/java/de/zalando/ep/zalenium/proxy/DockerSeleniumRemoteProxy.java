@@ -397,9 +397,11 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     }
 
     public boolean shutdownIfIdle() {
-        if (isTestIdle() || isTestSessionLimitReached()) {
+        boolean testIdle = isTestIdle();
+        boolean testSessionLimitReached = isTestSessionLimitReached();
+        if (testIdle || testSessionLimitReached) {
             LOGGER.info(String.format("[%s] is idle.", getContainerId()));
-            timeout("proxy being idle after test.");
+            timeout("proxy being idle after test.", (testSessionLimitReached? ShutdownType.MAX_TEST_SESSIONS_REACHED : ShutdownType.IDLE));
             return true;
         } else {
             return false;
@@ -409,7 +411,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     public boolean shutdownIfStale() {
         if (isBusy() && isTestIdle()) {
             LOGGER.info(String.format("[%s] is stale.", getContainerId()));
-            timeout("proxy being stuck | stale during a test.");
+            timeout("proxy being stuck | stale during a test.", ShutdownType.STALE);
             return true;
         } else {
             return false;
@@ -445,7 +447,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         }
     }
 
-    private void timeout(String reason) {
+    private void timeout(String reason, ShutdownType shutdownType) {
         boolean shutDown = false;
 
         synchronized (this) {
@@ -454,7 +456,6 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
             }
 
             if (!this.timedOut.getAndSet(true)) {
-                LOGGER.info(String.format("Timing out [%s].", getContainerId()));
                 LOGGER.info(getContainerId() + " Shutting down node due to " + reason);
                 shutDown = true;
             }
@@ -464,7 +465,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
             EXECUTOR_SERVICE.execute(new Runnable() {
                 @Override
                 public void run() {
-                    shutdownNode(true);
+                    shutdownNode(shutdownType);
                 }
             });
         }
@@ -674,14 +675,21 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                 || TestInformation.TestStatus.TIMEOUT.equals(testInformation.getTestStatus());
     }
     
-    public void shutdownNode(boolean isTestIdle) {
-        cleanupNode(true);
+    public void shutdownNode(ShutdownType shutdownType) {
+        String shutdownReason;
+        if (shutdownType == ShutdownType.MAX_TEST_SESSIONS_REACHED) {
+            shutdownReason = String.format(
+                    "%s Marking the node as down because it was stopped after %s tests.", getContainerId(),
+                    maxTestSessions);
+        }
+        else {
+            shutdownReason = String.format(
+                    "%s Marking the node as down because it was idle after the tests had finished.", getContainerId(),
+                    maxTestSessions, shutdownType);
+        }
 
-        String shutdownReason = String.format(
-                "%s Marking the node as down because it was stopped after %s tests, with idle [%s].", getContainerId(),
-                maxTestSessions, isTestIdle);
-
-        if (isTestIdle) {
+        if (shutdownType == ShutdownType.STALE) {
+            cleanupNode(true);
             terminateIdleTest();
             stopReceivingTests();
             shutdownReason = String.format(
@@ -721,4 +729,8 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     }
 
 }
-
+enum ShutdownType {
+    STALE,
+    IDLE,
+    MAX_TEST_SESSIONS_REACHED
+}
