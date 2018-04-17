@@ -8,6 +8,7 @@ import de.zalando.ep.zalenium.registry.ZaleniumRegistry;
 import de.zalando.ep.zalenium.util.CommonProxyUtilities;
 import de.zalando.ep.zalenium.util.Environment;
 import de.zalando.ep.zalenium.util.TestUtils;
+import de.zalando.ep.zalenium.util.ZaleniumConfiguration;
 import de.zalando.ep.zalenium.dashboard.TestInformation;
 import org.awaitility.Duration;
 import org.hamcrest.CoreMatchers;
@@ -82,7 +83,7 @@ public class BrowserStackRemoteProxyTest {
         browserStackProxy = BrowserStackRemoteProxy.getNewInstance(request, registry);
 
         request = TestUtils.getRegistrationRequestForTesting(30000,
-                DockerSeleniumProxyConfiguration.class.getCanonicalName());
+                ZaleniumConfiguration.class.getCanonicalName());
 
         // We add both nodes to the registry
         registry.add(browserStackProxy);
@@ -105,7 +106,7 @@ public class BrowserStackRemoteProxyTest {
         // Checking that the DockerSeleniumStarterProxy should come before SauceLabsProxy
         List<RemoteProxy> sorted = registry.getAllProxies().getSorted();
         Assert.assertEquals(2, sorted.size());
-        Assert.assertEquals(DockerSeleniumProxyConfiguration.class, sorted.get(0).getClass());
+        Assert.assertEquals(ZaleniumConfiguration.class, sorted.get(0).getClass());
         Assert.assertEquals(BrowserStackRemoteProxy.class, sorted.get(1).getClass());
     }
 

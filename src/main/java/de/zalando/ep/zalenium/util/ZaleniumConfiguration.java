@@ -1,30 +1,12 @@
-package de.zalando.ep.zalenium.proxy;
+package de.zalando.ep.zalenium.util;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.TimeZone;
-
-import org.openqa.selenium.Dimension;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 
-import de.zalando.ep.zalenium.util.Environment;
-import de.zalando.ep.zalenium.util.GoogleAnalyticsApi;
-
 /**
- * The idea of this proxy instance is:
- * 1. Receive a session request with some requested capabilities
- * 2. Start a docker-selenium container that will register with the hub
- * 3. Reject the received request
- * 4. When the registry receives the rejected request and sees the new registered node from step 2,
- * the process will flow as normal.
+ * Common configuration for Zalenium.
  */
-
-public class DockerSeleniumProxyConfiguration {
+public class ZaleniumConfiguration {
 
 
     @VisibleForTesting
@@ -36,10 +18,8 @@ public class DockerSeleniumProxyConfiguration {
     @VisibleForTesting
     static final String ZALENIUM_MAX_DOCKER_SELENIUM_CONTAINERS = "ZALENIUM_MAX_DOCKER_SELENIUM_CONTAINERS";
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(DockerSeleniumProxyConfiguration.class.getName());
-    
     private static final Environment defaultEnvironment = new Environment();
-    
+
     @VisibleForTesting
     private static Environment env = defaultEnvironment;
     private static int desiredContainersOnStartup;
@@ -57,30 +37,29 @@ public class DockerSeleniumProxyConfiguration {
                 DEFAULT_AMOUNT_DOCKER_SELENIUM_CONTAINERS_RUNNING);
         setMaxDockerSeleniumContainers(maxDSContainers);
     }
-    
+
     static {
     	readConfigurationFromEnvVariables();
     }
 
-    @VisibleForTesting
-    protected static int getDesiredContainersOnStartup() {
+    public static int getDesiredContainersOnStartup() {
         return desiredContainersOnStartup;
     }
 
     @VisibleForTesting
     protected static void setDesiredContainersOnStartup(int desiredContainersOnStartup) {
-        DockerSeleniumProxyConfiguration.desiredContainersOnStartup = desiredContainersOnStartup < 0 ?
+        ZaleniumConfiguration.desiredContainersOnStartup = desiredContainersOnStartup < 0 ?
                 DEFAULT_AMOUNT_DESIRED_CONTAINERS : desiredContainersOnStartup;
     }
 
     @VisibleForTesting
-    protected static int getMaxDockerSeleniumContainers() {
+    public static int getMaxDockerSeleniumContainers() {
         return maxDockerSeleniumContainers;
     }
 
     @VisibleForTesting
     protected static void setMaxDockerSeleniumContainers(int maxDockerSeleniumContainers) {
-        DockerSeleniumProxyConfiguration.maxDockerSeleniumContainers = maxDockerSeleniumContainers < 0 ?
+        ZaleniumConfiguration.maxDockerSeleniumContainers = maxDockerSeleniumContainers < 0 ?
                 DEFAULT_AMOUNT_DOCKER_SELENIUM_CONTAINERS_RUNNING : maxDockerSeleniumContainers;
     }
 

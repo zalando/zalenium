@@ -21,7 +21,10 @@ import org.openqa.selenium.remote.server.log.LoggingManager;
 
 import de.zalando.ep.zalenium.proxy.AutoStartProxySet;
 import de.zalando.ep.zalenium.proxy.DockerSeleniumRemoteProxy;
+import de.zalando.ep.zalenium.proxy.DockeredSeleniumStarter;
+import de.zalando.ep.zalenium.util.ZaleniumConfiguration;
 
+import java.time.Clock;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -59,7 +62,15 @@ public class ZaleniumRegistry extends BaseGridRegistry implements GridRegistry {
     public ZaleniumRegistry(Hub hub) {
         super(hub);
         this.newSessionQueue = new NewSessionRequestQueue();
-        proxies = new AutoStartProxySet(false);
+        
+        long minContainers = ZaleniumConfiguration.getDesiredContainersOnStartup();
+        long maxContainers = ZaleniumConfiguration.getMaxDockerSeleniumContainers();
+        long timeToWaitToStart = 180000;
+        boolean waitForAvailableNodes = true;
+
+        DockeredSeleniumStarter starter = new DockeredSeleniumStarter();
+
+        proxies = new AutoStartProxySet(false, minContainers, maxContainers, timeToWaitToStart, waitForAvailableNodes, starter, Clock.systemDefaultZone());
         this.matcherThread.setUncaughtExceptionHandler(new UncaughtExceptionHandler());
     }
 

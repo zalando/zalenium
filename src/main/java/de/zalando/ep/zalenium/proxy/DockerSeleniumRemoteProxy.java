@@ -45,6 +45,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 /*
     The implementation of this class was inspired on https://gist.github.com/krmahadevan/4649607
  */
@@ -88,8 +89,8 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     
     private long timeRegistered = System.currentTimeMillis();
 
-	private static final ExecutorService EXECUTOR_SERVICE = Executors.newFixedThreadPool(5);
-	
+    private static final ExecutorService EXECUTOR_SERVICE = Executors.newFixedThreadPool(5);
+
     public DockerSeleniumRemoteProxy(RegistrationRequest request, GridRegistry registry) {
         super(request, registry);
         try {
@@ -110,8 +111,8 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     }
     
     public long getLastCommandTime() {
-		return lastCommandTime;
-	}
+        return lastCommandTime;
+    }
 
     @VisibleForTesting
     static void readEnvVars() {
@@ -170,17 +171,16 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
      */
     @Override
     public synchronized TestSession getNewSession(Map<String, Object> requestedCapability) {
-    	
-    	LOGGER.debug(String.format("%s getting new session %s", getContainerId(), this.timedOut.get()));
-    	
-    	if (this.timedOut.get()) {
-    		LOGGER.debug(String.format("%s has timed out - not accepting session.", getContainerId()));
-    		return null;
-    	}
-    	else {
-    		LOGGER.debug(String.format("%s has not timed out.", getContainerId()));
-    	}
-    	
+
+        LOGGER.debug(String.format("%s getting new session %s", getContainerId(), this.timedOut.get()));
+
+        if (this.timedOut.get()) {
+            LOGGER.debug(String.format("%s has timed out - not accepting session.", getContainerId()));
+            return null;
+        } else {
+            LOGGER.debug(String.format("%s has not timed out.", getContainerId()));
+        }
+
         /*
             Validate first if the capability is matched
          */
@@ -195,51 +195,55 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         }
 
         if (!this.isBusy() && increaseCounter()) {
-            TestSession newSession = super.getNewSession(requestedCapability);
-            LOGGER.debug(getContainerId() + " Creating session for: " + requestedCapability.toString());
-            if (newSession == null) {
-            	// The node has been marked down.
-            	LOGGER.debug(getContainerId() + " was marked down after being assigned, returning null");
-            	return null;
-            }
-            
-            LOGGER.debug(getContainerId() + " Creating session for: " + requestedCapability.toString());
-            String browserName = requestedCapability.get(CapabilityType.BROWSER_NAME).toString();
-            testName = getCapability(requestedCapability, ZaleniumCapabilityType.TEST_NAME, "");
-            if (testName.isEmpty()) {
-                testName = newSession.getExternalKey() != null ?
-                        newSession.getExternalKey().getKey() :
-                        newSession.getInternalKey();
-            }
-            testBuild = getCapability(requestedCapability, ZaleniumCapabilityType.BUILD_NAME, "");
-            if (requestedCapability.containsKey(ZaleniumCapabilityType.RECORD_VIDEO)) {
-                boolean videoRecording = Boolean.parseBoolean(getCapability(requestedCapability, ZaleniumCapabilityType.RECORD_VIDEO, "true"));
-                setVideoRecordingEnabledSession(videoRecording);
-            }
-            String screenResolution = getCapability(newSession.getSlot().getCapabilities(), ZaleniumCapabilityType.SCREEN_RESOLUTION, "N/A");
-            String browserVersion = getCapability(newSession.getSlot().getCapabilities(), CapabilityType.VERSION, "");
-            String timeZone = getCapability(newSession.getSlot().getCapabilities(), ZaleniumCapabilityType.TIME_ZONE, "N/A");
-            testInformation = new TestInformation.TestInformationBuilder()
-                    .withTestName(testName)
-                    .withSeleniumSessionId(testName)
-                    .withProxyName("Zalenium")
-                    .withBrowser(browserName)
-                    .withBrowserVersion(browserVersion)
-                    .withPlatform(Platform.LINUX.name())
-                    .withScreenDimension(screenResolution)
-                    .withTimeZone(timeZone)
-                    .withBuild(testBuild)
-                    .withTestStatus(TestInformation.TestStatus.COMPLETED)
-                    .build();
-            testInformation.setVideoRecorded(isVideoRecordingEnabled());
-            maxTestIdleTimeSecs = getConfiguredIdleTimeout(requestedCapability);
-            
-            lastCommandTime = System.currentTimeMillis();
-            
-            return newSession;
+            return createNewSession(requestedCapability);
         }
         LOGGER.debug("{} No more sessions allowed", getContainerId());
         return null;
+    }
+
+    private TestSession createNewSession(Map<String, Object> requestedCapability) {
+        TestSession newSession = super.getNewSession(requestedCapability);
+        LOGGER.debug(getContainerId() + " Creating session for: " + requestedCapability.toString());
+        if (newSession == null) {
+            // The node has been marked down.
+            LOGGER.debug(getContainerId() + " was marked down after being assigned, returning null");
+            return null;
+        }
+        
+        LOGGER.debug(getContainerId() + " Creating session for: " + requestedCapability.toString());
+        String browserName = requestedCapability.get(CapabilityType.BROWSER_NAME).toString();
+        testName = getCapability(requestedCapability, ZaleniumCapabilityType.TEST_NAME, "");
+        if (testName.isEmpty()) {
+            testName = newSession.getExternalKey() != null ?
+                    newSession.getExternalKey().getKey() :
+                    newSession.getInternalKey();
+        }
+        testBuild = getCapability(requestedCapability, ZaleniumCapabilityType.BUILD_NAME, "");
+        if (requestedCapability.containsKey(ZaleniumCapabilityType.RECORD_VIDEO)) {
+            boolean videoRecording = Boolean.parseBoolean(getCapability(requestedCapability, ZaleniumCapabilityType.RECORD_VIDEO, "true"));
+            setVideoRecordingEnabledSession(videoRecording);
+        }
+        String screenResolution = getCapability(newSession.getSlot().getCapabilities(), ZaleniumCapabilityType.SCREEN_RESOLUTION, "N/A");
+        String browserVersion = getCapability(newSession.getSlot().getCapabilities(), CapabilityType.VERSION, "");
+        String timeZone = getCapability(newSession.getSlot().getCapabilities(), ZaleniumCapabilityType.TIME_ZONE, "N/A");
+        testInformation = new TestInformation.TestInformationBuilder()
+                .withTestName(testName)
+                .withSeleniumSessionId(testName)
+                .withProxyName("Zalenium")
+                .withBrowser(browserName)
+                .withBrowserVersion(browserVersion)
+                .withPlatform(Platform.LINUX.name())
+                .withScreenDimension(screenResolution)
+                .withTimeZone(timeZone)
+                .withBuild(testBuild)
+                .withTestStatus(TestInformation.TestStatus.COMPLETED)
+                .build();
+        testInformation.setVideoRecorded(isVideoRecordingEnabled());
+        maxTestIdleTimeSecs = getConfiguredIdleTimeout(requestedCapability);
+        
+        lastCommandTime = System.currentTimeMillis();
+        
+        return newSession;
     }
 
     @Override
@@ -393,23 +397,23 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     }
 
     public boolean shutdownIfIdle() {
-    	if (isTestIdle() || isTestSessionLimitReached()) {
-    		LOGGER.info(String.format("[%s] is idle.", getContainerId()));
-    		timeout("proxy being idle after test.");
-    		return true;
-    	} else {
-    		return false;
-    	}
+        if (isTestIdle() || isTestSessionLimitReached()) {
+            LOGGER.info(String.format("[%s] is idle.", getContainerId()));
+            timeout("proxy being idle after test.");
+            return true;
+        } else {
+            return false;
+        }
     }
-    
+
     public boolean shutdownIfStale() {
-    	if (isBusy() && isTestIdle()) {
-    		LOGGER.info(String.format("[%s] is stale.", getContainerId()));
-    		timeout("proxy being stuck | stale during a test.");
-    		return true;
-    	} else {
-    		return false;
-    	}
+        if (isBusy() && isTestIdle()) {
+            LOGGER.info(String.format("[%s] is stale.", getContainerId()));
+            timeout("proxy being stuck | stale during a test.");
+            return true;
+        } else {
+            return false;
+        }
     }
     
     /*
@@ -417,54 +421,53 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
      */
     @VisibleForTesting
     public synchronized boolean isTestIdle() {
-    	
-    	if (this.timedOut.get()) {
-    		return true;
-    	}
-    	else {    	
-	    	long timeLastUsed = Math.max(timeRegistered, lastCommandTime);
-	    	
-	    	long timeSinceUsed = System.currentTimeMillis() - timeLastUsed;
-	
-	        if (timeSinceUsed > (getMaxTestIdleTimeSecs() * 1000L)) {
-	        	LOGGER.info(String.format("[%s] has been idle [%d] which is more than [%d]", this.getContainerId(), timeSinceUsed, (getMaxTestIdleTimeSecs() * 1000L)));
-	        	return true;
-	        }
-	        else {
-	        	return false;
-	        }
-    	}
+
+        if (this.timedOut.get()) {
+            return true;
+        } else {
+            long timeLastUsed = Math.max(timeRegistered, lastCommandTime);
+
+            long timeSinceUsed = System.currentTimeMillis() - timeLastUsed;
+
+            if (timeSinceUsed > (getMaxTestIdleTimeSecs() * 1000L)) {
+                LOGGER.info(String.format("[%s] has been idle [%d] which is more than [%d]", this.getContainerId(),
+                        timeSinceUsed, (getMaxTestIdleTimeSecs() * 1000L)));
+                return true;
+            } else {
+                return false;
+            }
+        }
     }
     
     public synchronized void markDown() {
-    	if (!this.timedOut.getAndSet(true)) {
-			LOGGER.info(getContainerId() + " Marking node down.");
-    	}
+        if (!this.timedOut.getAndSet(true)) {
+            LOGGER.info(getContainerId() + " Marking node down.");
+        }
     }
-     
-    private void timeout(String reason) {
-    	boolean shutDown = false;
 
-    	synchronized(this) {
-	    	if (this.testInformation != null) {
-	    		this.testInformation.setTestStatus(TestInformation.TestStatus.TIMEOUT);
-	    	}
-	    	
-	    	if (!this.timedOut.getAndSet(true)) {
-	    		LOGGER.info(String.format("Timing out [%s].", getContainerId()));
-				LOGGER.info(getContainerId() + " Shutting down node due to " + reason);
-				shutDown = true;
-	    	}
-    	}
-    	
-    	if (shutDown) {
-    		EXECUTOR_SERVICE.execute(new Runnable() {
-				@Override
-				public void run() {
-					shutdownNode(true);					
-				}
-			});
-    	}
+    private void timeout(String reason) {
+        boolean shutDown = false;
+
+        synchronized (this) {
+            if (this.testInformation != null) {
+                this.testInformation.setTestStatus(TestInformation.TestStatus.TIMEOUT);
+            }
+
+            if (!this.timedOut.getAndSet(true)) {
+                LOGGER.info(String.format("Timing out [%s].", getContainerId()));
+                LOGGER.info(getContainerId() + " Shutting down node due to " + reason);
+                shutDown = true;
+            }
+        }
+
+        if (shutDown) {
+            EXECUTOR_SERVICE.execute(new Runnable() {
+                @Override
+                public void run() {
+                    shutdownNode(true);
+                }
+            });
+        }
     }
     
     public boolean isTimedOut() {
@@ -554,11 +557,11 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     @SuppressWarnings("ResultOfMethodCallIgnored")
     @VisibleForTesting
     void copyVideos(final String containerId) {
-    	if (testInformation == null) {
-    		// No tests run, nothing to copy and nothing to update.
-    		return;
-    	}
-    	
+        if (testInformation == null) {
+            // No tests run, nothing to copy and nothing to update.
+            return;
+        }
+
         boolean videoWasCopied = false;
         TarArchiveInputStream tarStream = new TarArchiveInputStream(containerClient.copyFiles(containerId, "/videos/"));
         try {
@@ -601,11 +604,11 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     @SuppressWarnings("ResultOfMethodCallIgnored")
     @VisibleForTesting
     void copyLogs(final String containerId) {
-    	if (testInformation == null) {
-    		// No tests run, nothing to copy and nothing to update.
-    		return;
-    	}
-    	
+        if (testInformation == null) {
+            // No tests run, nothing to copy and nothing to update.
+            return;
+        }
+
         TarArchiveInputStream tarStream = new TarArchiveInputStream(containerClient.copyFiles(containerId, "/var/log/cont/"));
         try {
             TarArchiveEntry entry;
@@ -674,14 +677,16 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     public void shutdownNode(boolean isTestIdle) {
         cleanupNode(true);
 
-        String shutdownReason = String.format("%s Marking the node as down because it was stopped after %s tests, with idle [%s].",
-        		getContainerId(), maxTestSessions, isTestIdle);
+        String shutdownReason = String.format(
+                "%s Marking the node as down because it was stopped after %s tests, with idle [%s].", getContainerId(),
+                maxTestSessions, isTestIdle);
 
         if (isTestIdle) {
             terminateIdleTest();
             stopReceivingTests();
-            shutdownReason = String.format("%s Marking the node as down because the test has been idle for more than %s seconds.",
-            		getContainerId(), getMaxTestIdleTimeSecs());
+            shutdownReason = String.format(
+                    "%s Marking the node as down because the test has been idle for more than %s seconds.",
+                    getContainerId(), getMaxTestIdleTimeSecs());
         }
 
         containerClient.stopContainer(getContainerId());
@@ -716,31 +721,4 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     }
 
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

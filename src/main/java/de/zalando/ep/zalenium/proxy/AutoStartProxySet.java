@@ -18,6 +18,7 @@
 
 package de.zalando.ep.zalenium.proxy;
 
+import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -88,21 +89,30 @@ public class AutoStartProxySet extends ProxySet implements Iterable<RemoteProxy>
 
     private final Map<ContainerCreationStatus, ContainerStatus> startedContainers = new ConcurrentHashMap<>();
 
-    private final DockeredSeleniumStarter starter = new DockeredSeleniumStarter();
+    private final DockeredSeleniumStarter starter;
 
     private final SessionRequestFilter filter = new SessionRequestFilter();
 
-    private final long minContainers = DockerSeleniumProxyConfiguration.getDesiredContainersOnStartup();
-    private final long maxContainers = DockerSeleniumProxyConfiguration.getMaxDockerSeleniumContainers();
-    private final long timeToWaitToStart = 180000;
-    private final boolean waitForAvailableNodes = true;
+    private final long minContainers;
+    private final long maxContainers;
+    private final long timeToWaitToStart;
+    private final boolean waitForAvailableNodes;
 
     private final Thread poller;
 
     private long timeOfLastReport = 0;
 
-    public AutoStartProxySet(boolean throwOnCapabilityNotPresent) {
+    private Clock clock;
+
+    public AutoStartProxySet(boolean throwOnCapabilityNotPresent, long minContainers, long maxContainers,
+            long timeToWaitToStart, boolean waitForAvailableNodes, DockeredSeleniumStarter starter, Clock clock) {
         super(throwOnCapabilityNotPresent);
+        this.minContainers = minContainers;
+        this.maxContainers = maxContainers;
+        this.timeToWaitToStart = timeToWaitToStart;
+        this.waitForAvailableNodes = waitForAvailableNodes;
+        this.starter = starter;
+        this.clock = clock;
 
         poller = new Thread(new Runnable() {
             @Override
@@ -110,7 +120,7 @@ public class AutoStartProxySet extends ProxySet implements Iterable<RemoteProxy>
                 LOGGER.info("Starting poller.");
                 while (true) {
 
-                    long now = System.currentTimeMillis();
+                    long now = clock.millis();
                     if (now - timeOfLastReport > 30000) {
                         dumpStatus();
                         timeOfLastReport = now;
@@ -290,13 +300,12 @@ public class AutoStartProxySet extends ProxySet implements Iterable<RemoteProxy>
         for (ContainerCreationStatus containerCreationStatus : deadProxies) {
             LOGGER.info("Container {} is terminated. Removing from tracked set.", containerCreationStatus);
             ContainerStatus removedProxy = this.startedContainers.remove(containerCreationStatus);
-            Optional.ofNullable(removedProxy).flatMap(ContainerStatus::getProxy)
-                    .ifPresent(proxy -> {
-                        proxy.markDown();
-                        if (contains(proxy)) {
-                            super.remove(proxy);
-                        }
-                    });
+            Optional.ofNullable(removedProxy).flatMap(ContainerStatus::getProxy).ifPresent(proxy -> {
+                proxy.markDown();
+                if (contains(proxy)) {
+                    super.remove(proxy);
+                }
+            });
         }
 
         for (Entry<ContainerCreationStatus, ContainerStatus> container : this.startedContainers.entrySet()) {
@@ -307,12 +316,12 @@ public class AutoStartProxySet extends ProxySet implements Iterable<RemoteProxy>
                 // No need to check.
             } else {
                 if (starter.containerHasStarted(creationStatus)) {
-                    long started = System.currentTimeMillis();
+                    long started = clock.millis();
                     containerStatus.setTimeStarted(Optional.of(started));
                     LOGGER.info("Container {} started after {}.", creationStatus.getContainerName(),
                             (started - containerStatus.getTimeCreated()));
                 } else {
-                    long timeWaitingToStart = System.currentTimeMillis() - containerStatus.getTimeCreated();
+                    long timeWaitingToStart = clock.millis() - containerStatus.getTimeCreated();
                     if (timeWaitingToStart > this.timeToWaitToStart) {
                         LOGGER.warn("Waited {} for {} to start, which is longer than {}.", timeWaitingToStart,
                                 containerStatus, this.timeToWaitToStart);
@@ -369,7 +378,7 @@ public class AutoStartProxySet extends ProxySet implements Iterable<RemoteProxy>
         } else {
             filter.requestHasBeenProcesssed(desiredCapabilities);
             startedContainers.put(startedContainer,
-                    new ContainerStatus(startedContainer.getContainerName(), System.currentTimeMillis()));
+                    new ContainerStatus(startedContainer.getContainerName(), clock.millis()));
             LOGGER.info("Created {}.", startedContainer);
         }
     }

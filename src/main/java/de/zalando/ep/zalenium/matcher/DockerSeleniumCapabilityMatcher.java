@@ -1,7 +1,7 @@
 package de.zalando.ep.zalenium.matcher;
 
-import de.zalando.ep.zalenium.proxy.DockerSeleniumProxyConfiguration;
 import de.zalando.ep.zalenium.proxy.DockeredSeleniumStarter;
+import de.zalando.ep.zalenium.util.ZaleniumConfiguration;
 
 import org.openqa.grid.internal.TestSlot;
 import org.openqa.grid.internal.utils.DefaultCapabilityMatcher;

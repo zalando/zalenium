@@ -39,10 +39,10 @@ import com.spotify.docker.client.messages.HostConfig;
 import com.spotify.docker.client.messages.Image;
 import com.spotify.docker.client.messages.NetworkSettings;
 
-import de.zalando.ep.zalenium.proxy.DockerSeleniumProxyConfiguration;
 import de.zalando.ep.zalenium.proxy.DockeredSeleniumStarter;
 import de.zalando.ep.zalenium.util.Environment;
 import de.zalando.ep.zalenium.util.GoogleAnalyticsApi;
+
 @SuppressWarnings("ConstantConditions")
 public class DockerContainerClient implements ContainerClient {
 
@@ -319,22 +319,27 @@ public class DockerContainerClient implements ContainerClient {
             dockerClient.startContainer(container.id());
             return new ContainerCreationStatus(true, containerName, container.id(), nodePort);
         } catch (DockerRequestException e) {
-            if (e.getMessage().contains("The container name \"" + containerName + "/\" is already in use by container ")) {
-                if (collisionAttempts > 0) {
-                    logger.debug("Name {} collided. Will generate a new name.", containerName);
-                    return createContainer(zaleniumContainerName, image, envVars, nodePort, collisionAttempts - 1);
-                }
+            if (isNameCollision(e, containerName) && hasRemainingAttempts(collisionAttempts)) {
+                logger.debug("Name {} collided. Will generate a new name.", containerName);
+                return createContainer(zaleniumContainerName, image, envVars, nodePort, collisionAttempts - 1);
             }
-            
+
             logger.warn(nodeId + " Error while starting a new container", e);
             ga.trackException(e);
-            return new ContainerCreationStatus(false);    
-        
+            return new ContainerCreationStatus(false);
         } catch (DockerException | InterruptedException e) {
             logger.warn(nodeId + " Error while starting a new container", e);
             ga.trackException(e);
             return new ContainerCreationStatus(false);
         }
+    }
+
+    private static boolean isNameCollision(Exception e, String containerName) {
+        return e.getMessage().contains("The container name \"" + containerName + "/\" is already in use by container ");
+    }
+
+    private static boolean hasRemainingAttempts(int collisionAttempts) {
+        return collisionAttempts > 0;
     }
 
     private String generateContainerName(String zaleniumContainerName,
