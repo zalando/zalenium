@@ -1,22 +1,20 @@
 package de.zalando.ep.zalenium.matcher;
 
-import de.zalando.ep.zalenium.proxy.DockeredSeleniumStarter;
-import de.zalando.ep.zalenium.util.ZaleniumConfiguration;
-
-import org.openqa.grid.internal.TestSlot;
-import org.openqa.grid.internal.utils.DefaultCapabilityMatcher;
-import org.openqa.grid.selenium.proxy.DefaultRemoteProxy;
-import org.openqa.selenium.remote.BrowserType;
-import org.openqa.selenium.remote.CapabilityType;
-
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.openqa.grid.internal.TestSlot;
+import org.openqa.grid.internal.utils.DefaultCapabilityMatcher;
+import org.openqa.grid.selenium.proxy.DefaultRemoteProxy;
+import org.openqa.selenium.remote.BrowserType;
+import org.openqa.selenium.remote.CapabilityType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import de.zalando.ep.zalenium.proxy.DockeredSeleniumStarter;
 
 public class DockerSeleniumCapabilityMatcher extends DefaultCapabilityMatcher {
     private static final List<String> ZALENIUM_CUSTOM_CAPABILITIES_NO_PREFIX = Arrays.asList(
