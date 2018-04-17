@@ -112,13 +112,13 @@ public class DockerContainerClient implements ContainerClient {
 
         if (containerList != null) {
 	        return containerList.stream()
-	                .filter(container -> {
-	                	NetworkSettings networkSettings = container.networkSettings();
-	                	return networkSettings.networks().values().stream()
-	                			.filter(network -> Objects.equals(network.ipAddress(), remoteUrl.getHost()))
-	                			.findFirst()
-	                			.isPresent();
-	                })
+                    .filter(container -> {
+                        NetworkSettings networkSettings = container.networkSettings();
+                        return networkSettings.networks().values().stream()
+                                .filter(network -> Objects.equals(network.ipAddress(), remoteUrl.getHost()))
+                                .findFirst()
+                                .isPresent();
+                    })
 	                .findFirst().map(Container::id).orElse(null);
         } else {
             logger.warn("No container list when looking for {}", remoteUrl.getHost());
@@ -160,6 +160,8 @@ public class DockerContainerClient implements ContainerClient {
     public void stopContainer(String containerId) {
         try {
             dockerClient.stopContainer(containerId, 5);
+        } catch (ContainerNotFoundException e) {
+            logger.info("Container {} does not exist - already shut down?.", containerId);
         } catch (DockerException | InterruptedException e) {
             logger.warn(nodeId + " Error while stopping the container", e);
             ga.trackException(e);
