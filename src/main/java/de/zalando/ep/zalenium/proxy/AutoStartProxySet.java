@@ -155,10 +155,6 @@ public class AutoStartProxySet extends ProxySet implements Iterable<RemoteProxy>
         super.teardown();
     }
 
-    public void stopPolling() {
-        poller.interrupt();
-    }
-
     /**
      * Creates a new session (if possible) on a proxy.
      * 
