@@ -413,11 +413,15 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
             LOGGER.info(String.format("[%s] is stale.", getContainerId()));
             timeout("proxy being stuck | stale during a test.", ShutdownType.STALE);
             return true;
+        } else if (isTestSessionLimitReached() && !isBusy()) {
+            LOGGER.info(String.format("[%s] has reached max test sessions.", getContainerId()));
+            timeout("proxy has reached max test sessions.", ShutdownType.MAX_TEST_SESSIONS_REACHED);
+            return true;
         } else {
             return false;
         }
     }
-    
+
     /*
         Method to check for test inactivity, each node only has one slot
      */

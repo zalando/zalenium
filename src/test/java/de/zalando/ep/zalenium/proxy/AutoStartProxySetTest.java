@@ -110,7 +110,7 @@ public class AutoStartProxySetTest {
 
         autoStartProxySet.getNewSession(Collections.emptyMap());
 
-        Mockito.verifyNoMoreInteractions(starter);
+        Mockito.verify(starter, Mockito.times(1)).startDockerSeleniumContainer(Collections.emptyMap());
     }
 
     @Test
