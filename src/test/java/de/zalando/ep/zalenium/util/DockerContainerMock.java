@@ -1,5 +1,30 @@
 package de.zalando.ep.zalenium.util;
 
+import static de.zalando.ep.zalenium.dashboard.TestInformation.TestStatus.COMPLETED;
+import static de.zalando.ep.zalenium.dashboard.TestInformation.TestStatus.TIMEOUT;
+import static de.zalando.ep.zalenium.proxy.DockerSeleniumRemoteProxy.DockerSeleniumContainerAction.CLEANUP_CONTAINER;
+import static de.zalando.ep.zalenium.proxy.DockerSeleniumRemoteProxy.DockerSeleniumContainerAction.SEND_NOTIFICATION;
+import static de.zalando.ep.zalenium.proxy.DockerSeleniumRemoteProxy.DockerSeleniumContainerAction.START_RECORDING;
+import static de.zalando.ep.zalenium.proxy.DockerSeleniumRemoteProxy.DockerSeleniumContainerAction.STOP_RECORDING;
+import static de.zalando.ep.zalenium.proxy.DockerSeleniumRemoteProxy.DockerSeleniumContainerAction.TRANSFER_LOGS;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.net.URL;
+import java.util.Arrays;
+import java.util.Collections;
+
+import org.apache.commons.lang3.RandomStringUtils;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.spotify.docker.client.DockerClient;
@@ -16,32 +41,35 @@ import com.spotify.docker.client.messages.HostConfig;
 import com.spotify.docker.client.messages.ImageInfo;
 import com.spotify.docker.client.messages.Info;
 import com.spotify.docker.client.messages.NetworkSettings;
+
+import de.zalando.ep.zalenium.container.ContainerClientRegistration;
 import de.zalando.ep.zalenium.container.DockerContainerClient;
-import org.apache.commons.lang3.RandomStringUtils;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.net.URL;
-import java.util.Arrays;
-import java.util.Collections;
-
-import static de.zalando.ep.zalenium.proxy.DockerSeleniumRemoteProxy.DockerSeleniumContainerAction.START_RECORDING;
-import static de.zalando.ep.zalenium.proxy.DockerSeleniumRemoteProxy.DockerSeleniumContainerAction.STOP_RECORDING;
-import static de.zalando.ep.zalenium.proxy.DockerSeleniumRemoteProxy.DockerSeleniumContainerAction.TRANSFER_LOGS;
-import static de.zalando.ep.zalenium.proxy.DockerSeleniumRemoteProxy.DockerSeleniumContainerAction.CLEANUP_CONTAINER;
-import static de.zalando.ep.zalenium.proxy.DockerSeleniumRemoteProxy.DockerSeleniumContainerAction.SEND_NOTIFICATION;
-import static de.zalando.ep.zalenium.dashboard.TestInformation.TestStatus.COMPLETED;
-import static de.zalando.ep.zalenium.dashboard.TestInformation.TestStatus.TIMEOUT;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 public class DockerContainerMock {
 
+    public static DockerContainerClient getRegisterOnlyDockerContainerClient() {
+        DockerContainerClient mock = mock(DockerContainerClient.class);
+        
+        when(mock.registerNode(anyString(), any(URL.class))).thenAnswer(new Answer<ContainerClientRegistration>() {
+
+            @Override
+            public ContainerClientRegistration answer(InvocationOnMock invocation) throws Throwable {
+                String containerName = invocation.getArgument(0);
+                URL remoteUrl = invocation.getArgument(1);
+                return new ContainerClientRegistration() {
+                    {
+                        setContainerId(containerName);
+                        setIpAddress(remoteUrl.getHost());
+                        setNoVncPort(40000);
+                    }
+                };
+            }
+        });
+        
+        return mock;
+    }
+
+    
     public static DockerContainerClient getMockedDockerContainerClient() {
         return getMockedDockerContainerClient("default");
     }
@@ -116,7 +144,7 @@ public class DockerContainerMock {
 
         Info dockerInfo = mock(Info.class);
         when(dockerInfo.name()).thenReturn("ubuntu_vm");
-
+        
         try {
             URL logsLocation = TestUtils.class.getClassLoader().getResource("logs.tar");
             URL videosLocation = TestUtils.class.getClassLoader().getResource("videos.tar");

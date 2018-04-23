@@ -114,8 +114,23 @@ public class DockerContainerClient implements ContainerClient {
 	        return containerList.stream()
                     .filter(container -> {
                         NetworkSettings networkSettings = container.networkSettings();
+                        System.out.println("Container [" + container + "].");
+                        if (networkSettings == null) {
+                            throw new RuntimeException("asdf");
+                        }
+                        if (networkSettings.networks() == null) {
+                            throw new RuntimeException("asdf");
+                        }
+                        if (networkSettings.networks().values() == null) {
+                            throw new RuntimeException("asdf");
+                        }
+                        System.out.println("Looking in [" + networkSettings.networks().keySet() + "].");
                         return networkSettings.networks().values().stream()
-                                .filter(network -> Objects.equals(network.ipAddress(), remoteUrl.getHost()))
+                                .filter(network -> {
+                                    System.out.println("Comparing [" + network + "] === [" + remoteUrl + "]");
+                                    System.out.println("Comparing [" + network + "] [" + network.ipAddress() + "] === [" + remoteUrl + "] [" + remoteUrl.getHost() + "]");
+                                    return Objects.equals(network.ipAddress(), remoteUrl.getHost());
+                                })
                                 .findFirst()
                                 .isPresent();
                     })

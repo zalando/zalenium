@@ -177,7 +177,7 @@ public class TestUtils {
 
     private static DockerSeleniumRemoteProxy createProxy(GridRegistry registry, RegistrationRequest req) {
         final DockerSeleniumRemoteProxy remoteProxy = new DockerSeleniumRemoteProxy(req, registry);
-        remoteProxy.setupTimeoutListener();
+//        remoteProxy.setupTimeoutListener(); FIXME why is this necessary when testing?
         return remoteProxy;
     }
 

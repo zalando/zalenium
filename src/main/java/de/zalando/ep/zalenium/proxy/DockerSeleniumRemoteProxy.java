@@ -94,20 +94,20 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     public DockerSeleniumRemoteProxy(RegistrationRequest request, GridRegistry registry) {
         super(request, registry);
         try {
-        this.amountOfExecutedTests = 0;
-        readEnvVars();
-        containerClient.setNodeId(getId());
-        registration = containerClient.registerNode(DockeredSeleniumStarter.getContainerName(), this.getRemoteHost());
-        }
-        catch (Exception e) {
-        	LOGGER.error("Failed to create", e);
-        	throw e;
+            this.amountOfExecutedTests = 0;
+            readEnvVars();
+            containerClient.setNodeId(getId());
+            registration = containerClient.registerNode(DockeredSeleniumStarter.getContainerName(),
+                    this.getRemoteHost());
+        } catch (Exception e) {
+            LOGGER.error("Failed to create", e);
+            throw e;
         }
     }
     
     @Override
     public long getLastSessionStart() {
-    	return super.getLastSessionStart();
+        return super.getLastSessionStart();
     }
     
     public long getLastCommandTime() {
