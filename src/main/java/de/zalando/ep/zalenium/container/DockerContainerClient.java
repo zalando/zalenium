@@ -237,7 +237,7 @@ public class DockerContainerClient implements ContainerClient {
 
     public ContainerCreationStatus createContainer(String zaleniumContainerName, String image, Map<String, String> envVars,
                                                    String nodePort, int collisionAttempts) {                                               
-        String containerName = generateContainerName(zaleniumContainerName, nodePort);
+        String containerName = generateContainerName(zaleniumContainerName);
 
         loadMountedFolders(zaleniumContainerName);
         // In some environments the created containers need to be labeled so the platform can handle them. E.g. Rancher.
@@ -344,10 +344,9 @@ public class DockerContainerClient implements ContainerClient {
         return collisionAttempts > 0;
     }
 
-    private String generateContainerName(String zaleniumContainerName,
-                                         String nodePort) {
+    private String generateContainerName(String zaleniumContainerName) {
         final String suffix = RandomStringUtils.randomAlphanumeric(6);
-        return String.format("%s_%s_%s", zaleniumContainerName, nodePort, suffix);
+        return String.format("%s_%s", zaleniumContainerName, suffix);
     }
 
     private void loadSeleniumContainerLabels() {
