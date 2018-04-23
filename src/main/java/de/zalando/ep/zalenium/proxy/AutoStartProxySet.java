@@ -86,6 +86,8 @@ import net.jcip.annotations.ThreadSafe;
 public class AutoStartProxySet extends ProxySet implements Iterable<RemoteProxy> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AutoStartProxySet.class.getName());
+    
+    private static final Logger STATUS_LOGGER = LoggerFactory.getLogger(LOGGER.getName() + ".Status");
 
     private final Map<ContainerCreationStatus, ContainerStatus> startedContainers = new ConcurrentHashMap<>();
 
@@ -407,7 +409,7 @@ public class AutoStartProxySet extends ProxySet implements Iterable<RemoteProxy>
     }
 
     private void dumpStatus() {
-        if (LOGGER.isInfoEnabled()) {
+        if (STATUS_LOGGER.isDebugEnabled()) {
             final AsciiTable at = new AsciiTable();
 
             at.addRule();
@@ -452,7 +454,7 @@ public class AutoStartProxySet extends ProxySet implements Iterable<RemoteProxy>
             CWC_LongestLine cwc = new CWC_LongestLine();
             at.getRenderer().setCWC(cwc);
 
-            LOGGER.info("Status:\n" + at.render(200));
+            STATUS_LOGGER.debug("Status:\n" + at.render(200));
         }
     }
 
