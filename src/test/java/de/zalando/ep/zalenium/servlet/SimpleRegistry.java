@@ -22,9 +22,10 @@ import org.openqa.selenium.remote.http.HttpClient;
 final class SimpleRegistry implements GridRegistry {
 
     private final ProxySet proxySet = new ProxySet(false);
-    
+
     @Override
     public void terminate(TestSession session, SessionTerminationReason reason) {
+        // Not needed for current testing.
     }
 
     @Override
@@ -36,6 +37,7 @@ final class SimpleRegistry implements GridRegistry {
 
     @Override
     public void forceRelease(TestSlot testSlot, SessionTerminationReason reason) {
+        // Not needed for current testing.
     }
 
     @Override
@@ -47,10 +49,12 @@ final class SimpleRegistry implements GridRegistry {
 
     @Override
     public void setHub(Hub hub) {
+        // Not needed for current testing.
     }
 
     @Override
     public void addNewSessionRequest(RequestHandler requestHandler) {
+        // Not needed for current testing.
     }
 
     @Override
@@ -60,7 +64,7 @@ final class SimpleRegistry implements GridRegistry {
 
     @Override
     public void setThrowOnCapabilityNotPresent(boolean throwOnCapabilityNotPresent) {
-        
+        // Not needed for current testing.
     }
 
     @Override
@@ -90,6 +94,7 @@ final class SimpleRegistry implements GridRegistry {
 
     @Override
     public void start() {
+        // Not needed for current testing.
     }
 
     @Override
@@ -109,6 +114,7 @@ final class SimpleRegistry implements GridRegistry {
 
     @Override
     public void stop() {
+        // Not needed for current testing.
     }
 
     @Override
@@ -123,6 +129,7 @@ final class SimpleRegistry implements GridRegistry {
 
     @Override
     public void clearNewSessionRequests() {
+        // Not needed for current testing.
     }
-    
+
 }

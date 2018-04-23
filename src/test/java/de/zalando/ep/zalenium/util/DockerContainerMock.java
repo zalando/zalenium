@@ -56,13 +56,13 @@ public class DockerContainerMock {
             public ContainerClientRegistration answer(InvocationOnMock invocation) throws Throwable {
                 String containerName = invocation.getArgument(0);
                 URL remoteUrl = invocation.getArgument(1);
-                return new ContainerClientRegistration() {
-                    {
-                        setContainerId(containerName);
-                        setIpAddress(remoteUrl.getHost());
-                        setNoVncPort(40000);
-                    }
-                };
+
+                ContainerClientRegistration registration = new ContainerClientRegistration();
+                registration.setContainerId(containerName);
+                registration.setIpAddress(remoteUrl.getHost());
+                registration.setNoVncPort(40000);
+
+                return registration;
             }
         });
         

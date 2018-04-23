@@ -296,9 +296,8 @@ public class AutoStartProxySet extends ProxySet implements Iterable<RemoteProxy>
             ContainerCreationStatus creationStatus = container.getKey();
             ContainerStatus containerStatus = container.getValue();
 
-            if (containerStatus.isStarted()) {
-                // No need to check.
-            } else {
+            // Only need to check containers that haven't yet started.
+            if (!containerStatus.isStarted()) {
                 if (starter.containerHasStarted(creationStatus)) {
                     long started = clock.millis();
                     containerStatus.setTimeStarted(Optional.of(started));

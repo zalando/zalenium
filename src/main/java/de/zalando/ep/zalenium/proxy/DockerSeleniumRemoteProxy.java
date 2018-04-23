@@ -659,17 +659,15 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         // willShutdown == true => there won't be a next session
         this.setCleaningUpBeforeNextSession(!willShutdown);
         try {
-        	if (testInformation != null) {
-	            processContainerAction(DockerSeleniumContainerAction.SEND_NOTIFICATION,
-	                    testInformation.getTestStatus().getTestNotificationMessage(), getContainerId());
-        	}
+            if (testInformation != null) {
+                processContainerAction(DockerSeleniumContainerAction.SEND_NOTIFICATION,
+                        testInformation.getTestStatus().getTestNotificationMessage(), getContainerId());
+            }
             videoRecording(DockerSeleniumContainerAction.STOP_RECORDING);
             processContainerAction(DockerSeleniumContainerAction.TRANSFER_LOGS, getContainerId());
             processContainerAction(DockerSeleniumContainerAction.CLEANUP_CONTAINER, getContainerId());
-            if (keepVideoAndLogs()) {
-            	if (testInformation != null) {
-            		Dashboard.updateDashboard(testInformation);
-            	}
+            if (testInformation != null && keepVideoAndLogs()) {
+                Dashboard.updateDashboard(testInformation);
             }
         } finally {
             this.setCleaningUpBeforeNextSession(false);

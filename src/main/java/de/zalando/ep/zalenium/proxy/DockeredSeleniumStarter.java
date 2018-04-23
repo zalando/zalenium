@@ -5,11 +5,13 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.TimeZone;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.RandomUtils;
 import org.openqa.grid.common.RegistrationRequest;
 import org.openqa.selenium.Dimension;
@@ -232,16 +234,11 @@ public class DockeredSeleniumStarter {
         }
     }
     
-    public ContainerCreationStatus startDockerSeleniumContainer(TimeZone timeZone, Dimension screenSize) {
+    public ContainerCreationStatus startDockerSeleniumContainer(final TimeZone timeZone, final Dimension screenSize) {
 
-        if (timeZone == null) {
-            timeZone = DEFAULT_TZ;
-        }
-        
-        if (screenSize == null) {
-            screenSize = DEFAULT_SCREEN_SIZE;
-        }
-        
+        TimeZone effectiveTimeZone = ObjectUtils.defaultIfNull(timeZone, DEFAULT_TZ);
+        Dimension effectiveScreenSize = ObjectUtils.defaultIfNull(screenSize, DEFAULT_SCREEN_SIZE);
+
         NetworkUtils networkUtils = new NetworkUtils();
         String hostIpAddress = networkUtils.getIp4NonLoopbackAddressOfThisMachine().getHostAddress();
         String nodePolling = String.valueOf(RandomUtils.nextInt(90, 120) * 1000);
@@ -249,7 +246,7 @@ public class DockeredSeleniumStarter {
         String seleniumNodeParams = getSeleniumNodeParameters();
         String latestImage = getLatestDownloadedImage(getDockerSeleniumImageName());
 
-        Map<String, String> envVars = buildEnvVars(timeZone, screenSize, hostIpAddress, sendAnonymousUsageInfo, nodePolling, nodeRegisterCycle, seleniumNodeParams);
+        Map<String, String> envVars = buildEnvVars(effectiveTimeZone, effectiveScreenSize, hostIpAddress, sendAnonymousUsageInfo, nodePolling, nodeRegisterCycle, seleniumNodeParams);
 
         ContainerCreationStatus creationStatus = containerClient
                 .createContainer(getContainerName(), latestImage, envVars, String.valueOf(LOWER_PORT_BOUNDARY));

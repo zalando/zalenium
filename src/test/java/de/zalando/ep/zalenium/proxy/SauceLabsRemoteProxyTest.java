@@ -44,7 +44,6 @@ import static org.mockito.Mockito.*;
 
 public class SauceLabsRemoteProxyTest {
 
-    private DockerSeleniumRemoteProxy proxy;
     private SauceLabsRemoteProxy sauceLabsProxy;
     private GridRegistry registry;
 
@@ -76,7 +75,7 @@ public class SauceLabsRemoteProxyTest {
         proxyRequest.getConfiguration().capabilities.addAll(TestUtils.getDockerSeleniumCapabilitiesForTesting());
 
         // Creating the proxy
-        proxy = DockerSeleniumRemoteProxy.getNewInstance(proxyRequest, registry);
+        DockerSeleniumRemoteProxy proxy = DockerSeleniumRemoteProxy.getNewInstance(proxyRequest, registry);
         registry.add(proxy);
     }
 
