@@ -433,12 +433,6 @@ StartUp()
     -Djava.util.logging.config.file=logging_${DEBUG_MODE}.properties \
     -cp ${ZALENIUM_ARTIFACT} org.openqa.grid.selenium.GridLauncherV3 \
     -role hub -port 4445 -newSessionWaitTimeout ${NEW_SESSION_WAIT_TIMEOUT} \
-    -servlet de.zalando.ep.zalenium.servlet.LivePreviewServlet \
-    -servlet de.zalando.ep.zalenium.servlet.ZaleniumConsoleServlet \
-    -servlet de.zalando.ep.zalenium.servlet.ZaleniumResourceServlet \
-    -servlet de.zalando.ep.zalenium.dashboard.DashboardCleanupServlet \
-    -servlet de.zalando.ep.zalenium.dashboard.DashboardInformationServlet \
-    -servlet de.zalando.ep.zalenium.servlet.VncAuthenticationServlet \
     -registry de.zalando.ep.zalenium.registry.ZaleniumRegistry \
     ${SELENIUM_HUB_PARAMS} \
     ${DEBUG_FLAG} &
