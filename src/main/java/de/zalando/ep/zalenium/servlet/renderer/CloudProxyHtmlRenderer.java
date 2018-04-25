@@ -87,13 +87,13 @@ public class CloudProxyHtmlRenderer implements HtmlRenderer {
         TestSession session = s.getSession();
         String icon = "";
         if (proxy instanceof TestingBotRemoteProxy) {
-            icon = "/grid/admin/ZaleniumResourceServlet/images/testingbot.png";
+            icon = "/grid/resources/images/testingbot.png";
         }
         if (proxy instanceof BrowserStackRemoteProxy) {
-            icon = "/grid/admin/ZaleniumResourceServlet/images/browserstack.png";
+            icon = "/grid/resources/images/browserstack.png";
         }
         if (proxy instanceof SauceLabsRemoteProxy) {
-            icon = "/grid/admin/ZaleniumResourceServlet/images/saucelabs.png";
+            icon = "/grid/resources/images/saucelabs.png";
         }
         String slotClass = "";
         String slotTitle;
