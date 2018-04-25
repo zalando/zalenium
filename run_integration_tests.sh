@@ -15,7 +15,7 @@ else
     if [ "$INTEGRATION_TO_TEST" = sauceLabs ]; then
         if [ -n "${SAUCE_USERNAME}" ]; then
             sudo env "PATH=$PATH" mvn clean
-            mvn clean verify -Dlogback.appender=STDOUT -Dlogback.configurationFile=logback.xml -Pintegration-test -DthreadCountProperty=2 -Dskip.surefire.tests=true -DintegrationToTest=${INTEGRATION_TO_TEST}
+            mvn clean verify -Pintegration-test -DthreadCountProperty=2 -Dskip.surefire.tests=true -DintegrationToTest=${INTEGRATION_TO_TEST}
             # Check for generated videos
             ls -la ${VIDEOS_FOLDER}/saucelabs*.mp4 || (echo "No Sauce Labs videos were downloaded." && exit 2)
             ls -la ${VIDEOS_FOLDER}/zalenium*.mp4 || (echo "No Zalenium videos were generated." && exit 2)
@@ -30,7 +30,7 @@ else
             curl -sSL https://raw.githubusercontent.com/dosel/t/i/p | PULL_DEPENDENCIES=false bash -s stop
             curl -sSL https://raw.githubusercontent.com/dosel/t/i/p | SAUCE_USERNAME='' SAUCE_ACCESS_KEY='' TESTINGBOT_KEY='' TESTINGBOT_SECRET='' PULL_DEPENDENCIES=false ADDITIONAL_DOCKER_OPTS='-u 1000060000:1000060000' VIDEOS_DIR=${VIDEOS_FOLDER} bash -s start
             docker logs zalenium
-            mvn verify -Dlogback.appender=STDOUT -Dlogback.configurationFile=logback.xml -Pintegration-test -DthreadCountProperty=2 -Dskip.surefire.tests=true -Dskip.failsafe.setup=true -DintegrationToTest=${INTEGRATION_TO_TEST}
+            mvn verify -Pintegration-test -DthreadCountProperty=2 -Dskip.surefire.tests=true -Dskip.failsafe.setup=true -DintegrationToTest=${INTEGRATION_TO_TEST}
             # Check for generated videos
             ls -la ${VIDEOS_FOLDER}/browserstack*.mp4 || (echo "No BrowserStack videos were downloaded." && exit 2)
             ls -la ${VIDEOS_FOLDER}/zalenium*.mp4 || (echo "No Zalenium videos were generated." && exit 2)
@@ -39,7 +39,7 @@ else
     if [ "$INTEGRATION_TO_TEST" = testingBot ]; then
         if [ -n "${TESTINGBOT_KEY}" ]; then
             sudo env "PATH=$PATH" mvn clean
-            mvn clean verify -Dlogback.appender=STDOUT -Dlogback.configurationFile=logback.xml -Pintegration-test -DthreadCountProperty=2 -Dskip.surefire.tests=true -DintegrationToTest=${INTEGRATION_TO_TEST}
+            mvn clean verify -Pintegration-test -DthreadCountProperty=2 -Dskip.surefire.tests=true -DintegrationToTest=${INTEGRATION_TO_TEST}
             # Check for generated videos
             ls -la ${VIDEOS_FOLDER}/testingbot*.mp4 || (echo "No TestingBot videos were downloaded." && exit 2)
             ls -la ${VIDEOS_FOLDER}/zalenium*.mp4 || (echo "No Zalenium videos were generated." && exit 2)
@@ -52,7 +52,7 @@ else
             mkdir -p "${VIDEOS_FOLDER}"
             chmod +x target/zalenium_in_docker_compose.sh
             target/zalenium_in_docker_compose.sh start
-            mvn verify -Dlogback.appender=STDOUT -Dlogback.configurationFile=logback.xml -Pintegration-test -DthreadCountProperty=2 -Dskip.surefire.tests=true -Dskip.failsafe.setup=true -DintegrationToTest=sauceLabs
+            mvn verify -Pintegration-test -DthreadCountProperty=2 -Dskip.surefire.tests=true -Dskip.failsafe.setup=true -DintegrationToTest=sauceLabs
             # Check for generated videos
             ls -la ${VIDEOS_FOLDER}/saucelabs*.mp4 || (echo "No Sauce Labs videos were downloaded." && exit 2)
             ls -la ${VIDEOS_FOLDER}/zalenium*.mp4 || (echo "No Zalenium videos were generated." && exit 2)
@@ -63,7 +63,7 @@ else
         MINIKUBE_IP=$(minikube ip)
         export ZALENIUM_GRID_PORT=$(kubectl get svc zalenium -o go-template='{{ index (index .spec.ports 0) "nodePort" }}{{ "\n" }}')
         export ZALENIUM_GRID_HOST=$MINIKUBE_IP
-        mvn verify -Dlogback.appender=STDOUT -Dlogback.configurationFile=logback.xml -Pintegration-test -DthreadCountProperty=2 -Dskip.surefire.tests=true -Dskip.failsafe.setup=true -Dgroups=minikube
+        mvn verify -Pintegration-test -DthreadCountProperty=2 -Dskip.surefire.tests=true -Dskip.failsafe.setup=true -Dgroups=minikube
     fi
 fi
 
