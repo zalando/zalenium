@@ -16,23 +16,21 @@ import javax.management.ObjectName;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import de.zalando.ep.zalenium.registry.ZaleniumRegistry;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
-import org.openqa.grid.common.RegistrationRequest;
 import org.openqa.grid.internal.GridRegistry;
+import org.openqa.grid.internal.utils.configuration.GridHubConfiguration;
+import org.openqa.grid.web.Hub;
+import org.openqa.selenium.remote.server.jmx.JMXHelper;
 
 import de.zalando.ep.zalenium.container.ContainerClient;
 import de.zalando.ep.zalenium.container.ContainerFactory;
 import de.zalando.ep.zalenium.proxy.DockerSeleniumRemoteProxy;
-import de.zalando.ep.zalenium.proxy.DockerSeleniumStarterRemoteProxy;
+import de.zalando.ep.zalenium.registry.ZaleniumRegistry;
 import de.zalando.ep.zalenium.util.DockerContainerMock;
 import de.zalando.ep.zalenium.util.TestUtils;
-import org.openqa.grid.internal.utils.configuration.GridHubConfiguration;
-import org.openqa.grid.web.Hub;
-import org.openqa.selenium.remote.server.jmx.JMXHelper;
 
 public class VncAuthenticationServletTest {
     private GridRegistry registry;
@@ -52,20 +50,11 @@ public class VncAuthenticationServletTest {
         registry = ZaleniumRegistry.newInstance(new Hub(new GridHubConfiguration()));
         
         this.originalContainerClient = ContainerFactory.getContainerClientGenerator();
-        ContainerFactory.setContainerClientGenerator(DockerContainerMock::getMockedDockerContainerClient);
+        ContainerFactory.setContainerClientGenerator(DockerContainerMock::getRegisterOnlyDockerContainerClient);
 
         // Creating the configuration and the registration request of the proxy (node)
-        RegistrationRequest registrationRequest = TestUtils.getRegistrationRequestForTesting(40000,
-                DockerSeleniumRemoteProxy.class.getCanonicalName());
-        registrationRequest.getConfiguration().capabilities.clear();
-        registrationRequest.getConfiguration().capabilities.addAll(DockerSeleniumStarterRemoteProxy.getCapabilities());
-        DockerSeleniumRemoteProxy proxyOne = DockerSeleniumRemoteProxy.getNewInstance(registrationRequest, registry);
-
-        registrationRequest = TestUtils.getRegistrationRequestForTesting(40001,
-                DockerSeleniumRemoteProxy.class.getCanonicalName());
-        registrationRequest.getConfiguration().capabilities.clear();
-        registrationRequest.getConfiguration().capabilities.addAll(DockerSeleniumStarterRemoteProxy.getCapabilities());
-        DockerSeleniumRemoteProxy proxyTwo = DockerSeleniumRemoteProxy.getNewInstance(registrationRequest, registry);
+        DockerSeleniumRemoteProxy proxyOne = TestUtils.getNewBasicRemoteProxy("app1", "http://machine1:4444/", registry);
+        DockerSeleniumRemoteProxy proxyTwo = TestUtils.getNewBasicRemoteProxy("app1", "http://machine2:4444/", registry);
 
         registry.add(proxyOne);
         registry.add(proxyTwo);
@@ -92,7 +81,7 @@ public class VncAuthenticationServletTest {
         VncAuthenticationServlet vncAuthenticationServlet = new VncAuthenticationServlet(registry);
         
         ArgumentCaptor<Integer> statusCaptor = ArgumentCaptor.forClass(Integer.class);
-        when(request.getHeader("X-Original-URI")).thenReturn("http://localhost/vnc/host/localhost/port/50000/?nginx=localhost:50000&view_only=true");
+        when(request.getHeader("X-Original-URI")).thenReturn("http://localhost/vnc/host/machine1/port/40000/?nginx=machine1:40000&view_only=true");
         
         vncAuthenticationServlet.doGet(request, response);
         
@@ -106,7 +95,7 @@ public class VncAuthenticationServletTest {
         VncAuthenticationServlet vncAuthenticationServlet = new VncAuthenticationServlet(registry);
         
         ArgumentCaptor<Integer> statusCaptor = ArgumentCaptor.forClass(Integer.class);
-        when(request.getHeader("X-Original-URI")).thenReturn("http://localhost/proxy/localhost:50000/websockify");
+        when(request.getHeader("X-Original-URI")).thenReturn("http://localhost/proxy/machine1:40000/websockify");
         
         vncAuthenticationServlet.doGet(request, response);
         
@@ -120,7 +109,7 @@ public class VncAuthenticationServletTest {
         VncAuthenticationServlet vncAuthenticationServlet = new VncAuthenticationServlet(registry);
         
         ArgumentCaptor<Integer> statusCaptor = ArgumentCaptor.forClass(Integer.class);
-        when(request.getHeader("X-Original-URI")).thenReturn("http://localhost/proxy/localhost:50002/websockify");
+        when(request.getHeader("X-Original-URI")).thenReturn("http://localhost/proxy/not_a_machine:40000/websockify");
         
         vncAuthenticationServlet.doGet(request, response);
         
@@ -134,7 +123,7 @@ public class VncAuthenticationServletTest {
         VncAuthenticationServlet vncAuthenticationServlet = new VncAuthenticationServlet(registry);
         
         ArgumentCaptor<Integer> statusCaptor = ArgumentCaptor.forClass(Integer.class);
-        when(request.getHeader("X-Original-URI")).thenReturn("http://localhost/vnc/host/localhost/port/50003/?nginx=localhost:50003&view_only=true");
+        when(request.getHeader("X-Original-URI")).thenReturn("http://localhost/vnc/host/machine1/port/50003/?nginx=machine1:50003&view_only=true");
         
         vncAuthenticationServlet.doGet(request, response);
         
@@ -148,7 +137,7 @@ public class VncAuthenticationServletTest {
         VncAuthenticationServlet vncAuthenticationServlet = new VncAuthenticationServlet(registry);
         
         ArgumentCaptor<Integer> statusCaptor = ArgumentCaptor.forClass(Integer.class);
-        when(request.getHeader("X-Original-URI")).thenReturn("http://localhost/vnc/host/fakehost/port/50000/?nginx=fakehost:50000&view_only=true");
+        when(request.getHeader("X-Original-URI")).thenReturn("http://localhost/vnc/host/fakehost/port/40000/?nginx=fakehost:40000&view_only=true");
         
         vncAuthenticationServlet.doGet(request, response);
         

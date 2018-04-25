@@ -89,17 +89,21 @@ public class TestingBotRemoteProxyTest {
         TestingBotRemoteProxy.setCommonProxyUtilities(commonProxyUtilities);
         testingBotProxy = TestingBotRemoteProxy.getNewInstance(request, registry);
 
-        // we need to register a DockerSeleniumStarter proxy to have a proper functioning testingBotProxy
-        request = TestUtils.getRegistrationRequestForTesting(30000,
-                DockerSeleniumStarterRemoteProxy.class.getCanonicalName());
-        DockerSeleniumStarterRemoteProxy dsStarterProxy = DockerSeleniumStarterRemoteProxy.getNewInstance(request, registry);
-
         // Temporal folder for dashboard files
         TestUtils.ensureRequiredInputFilesExist(temporaryFolder);
 
         // We add both nodes to the registry
         registry.add(testingBotProxy);
-        registry.add(dsStarterProxy);
+        
+        // Creating the configuration and the registration request of the proxy (node)
+        RegistrationRequest proxyRequest = TestUtils.getRegistrationRequestForTesting(40000,
+                DockerSeleniumRemoteProxy.class.getCanonicalName());
+        proxyRequest.getConfiguration().capabilities.clear();
+        proxyRequest.getConfiguration().capabilities.addAll(TestUtils.getDockerSeleniumCapabilitiesForTesting());
+
+        // Creating the proxy
+        RemoteProxy remoteProxy = DockerSeleniumRemoteProxy.getNewInstance(proxyRequest, registry);
+        registry.add(remoteProxy);
     }
 
     @After
@@ -118,7 +122,7 @@ public class TestingBotRemoteProxyTest {
         // Checking that the DockerSeleniumStarterProxy should come before TestingBotProxy
         List<RemoteProxy> sorted = registry.getAllProxies().getSorted();
         Assert.assertEquals(2, sorted.size());
-        Assert.assertEquals(DockerSeleniumStarterRemoteProxy.class, sorted.get(0).getClass());
+        Assert.assertEquals(DockerSeleniumRemoteProxy.class, sorted.get(0).getClass());
         Assert.assertEquals(TestingBotRemoteProxy.class, sorted.get(1).getClass());
     }
 

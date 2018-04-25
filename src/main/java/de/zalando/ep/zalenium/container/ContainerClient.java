@@ -25,4 +25,8 @@ public interface ContainerClient {
     void initialiseContainerEnvironment();
 
     String getContainerIp(String containerName);
+    
+    boolean isReady(ContainerCreationStatus container);
+    
+    boolean isTerminated(ContainerCreationStatus container);
 }

@@ -6,6 +6,8 @@ public class ContainerCreationStatus {
     
     private String containerName;
     
+    private String containerId;
+    
     private String nodePort;
 
     public ContainerCreationStatus(boolean isCreated) {
@@ -13,10 +15,11 @@ public class ContainerCreationStatus {
         this.isCreated = isCreated;
     }
 
-    public ContainerCreationStatus(boolean isCreated, String containerName, String nodePort) {
+    public ContainerCreationStatus(boolean isCreated, String containerName, String containerId, String nodePort) {
         super();
         this.isCreated = isCreated;
         this.containerName = containerName;
+		this.containerId = containerId;
         this.nodePort = nodePort;
     }
 
@@ -28,13 +31,18 @@ public class ContainerCreationStatus {
         return containerName;
     }
 
+    public String getContainerId() {
+		return containerId;
+	}
+    
     public String getNodePort() {
         return nodePort;
     }
 
-    @Override
-    public String toString() {
-        return "ContainerCreationStatus [isCreated=" + isCreated + ", containerName=" + containerName + ", nodePort="
-                + nodePort + "]";
-    }
+	@Override
+	public String toString() {
+		return "ContainerCreationStatus [isCreated=" + isCreated + ", containerName=" + containerName + ", containerId="
+				+ containerId + ", nodePort=" + nodePort + "]";
+	}
+    
 }

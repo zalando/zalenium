@@ -66,14 +66,17 @@ public class SauceLabsRemoteProxyTest {
         SauceLabsRemoteProxy.setCommonProxyUtilities(commonProxyUtilities);
         sauceLabsProxy = SauceLabsRemoteProxy.getNewInstance(request, registry);
 
-        // we need to register a DockerSeleniumStarter proxy to have a proper functioning SauceLabsProxy
-        request = TestUtils.getRegistrationRequestForTesting(30000,
-                DockerSeleniumStarterRemoteProxy.class.getCanonicalName());
-        DockerSeleniumStarterRemoteProxy dsStarterProxy = DockerSeleniumStarterRemoteProxy.getNewInstance(request, registry);
-
-        // We add both nodes to the registry
         registry.add(sauceLabsProxy);
-        registry.add(dsStarterProxy);
+        
+        // Creating the configuration and the registration request of the proxy (node)
+        RegistrationRequest proxyRequest = TestUtils.getRegistrationRequestForTesting(40000,
+                DockerSeleniumRemoteProxy.class.getCanonicalName());
+        proxyRequest.getConfiguration().capabilities.clear();
+        proxyRequest.getConfiguration().capabilities.addAll(TestUtils.getDockerSeleniumCapabilitiesForTesting());
+
+        // Creating the proxy
+        DockerSeleniumRemoteProxy proxy = DockerSeleniumRemoteProxy.getNewInstance(proxyRequest, registry);
+        registry.add(proxy);
     }
 
     @After
@@ -116,7 +119,7 @@ public class SauceLabsRemoteProxyTest {
         // Checking that the DockerSeleniumStarterProxy should come before SauceLabsProxy
         List<RemoteProxy> sorted = registry.getAllProxies().getSorted();
         Assert.assertEquals(2, sorted.size());
-        Assert.assertEquals(DockerSeleniumStarterRemoteProxy.class, sorted.get(0).getClass());
+        Assert.assertEquals(DockerSeleniumRemoteProxy.class, sorted.get(0).getClass());
         Assert.assertEquals(SauceLabsRemoteProxy.class, sorted.get(1).getClass());
     }
 

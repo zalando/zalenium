@@ -1,13 +1,14 @@
 package de.zalando.ep.zalenium.matcher;
 
-import de.zalando.ep.zalenium.proxy.DockerSeleniumStarterRemoteProxy;
+import java.util.Map;
+
 import org.openqa.grid.internal.RemoteProxy;
 import org.openqa.grid.internal.utils.DefaultCapabilityMatcher;
 import org.openqa.grid.selenium.proxy.DefaultRemoteProxy;
-
-import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import de.zalando.ep.zalenium.proxy.DockerSeleniumRemoteProxy;
 
 /**
  * The purpose of this class is to check if the capabilities cannot be supplied by docker-selenium so they can be just
@@ -31,7 +32,7 @@ public class ZaleniumCapabilityMatcher extends DefaultCapabilityMatcher {
                 nodeCapability));
 
         for (RemoteProxy remoteProxy : proxy.getRegistry().getAllProxies()) {
-            if ((remoteProxy instanceof DockerSeleniumStarterRemoteProxy) &&
+            if ((remoteProxy instanceof DockerSeleniumRemoteProxy) &&
                     remoteProxy.hasCapability(requestedCapability)) {
                 logger.debug(String.format("Capability supported by docker-selenium, should not be processed by " +
                         "a Cloud Testing Provider: %s", requestedCapability));

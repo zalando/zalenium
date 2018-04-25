@@ -1,12 +1,33 @@
 package de.zalando.ep.zalenium.container;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
+
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.RandomStringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 import com.spotify.docker.client.AnsiProgressHandler;
 import com.spotify.docker.client.DefaultDockerClient;
 import com.spotify.docker.client.DockerClient;
 import com.spotify.docker.client.LogStream;
+import com.spotify.docker.client.exceptions.ContainerNotFoundException;
 import com.spotify.docker.client.exceptions.DockerException;
+import com.spotify.docker.client.exceptions.DockerRequestException;
 import com.spotify.docker.client.messages.AttachedNetwork;
 import com.spotify.docker.client.messages.Container;
 import com.spotify.docker.client.messages.ContainerConfig;
@@ -16,23 +37,11 @@ import com.spotify.docker.client.messages.ContainerMount;
 import com.spotify.docker.client.messages.ExecCreation;
 import com.spotify.docker.client.messages.HostConfig;
 import com.spotify.docker.client.messages.Image;
+import com.spotify.docker.client.messages.NetworkSettings;
+
+import de.zalando.ep.zalenium.proxy.DockeredSeleniumStarter;
 import de.zalando.ep.zalenium.util.Environment;
 import de.zalando.ep.zalenium.util.GoogleAnalyticsApi;
-
-import java.io.InputStream;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.concurrent.atomic.AtomicBoolean;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import java.util.stream.Collectors;
-
-import de.zalando.ep.zalenium.proxy.DockerSeleniumStarterRemoteProxy;
 
 @SuppressWarnings("ConstantConditions")
 public class DockerContainerClient implements ContainerClient {
@@ -58,6 +67,8 @@ public class DockerContainerClient implements ContainerClient {
     };
     private static final Environment defaultEnvironment = new Environment();
     private static Environment env = defaultEnvironment;
+    /** Number of times to attempt to create a container when the generated name is not unique. */
+    private static final int NAME_COLLISION_RETRIES = 10;
     private final Logger logger = LoggerFactory.getLogger(DockerContainerClient.class.getName());
     private final GoogleAnalyticsApi ga = new GoogleAnalyticsApi();
     private DockerClient dockerClient = new DefaultDockerClient("unix:///var/run/docker.sock");
@@ -90,6 +101,31 @@ public class DockerContainerClient implements ContainerClient {
         this.nodeId = nodeId;
     }
 
+    private String getContainerId(URL remoteUrl) {
+        List<Container> containerList = null;
+        try {
+            containerList = dockerClient.listContainers(DockerClient.ListContainersParam.allContainers());
+        } catch (DockerException | InterruptedException e) {
+            logger.debug(nodeId + " Error while getting containerId", e);
+            ga.trackException(e);
+        }
+
+        if (containerList != null) {
+	        return containerList.stream()
+                    .filter(container -> {
+                        NetworkSettings networkSettings = container.networkSettings();
+                        return networkSettings.networks().values().stream()
+                                .filter(network ->  Objects.equals(network.ipAddress(), remoteUrl.getHost()))
+                                .findFirst()
+                                .isPresent();
+                    })
+	                .findFirst().map(Container::id).orElse(null);
+        } else {
+            logger.warn("No container list when looking for {}", remoteUrl.getHost());
+        	return null;
+        }
+    }
+
     private String getContainerId(String containerName) {
         final String containerNameSearch = containerName.contains("/") ?
                 containerName : String.format("/%s", containerName);
@@ -102,9 +138,13 @@ public class DockerContainerClient implements ContainerClient {
             ga.trackException(e);
         }
 
-        return containerList.stream()
-                .filter(container -> containerNameSearch.equalsIgnoreCase(container.names().get(0)))
-                .findFirst().map(Container::id).orElse(null);
+        if (containerList != null) {
+	        return containerList.stream()
+	                .filter(container -> containerNameSearch.equalsIgnoreCase(container.names().get(0)))
+	                .findFirst().map(Container::id).orElse(null);
+        } else {
+        	return null;
+        }
     }
 
     public InputStream copyFiles(String containerId, String folderName) {
@@ -120,6 +160,8 @@ public class DockerContainerClient implements ContainerClient {
     public void stopContainer(String containerId) {
         try {
             dockerClient.stopContainer(containerId, 5);
+        } catch (ContainerNotFoundException e) {
+            logger.info("Container {} does not exist - already shut down?.", containerId);
         } catch (DockerException | InterruptedException e) {
             logger.warn(nodeId + " Error while stopping the container", e);
             ga.trackException(e);
@@ -190,7 +232,12 @@ public class DockerContainerClient implements ContainerClient {
 
     public ContainerCreationStatus createContainer(String zaleniumContainerName, String image, Map<String, String> envVars,
                                                    String nodePort) {
-        String containerName = generateContainerName(zaleniumContainerName, nodePort);
+        return createContainer(zaleniumContainerName, image, envVars, nodePort, NAME_COLLISION_RETRIES);
+    }
+
+    public ContainerCreationStatus createContainer(String zaleniumContainerName, String image, Map<String, String> envVars,
+                                                   String nodePort, int collisionAttempts) {                                               
+        String containerName = generateContainerName(zaleniumContainerName);
 
         loadMountedFolders(zaleniumContainerName);
         // In some environments the created containers need to be labeled so the platform can handle them. E.g. Rancher.
@@ -272,7 +319,16 @@ public class DockerContainerClient implements ContainerClient {
         try {
             final ContainerCreation container = dockerClient.createContainer(containerConfig, containerName);
             dockerClient.startContainer(container.id());
-            return new ContainerCreationStatus(true, containerName, nodePort);
+            return new ContainerCreationStatus(true, containerName, container.id(), nodePort);
+        } catch (DockerRequestException e) {
+            if (isNameCollision(e, containerName) && hasRemainingAttempts(collisionAttempts)) {
+                logger.debug("Name {} collided. Will generate a new name.", containerName);
+                return createContainer(zaleniumContainerName, image, envVars, nodePort, collisionAttempts - 1);
+            }
+
+            logger.warn(nodeId + " Error while starting a new container", e);
+            ga.trackException(e);
+            return new ContainerCreationStatus(false);
         } catch (DockerException | InterruptedException e) {
             logger.warn(nodeId + " Error while starting a new container", e);
             ga.trackException(e);
@@ -280,9 +336,17 @@ public class DockerContainerClient implements ContainerClient {
         }
     }
 
-    private String generateContainerName(String zaleniumContainerName,
-                                         String nodePort) {
-        return String.format("%s_%s", zaleniumContainerName, nodePort);
+    private static boolean isNameCollision(Exception e, String containerName) {
+        return e.getMessage().contains("The container name \"" + containerName + "/\" is already in use by container ");
+    }
+
+    private static boolean hasRemainingAttempts(int collisionAttempts) {
+        return collisionAttempts > 0;
+    }
+
+    private String generateContainerName(String zaleniumContainerName) {
+        final String suffix = RandomStringUtils.randomAlphanumeric(6);
+        return String.format("%s_%s", zaleniumContainerName, suffix);
     }
 
     private void loadSeleniumContainerLabels() {
@@ -432,9 +496,14 @@ public class DockerContainerClient implements ContainerClient {
     public ContainerClientRegistration registerNode(String zaleniumContainerName, URL remoteHost) {
         ContainerClientRegistration registration = new ContainerClientRegistration();
 
-        Integer noVncPort = remoteHost.getPort() + DockerSeleniumStarterRemoteProxy.NO_VNC_PORT_GAP;
-        String containerName = generateContainerName(zaleniumContainerName, Integer.toString(remoteHost.getPort()));
-        String containerId = this.getContainerId(containerName);
+        Integer noVncPort = remoteHost.getPort() + DockeredSeleniumStarter.NO_VNC_PORT_GAP;
+
+        String containerId = this.getContainerId(remoteHost);
+
+        if (containerId == null) {
+            logger.warn("No container id for {} - {}, can't register.", zaleniumContainerName, remoteHost.getHost());
+        }
+
         registration.setNoVncPort(noVncPort);
         registration.setContainerId(containerId);
         registration.setIpAddress(remoteHost.getHost());
@@ -481,6 +550,45 @@ public class DockerContainerClient implements ContainerClient {
             ga.trackException(e);
         }
         return null;
+    }
+
+    @Override
+    public boolean isReady(ContainerCreationStatus container) {
+        String containerIp = this.getContainerIp(container.getContainerName());
+        if (containerIp != null) {
+	        try {
+	            URL statusUrl = new URL(String.format("http://%s:%s/wd/hub/status", containerIp, container.getNodePort()));
+	            String status = IOUtils.toString(statusUrl, StandardCharsets.UTF_8);
+	            String successMessage = "\"Node is running\"";
+	            if (status.contains(successMessage)) {
+	                return true;
+	            }
+	        } catch (IOException e) {
+	            logger.debug("Error while getting node status, probably the node is still starting up...", e);
+	        }
+        }
+        return false;
+    }
+
+    @Override
+    public boolean isTerminated(ContainerCreationStatus container) {
+        try {
+            final ContainerInfo info = dockerClient.inspectContainer(container.getContainerId());
+            if (info.state().status().equalsIgnoreCase("exited") || info.state().status().equalsIgnoreCase("dead")) {
+                logger.info("Container {} exited with status {} - it is terminated.", container, info.state().status());
+                return true;
+            }
+            return false;
+        } catch (ContainerNotFoundException e) {
+            logger.info("Container {} not found - it is terminated.", container);
+            return true;
+        } catch (DockerException e) {
+            logger.warn("Failed to fetch container status [" + container + "].", e);
+            return false;
+        } catch (InterruptedException e) {
+            logger.warn("Failed to fetch container status [" + container + "].", e);
+            return false;
+        }
     }
 }
 

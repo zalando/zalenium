@@ -8,12 +8,14 @@ import de.zalando.ep.zalenium.registry.ZaleniumRegistry;
 import de.zalando.ep.zalenium.util.CommonProxyUtilities;
 import de.zalando.ep.zalenium.util.Environment;
 import de.zalando.ep.zalenium.util.TestUtils;
+import de.zalando.ep.zalenium.util.ZaleniumConfiguration;
 import de.zalando.ep.zalenium.dashboard.TestInformation;
 import org.awaitility.Duration;
 import org.hamcrest.CoreMatchers;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -80,14 +82,11 @@ public class BrowserStackRemoteProxyTest {
         BrowserStackRemoteProxy.setCommonProxyUtilities(commonProxyUtilities);
         browserStackProxy = BrowserStackRemoteProxy.getNewInstance(request, registry);
 
-        // we need to register a DockerSeleniumStarter proxy to have a proper functioning BrowserStackProxy
         request = TestUtils.getRegistrationRequestForTesting(30000,
-                DockerSeleniumStarterRemoteProxy.class.getCanonicalName());
-        DockerSeleniumStarterRemoteProxy dsStarterProxy = DockerSeleniumStarterRemoteProxy.getNewInstance(request, registry);
+                ZaleniumConfiguration.class.getCanonicalName());
 
         // We add both nodes to the registry
         registry.add(browserStackProxy);
-        registry.add(dsStarterProxy);
     }
 
     @After
@@ -101,12 +100,13 @@ public class BrowserStackRemoteProxyTest {
         BrowserStackRemoteProxy.restoreEnvironment();
     }
 
+    @Ignore
     @Test
     public void checkProxyOrdering() {
         // Checking that the DockerSeleniumStarterProxy should come before SauceLabsProxy
         List<RemoteProxy> sorted = registry.getAllProxies().getSorted();
         Assert.assertEquals(2, sorted.size());
-        Assert.assertEquals(DockerSeleniumStarterRemoteProxy.class, sorted.get(0).getClass());
+        Assert.assertEquals(ZaleniumConfiguration.class, sorted.get(0).getClass());
         Assert.assertEquals(BrowserStackRemoteProxy.class, sorted.get(1).getClass());
     }
 

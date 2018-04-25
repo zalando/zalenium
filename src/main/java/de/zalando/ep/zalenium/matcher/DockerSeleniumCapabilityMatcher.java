@@ -1,19 +1,20 @@
 package de.zalando.ep.zalenium.matcher;
 
-import de.zalando.ep.zalenium.proxy.DockerSeleniumStarterRemoteProxy;
-import org.openqa.grid.internal.TestSlot;
-import org.openqa.grid.internal.utils.DefaultCapabilityMatcher;
-import org.openqa.grid.selenium.proxy.DefaultRemoteProxy;
-import org.openqa.selenium.remote.BrowserType;
-import org.openqa.selenium.remote.CapabilityType;
-
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import org.openqa.grid.internal.TestSlot;
+import org.openqa.grid.internal.utils.DefaultCapabilityMatcher;
+import org.openqa.grid.selenium.proxy.DefaultRemoteProxy;
+import org.openqa.selenium.remote.BrowserType;
+import org.openqa.selenium.remote.CapabilityType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import de.zalando.ep.zalenium.proxy.DockeredSeleniumStarter;
 
 public class DockerSeleniumCapabilityMatcher extends DefaultCapabilityMatcher {
     private static final List<String> ZALENIUM_CUSTOM_CAPABILITIES_NO_PREFIX = Arrays.asList(
@@ -46,22 +47,6 @@ public class DockerSeleniumCapabilityMatcher extends DefaultCapabilityMatcher {
             logger.debug(String.format("%s Capability %s does not contain %s key, a docker-selenium " +
                     "node cannot be started without it", proxy.getId(), requestedCapability, CapabilityType.BROWSER_NAME));
             return false;
-        }
-
-        // We do this because the starter node does not have the browser versions when Zalenium starts
-        if (proxy instanceof DockerSeleniumStarterRemoteProxy) {
-            Map<String, Object> requestedCapabilityCopy = copyMap(requestedCapability);
-            if (browserVersionsFetched.get()) {
-                String browser = nodeCapability.get(CapabilityType.BROWSER_NAME).toString();
-                if (BrowserType.FIREFOX.equalsIgnoreCase(browser)) {
-                    nodeCapability.put(CapabilityType.VERSION, firefoxVersion);
-                } else if (BrowserType.CHROME.equalsIgnoreCase(browser)) {
-                    nodeCapability.put(CapabilityType.VERSION, chromeVersion);
-                }
-            } else {
-                requestedCapabilityCopy.remove(CapabilityType.VERSION);
-            }
-            return super.matches(nodeCapability, requestedCapabilityCopy);
         }
 
         // DockerSeleniumRemoteProxy part
@@ -133,8 +118,8 @@ public class DockerSeleniumCapabilityMatcher extends DefaultCapabilityMatcher {
             then this validation prevents requests using nodes that were created with specific screen sizes
          */
         String defaultScreenResolution = String.format("%sx%s",
-                DockerSeleniumStarterRemoteProxy.getConfiguredScreenSize().getWidth(),
-                DockerSeleniumStarterRemoteProxy.getConfiguredScreenSize().getHeight());
+                DockeredSeleniumStarter.getConfiguredScreenSize().getWidth(),
+                DockeredSeleniumStarter.getConfiguredScreenSize().getHeight());
         String nodeScreenResolution = nodeCapability.get(ZaleniumCapabilityType.SCREEN_RESOLUTION).toString();
         if (!screenSizeCapabilityIsRequested && !defaultScreenResolution.equalsIgnoreCase(nodeScreenResolution)) {
             screenResolutionCapabilityMatches = false;
@@ -145,7 +130,7 @@ public class DockerSeleniumCapabilityMatcher extends DefaultCapabilityMatcher {
     private boolean isTimeZoneMatching(Map<String, Object> nodeCapability, Map<String, Object> requestedCapability) {
         boolean timeZoneCapabilityMatches;
 
-        String defaultTimeZone = DockerSeleniumStarterRemoteProxy.getConfiguredTimeZone().getID();
+        String defaultTimeZone = DockeredSeleniumStarter.getConfiguredTimeZone().getID();
         String nodeTimeZone = nodeCapability.get(ZaleniumCapabilityType.TIME_ZONE).toString();
 
         /*

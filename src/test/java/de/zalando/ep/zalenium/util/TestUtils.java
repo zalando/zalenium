@@ -4,7 +4,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import de.zalando.ep.zalenium.proxy.DockerSeleniumRemoteProxy;
-import de.zalando.ep.zalenium.proxy.DockerSeleniumStarterRemoteProxy;
+import de.zalando.ep.zalenium.proxy.DockeredSeleniumStarter;
 import org.apache.commons.io.FileUtils;
 import org.junit.rules.TemporaryFolder;
 import org.openqa.grid.common.RegistrationRequest;
@@ -77,8 +77,8 @@ public class TestUtils {
 
     public static List<MutableCapabilities> getDockerSeleniumCapabilitiesForTesting() {
         String screenResolution = String.format("%sx%s",
-                DockerSeleniumStarterRemoteProxy.getConfiguredScreenSize().getWidth(),
-                DockerSeleniumStarterRemoteProxy.getConfiguredScreenSize().getHeight());
+                DockeredSeleniumStarter.getConfiguredScreenSize().getWidth(),
+                DockeredSeleniumStarter.getConfiguredScreenSize().getHeight());
         List<MutableCapabilities> dsCapabilities = new ArrayList<>();
         MutableCapabilities firefoxCapabilities = new MutableCapabilities();
         firefoxCapabilities.setCapability(CapabilityType.BROWSER_NAME, BrowserType.FIREFOX);
@@ -86,7 +86,7 @@ public class TestUtils {
         firefoxCapabilities.setCapability(CapabilityType.VERSION, "57.0");
         firefoxCapabilities.setCapability(RegistrationRequest.MAX_INSTANCES, 1);
         firefoxCapabilities.setCapability("screenResolution", screenResolution);
-        firefoxCapabilities.setCapability("tz", DockerSeleniumStarterRemoteProxy.getConfiguredTimeZone().getID());
+        firefoxCapabilities.setCapability("tz", DockeredSeleniumStarter.getConfiguredTimeZone().getID());
         dsCapabilities.add(firefoxCapabilities);
         MutableCapabilities chromeCapabilities = new MutableCapabilities();
         chromeCapabilities.setCapability(CapabilityType.BROWSER_NAME, BrowserType.CHROME);
@@ -94,7 +94,7 @@ public class TestUtils {
         chromeCapabilities.setCapability(CapabilityType.VERSION, "62.0.3202.94");
         chromeCapabilities.setCapability(RegistrationRequest.MAX_INSTANCES, 1);
         chromeCapabilities.setCapability("screenResolution", screenResolution);
-        chromeCapabilities.setCapability("tz", DockerSeleniumStarterRemoteProxy.getConfiguredTimeZone().getID());
+        chromeCapabilities.setCapability("tz", DockeredSeleniumStarter.getConfiguredTimeZone().getID());
         dsCapabilities.add(chromeCapabilities);
         return dsCapabilities;
     }
@@ -177,7 +177,7 @@ public class TestUtils {
 
     private static DockerSeleniumRemoteProxy createProxy(GridRegistry registry, RegistrationRequest req) {
         final DockerSeleniumRemoteProxy remoteProxy = new DockerSeleniumRemoteProxy(req, registry);
-        remoteProxy.setupTimeoutListener();
+//        remoteProxy.setupTimeoutListener(); FIXME why is this necessary when testing?
         return remoteProxy;
     }
 

@@ -432,13 +432,14 @@ public class DockerSeleniumRemoteProxyTest {
         try {
 
             // Create a docker-selenium container
-            RegistrationRequest request = TestUtils.getRegistrationRequestForTesting(30000,
-                    DockerSeleniumStarterRemoteProxy.class.getCanonicalName());
-            DockerSeleniumStarterRemoteProxy dsProxy = new DockerSeleniumStarterRemoteProxy(request, registry);
-            DockerSeleniumStarterRemoteProxy.setMaxDockerSeleniumContainers(1);
-            DockerSeleniumStarterRemoteProxy.setConfiguredScreenSize(DockerSeleniumStarterRemoteProxy.DEFAULT_SCREEN_SIZE);
-            DockerSeleniumStarterRemoteProxy.setContainerClient(containerClient);
-            dsProxy.getNewSession(getCapabilitySupportedByDockerSelenium());
+//            RegistrationRequest request = TestUtils.getRegistrationRequestForTesting(30000,
+//                    DockerSeleniumStarterRemoteProxy.class.getCanonicalName());
+//            DockerSeleniumStarterRemoteProxy dsProxy = new DockerSeleniumStarterRemoteProxy(request, registry);
+//            DockerSeleniumStarterRemoteProxy.setMaxDockerSeleniumContainers(1);
+//            DockerSeleniumStarterRemoteProxy.setConfiguredScreenSize(DockerSeleniumStarterRemoteProxy.DEFAULT_SCREEN_SIZE);
+//            DockerSeleniumStarterRemoteProxy.setContainerClient(containerClient);
+//            dsProxy.getNewSession(getCapabilitySupportedByDockerSelenium());
+//            
 
             CommonProxyUtilities commonProxyUtilities = TestUtils.mockCommonProxyUtilitiesForDashboardTesting(temporaryFolder);
             TestUtils.ensureRequiredInputFilesExist(temporaryFolder);
@@ -499,14 +500,14 @@ public class DockerSeleniumRemoteProxyTest {
 
         try {
             // Create a docker-selenium container
-            RegistrationRequest request = TestUtils.getRegistrationRequestForTesting(30000,
-                    DockerSeleniumStarterRemoteProxy.class.getCanonicalName());
-            DockerSeleniumStarterRemoteProxy dsProxy = new DockerSeleniumStarterRemoteProxy(request, registry);
-            DockerSeleniumStarterRemoteProxy.setMaxDockerSeleniumContainers(1);
-            DockerSeleniumStarterRemoteProxy.setConfiguredScreenSize(DockerSeleniumStarterRemoteProxy.DEFAULT_SCREEN_SIZE);
-            DockerSeleniumStarterRemoteProxy.setConfiguredTimeZone(DockerSeleniumStarterRemoteProxy.DEFAULT_TZ.getID());
-            DockerSeleniumStarterRemoteProxy.setContainerClient(containerClient);
-            dsProxy.getNewSession(getCapabilitySupportedByDockerSelenium());
+//            RegistrationRequest request = TestUtils.getRegistrationRequestForTesting(30000,
+//                    DockerSeleniumStarterRemoteProxy.class.getCanonicalName());
+//            DockerSeleniumStarterRemoteProxy dsProxy = new DockerSeleniumStarterRemoteProxy(request, registry);
+//            DockerSeleniumStarterRemoteProxy.setMaxDockerSeleniumContainers(1);
+//            DockerSeleniumStarterRemoteProxy.setConfiguredScreenSize(DockerSeleniumStarterRemoteProxy.DEFAULT_SCREEN_SIZE);
+//            DockerSeleniumStarterRemoteProxy.setConfiguredTimeZone(DockerSeleniumStarterRemoteProxy.DEFAULT_TZ.getID());
+//            DockerSeleniumStarterRemoteProxy.setContainerClient(containerClient);
+//            dsProxy.getNewSession(getCapabilitySupportedByDockerSelenium());
 
             // Mocking the environment variable to return false for video recording enabled
             Environment environment = mock(Environment.class);
