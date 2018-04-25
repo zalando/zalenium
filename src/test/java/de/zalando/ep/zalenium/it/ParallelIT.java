@@ -112,10 +112,7 @@ public class ParallelIT  {
     }
 
     @Test(dataProvider = "browsersAndPlatformsForLivePreview")
-    public void checkIframeLinksForLivePreviewWithMachineIp(String browserType, Platform platform) {
-
-        NetworkUtils networkUtils = new NetworkUtils();
-        String hostIpAddress = networkUtils.getIp4NonLoopbackAddressOfThisMachine().getHostAddress();
+    public void checkIframeLinksForLivePreview(String browserType, Platform platform) {
 
         // Go to the homepage
         getWebDriver().get(String.format("http://%s:%s/grid/admin/live", ZALENIUM_HOST, ZALENIUM_PORT));
