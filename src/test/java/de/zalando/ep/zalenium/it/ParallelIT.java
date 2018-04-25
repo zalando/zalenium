@@ -118,7 +118,7 @@ public class ParallelIT  {
         String hostIpAddress = networkUtils.getIp4NonLoopbackAddressOfThisMachine().getHostAddress();
 
         // Go to the homepage
-        getWebDriver().get(String.format("http://%s:%s/grid/admin/live", hostIpAddress, ZALENIUM_PORT));
+        getWebDriver().get(String.format("http://%s:%s/grid/admin/live", ZALENIUM_HOST, ZALENIUM_PORT));
 
         // Get the page source to get the iFrame links
         String pageSource = getWebDriver().getPageSource();
