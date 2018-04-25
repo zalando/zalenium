@@ -350,7 +350,10 @@ public class CloudTestingRemoteProxy extends DefaultRemoteProxy {
                 long executionTime = (System.currentTimeMillis() - testSlot.getLastSessionStart()) / 1000;
                 getGa().testEvent(getProxyClassName(), testSlot.getSession().getRequestedCapabilities().toString(),
                         executionTime);
-                addTestToDashboard(testSlot.getSession().getExternalKey().getKey(), false);
+                // If it is null, it is probable that the test never reached the cloud service.
+                if (testSlot.getSession().getExternalKey() != null) {
+                    addTestToDashboard(testSlot.getSession().getExternalKey().getKey(), false);
+                }
                 getRegistry().forceRelease(testSlot, SessionTerminationReason.ORPHAN);
                 logger.info(getProxyName() + " Releasing slot and terminating session due to inactivity.");
             }
