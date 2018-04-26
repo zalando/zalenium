@@ -148,16 +148,26 @@ public class Dashboard {
         File videosFolder = new File(getLocalVideosPath());
         String[] extensions = new String[] { "mp4", "mkv", "flv" };
         for (File file : FileUtils.listFiles(videosFolder, extensions, true)) {
-            FileUtils.forceDelete(file);
+            deleteIfExists(file);
         }
-        FileUtils.forceDelete(logsFolder);
-        FileUtils.forceDelete(testList);
-        FileUtils.forceDelete(testCountFile);
-        FileUtils.forceDelete(dashboardHtml);
+        deleteIfExists(logsFolder);
+        deleteIfExists(testList);
+        deleteIfExists(testCountFile);
+        deleteIfExists(dashboardHtml);
         String dashboard = FileUtils.readFileToString(new File(getCurrentLocalPath(), DASHBOARD_TEMPLATE_FILE), UTF_8);
         dashboard = dashboard.replace("{testList}", "").
                 replace("{executedTests}", "0");
         FileUtils.writeStringToFile(dashboardHtml, dashboard, UTF_8);
+    }
+    
+    public static void deleteIfExists(File file) {
+        if (file.exists()) {
+            try {
+                FileUtils.forceDelete(file);
+            } catch (IOException e) {
+                LOGGER.error("Failed to delete file: [" + file.toString() + "]", e);
+            }
+        }
     }
 
     @VisibleForTesting
