@@ -107,7 +107,7 @@ RUN apt-get -qqy update \
 # Layer size: medium: 50.51 MB
 RUN apt-get -qqy update \
   && apt-get -qqy --no-install-recommends install \
-    nginx \
+    nginx-extras \
   && apt-get -qyy autoremove \
   && rm -rf /var/lib/apt/lists/* \
   && nginx -v \

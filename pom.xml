@@ -50,6 +50,8 @@
     <properties>
         <selenium-server.major-minor.version>3.11</selenium-server.major-minor.version>
         <selenium-server.patch-level.version>0</selenium-server.patch-level.version>
+        <!-- This needs to match what is in the Selenium Server pom file -->
+        <jetty.version>9.4.8.v20171121</jetty.version>
         <docker-client.version>8.11.2</docker-client.version>
         <kubernetes-client.version>3.1.10</kubernetes-client.version>
         <junit.version>4.12</junit.version>
@@ -69,6 +71,9 @@
         <versions-maven-plugin.version>2.5</versions-maven-plugin.version>
         <exec-maven-plugin.version>1.6.0</exec-maven-plugin.version>
         <jacoco-maven-plugin.version>0.7.9</jacoco-maven-plugin.version>
+        <prometheus.version>0.3.0</prometheus.version>
+        <aspectj.version>1.8.13</aspectj.version>
+        <aspectj-maven-plugin.version>1.11</aspectj-maven-plugin.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <threadCountProperty>1</threadCountProperty>
@@ -79,6 +84,11 @@
     </properties>
 
     <dependencies>
+        <dependency>
+            <groupId>org.aspectj</groupId>
+            <artifactId>aspectjrt</artifactId>
+            <version>${aspectj.version}</version>
+        </dependency>
         <dependency>
             <groupId>org.seleniumhq.selenium</groupId>
             <artifactId>selenium-server</artifactId>
@@ -143,6 +153,52 @@
             <groupId>net.logstash.logback</groupId>
             <artifactId>logstash-logback-encoder</artifactId>
             <version>${logstash-logback-encoder.version}</version>
+        </dependency>
+        <!-- The prometheus client -->
+        <dependency>
+          <groupId>io.prometheus</groupId>
+          <artifactId>simpleclient</artifactId>
+          <version>${prometheus.version}</version>
+        </dependency>
+        <!-- Prometheus Hotspot JVM metrics -->
+        <dependency>
+          <groupId>io.prometheus</groupId>
+          <artifactId>simpleclient_hotspot</artifactId>
+          <version>${prometheus.version}</version>
+        </dependency>
+        <!-- Prometheus Exporter Servlet -->
+        <dependency>
+          <groupId>io.prometheus</groupId>
+          <artifactId>simpleclient_servlet</artifactId>
+          <version>${prometheus.version}</version>
+        </dependency>
+        <!-- Prometheus Jetty -->
+        <dependency>
+          <groupId>io.prometheus</groupId>
+          <artifactId>simpleclient_jetty</artifactId>
+          <version>${prometheus.version}</version>
+          <exclusions>
+            <exclusion>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>*</artifactId>
+            </exclusion>
+          </exclusions>
+        </dependency>
+        <!-- 
+        This allows us to add prometheus jetty collectors that expect to find jetty classes in their usual place.
+        Selenium has repackaged Jetty, so this makes it available at compile time, before we relocate the classes again.
+         -->
+        <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-server</artifactId>
+            <scope>provided</scope>
+            <version>${jetty.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>io.fabric8</groupId>
@@ -287,6 +343,30 @@
                 </configuration>
 
             </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>aspectj-maven-plugin</artifactId>
+                <version>${aspectj-maven-plugin.version}</version>
+                <configuration>
+                    <showWeaveInfo>true</showWeaveInfo>
+                    <weaveDependencies>
+                        <weaveDependency>
+                            <groupId>org.seleniumhq.selenium</groupId>
+                            <artifactId>selenium-server</artifactId>
+                        </weaveDependency>
+                    </weaveDependencies>
+                    <complianceLevel>1.8</complianceLevel>
+                    <source>1.8</source>
+                    <target>1.8</target>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>compile</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
             <!-- Plugin to build the fat jar -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -312,6 +392,12 @@
                             <artifactSet>
 
                             </artifactSet>
+                            <relocations>
+                                <relocation>
+                                    <pattern>org.eclipse.jetty</pattern>
+                                    <shadedPattern>org.seleniumhq.jetty9</shadedPattern>
+                                </relocation>
+                            </relocations>
                         </configuration>
                     </execution>
                 </executions>
