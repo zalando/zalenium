@@ -80,8 +80,7 @@ privileged public aspect HubAspect {
     protected void registerZaleniumServlets(ServletContextHandler handler) {
         handler.addServlet(LivePreviewServlet.class, "/grid/admin/live");
         handler.addServlet(ZaleniumConsoleServlet.class, "/grid/console");
-        // We want resources to be at least 3 levels deep so that the prometheus servlet filter doesn't pick up all the individual resources
-        handler.addServlet(ZaleniumResourceServlet.class, "/grid/resources");
+        handler.addServlet(ZaleniumResourceServlet.class, "/resources/*");
         handler.addServlet(DashboardCleanupServlet.class, "/dashboard/cleanup");
         handler.addServlet(DashboardInformationServlet.class, "/dashboard/information");
         handler.addServlet(VncAuthenticationServlet.class, "/vnc/auth");

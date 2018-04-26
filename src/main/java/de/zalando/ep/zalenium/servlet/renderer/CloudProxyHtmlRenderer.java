@@ -87,13 +87,13 @@ public class CloudProxyHtmlRenderer implements HtmlRenderer {
         TestSession session = s.getSession();
         String icon = "";
         if (proxy instanceof TestingBotRemoteProxy) {
-            icon = "/grid/resources/images/testingbot.png";
+            icon = "/resources/images/testingbot.png";
         }
         if (proxy instanceof BrowserStackRemoteProxy) {
-            icon = "/grid/resources/images/browserstack.png";
+            icon = "/resources/images/browserstack.png";
         }
         if (proxy instanceof SauceLabsRemoteProxy) {
-            icon = "/grid/resources/images/saucelabs.png";
+            icon = "/resources/images/saucelabs.png";
         }
         String slotClass = "";
         String slotTitle;
