@@ -105,12 +105,12 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
             throw e;
         }
     }
-    
+
     @Override
     public long getLastSessionStart() {
         return super.getLastSessionStart();
     }
-    
+
     public long getLastCommandTime() {
         return lastCommandTime;
     }

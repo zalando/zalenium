@@ -166,11 +166,19 @@ public class AutoStartProxySet extends ProxySet implements Iterable<RemoteProxy>
     }
 
     public void add(RemoteProxy proxy) {
+        boolean shouldAdd = true;
         if (proxy instanceof DockerSeleniumRemoteProxy) {
             DockerSeleniumRemoteProxy dockerSeleniumRemoteProxy = (DockerSeleniumRemoteProxy) proxy;
-            this.register(dockerSeleniumRemoteProxy);
+            shouldAdd = this.register(dockerSeleniumRemoteProxy);
         }
-        super.add(proxy);
+
+        if (shouldAdd) {
+            super.add(proxy);
+        }
+        else {
+            // Won't be tracking the proxy, so it won't be removed and shutdown later - tear down.
+            proxy.teardown();
+        }
     }
 
     public RemoteProxy remove(RemoteProxy proxy) {
@@ -180,6 +188,7 @@ public class AutoStartProxySet extends ProxySet implements Iterable<RemoteProxy>
             String containerId = dockerSeleniumRemoteProxy.getContainerId();
 
             try {
+                LOGGER.info("Stopping removed container [" + containerId + "].");
                 starter.stopContainer(containerId);
             } catch (Exception e) {
                 LOGGER.error("Failed to stop container [" + containerId + "].", e);
@@ -230,7 +239,7 @@ public class AutoStartProxySet extends ProxySet implements Iterable<RemoteProxy>
         filter.cleanProcessedCapabilities();
     }
 
-    private void register(DockerSeleniumRemoteProxy proxy) {
+    private boolean register(DockerSeleniumRemoteProxy proxy) {
         String containerId = proxy.getContainerId();
 
         ContainerStatus containerStatus = null;
@@ -251,12 +260,15 @@ public class AutoStartProxySet extends ProxySet implements Iterable<RemoteProxy>
                     "Registered (or re-registered) a container {} {} that is not tracked by the pool, marking down.",
                     containerId, proxy);
             proxy.markDown();
+            return false;
         } else if (containerStatus.isShuttingDown()) {
             LOGGER.warn("Registered (or re-registered) a container {} {} that is shutting down, marking down.",
                     containerId, proxy);
             proxy.markDown();
+            return false;
         } else {
             LOGGER.info("Registered a container {} {}.", containerId, proxy);
+            return true;
         }
     }
 
