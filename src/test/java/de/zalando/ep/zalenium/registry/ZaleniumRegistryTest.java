@@ -23,7 +23,7 @@ import java.util.UUID;
 import java.util.concurrent.Callable;
 
 import static org.awaitility.Awaitility.await;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertEquals;
 
 public class ZaleniumRegistryTest {
 
@@ -39,7 +39,7 @@ public class ZaleniumRegistryTest {
             registry.add(p2);
             registry.add(p3);
             registry.add(p4);
-            assertTrue(registry.getAllProxies().size() == 4);
+            assertEquals(4, registry.getAllProxies().size());
         } finally {
             registry.stop();
         }
@@ -51,9 +51,9 @@ public class ZaleniumRegistryTest {
         DockerSeleniumRemoteProxy p1 = TestUtils.getNewBasicRemoteProxy("app1", "http://machine1:4444/", registry);
         try {
             registry.add(p1);
-            assertTrue(registry.getAllProxies().size() == 1);
+            assertEquals(1, registry.getAllProxies().size());
             registry.removeIfPresent(p1);
-            assertTrue(registry.getAllProxies().size() == 0);
+            assertEquals(0, registry.getAllProxies().size());
         } finally {
             registry.stop();
         }
