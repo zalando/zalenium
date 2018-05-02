@@ -48,7 +48,7 @@ public class ZaleniumRegistry extends BaseGridRegistry implements GridRegistry {
     // registry.
     private final ReentrantLock lock = new ReentrantLock();
     private final Condition testSessionAvailable = lock.newCondition();
-    private final AutoStartProxySet proxies;
+    private final ProxySet proxies;
     private final ActiveTestSessions activeTestSessions = new ActiveTestSessions();
     private final NewSessionRequestQueue newSessionQueue;
     private final Matcher matcherThread = new Matcher();
@@ -78,10 +78,37 @@ public class ZaleniumRegistry extends BaseGridRegistry implements GridRegistry {
      * Creates a new {@link GridRegistry} and starts it.
      *
      * @param hub the {@link Hub} to associate this registry with
+     * @param proxySet the {@link ProxySet} to manage proxies with
+     * @return the registry
+     */
+    public ZaleniumRegistry(Hub hub, ProxySet proxySet) {
+        super(hub);
+        this.newSessionQueue = new NewSessionRequestQueue();
+        proxies = proxySet;
+        this.matcherThread.setUncaughtExceptionHandler(new UncaughtExceptionHandler());
+    }
+
+    /**
+     * Creates a new {@link GridRegistry} and starts it.
+     *
+     * @param hub the {@link Hub} to associate this registry with
      * @return the registry
      */
     public static GridRegistry newInstance(Hub hub) {
         ZaleniumRegistry registry = new ZaleniumRegistry(hub);
+        registry.start();
+        return registry;
+    }
+
+    /**
+     * Creates a new {@link GridRegistry} and starts it.
+     *
+     * @param hub the {@link Hub} to associate this registry with
+     * @param proxySet the {@link ProxySet} to manage proxies with
+     * @return the registry
+     */
+    public static GridRegistry newInstance(Hub hub, ProxySet proxySet) {
+        ZaleniumRegistry registry = new ZaleniumRegistry(hub, proxySet);
         registry.start();
         return registry;
     }

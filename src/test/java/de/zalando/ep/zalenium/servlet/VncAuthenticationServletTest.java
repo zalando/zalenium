@@ -21,15 +21,13 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.openqa.grid.internal.GridRegistry;
-import org.openqa.grid.internal.utils.configuration.GridHubConfiguration;
-import org.openqa.grid.web.Hub;
 import org.openqa.selenium.remote.server.jmx.JMXHelper;
 
 import de.zalando.ep.zalenium.container.ContainerClient;
 import de.zalando.ep.zalenium.container.ContainerFactory;
 import de.zalando.ep.zalenium.proxy.DockerSeleniumRemoteProxy;
-import de.zalando.ep.zalenium.registry.ZaleniumRegistry;
 import de.zalando.ep.zalenium.util.DockerContainerMock;
+import de.zalando.ep.zalenium.util.SimpleRegistry;
 import de.zalando.ep.zalenium.util.TestUtils;
 
 public class VncAuthenticationServletTest {
@@ -47,8 +45,8 @@ public class VncAuthenticationServletTest {
         } catch (MalformedObjectNameException | InstanceNotFoundException e) {
             // Might be that the object does not exist, it is ok. Nothing to do, this is just a cleanup task.
         }
-        registry = ZaleniumRegistry.newInstance(new Hub(new GridHubConfiguration()));
-        
+        registry = new SimpleRegistry();
+
         this.originalContainerClient = ContainerFactory.getContainerClientGenerator();
         ContainerFactory.setContainerClientGenerator(DockerContainerMock::getRegisterOnlyDockerContainerClient);
 

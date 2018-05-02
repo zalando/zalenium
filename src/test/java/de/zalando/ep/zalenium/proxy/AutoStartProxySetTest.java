@@ -149,11 +149,15 @@ public class AutoStartProxySetTest {
     @Test
     public void containersAreStoppedWhenProxiesAreRemoved() {
         Clock clock = Clock.fixed(Instant.ofEpochMilli(10000), ZoneId.systemDefault());
+        DockerSeleniumRemoteProxy proxy = proxy("container_id", false);
         DockeredSeleniumStarter starter = Mockito.mock(DockeredSeleniumStarter.class);
+        ContainerCreationStatus containerCreationStatus = new ContainerCreationStatus(true, "name", "container_id",
+                "40000");
+        Mockito.when(starter.startDockerSeleniumContainer(Mockito.any())).thenReturn(containerCreationStatus);
+        
         AutoStartProxySet autoStartProxySet = new AutoStartProxySet(false, 0, 5, 1000, false, starter, clock);
 
-        DockerSeleniumRemoteProxy proxy = proxy("container_id", false);
-
+        autoStartProxySet.getNewSession(Collections.emptyMap());
         autoStartProxySet.add(proxy);
         autoStartProxySet.remove(proxy);
 

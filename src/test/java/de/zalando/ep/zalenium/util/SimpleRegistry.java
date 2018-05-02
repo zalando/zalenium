@@ -1,4 +1,4 @@
-package de.zalando.ep.zalenium.servlet;
+package de.zalando.ep.zalenium.util;
 
 import java.net.URL;
 import java.util.Collections;
@@ -19,7 +19,9 @@ import org.openqa.grid.web.servlet.handler.RequestHandler;
 import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.remote.http.HttpClient;
 
-final class SimpleRegistry implements GridRegistry {
+import okhttp3.OkHttpClient;
+
+public final class SimpleRegistry implements GridRegistry {
 
     private final ProxySet proxySet = new ProxySet(false);
 
@@ -119,7 +121,7 @@ final class SimpleRegistry implements GridRegistry {
 
     @Override
     public HttpClient getHttpClient(URL url) {
-        return null;
+        return new org.openqa.selenium.remote.internal.OkHttpClient(new OkHttpClient(), url);
     }
 
     @Override
