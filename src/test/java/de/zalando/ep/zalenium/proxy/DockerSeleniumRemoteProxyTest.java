@@ -115,7 +115,7 @@ public class DockerSeleniumRemoteProxyTest {
             // Might be that the object does not exist, it is ok. Nothing to do, this is just a cleanup task.
         }
 
-        registry = ZaleniumRegistry.newInstance(new Hub(new GridHubConfiguration()));
+        registry = new de.zalando.ep.zalenium.servlet.SimpleRegistry();
 
         // Creating the configuration and the registration request of the proxy (node)
         RegistrationRequest request = TestUtils.getRegistrationRequestForTesting(40000,

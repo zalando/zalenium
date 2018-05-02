@@ -6,6 +6,7 @@ import com.google.gson.JsonObject;
 import de.zalando.ep.zalenium.dashboard.Dashboard;
 import de.zalando.ep.zalenium.dashboard.TestInformation;
 import de.zalando.ep.zalenium.registry.ZaleniumRegistry;
+import de.zalando.ep.zalenium.servlet.SimpleRegistry;
 import de.zalando.ep.zalenium.util.CommonProxyUtilities;
 import de.zalando.ep.zalenium.util.Environment;
 import de.zalando.ep.zalenium.util.TestUtils;
@@ -68,7 +69,7 @@ public class TestingBotRemoteProxyTest {
         } catch (MalformedObjectNameException | InstanceNotFoundException e) {
             // Might be that the object does not exist, it is ok. Nothing to do, this is just a cleanup task.
         }
-        registry = ZaleniumRegistry.newInstance(new Hub(new GridHubConfiguration()));
+        registry = new SimpleRegistry();
         // Creating the configuration and the registration request of the proxy (node)
         RegistrationRequest request = TestUtils.getRegistrationRequestForTesting(30002,
                 TestingBotRemoteProxy.class.getCanonicalName());

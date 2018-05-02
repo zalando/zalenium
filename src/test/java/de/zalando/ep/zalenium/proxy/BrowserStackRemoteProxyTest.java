@@ -1,43 +1,14 @@
 package de.zalando.ep.zalenium.proxy;
 
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import de.zalando.ep.zalenium.dashboard.Dashboard;
-import de.zalando.ep.zalenium.registry.ZaleniumRegistry;
-import de.zalando.ep.zalenium.util.CommonProxyUtilities;
-import de.zalando.ep.zalenium.util.Environment;
-import de.zalando.ep.zalenium.util.TestUtils;
-import de.zalando.ep.zalenium.util.ZaleniumConfiguration;
-import de.zalando.ep.zalenium.dashboard.TestInformation;
-import org.awaitility.Duration;
-import org.hamcrest.CoreMatchers;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
-import org.openqa.grid.common.RegistrationRequest;
-import org.openqa.grid.internal.ExternalSessionKey;
-import org.openqa.grid.internal.GridRegistry;
-import org.openqa.grid.internal.RemoteProxy;
-import org.openqa.grid.internal.TestSession;
-import org.openqa.grid.internal.utils.configuration.GridHubConfiguration;
-import org.openqa.grid.web.Hub;
-import org.openqa.grid.web.servlet.handler.RequestType;
-import org.openqa.grid.web.servlet.handler.WebDriverRequest;
-import org.openqa.selenium.Platform;
-import org.openqa.selenium.remote.BrowserType;
-import org.openqa.selenium.remote.CapabilityType;
-import org.openqa.selenium.remote.server.jmx.JMXHelper;
+import static org.awaitility.Awaitility.await;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.timeout;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
-import javax.management.InstanceNotFoundException;
-import javax.management.MalformedObjectNameException;
-import javax.management.ObjectName;
-import javax.servlet.ServletOutputStream;
-import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.util.Collections;
@@ -47,13 +18,42 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.anyString;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.timeout;
-import static org.awaitility.Awaitility.await;
+import javax.management.InstanceNotFoundException;
+import javax.management.MalformedObjectNameException;
+import javax.management.ObjectName;
+import javax.servlet.ServletOutputStream;
+import javax.servlet.http.HttpServletResponse;
+
+import org.awaitility.Duration;
+import org.hamcrest.CoreMatchers;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
+import org.openqa.grid.common.RegistrationRequest;
+import org.openqa.grid.internal.ExternalSessionKey;
+import org.openqa.grid.internal.GridRegistry;
+import org.openqa.grid.internal.RemoteProxy;
+import org.openqa.grid.internal.TestSession;
+import org.openqa.grid.web.servlet.handler.RequestType;
+import org.openqa.grid.web.servlet.handler.WebDriverRequest;
+import org.openqa.selenium.Platform;
+import org.openqa.selenium.remote.BrowserType;
+import org.openqa.selenium.remote.CapabilityType;
+import org.openqa.selenium.remote.server.jmx.JMXHelper;
+
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+
+import de.zalando.ep.zalenium.dashboard.Dashboard;
+import de.zalando.ep.zalenium.dashboard.TestInformation;
+import de.zalando.ep.zalenium.servlet.SimpleRegistry;
+import de.zalando.ep.zalenium.util.CommonProxyUtilities;
+import de.zalando.ep.zalenium.util.Environment;
+import de.zalando.ep.zalenium.util.TestUtils;
+import de.zalando.ep.zalenium.util.ZaleniumConfiguration;
 
 public class BrowserStackRemoteProxyTest {
 
@@ -73,7 +73,7 @@ public class BrowserStackRemoteProxyTest {
         } catch (MalformedObjectNameException | InstanceNotFoundException e) {
             // Might be that the object does not exist, it is ok. Nothing to do, this is just a cleanup task.
         }
-        registry = ZaleniumRegistry.newInstance(new Hub(new GridHubConfiguration()));
+        registry = new SimpleRegistry();
         // Creating the configuration and the registration request of the proxy (node)
         RegistrationRequest request = TestUtils.getRegistrationRequestForTesting(30002,
                 BrowserStackRemoteProxy.class.getCanonicalName());
@@ -87,6 +87,16 @@ public class BrowserStackRemoteProxyTest {
 
         // We add both nodes to the registry
         registry.add(browserStackProxy);
+        
+        // Creating the configuration and the registration request of the proxy (node)
+        RegistrationRequest proxyRequest = TestUtils.getRegistrationRequestForTesting(40000,
+                DockerSeleniumRemoteProxy.class.getCanonicalName());
+        proxyRequest.getConfiguration().capabilities.clear();
+        proxyRequest.getConfiguration().capabilities.addAll(TestUtils.getDockerSeleniumCapabilitiesForTesting());
+
+        // Creating the proxy
+        DockerSeleniumRemoteProxy proxy = DockerSeleniumRemoteProxy.getNewInstance(proxyRequest, registry);
+        registry.add(proxy);
     }
 
     @After
@@ -100,13 +110,12 @@ public class BrowserStackRemoteProxyTest {
         BrowserStackRemoteProxy.restoreEnvironment();
     }
 
-    @Ignore
     @Test
     public void checkProxyOrdering() {
-        // Checking that the DockerSeleniumStarterProxy should come before SauceLabsProxy
+        // Checking that the DockerSeleniumStarterProxy should come before BrowserStackRemoteProxy
         List<RemoteProxy> sorted = registry.getAllProxies().getSorted();
         Assert.assertEquals(2, sorted.size());
-        Assert.assertEquals(ZaleniumConfiguration.class, sorted.get(0).getClass());
+        Assert.assertEquals(DockerSeleniumRemoteProxy.class, sorted.get(0).getClass());
         Assert.assertEquals(BrowserStackRemoteProxy.class, sorted.get(1).getClass());
     }
 
