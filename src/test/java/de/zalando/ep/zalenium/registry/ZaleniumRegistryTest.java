@@ -8,6 +8,7 @@ import org.junit.Ignore;
 import org.openqa.grid.common.RegistrationRequest;
 import org.openqa.grid.internal.ExternalSessionKey;
 import org.openqa.grid.internal.GridRegistry;
+import org.openqa.grid.internal.ProxySet;
 import org.openqa.grid.internal.SessionTerminationReason;
 import org.openqa.grid.internal.TestSession;
 import org.openqa.grid.internal.utils.configuration.GridHubConfiguration;
@@ -29,7 +30,7 @@ public class ZaleniumRegistryTest {
 
     @Test
     public void proxyIsAdded() throws Exception {
-        GridRegistry registry = ZaleniumRegistry.newInstance(new Hub(new GridHubConfiguration()));
+        GridRegistry registry = ZaleniumRegistry.newInstance(new Hub(new GridHubConfiguration()), new ProxySet(false));
         DockerSeleniumRemoteProxy p1 = TestUtils.getNewBasicRemoteProxy("app1", "http://machine1:4444/", registry);
         DockerSeleniumRemoteProxy p2 = TestUtils.getNewBasicRemoteProxy("app1", "http://machine2:4444/", registry);
         DockerSeleniumRemoteProxy p3 = TestUtils.getNewBasicRemoteProxy("app1", "http://machine3:4444/", registry);
@@ -47,7 +48,7 @@ public class ZaleniumRegistryTest {
 
     @Test
     public void proxyIsRemoved() throws Exception {
-        GridRegistry registry = ZaleniumRegistry.newInstance(new Hub(new GridHubConfiguration()));
+        GridRegistry registry = ZaleniumRegistry.newInstance(new Hub(new GridHubConfiguration()), new ProxySet(false));
         DockerSeleniumRemoteProxy p1 = TestUtils.getNewBasicRemoteProxy("app1", "http://machine1:4444/", registry);
         try {
             registry.add(p1);
@@ -60,13 +61,12 @@ public class ZaleniumRegistryTest {
     }
 
     @Test
-    @Ignore
     public void sessionIsProcessed() {
         Map<String, Object> requestedCapability = new HashMap<>();
         requestedCapability.put(CapabilityType.BROWSER_NAME, BrowserType.CHROME);
         requestedCapability.put(CapabilityType.PLATFORM_NAME, Platform.LINUX);
 
-        GridRegistry registry = ZaleniumRegistry.newInstance(new Hub(new GridHubConfiguration()));
+        GridRegistry registry = ZaleniumRegistry.newInstance(new Hub(new GridHubConfiguration()), new ProxySet(false));
         RegistrationRequest req = TestUtils.getRegistrationRequestForTesting(40000, DockerSeleniumRemoteProxy.class.getCanonicalName());
         req.getConfiguration().capabilities.clear();
         req.getConfiguration().capabilities.addAll(TestUtils.getDockerSeleniumCapabilitiesForTesting());

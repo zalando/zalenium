@@ -1,4 +1,4 @@
-package de.zalando.ep.zalenium.servlet;
+package de.zalando.ep.zalenium.util;
 
 import java.net.URL;
 import java.util.Collections;

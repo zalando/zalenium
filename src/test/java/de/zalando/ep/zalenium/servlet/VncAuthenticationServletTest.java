@@ -27,6 +27,7 @@ import de.zalando.ep.zalenium.container.ContainerClient;
 import de.zalando.ep.zalenium.container.ContainerFactory;
 import de.zalando.ep.zalenium.proxy.DockerSeleniumRemoteProxy;
 import de.zalando.ep.zalenium.util.DockerContainerMock;
+import de.zalando.ep.zalenium.util.SimpleRegistry;
 import de.zalando.ep.zalenium.util.TestUtils;
 
 public class VncAuthenticationServletTest {

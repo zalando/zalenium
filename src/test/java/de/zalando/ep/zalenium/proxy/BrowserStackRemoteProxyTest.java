@@ -49,9 +49,9 @@ import com.google.gson.JsonObject;
 
 import de.zalando.ep.zalenium.dashboard.Dashboard;
 import de.zalando.ep.zalenium.dashboard.TestInformation;
-import de.zalando.ep.zalenium.servlet.SimpleRegistry;
 import de.zalando.ep.zalenium.util.CommonProxyUtilities;
 import de.zalando.ep.zalenium.util.Environment;
+import de.zalando.ep.zalenium.util.SimpleRegistry;
 import de.zalando.ep.zalenium.util.TestUtils;
 import de.zalando.ep.zalenium.util.ZaleniumConfiguration;
 

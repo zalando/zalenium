@@ -16,7 +16,6 @@ import java.lang.management.ManagementFactory;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Stream;
 
 import javax.management.InstanceNotFoundException;
 import javax.management.MalformedObjectNameException;
@@ -67,7 +66,7 @@ public class SauceLabsRemoteProxyTest {
         } catch (MalformedObjectNameException | InstanceNotFoundException e) {
             // Might be that the object does not exist, it is ok. Nothing to do, this is just a cleanup task.
         }
-        registry = new de.zalando.ep.zalenium.servlet.SimpleRegistry();
+        registry = new de.zalando.ep.zalenium.util.SimpleRegistry();
         // Creating the configuration and the registration request of the proxy (node)
         RegistrationRequest request = TestUtils.getRegistrationRequestForTesting(30001,
                 SauceLabsRemoteProxy.class.getCanonicalName());

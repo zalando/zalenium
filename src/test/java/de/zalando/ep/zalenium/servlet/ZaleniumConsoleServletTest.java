@@ -31,6 +31,7 @@ import de.zalando.ep.zalenium.proxy.SauceLabsRemoteProxy;
 import de.zalando.ep.zalenium.proxy.TestingBotRemoteProxy;
 import de.zalando.ep.zalenium.util.CommonProxyUtilities;
 import de.zalando.ep.zalenium.util.DockerContainerMock;
+import de.zalando.ep.zalenium.util.SimpleRegistry;
 import de.zalando.ep.zalenium.util.TestUtils;
 
 public class ZaleniumConsoleServletTest {

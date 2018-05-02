@@ -12,7 +12,7 @@ import org.openqa.grid.internal.GridRegistry;
 import org.openqa.selenium.remote.server.jmx.JMXHelper;
 import org.testng.Assert;
 
-import de.zalando.ep.zalenium.servlet.SimpleRegistry;
+import de.zalando.ep.zalenium.util.SimpleRegistry;
 import de.zalando.ep.zalenium.util.TestUtils;
 
 public class CloudTestingRemoteProxyTest {
