@@ -41,6 +41,9 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -79,16 +82,37 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     private String testBuild;
     private String testName;
     private TestInformation testInformation;
-    private DockerSeleniumNodePoller dockerSeleniumNodePollerThread = null;
     private GoogleAnalyticsApi ga = new GoogleAnalyticsApi();
     private CapabilityMatcher capabilityHelper;
+    private long lastCommandTime = 0;
+    
+    private AtomicBoolean timedOut = new AtomicBoolean(false);
+    
+    private long timeRegistered = System.currentTimeMillis();
+
+    private static final ExecutorService EXECUTOR_SERVICE = Executors.newFixedThreadPool(5);
 
     public DockerSeleniumRemoteProxy(RegistrationRequest request, GridRegistry registry) {
         super(request, registry);
-        this.amountOfExecutedTests = 0;
-        readEnvVars();
-        containerClient.setNodeId(getId());
-        registration = containerClient.registerNode(DockerSeleniumStarterRemoteProxy.getContainerName(), this.getRemoteHost());
+        try {
+            this.amountOfExecutedTests = 0;
+            readEnvVars();
+            containerClient.setNodeId(getId());
+            registration = containerClient.registerNode(DockeredSeleniumStarter.getContainerName(),
+                    this.getRemoteHost());
+        } catch (Exception e) {
+            LOGGER.error("Failed to create", e);
+            throw e;
+        }
+    }
+
+    @Override
+    public long getLastSessionStart() {
+        return super.getLastSessionStart();
+    }
+
+    public long getLastCommandTime() {
+        return lastCommandTime;
     }
 
     @VisibleForTesting
@@ -147,7 +171,17 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         Incrementing the number of tests that will be executed when the session is assigned.
      */
     @Override
-    public TestSession getNewSession(Map<String, Object> requestedCapability) {
+    public synchronized TestSession getNewSession(Map<String, Object> requestedCapability) {
+
+        LOGGER.debug(String.format("%s getting new session %s", getContainerId(), this.timedOut.get()));
+
+        if (this.timedOut.get()) {
+            LOGGER.debug(String.format("%s has timed out - not accepting session.", getContainerId()));
+            return null;
+        } else {
+            LOGGER.debug(String.format("%s has not timed out.", getContainerId()));
+        }
+
         /*
             Validate first if the capability is matched
          */
@@ -157,46 +191,60 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
 
         if (!requestedCapability.containsKey(CapabilityType.BROWSER_NAME)) {
             LOGGER.debug(String.format("%s Capability %s does not contain %s key, a browser test cannot " +
-                            "start without it.", getId(), requestedCapability, CapabilityType.BROWSER_NAME));
+                            "start without it.", getContainerId(), requestedCapability, CapabilityType.BROWSER_NAME));
             return null;
         }
 
         if (!this.isBusy() && increaseCounter()) {
-            TestSession newSession = super.getNewSession(requestedCapability);
-            LOGGER.debug(getId() + " Creating session for: " + requestedCapability.toString());
-            String browserName = requestedCapability.get(CapabilityType.BROWSER_NAME).toString();
-            testName = getCapability(requestedCapability, ZaleniumCapabilityType.TEST_NAME, "");
-            if (testName.isEmpty()) {
-                testName = newSession.getExternalKey() != null ?
-                        newSession.getExternalKey().getKey() :
-                        newSession.getInternalKey();
-            }
-            testBuild = getCapability(requestedCapability, ZaleniumCapabilityType.BUILD_NAME, "");
-            if (requestedCapability.containsKey(ZaleniumCapabilityType.RECORD_VIDEO)) {
-                boolean videoRecording = Boolean.parseBoolean(getCapability(requestedCapability, ZaleniumCapabilityType.RECORD_VIDEO, "true"));
-                setVideoRecordingEnabledSession(videoRecording);
-            }
-            String screenResolution = getCapability(newSession.getSlot().getCapabilities(), ZaleniumCapabilityType.SCREEN_RESOLUTION, "N/A");
-            String browserVersion = getCapability(newSession.getSlot().getCapabilities(), CapabilityType.VERSION, "");
-            String timeZone = getCapability(newSession.getSlot().getCapabilities(), ZaleniumCapabilityType.TIME_ZONE, "N/A");
-            testInformation = new TestInformation.TestInformationBuilder()
-                    .withTestName(testName)
-                    .withSeleniumSessionId(testName)
-                    .withProxyName("Zalenium")
-                    .withBrowser(browserName)
-                    .withBrowserVersion(browserVersion)
-                    .withPlatform(Platform.LINUX.name())
-                    .withScreenDimension(screenResolution)
-                    .withTimeZone(timeZone)
-                    .withBuild(testBuild)
-                    .withTestStatus(TestInformation.TestStatus.COMPLETED)
-                    .build();
-            testInformation.setVideoRecorded(isVideoRecordingEnabled());
-            maxTestIdleTimeSecs = getConfiguredIdleTimeout(requestedCapability);
-            return newSession;
+            return createNewSession(requestedCapability);
         }
-        LOGGER.debug(String.format("%s No more sessions allowed", getId()));
+        LOGGER.debug("{} No more sessions allowed", getContainerId());
         return null;
+    }
+
+    private TestSession createNewSession(Map<String, Object> requestedCapability) {
+        TestSession newSession = super.getNewSession(requestedCapability);
+        LOGGER.debug(getContainerId() + " Creating session for: " + requestedCapability.toString());
+        if (newSession == null) {
+            // The node has been marked down.
+            LOGGER.debug(getContainerId() + " was marked down after being assigned, returning null");
+            return null;
+        }
+        
+        LOGGER.debug(getContainerId() + " Creating session for: " + requestedCapability.toString());
+        String browserName = requestedCapability.get(CapabilityType.BROWSER_NAME).toString();
+        testName = getCapability(requestedCapability, ZaleniumCapabilityType.TEST_NAME, "");
+        if (testName.isEmpty()) {
+            testName = newSession.getExternalKey() != null ?
+                    newSession.getExternalKey().getKey() :
+                    newSession.getInternalKey();
+        }
+        testBuild = getCapability(requestedCapability, ZaleniumCapabilityType.BUILD_NAME, "");
+        if (requestedCapability.containsKey(ZaleniumCapabilityType.RECORD_VIDEO)) {
+            boolean videoRecording = Boolean.parseBoolean(getCapability(requestedCapability, ZaleniumCapabilityType.RECORD_VIDEO, "true"));
+            setVideoRecordingEnabledSession(videoRecording);
+        }
+        String screenResolution = getCapability(newSession.getSlot().getCapabilities(), ZaleniumCapabilityType.SCREEN_RESOLUTION, "N/A");
+        String browserVersion = getCapability(newSession.getSlot().getCapabilities(), CapabilityType.VERSION, "");
+        String timeZone = getCapability(newSession.getSlot().getCapabilities(), ZaleniumCapabilityType.TIME_ZONE, "N/A");
+        testInformation = new TestInformation.TestInformationBuilder()
+                .withTestName(testName)
+                .withSeleniumSessionId(testName)
+                .withProxyName("Zalenium")
+                .withBrowser(browserName)
+                .withBrowserVersion(browserVersion)
+                .withPlatform(Platform.LINUX.name())
+                .withScreenDimension(screenResolution)
+                .withTimeZone(timeZone)
+                .withBuild(testBuild)
+                .withTestStatus(TestInformation.TestStatus.COMPLETED)
+                .build();
+        testInformation.setVideoRecorded(isVideoRecordingEnabled());
+        maxTestIdleTimeSecs = getConfiguredIdleTimeout(requestedCapability);
+        
+        lastCommandTime = System.currentTimeMillis();
+        
+        return newSession;
     }
 
     @Override
@@ -214,8 +262,8 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
             configuredIdleTimeout = Long.valueOf(String.valueOf(idleTimeout));
         } catch (Exception e) {
             configuredIdleTimeout = DEFAULT_MAX_TEST_IDLE_TIME_SECS;
-            LOGGER.warn(getId() + " " + e.toString());
-            LOGGER.debug(getId() + " " + e.toString(), e);
+            LOGGER.warn(getContainerId() + " " + e.toString());
+            LOGGER.debug(getContainerId() + " " + e.toString(), e);
         }
         if (configuredIdleTimeout <= 0) {
             configuredIdleTimeout = DEFAULT_MAX_TEST_IDLE_TIME_SECS;
@@ -226,11 +274,11 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     @Override
     public void beforeCommand(TestSession session, HttpServletRequest request, HttpServletResponse response) {
         super.beforeCommand(session, request, response);
-        LOGGER.debug(getId() + " lastCommand: " +  request.getMethod() + " - " + request.getPathInfo() + " executing...");
+        LOGGER.debug(getContainerId() + " lastCommand: " +  request.getMethod() + " - " + request.getPathInfo() + " executing...");
         if (request instanceof WebDriverRequest && "POST".equalsIgnoreCase(request.getMethod())) {
             WebDriverRequest seleniumRequest = (WebDriverRequest) request;
             if (seleniumRequest.getPathInfo().endsWith("cookie")) {
-                LOGGER.debug(getId() + " Checking for cookies..." + seleniumRequest.getBody());
+                LOGGER.debug(getContainerId() + " Checking for cookies..." + seleniumRequest.getBody());
                 JsonElement bodyRequest = new JsonParser().parse(seleniumRequest.getBody());
                 JsonObject cookie = bodyRequest.getAsJsonObject().getAsJsonObject("cookie");
                 JsonObject emptyName = new JsonObject();
@@ -259,7 +307,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     @Override
     public void afterCommand(TestSession session, HttpServletRequest request, HttpServletResponse response) {
         super.afterCommand(session, request, response);
-        LOGGER.debug(getId() + " lastCommand: " +  request.getMethod() + " - " + request.getPathInfo() + " executed.");
+        LOGGER.debug(getContainerId() + " lastCommand: " +  request.getMethod() + " - " + request.getPathInfo() + " executed.");
         if (request instanceof WebDriverRequest && "POST".equalsIgnoreCase(request.getMethod())) {
             WebDriverRequest seleniumRequest = (WebDriverRequest) request;
             if (RequestType.START_SESSION.equals(seleniumRequest.getRequestType())) {
@@ -271,11 +319,13 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                 ExternalSessionKey externalKey = Optional.ofNullable(session.getExternalKey()).orElse(new ExternalSessionKey("[No external key present]"));
                 LOGGER.info(String.format("Test session started with internal key %s and external key %s assigned to remote %s.",
                               session.getInternalKey(),
-                              externalKey.getKey(),
+                              externalKey,
                               remoteName));
                 videoRecording(DockerSeleniumContainerAction.START_RECORDING);
             }
         }
+        
+        this.lastCommandTime = System.currentTimeMillis();
     }
 
     @Override
@@ -289,13 +339,13 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                 // This avoids shutting down the node by timeout in case the file copying takes too long.
                 stopPolling();
                 if (isTestSessionLimitReached()) {
-                    String message = String.format("%s AFTER_SESSION command received. Node should shutdown soon...", getId());
+                    String message = String.format("%s AFTER_SESSION command received. Node should shutdown soon...", getContainerId());
                     LOGGER.info(message);
-                    shutdownNode(false);
+                    cleanupNode(true);
                 }
                 else {
                     String message = String.format(
-                            "%s AFTER_SESSION command received. Cleaning up node for reuse, used %s of max %s", getId(),
+                            "%s AFTER_SESSION command received. Cleaning up node for reuse, used %s of max %s", getContainerId(),
                             getAmountOfExecutedTests(), maxTestSessions);
                     LOGGER.info(message);
                     cleanupNode(false);
@@ -304,31 +354,10 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                 }
             }
         } catch (Exception e) {
-            LOGGER.warn(getId() + " " + e.toString(), e);
+            LOGGER.warn(getContainerId() + " " + e.toString(), e);
         } finally {
             super.afterSession(session);
         }
-    }
-
-    @Override
-    public void startPolling() {
-        super.startPolling();
-        String containerId = this.getRegistration().getContainerId();
-        
-        dockerSeleniumNodePollerThread = new DockerSeleniumNodePoller(this, containerId);
-        dockerSeleniumNodePollerThread.start();
-    }
-
-    @Override
-    public void stopPolling() {
-        super.stopPolling();
-        dockerSeleniumNodePollerThread.interrupt();
-    }
-
-    @Override
-    public void teardown() {
-        super.teardown();
-        stopPolling();
     }
 
     /*
@@ -369,17 +398,87 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         return getAmountOfExecutedTests() >= maxTestSessions;
     }
 
+    public boolean shutdownIfIdle() {
+        boolean testIdle = isTestIdle();
+        boolean testSessionLimitReached = isTestSessionLimitReached();
+        if (testIdle || (testSessionLimitReached && !isBusy())) {
+            LOGGER.info(String.format("[%s] is idle.", getContainerId()));
+            timeout("proxy being idle after test.", (testSessionLimitReached? ShutdownType.MAX_TEST_SESSIONS_REACHED : ShutdownType.IDLE));
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public boolean shutdownIfStale() {
+        if (isBusy() && isTestIdle()) {
+            LOGGER.info(String.format("[%s] is stale.", getContainerId()));
+            timeout("proxy being stuck | stale during a test.", ShutdownType.STALE);
+            return true;
+        } else if (isTestSessionLimitReached() && !isBusy()) {
+            LOGGER.info(String.format("[%s] has reached max test sessions.", getContainerId()));
+            timeout("proxy has reached max test sessions.", ShutdownType.MAX_TEST_SESSIONS_REACHED);
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     /*
         Method to check for test inactivity, each node only has one slot
      */
     @VisibleForTesting
-    protected synchronized boolean isTestIdle() {
-        for (TestSlot testSlot : getTestSlots()) {
-            if (testSlot.getSession() != null) {
-                return testSlot.getSession().getInactivityTime() >= (getMaxTestIdleTimeSecs() * 1000L);
+    public synchronized boolean isTestIdle() {
+
+        if (this.timedOut.get()) {
+            return true;
+        } else {
+            long timeLastUsed = Math.max(timeRegistered, lastCommandTime);
+
+            long timeSinceUsed = System.currentTimeMillis() - timeLastUsed;
+
+            if (timeSinceUsed > (getMaxTestIdleTimeSecs() * 1000L)) {
+                LOGGER.info(String.format("[%s] has been idle [%d] which is more than [%d]", this.getContainerId(),
+                        timeSinceUsed, (getMaxTestIdleTimeSecs() * 1000L)));
+                return true;
+            } else {
+                return false;
             }
         }
-        return false;
+    }
+    
+    public synchronized void markDown() {
+        if (!this.timedOut.getAndSet(true)) {
+            LOGGER.info(getContainerId() + " Marking node down.");
+        }
+    }
+
+    private void timeout(String reason, ShutdownType shutdownType) {
+        boolean shutDown = false;
+
+        synchronized (this) {
+            if (this.testInformation != null) {
+                this.testInformation.setTestStatus(TestInformation.TestStatus.TIMEOUT);
+            }
+
+            if (!this.timedOut.getAndSet(true)) {
+                LOGGER.info(getContainerId() + " Shutting down node due to " + reason);
+                shutDown = true;
+            }
+        }
+
+        if (shutDown) {
+            EXECUTOR_SERVICE.execute(new Runnable() {
+                @Override
+                public void run() {
+                    shutdownNode(shutdownType);
+                }
+            });
+        }
+    }
+    
+    public boolean isTimedOut() {
+    	return this.timedOut.get();
     }
 
     /*
@@ -387,7 +486,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         We use BROWSER_TIMEOUT as a reason, but this could be changed in the future to show a more clear reason
      */
     @VisibleForTesting
-    protected synchronized void terminateIdleTest() {
+    protected void terminateIdleTest() {
         for (TestSlot testSlot : getTestSlots()) {
             if (testSlot.getSession() != null) {
                 long executionTime = (System.currentTimeMillis() - testSlot.getLastSessionStart()) / 1000;
@@ -409,11 +508,11 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
             try {
                 processContainerAction(action, getContainerId());
             } catch (Exception e) {
-                LOGGER.error(getId() + e.toString(), e);
+                LOGGER.error(getContainerId() + e.toString(), e);
                 ga.trackException(e);
             }
         } else {
-            String message = String.format("%s %s: Video recording is disabled", getId(), action.getContainerAction());
+            String message = String.format("%s %s: Video recording is disabled", getContainerId(), action.getContainerAction());
             LOGGER.info(message);
         }
     }
@@ -465,6 +564,11 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     @SuppressWarnings("ResultOfMethodCallIgnored")
     @VisibleForTesting
     void copyVideos(final String containerId) {
+        if (testInformation == null) {
+            // No tests run, nothing to copy and nothing to update.
+            return;
+        }
+
         boolean videoWasCopied = false;
         TarArchiveInputStream tarStream = new TarArchiveInputStream(containerClient.copyFiles(containerId, "/videos/"));
         try {
@@ -484,22 +588,22 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                 IOUtils.copy(tarStream, outputStream);
                 outputStream.close();
                 videoWasCopied = true;
-                LOGGER.info(String.format("%s Video file copied to: %s/%s", getId(),
-                        testInformation.getVideoFolderPath(), testInformation.getFileName()));
+                LOGGER.info("{} Video file copied to: {}/{}", new Object[]{getContainerId(),
+                        testInformation.getVideoFolderPath(), testInformation.getFileName()});
             }
         } catch (IOException e) {
             // This error happens in k8s, but the file is ok, nevertheless the size is not accurate
             boolean isPipeClosed = e.getMessage().toLowerCase().contains("pipe closed");
             if (ContainerFactory.getIsKubernetes().get() && isPipeClosed) {
-                LOGGER.info(String.format("%s Video file copied to: %s/%s", getId(),
-                        testInformation.getVideoFolderPath(), testInformation.getFileName()));
+                LOGGER.info("{} Video file copied to: {}/{}", new Object[]{getContainerId(),
+                        testInformation.getVideoFolderPath(), testInformation.getFileName()});
             } else {
-                LOGGER.warn(getId() + " Error while copying the video", e);
+                LOGGER.warn(getContainerId() + " Error while copying the video", e);
             }
             ga.trackException(e);
         } finally {
             if (!videoWasCopied) {
-                testInformation.setVideoRecorded(false);
+        		testInformation.setVideoRecorded(false);
             }
         }
     }
@@ -507,6 +611,11 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     @SuppressWarnings("ResultOfMethodCallIgnored")
     @VisibleForTesting
     void copyLogs(final String containerId) {
+        if (testInformation == null) {
+            // No tests run, nothing to copy and nothing to update.
+            return;
+        }
+
         TarArchiveInputStream tarStream = new TarArchiveInputStream(containerClient.copyFiles(containerId, "/var/log/cont/"));
         try {
             TarArchiveEntry entry;
@@ -524,14 +633,14 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                 IOUtils.copy(tarStream, outputStream);
                 outputStream.close();
             }
-            LOGGER.info(String.format("%s Logs copied to: %s", getId(), testInformation.getLogsFolderPath()));
+            LOGGER.info("{} Logs copied to: {}", new Object[]{getContainerId(), testInformation.getLogsFolderPath()});
         } catch (IOException e) {
             // This error happens in k8s, but the file is ok, nevertheless the size is not accurate
             boolean isPipeClosed = e.getMessage().toLowerCase().contains("pipe closed");
             if (ContainerFactory.getIsKubernetes().get() && isPipeClosed) {
-                LOGGER.info(String.format("%s Logs copied to: %s", getId(), testInformation.getLogsFolderPath()));
+                LOGGER.info("{} Logs copied to: {}", new Object[]{getContainerId(), testInformation.getLogsFolderPath()});
             } else {
-                LOGGER.warn(getId() + " Error while copying the logs", e);
+                LOGGER.warn(getContainerId() + " Error while copying the logs", e);
             }
             ga.trackException(e);
         }
@@ -550,12 +659,14 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         // willShutdown == true => there won't be a next session
         this.setCleaningUpBeforeNextSession(!willShutdown);
         try {
-            processContainerAction(DockerSeleniumContainerAction.SEND_NOTIFICATION,
-                    testInformation.getTestStatus().getTestNotificationMessage(), getContainerId());
+            if (testInformation != null) {
+                processContainerAction(DockerSeleniumContainerAction.SEND_NOTIFICATION,
+                        testInformation.getTestStatus().getTestNotificationMessage(), getContainerId());
+            }
             videoRecording(DockerSeleniumContainerAction.STOP_RECORDING);
             processContainerAction(DockerSeleniumContainerAction.TRANSFER_LOGS, getContainerId());
             processContainerAction(DockerSeleniumContainerAction.CLEANUP_CONTAINER, getContainerId());
-            if (keepVideoAndLogs()) {
+            if (testInformation != null && keepVideoAndLogs()) {
                 Dashboard.updateDashboard(testInformation);
             }
         } finally {
@@ -568,20 +679,30 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                 || TestInformation.TestStatus.TIMEOUT.equals(testInformation.getTestStatus());
     }
     
-    private void shutdownNode(boolean isTestIdle) {
-        cleanupNode(true);
+    public void shutdownNode(ShutdownType shutdownType) {
+        String shutdownReason;
+        if (shutdownType == ShutdownType.MAX_TEST_SESSIONS_REACHED) {
+            shutdownReason = String.format(
+                    "%s Marking the node as down because it was stopped after %s tests.", getContainerId(),
+                    maxTestSessions);
+        }
+        else {
+            shutdownReason = String.format(
+                    "%s Marking the node as down because it was idle after the tests had finished.", getContainerId(),
+                    maxTestSessions, shutdownType);
+        }
 
-        String shutdownReason = String.format("%s Marking the node as down because it was stopped after %s tests.",
-                getId(), maxTestSessions);
-
-        if (isTestIdle) {
+        if (shutdownType == ShutdownType.STALE) {
+            cleanupNode(true);
             terminateIdleTest();
             stopReceivingTests();
-            shutdownReason = String.format("%s Marking the node as down because the test has been idle for more than %s seconds.",
-                    getId(), getMaxTestIdleTimeSecs());
+            shutdownReason = String.format(
+                    "%s Marking the node as down because the test has been idle for more than %s seconds.",
+                    getContainerId(), getMaxTestIdleTimeSecs());
         }
 
         containerClient.stopContainer(getContainerId());
+        
         addNewEvent(new RemoteUnregisterException(shutdownReason));
     }
 
@@ -611,44 +732,9 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         }
     }
 
-    /*
-        Class to poll continuously the node status regarding the amount of tests executed. If maxTestSessions
-        have been executed, then the node is removed from the grid (this should trigger the docker container to stop).
-     */
-    static class DockerSeleniumNodePoller extends Thread {
-
-        private static long sleepTimeBetweenChecks = 500;
-        private DockerSeleniumRemoteProxy dockerSeleniumRemoteProxy;
-        DockerSeleniumNodePoller(DockerSeleniumRemoteProxy dockerSeleniumRemoteProxy, String containerName) {
-            super("DockerSeleniumNodePoller container [" + containerName + "]");
-            this.dockerSeleniumRemoteProxy = dockerSeleniumRemoteProxy;
-        }
-
-        protected long getSleepTimeBetweenChecks() {
-            return sleepTimeBetweenChecks;
-        }
-
-        @Override
-        public void run() {
-            while (true) {
-                /*
-                    If the current session has been idle for a while, the node shuts down
-                */
-                if (dockerSeleniumRemoteProxy.isTestIdle()) {
-                    dockerSeleniumRemoteProxy.testInformation.setTestStatus(TestInformation.TestStatus.TIMEOUT);
-                    LOGGER.info(dockerSeleniumRemoteProxy.getId() +
-                            " Shutting down node due to test inactivity");
-                    dockerSeleniumRemoteProxy.shutdownNode(true);
-                    return;
-                }
-                try {
-                    Thread.sleep(getSleepTimeBetweenChecks());
-                } catch (InterruptedException e) {
-                    return;
-                }
-            }
-        }
-    }
-
-
+}
+enum ShutdownType {
+    STALE,
+    IDLE,
+    MAX_TEST_SESSIONS_REACHED
 }

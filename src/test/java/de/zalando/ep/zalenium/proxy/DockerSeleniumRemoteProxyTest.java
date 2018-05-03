@@ -1,16 +1,31 @@
 package de.zalando.ep.zalenium.proxy;
 
-import de.zalando.ep.zalenium.container.ContainerClient;
-import de.zalando.ep.zalenium.container.ContainerFactory;
-import de.zalando.ep.zalenium.container.kubernetes.KubernetesContainerClient;
-import de.zalando.ep.zalenium.dashboard.Dashboard;
-import de.zalando.ep.zalenium.dashboard.TestInformation;
-import de.zalando.ep.zalenium.registry.ZaleniumRegistry;
-import de.zalando.ep.zalenium.util.CommonProxyUtilities;
-import de.zalando.ep.zalenium.util.DockerContainerMock;
-import de.zalando.ep.zalenium.util.Environment;
-import de.zalando.ep.zalenium.util.KubernetesContainerMock;
-import de.zalando.ep.zalenium.util.TestUtils;
+import static org.awaitility.Awaitility.await;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.timeout;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.withSettings;
+
+import java.io.IOException;
+import java.lang.management.ManagementFactory;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.TimeZone;
+import java.util.concurrent.Callable;
+import java.util.function.Supplier;
+
+import javax.management.InstanceNotFoundException;
+import javax.management.MalformedObjectNameException;
+import javax.management.ObjectName;
+import javax.servlet.http.HttpServletResponse;
+
 import org.awaitility.Duration;
 import org.junit.After;
 import org.junit.Assert;
@@ -25,8 +40,6 @@ import org.openqa.grid.common.RegistrationRequest;
 import org.openqa.grid.internal.ExternalSessionKey;
 import org.openqa.grid.internal.GridRegistry;
 import org.openqa.grid.internal.TestSession;
-import org.openqa.grid.internal.utils.configuration.GridHubConfiguration;
-import org.openqa.grid.web.Hub;
 import org.openqa.grid.web.servlet.handler.RequestType;
 import org.openqa.grid.web.servlet.handler.WebDriverRequest;
 import org.openqa.selenium.Dimension;
@@ -35,30 +48,16 @@ import org.openqa.selenium.remote.BrowserType;
 import org.openqa.selenium.remote.CapabilityType;
 import org.openqa.selenium.remote.server.jmx.JMXHelper;
 
-import javax.management.InstanceNotFoundException;
-import javax.management.MalformedObjectNameException;
-import javax.management.ObjectName;
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.lang.management.ManagementFactory;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.TimeZone;
-import java.util.concurrent.Callable;
-import java.util.function.Supplier;
-
-import static org.awaitility.Awaitility.await;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.withSettings;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.timeout;
-import static org.mockito.Mockito.never;
+import de.zalando.ep.zalenium.container.ContainerClient;
+import de.zalando.ep.zalenium.container.ContainerFactory;
+import de.zalando.ep.zalenium.container.kubernetes.KubernetesContainerClient;
+import de.zalando.ep.zalenium.dashboard.Dashboard;
+import de.zalando.ep.zalenium.dashboard.TestInformation;
+import de.zalando.ep.zalenium.util.CommonProxyUtilities;
+import de.zalando.ep.zalenium.util.DockerContainerMock;
+import de.zalando.ep.zalenium.util.Environment;
+import de.zalando.ep.zalenium.util.KubernetesContainerMock;
+import de.zalando.ep.zalenium.util.TestUtils;
 
 
 @RunWith(value = Parameterized.class)
@@ -115,7 +114,7 @@ public class DockerSeleniumRemoteProxyTest {
             // Might be that the object does not exist, it is ok. Nothing to do, this is just a cleanup task.
         }
 
-        registry = ZaleniumRegistry.newInstance(new Hub(new GridHubConfiguration()));
+        registry = new de.zalando.ep.zalenium.util.SimpleRegistry();
 
         // Creating the configuration and the registration request of the proxy (node)
         RegistrationRequest request = TestUtils.getRegistrationRequestForTesting(40000,
@@ -430,16 +429,6 @@ public class DockerSeleniumRemoteProxyTest {
     public void videoRecordingIsStartedAndStopped() throws MalformedObjectNameException, IOException {
 
         try {
-
-            // Create a docker-selenium container
-            RegistrationRequest request = TestUtils.getRegistrationRequestForTesting(30000,
-                    DockerSeleniumStarterRemoteProxy.class.getCanonicalName());
-            DockerSeleniumStarterRemoteProxy dsProxy = new DockerSeleniumStarterRemoteProxy(request, registry);
-            DockerSeleniumStarterRemoteProxy.setMaxDockerSeleniumContainers(1);
-            DockerSeleniumStarterRemoteProxy.setConfiguredScreenSize(DockerSeleniumStarterRemoteProxy.DEFAULT_SCREEN_SIZE);
-            DockerSeleniumStarterRemoteProxy.setContainerClient(containerClient);
-            dsProxy.getNewSession(getCapabilitySupportedByDockerSelenium());
-
             CommonProxyUtilities commonProxyUtilities = TestUtils.mockCommonProxyUtilitiesForDashboardTesting(temporaryFolder);
             TestUtils.ensureRequiredInputFilesExist(temporaryFolder);
             Dashboard.setCommonProxyUtilities(commonProxyUtilities);
@@ -498,16 +487,6 @@ public class DockerSeleniumRemoteProxyTest {
     public void videoRecordingIsDisabled() throws MalformedObjectNameException, IOException {
 
         try {
-            // Create a docker-selenium container
-            RegistrationRequest request = TestUtils.getRegistrationRequestForTesting(30000,
-                    DockerSeleniumStarterRemoteProxy.class.getCanonicalName());
-            DockerSeleniumStarterRemoteProxy dsProxy = new DockerSeleniumStarterRemoteProxy(request, registry);
-            DockerSeleniumStarterRemoteProxy.setMaxDockerSeleniumContainers(1);
-            DockerSeleniumStarterRemoteProxy.setConfiguredScreenSize(DockerSeleniumStarterRemoteProxy.DEFAULT_SCREEN_SIZE);
-            DockerSeleniumStarterRemoteProxy.setConfiguredTimeZone(DockerSeleniumStarterRemoteProxy.DEFAULT_TZ.getID());
-            DockerSeleniumStarterRemoteProxy.setContainerClient(containerClient);
-            dsProxy.getNewSession(getCapabilitySupportedByDockerSelenium());
-
             // Mocking the environment variable to return false for video recording enabled
             Environment environment = mock(Environment.class);
             when(environment.getEnvVariable(DockerSeleniumRemoteProxy.ZALENIUM_VIDEO_RECORDING_ENABLED))
@@ -577,7 +556,7 @@ public class DockerSeleniumRemoteProxyTest {
 
         TestSession newSession = proxy.getNewSession(requestedCapability);
         Assert.assertNotNull(newSession);
-        Assert.assertEquals(proxy.isVideoRecordingEnabled(), false);
+      Assert.assertFalse(proxy.isVideoRecordingEnabled());
     }
 
     private Map<String, Object> getCapabilitySupportedByDockerSelenium() {

@@ -27,6 +27,11 @@ export -f WaitZaleniumStarted
 
 StartUp()
 {
+    HOST_OPTIONS=""
+    if [ "$(uname -s)" != 'Darwin' ]; then
+        HOST_OPTIONS="-e HOST_UID=\"$(id -u)\" -e HOST_GID=\"$(id -g)\""
+    fi
+
     DOCKER_SELENIUM_IMAGE_COUNT=$(docker images | grep "elgalu/selenium" | wc -l)
     if [ ${DOCKER_SELENIUM_IMAGE_COUNT} -eq 0 ]; then
         echo "Seems that docker-selenium's image has not been downloaded yet, please run 'docker pull elgalu/selenium' first"
@@ -58,8 +63,7 @@ StartUp()
         fi
 
         docker run -d -ti --name zalenium -p 4444:4444 \
-              -e HOST_UID="$(id -u)" \
-              -e HOST_GID="$(id -g)" \
+              ${HOST_OPTIONS} \
               -e SAUCE_USERNAME -e SAUCE_ACCESS_KEY \
               -v ${VIDEOS_FOLDER}:/home/seluser/videos \
               -v /var/run/docker.sock:/var/run/docker.sock \
@@ -82,8 +86,7 @@ StartUp()
         fi
 
         docker run -d -ti --name zalenium -p 4444:4444 \
-              -e HOST_UID="$(id -u)" \
-              -e HOST_GID="$(id -g)" \
+              ${HOST_OPTIONS} \
               -e BROWSER_STACK_USER -e BROWSER_STACK_KEY \
               -v ${VIDEOS_FOLDER}:/home/seluser/videos \
               -v /var/run/docker.sock:/var/run/docker.sock \
@@ -106,8 +109,7 @@ StartUp()
         fi
 
         docker run -d -ti --name zalenium -p 4444:4444 \
-              -e HOST_UID="$(id -u)" \
-              -e HOST_GID="$(id -g)" \
+              ${HOST_OPTIONS} \
               -e TESTINGBOT_KEY -e TESTINGBOT_SECRET \
               -v ${VIDEOS_FOLDER}:/home/seluser/videos \
               -v /var/run/docker.sock:/var/run/docker.sock \

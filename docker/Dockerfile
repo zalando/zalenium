@@ -319,10 +319,15 @@ RUN cd /tmp \
 # -----------------------#
 # https://testingbot.com/support/other/tunnel
 ENV TB_TUNNEL_URL="https://testingbot.com/tunnel/testingbot-tunnel.jar"
-RUN cd /tmp \
+# If you need to disable testingBot at build time set a build arg of testingBotEnabled=false
+ARG testingBotEnabled=true
+RUN if [ "${testingBotEnabled}" = "true" ]; then \
+  cd /tmp \
   && wget -nv "${TB_TUNNEL_URL}" \
   && mv testingbot-tunnel.jar /usr/local/bin \
-  && java -jar /usr/local/bin/testingbot-tunnel.jar --version
+  && java -jar /usr/local/bin/testingbot-tunnel.jar --version; \
+  else echo "Testing Bot Disabled"; \
+  fi
 
 #===================================================
 # Run the following commands as non-privileged user

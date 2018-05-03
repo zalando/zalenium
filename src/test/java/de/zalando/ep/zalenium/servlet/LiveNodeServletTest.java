@@ -1,22 +1,13 @@
 package de.zalando.ep.zalenium.servlet;
 
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
-import de.zalando.ep.zalenium.registry.ZaleniumRegistry;
-import de.zalando.ep.zalenium.util.DockerContainerMock;
-import de.zalando.ep.zalenium.util.TestUtils;
-import de.zalando.ep.zalenium.container.ContainerClient;
-import de.zalando.ep.zalenium.container.ContainerFactory;
-import de.zalando.ep.zalenium.proxy.DockerSeleniumRemoteProxy;
-import de.zalando.ep.zalenium.proxy.DockerSeleniumStarterRemoteProxy;
-
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.openqa.grid.common.RegistrationRequest;
-import org.openqa.grid.internal.GridRegistry;
-import org.openqa.grid.internal.utils.configuration.GridHubConfiguration;
-import org.openqa.grid.web.Hub;
-import org.openqa.selenium.remote.server.jmx.JMXHelper;
+import java.io.IOException;
+import java.lang.management.ManagementFactory;
+import java.util.function.Supplier;
 
 import javax.management.InstanceNotFoundException;
 import javax.management.MalformedObjectNameException;
@@ -24,14 +15,18 @@ import javax.management.ObjectName;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import java.io.IOException;
-import java.lang.management.ManagementFactory;
-import java.util.function.Supplier;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.openqa.grid.internal.GridRegistry;
+import org.openqa.selenium.remote.server.jmx.JMXHelper;
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.CoreMatchers.containsString;
+import de.zalando.ep.zalenium.container.ContainerClient;
+import de.zalando.ep.zalenium.container.ContainerFactory;
+import de.zalando.ep.zalenium.proxy.DockerSeleniumRemoteProxy;
+import de.zalando.ep.zalenium.util.DockerContainerMock;
+import de.zalando.ep.zalenium.util.SimpleRegistry;
+import de.zalando.ep.zalenium.util.TestUtils;
 
 public class LiveNodeServletTest {
 
@@ -49,26 +44,16 @@ public class LiveNodeServletTest {
         } catch (MalformedObjectNameException | InstanceNotFoundException e) {
             // Might be that the object does not exist, it is ok. Nothing to do, this is just a cleanup task.
         }
-        registry = ZaleniumRegistry.newInstance(new Hub(new GridHubConfiguration()));
+        registry = new SimpleRegistry();
         
         this.originalContainerClient = ContainerFactory.getContainerClientGenerator();
-        ContainerFactory.setContainerClientGenerator(DockerContainerMock::getMockedDockerContainerClient);
+        ContainerFactory.setContainerClientGenerator(DockerContainerMock::getRegisterOnlyDockerContainerClient);
 
-        // Creating the configuration and the registration request of the proxy (node)
-        RegistrationRequest registrationRequest = TestUtils.getRegistrationRequestForTesting(40000,
-                DockerSeleniumRemoteProxy.class.getCanonicalName());
-        registrationRequest.getConfiguration().capabilities.clear();
-        registrationRequest.getConfiguration().capabilities.addAll(DockerSeleniumStarterRemoteProxy.getCapabilities());
-        DockerSeleniumRemoteProxy proxyOne = DockerSeleniumRemoteProxy.getNewInstance(registrationRequest, registry);
+        DockerSeleniumRemoteProxy p1 = TestUtils.getNewBasicRemoteProxy("app1", "http://machine1:4444/", registry);
+        DockerSeleniumRemoteProxy p2 = TestUtils.getNewBasicRemoteProxy("app1", "http://machine2:4444/", registry);
 
-        registrationRequest = TestUtils.getRegistrationRequestForTesting(40001,
-                DockerSeleniumRemoteProxy.class.getCanonicalName());
-        registrationRequest.getConfiguration().capabilities.clear();
-        registrationRequest.getConfiguration().capabilities.addAll(DockerSeleniumStarterRemoteProxy.getCapabilities());
-        DockerSeleniumRemoteProxy proxyTwo = DockerSeleniumRemoteProxy.getNewInstance(registrationRequest, registry);
-
-        registry.add(proxyOne);
-        registry.add(proxyTwo);
+        registry.add(p1);
+        registry.add(p2);
 
         request = mock(HttpServletRequest.class);
         response = mock(HttpServletResponse.class);
@@ -87,12 +72,12 @@ public class LiveNodeServletTest {
 
         String responseContent = response.getOutputStream().toString();
         assertThat(responseContent, containsString("Zalenium Live Preview"));
-        assertThat(responseContent, containsString("http://localhost:40000"));
-        assertThat(responseContent, containsString("http://localhost:40001"));
-        assertThat(responseContent, containsString("/vnc/host/localhost/port/50000/?nginx=localhost:50000&view_only=true'"));
-        assertThat(responseContent, containsString("/vnc/host/localhost/port/50000/?nginx=localhost:50000&view_only=false'"));
-        assertThat(responseContent, containsString("/vnc/host/localhost/port/50001/?nginx=localhost:50001&view_only=true'"));
-        assertThat(responseContent, containsString("/vnc/host/localhost/port/50001/?nginx=localhost:50001&view_only=false'"));
+        assertThat(responseContent, containsString("http://machine1:4444"));
+        assertThat(responseContent, containsString("http://machine2:4444"));
+        assertThat(responseContent, containsString("/vnc/host/machine1/port/40000/?nginx=machine1:40000&view_only=true'"));
+        assertThat(responseContent, containsString("/vnc/host/machine1/port/40000/?nginx=machine1:40000&view_only=false'"));
+        assertThat(responseContent, containsString("/vnc/host/machine2/port/40000/?nginx=machine2:40000&view_only=true'"));
+        assertThat(responseContent, containsString("/vnc/host/machine2/port/40000/?nginx=machine2:40000&view_only=false'"));
     }
 
     @Test
@@ -127,5 +112,5 @@ public class LiveNodeServletTest {
         new JMXHelper().unregister(objectName);
         ContainerFactory.setContainerClientGenerator(originalContainerClient);
     }
-
+    
 }
