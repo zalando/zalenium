@@ -72,7 +72,8 @@ public class DockeredSeleniumStarter {
     /*
      * Reading configuration values from the env variables, if a value was not provided it falls back to defaults.
      */
-    private static void readConfigurationFromEnvVariables() {
+    @VisibleForTesting
+    public static void readConfigurationFromEnvVariables() {
 
         int sWidth = env.getIntEnvVariable(ZALENIUM_SCREEN_WIDTH, DEFAULT_SCREEN_SIZE.getWidth());
         int sHeight = env.getIntEnvVariable(ZALENIUM_SCREEN_HEIGHT, DEFAULT_SCREEN_SIZE.getHeight());
