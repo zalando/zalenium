@@ -3,20 +3,14 @@ package de.zalando.ep.zalenium.proxy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.timeout;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.withSettings;
 
 import de.zalando.ep.zalenium.container.ContainerClient;
 import de.zalando.ep.zalenium.container.ContainerFactory;
 import de.zalando.ep.zalenium.container.kubernetes.KubernetesContainerClient;
-import de.zalando.ep.zalenium.registry.ZaleniumRegistry;
 import de.zalando.ep.zalenium.util.DockerContainerMock;
 import de.zalando.ep.zalenium.util.Environment;
 import de.zalando.ep.zalenium.util.KubernetesContainerMock;
-import de.zalando.ep.zalenium.util.TestUtils;
 import de.zalando.ep.zalenium.util.ZaleniumConfiguration;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -25,15 +19,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-import org.openqa.grid.common.RegistrationRequest;
-import org.openqa.grid.internal.GridRegistry;
-import org.openqa.grid.internal.TestSession;
-import org.openqa.grid.internal.utils.configuration.GridHubConfiguration;
-import org.openqa.grid.web.Hub;
 import org.openqa.selenium.Dimension;
-import org.openqa.selenium.Platform;
-import org.openqa.selenium.remote.BrowserType;
-import org.openqa.selenium.remote.CapabilityType;
 import org.openqa.selenium.remote.server.jmx.JMXHelper;
 
 import javax.management.InstanceNotFoundException;
@@ -42,24 +28,17 @@ import javax.management.ObjectName;
 import java.lang.management.ManagementFactory;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.TimeZone;
 import java.util.function.Supplier;
 
 @RunWith(value = Parameterized.class)
 public class DockeredSeleniumStarterTest {
 
-    private DockeredSeleniumStarter spyProxy;
-    private GridRegistry registry;
     private ContainerClient containerClient;
     private Supplier<ContainerClient> originalDockerContainerClient;
     private KubernetesContainerClient originalKubernetesContainerClient;
     private Supplier<Boolean> originalIsKubernetesValue;
     private Supplier<Boolean> currentIsKubernetesValue;
-    private RegistrationRequest request;
-    private TimeZone timeZone;
-    private Dimension screenSize;
 
     public DockeredSeleniumStarterTest(ContainerClient containerClient, Supplier<Boolean> isKubernetes) {
         this.containerClient = containerClient;
@@ -101,32 +80,16 @@ public class DockeredSeleniumStarterTest {
         } catch (MalformedObjectNameException | InstanceNotFoundException e) {
             // Might be that the object does not exist, it is ok. Nothing to do, this is just a cleanup task.
         }
-        registry = ZaleniumRegistry.newInstance(new Hub(new GridHubConfiguration()));
 
-        // Creating the configuration and the registration request of the proxy (node)
-        request = TestUtils.getRegistrationRequestForTesting(30000,
-                DockeredSeleniumStarter.class.getCanonicalName());
-
-        // Creating the proxy
         DockeredSeleniumStarter.setContainerClient(containerClient);
-        // DockeredSeleniumStarter.setSleepIntervalMultiplier(0);
-        // DockeredSeleniumStarter proxy = DockeredSeleniumStarter.getNewInstance(request, registry);
-        timeZone = DockeredSeleniumStarter.getConfiguredTimeZone();
-        screenSize = DockeredSeleniumStarter.getConfiguredScreenSize();
-
-        // Spying on the proxy to see if methods are invoked or not
-        // spyProxy = spy(proxy);
     }
 
     @After
     public void afterMethod() throws MalformedObjectNameException {
         ObjectName objectName = new ObjectName("org.seleniumhq.grid:type=RemoteProxy,node=\"http://localhost:30000\"");
         new JMXHelper().unregister(objectName);
-        // registry.removeIfPresent(spyProxy);
-        //DockeredSeleniumStarter.setSleepIntervalMultiplier(1000);
         DockeredSeleniumStarter.restoreEnvironment();
         ZaleniumConfiguration.restoreEnvironment();
-        // DockeredSeleniumStarter.processedCapabilitiesList.clear();
         ContainerFactory.setContainerClientGenerator(originalDockerContainerClient);
         ContainerFactory.setIsKubernetes(originalIsKubernetesValue);
         ContainerFactory.setKubernetesContainerClient(originalKubernetesContainerClient);

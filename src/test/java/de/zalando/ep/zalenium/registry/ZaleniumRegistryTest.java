@@ -4,7 +4,6 @@ import de.zalando.ep.zalenium.proxy.DockerSeleniumRemoteProxy;
 import de.zalando.ep.zalenium.util.TestUtils;
 import org.awaitility.Duration;
 import org.junit.Test;
-import org.junit.Ignore;
 import org.openqa.grid.common.RegistrationRequest;
 import org.openqa.grid.internal.ExternalSessionKey;
 import org.openqa.grid.internal.GridRegistry;
