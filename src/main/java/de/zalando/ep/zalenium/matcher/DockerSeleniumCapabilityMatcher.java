@@ -1,7 +1,6 @@
 package de.zalando.ep.zalenium.matcher;
 
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -72,15 +71,6 @@ public class DockerSeleniumCapabilityMatcher extends DefaultCapabilityMatcher {
                 capabilities.remove(zaleniumCustomCapability);
             }
         }
-    }
-
-    // Cannot use Collectors.toMap() because it fails when there are null values.
-    private Map<String, Object> copyMap(Map<String, Object> mapToCopy) {
-        Map<String, Object> copiedMap = new HashMap<>();
-        for (Map.Entry<String, Object> entry : mapToCopy.entrySet()) {
-            copiedMap.put(entry.getKey(), entry.getValue());
-        }
-        return copiedMap;
     }
 
     private void getChromeAndFirefoxVersions(DefaultRemoteProxy proxy) {
