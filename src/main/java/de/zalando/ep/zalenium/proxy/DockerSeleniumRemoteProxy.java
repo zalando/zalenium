@@ -250,7 +250,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     @Override
     public CapabilityMatcher getCapabilityHelper() {
         if (capabilityHelper == null) {
-            capabilityHelper = new DockerSeleniumCapabilityMatcher(this);
+            capabilityHelper = new DockerSeleniumCapabilityMatcher();
         }
         return capabilityHelper;
     }
@@ -468,12 +468,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         }
 
         if (shutDown) {
-            EXECUTOR_SERVICE.execute(new Runnable() {
-                @Override
-                public void run() {
-                    shutdownNode(shutdownType);
-                }
-            });
+            EXECUTOR_SERVICE.execute(() -> shutdownNode(shutdownType));
         }
     }
     
@@ -588,15 +583,15 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                 IOUtils.copy(tarStream, outputStream);
                 outputStream.close();
                 videoWasCopied = true;
-                LOGGER.info("{} Video file copied to: {}/{}", new Object[]{getContainerId(),
-                        testInformation.getVideoFolderPath(), testInformation.getFileName()});
+                LOGGER.info("{} Video file copied to: {}/{}", getContainerId(),
+                    testInformation.getVideoFolderPath(), testInformation.getFileName());
             }
         } catch (IOException e) {
             // This error happens in k8s, but the file is ok, nevertheless the size is not accurate
             boolean isPipeClosed = e.getMessage().toLowerCase().contains("pipe closed");
             if (ContainerFactory.getIsKubernetes().get() && isPipeClosed) {
-                LOGGER.info("{} Video file copied to: {}/{}", new Object[]{getContainerId(),
-                        testInformation.getVideoFolderPath(), testInformation.getFileName()});
+                LOGGER.info("{} Video file copied to: {}/{}", getContainerId(),
+                    testInformation.getVideoFolderPath(), testInformation.getFileName());
             } else {
                 LOGGER.warn(getContainerId() + " Error while copying the video", e);
             }
@@ -688,8 +683,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         }
         else {
             shutdownReason = String.format(
-                    "%s Marking the node as down because it was idle after the tests had finished.", getContainerId(),
-                    maxTestSessions, shutdownType);
+                    "%s Marking the node as down because it was idle after the tests had finished.", getContainerId());
         }
 
         if (shutdownType == ShutdownType.STALE) {

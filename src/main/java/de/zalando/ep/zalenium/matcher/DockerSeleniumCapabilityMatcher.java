@@ -1,14 +1,9 @@
 package de.zalando.ep.zalenium.matcher;
 
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
-
-import org.openqa.grid.internal.TestSlot;
 import org.openqa.grid.internal.utils.DefaultCapabilityMatcher;
-import org.openqa.grid.selenium.proxy.DefaultRemoteProxy;
 import org.openqa.selenium.remote.BrowserType;
 import org.openqa.selenium.remote.CapabilityType;
 import org.slf4j.Logger;
@@ -29,29 +24,26 @@ public class DockerSeleniumCapabilityMatcher extends DefaultCapabilityMatcher {
 
     private static String chromeVersion = null;
     private static String firefoxVersion = null;
-    private static AtomicBoolean browserVersionsFetched = new AtomicBoolean(false);
     private final Logger logger = LoggerFactory.getLogger(DockerSeleniumCapabilityMatcher.class.getName());
-    private DefaultRemoteProxy proxy;
 
-    public DockerSeleniumCapabilityMatcher(DefaultRemoteProxy defaultRemoteProxy) {
+    public DockerSeleniumCapabilityMatcher() {
         super();
-        proxy = defaultRemoteProxy;
     }
 
     @Override
     public boolean matches(Map<String, Object> nodeCapability, Map<String, Object> requestedCapability) {
-        logger.debug(String.format("Validating %s in node with capabilities %s", requestedCapability,
+        logger.info(String.format("Validating %s in node with capabilities %s", requestedCapability,
                 nodeCapability));
 
         if (!requestedCapability.containsKey(CapabilityType.BROWSER_NAME)) {
-            logger.debug(String.format("%s Capability %s does not contain %s key, a docker-selenium " +
-                    "node cannot be started without it", proxy.getId(), requestedCapability, CapabilityType.BROWSER_NAME));
+            logger.debug(String.format("Capability %s does not contain %s key, a docker-selenium " +
+                    "node cannot be started without it", requestedCapability, CapabilityType.BROWSER_NAME));
             return false;
         }
 
         // DockerSeleniumRemoteProxy part
         if (super.matches(nodeCapability, requestedCapability)) {
-            getChromeAndFirefoxVersions(proxy);
+            getChromeAndFirefoxVersions(nodeCapability);
 
             // Prefix Zalenium custom capabilities here (both node and requested)
             prefixZaleniumCustomCapabilities(nodeCapability);
@@ -74,25 +66,14 @@ public class DockerSeleniumCapabilityMatcher extends DefaultCapabilityMatcher {
         }
     }
 
-    // Cannot use Collectors.toMap() because it fails when there are null values.
-    private Map<String, Object> copyMap(Map<String, Object> mapToCopy) {
-        Map<String, Object> copiedMap = new HashMap<>();
-        for (Map.Entry<String, Object> entry : mapToCopy.entrySet()) {
-            copiedMap.put(entry.getKey(), entry.getValue());
-        }
-        return copiedMap;
-    }
-
-    private void getChromeAndFirefoxVersions(DefaultRemoteProxy proxy) {
-        if (!browserVersionsFetched.getAndSet(true)) {
-            for (TestSlot testSlot : proxy.getTestSlots()) {
-                String browser = testSlot.getCapabilities().get(CapabilityType.BROWSER_NAME).toString();
-                String browserVersion = testSlot.getCapabilities().get(CapabilityType.VERSION).toString();
-                if (BrowserType.CHROME.equalsIgnoreCase(browser)) {
-                    chromeVersion = browserVersion;
-                } else if (BrowserType.FIREFOX.equalsIgnoreCase(browser)) {
-                    firefoxVersion = browserVersion;
-                }
+    private void getChromeAndFirefoxVersions(Map<String, Object> capabilities) {
+        String browser = capabilities.get(CapabilityType.BROWSER_NAME).toString();
+        if (capabilities.containsKey(CapabilityType.VERSION)) {
+            String browserVersion = capabilities.get(CapabilityType.VERSION).toString();
+            if (BrowserType.CHROME.equalsIgnoreCase(browser)) {
+              chromeVersion = browserVersion;
+            } else if (BrowserType.FIREFOX.equalsIgnoreCase(browser)) {
+              firefoxVersion = browserVersion;
             }
         }
     }
@@ -148,4 +129,11 @@ public class DockerSeleniumCapabilityMatcher extends DefaultCapabilityMatcher {
         return timeZoneCapabilityMatches;
     }
 
+    static String getChromeVersion() {
+      return chromeVersion;
+    }
+
+    static String getFirefoxVersion() {
+      return firefoxVersion;
+    }
 }

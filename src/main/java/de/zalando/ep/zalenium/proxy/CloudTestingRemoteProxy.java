@@ -269,7 +269,7 @@ public class CloudTestingRemoteProxy extends DefaultRemoteProxy {
     @Override
     public CapabilityMatcher getCapabilityHelper() {
         if (capabilityHelper == null) {
-            capabilityHelper = new ZaleniumCapabilityMatcher(this);
+            capabilityHelper = new ZaleniumCapabilityMatcher();
         }
         return capabilityHelper;
     }
