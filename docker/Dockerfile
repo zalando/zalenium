@@ -5,10 +5,12 @@ FROM ubuntu:xenial-20180417
 ENV UBUNTU_FLAVOR="xenial" \
     UBUNTU_DATE="20180417"
 
+ARG UBUNTU_MIRROR=http://archive.ubuntu.com/ubuntu
+
 #== Ubuntu flavors - common
-RUN  echo "deb http://archive.ubuntu.com/ubuntu ${UBUNTU_FLAVOR} main universe\n" > /etc/apt/sources.list \
-  && echo "deb http://archive.ubuntu.com/ubuntu ${UBUNTU_FLAVOR}-updates main universe\n" >> /etc/apt/sources.list \
-  && echo "deb http://archive.ubuntu.com/ubuntu ${UBUNTU_FLAVOR}-security main universe\n" >> /etc/apt/sources.list
+RUN  echo "deb ${UBUNTU_MIRROR} ${UBUNTU_FLAVOR} main universe\n" > /etc/apt/sources.list \
+  && echo "deb ${UBUNTU_MIRROR} ${UBUNTU_FLAVOR}-updates main universe\n" >> /etc/apt/sources.list \
+  && echo "deb ${UBUNTU_MIRROR} ${UBUNTU_FLAVOR}-security main universe\n" >> /etc/apt/sources.list
 
 MAINTAINER Team EP <diemol+team-ep@gmail.com>
 # https://github.com/docker/docker/pull/25466#discussion-diff-74622923R677
@@ -237,14 +239,25 @@ RUN apt-get -qqy update \
   && rm -rf /var/lib/apt/lists/*
 
 #==============================================================
+# Kubernetes doesn't need gosu or docker
+# So if you set a build arg of kubernetesSlimVersion=true then
+# the unneeded layers will be excluded
+#==============================================================
+ARG kubernetesSlimVersion=false
+
+#==============================================================
 # Simple Go-based setuid+setgid+setgroups+exec
 # drop-in replacement to avoid using `su` as is buggy in docker
 #==============================================================
 # https://github.com/tianon/gosu
-RUN wget -nv -O /usr/bin/gosu \
-        "https://github.com/tianon/gosu/releases/download/1.10/gosu-amd64" \
-  && chmod +x /usr/bin/gosu \
-  && gosu root bash -c 'whoami' | grep root
+RUN if [ "${kubernetesSlimVersion}" = "false" ]; then \
+        wget -nv -O /usr/bin/gosu \
+            "https://github.com/tianon/gosu/releases/download/1.10/gosu-amd64" \
+        && chmod +x /usr/bin/gosu \
+        && gosu root bash -c 'whoami' | grep root; \
+    else \
+        echo "Skipping gosu because building in kubernetes slim mode"; \
+    fi
 
 #=====================
 # Get docker binaries
@@ -259,28 +272,36 @@ ENV DOCKER_HOST="unix:///var/run/docker.sock" \
 #----------------------------
 # https://github.com/docker-library/docker/blob/master/17.09/Dockerfile
 # Note: Starting with 1.13, newer CLIs can talk to older daemons
-RUN set -x \
-  && DOCKER_VERSION="17.09.1-ce" \
-  && curl -fSL "https://${DOCKER_BUCKET}/linux/static/stable/x86_64/docker-${DOCKER_VERSION}.tgz" \
-          -o docker.tgz \
-  && tar -xzvf docker.tgz \
-  && mv docker/docker /usr/bin/docker-${DOCKER_VERSION} \
-  && rm -rf docker/ && rm docker.tgz \
-  && docker-${DOCKER_VERSION} --version | grep "${DOCKER_VERSION}"
+RUN if [ "${kubernetesSlimVersion}" = "false" ]; then \
+        set -x \
+        && DOCKER_VERSION="17.09.1-ce" \
+        && curl -fSL "https://${DOCKER_BUCKET}/linux/static/stable/x86_64/docker-${DOCKER_VERSION}.tgz" \
+                -o docker.tgz \
+        && tar -xzvf docker.tgz \
+        && mv docker/docker /usr/bin/docker-${DOCKER_VERSION} \
+        && rm -rf docker/ && rm docker.tgz \
+        && docker-${DOCKER_VERSION} --version | grep "${DOCKER_VERSION}"; \
+    else \
+        echo "Skipping adding Docker because of kubernetes slim mode"; \
+    fi
 
 #----------------------------
 # Docker 17.12.0-ce -- 15 MB
 #----------------------------
 # https://github.com/docker-library/docker/blob/master/17.09/Dockerfile
 # Note: Starting with 1.13, newer CLIs can talk to older daemons
-RUN set -x \
-  && DOCKER_VERSION="17.12.0-ce" \
-  && curl -fSL "https://${DOCKER_BUCKET}/linux/static/stable/x86_64/docker-${DOCKER_VERSION}.tgz" \
-          -o docker.tgz \
-  && tar -xzvf docker.tgz \
-  && mv docker/docker /usr/bin/docker-${DOCKER_VERSION} \
-  && rm -rf docker/ && rm docker.tgz \
-  && docker-${DOCKER_VERSION} --version | grep "${DOCKER_VERSION}"
+RUN if [ "${kubernetesSlimVersion}" = "false" ]; then \
+        set -x \
+        && DOCKER_VERSION="17.12.0-ce" \
+        && curl -fSL "https://${DOCKER_BUCKET}/linux/static/stable/x86_64/docker-${DOCKER_VERSION}.tgz" \
+                -o docker.tgz \
+        && tar -xzvf docker.tgz \
+        && mv docker/docker /usr/bin/docker-${DOCKER_VERSION} \
+        && rm -rf docker/ && rm docker.tgz \
+        && docker-${DOCKER_VERSION} --version | grep "${DOCKER_VERSION}"; \
+    else \
+        echo "Skipping adding Docker because of kubernetes slim mode"; \
+    fi
 
 
 # ------------------------#
