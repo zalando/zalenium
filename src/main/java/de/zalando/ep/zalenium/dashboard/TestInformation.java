@@ -10,7 +10,7 @@ import java.util.Optional;
  */
 @SuppressWarnings("WeakerAccess")
 public class TestInformation {
-    private static final String TEST_FILE_NAME_TEMPLATE = "{buildName}{proxyName}_{testName}_{browser}_{platform}_{timestamp}";
+    private static final String TEST_FILE_NAME_TEMPLATE = "{buildName}{proxyName}_{testName}_{browser}_{platform}_{timestamp}_{testStatus}";
     private static final String FILE_NAME_TEMPLATE = "{fileName}{fileExtension}";
     private static final String ZALENIUM_PROXY_NAME = "Zalenium";
     private static final String SAUCE_LABS_PROXY_NAME = "SauceLabs";
@@ -134,6 +134,7 @@ public class TestInformation {
                 .replace("{browser}", this.browser)
                 .replace("{platform}", this.platform)
                 .replace("{timestamp}", commonProxyUtilities.getCurrentDateAndTimeFormatted())
+                .replace("{testStatus}", getTestStatus())
                 .replace(" ", "_")
                 .replace("/", "_");
         this.testNameNoExtension = this.testNameNoExtension.replace("{buildName}", buildName);
