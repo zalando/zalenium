@@ -134,7 +134,7 @@ public class TestInformation {
                 .replace("{browser}", this.browser)
                 .replace("{platform}", this.platform)
                 .replace("{timestamp}", commonProxyUtilities.getCurrentDateAndTimeFormatted())
-                .replace("{testStatus}", getTestStatus())
+                .replace("{testStatus}", getTestStatus().toString())
                 .replace(" ", "_")
                 .replace("/", "_");
         this.testNameNoExtension = this.testNameNoExtension.replace("{buildName}", buildName);
