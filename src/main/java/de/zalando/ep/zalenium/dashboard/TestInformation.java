@@ -125,7 +125,7 @@ public class TestInformation {
         if ("N/A".equalsIgnoreCase(this.build) || this.build.trim().isEmpty()) {
             buildName = "";
         } else {
-            buildName = this.build.replace(" ", "_").replace("/", "_") + "/";
+            buildName = this.build.replaceAll("[^a-zA-Z0-9]", "_") + "/";
         }
 
         this.testNameNoExtension = TEST_FILE_NAME_TEMPLATE
@@ -135,8 +135,7 @@ public class TestInformation {
                 .replace("{platform}", this.platform)
                 .replace("{timestamp}", commonProxyUtilities.getCurrentDateAndTimeFormatted())
                 .replace("{testStatus}", getTestStatus().toString())
-                .replace(" ", "_")
-                .replace("/", "_");
+                .replaceAll("[^a-zA-Z0-9]", "_");
         this.testNameNoExtension = this.testNameNoExtension.replace("{buildName}", buildName);
 
         this.fileName = FILE_NAME_TEMPLATE.replace("{fileName}", testNameNoExtension)
