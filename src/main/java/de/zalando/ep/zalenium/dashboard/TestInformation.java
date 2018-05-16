@@ -1,5 +1,6 @@
 package de.zalando.ep.zalenium.dashboard;
 
+import com.google.common.base.Strings;
 import de.zalando.ep.zalenium.util.CommonProxyUtilities;
 
 import java.util.List;
@@ -10,7 +11,7 @@ import java.util.Optional;
  */
 @SuppressWarnings("WeakerAccess")
 public class TestInformation {
-    private static final String TEST_FILE_NAME_TEMPLATE = "{buildName}{proxyName}_{testName}_{browser}_{platform}_{timestamp}_{testStatus}";
+    private static final String TEST_FILE_NAME_TEMPLATE = "{proxyName}_{testName}_{browser}_{platform}_{timestamp}_{testStatus}";
     private static final String FILE_NAME_TEMPLATE = "{fileName}{fileExtension}";
     private static final String ZALENIUM_PROXY_NAME = "Zalenium";
     private static final String SAUCE_LABS_PROXY_NAME = "SauceLabs";
@@ -122,7 +123,7 @@ public class TestInformation {
 
     public void buildVideoFileName() {
         String buildName;
-        if ("N/A".equalsIgnoreCase(this.build) || this.build.trim().isEmpty()) {
+        if ("N/A".equalsIgnoreCase(this.build) || Strings.isNullOrEmpty(this.build)) {
             buildName = "";
         } else {
             buildName = this.build.replaceAll("[^a-zA-Z0-9]", "_") + "/";
@@ -136,7 +137,7 @@ public class TestInformation {
                 .replace("{timestamp}", commonProxyUtilities.getCurrentDateAndTimeFormatted())
                 .replace("{testStatus}", getTestStatus().toString())
                 .replaceAll("[^a-zA-Z0-9]", "_");
-        this.testNameNoExtension = this.testNameNoExtension.replace("{buildName}", buildName);
+        this.testNameNoExtension = buildName.concat(this.testNameNoExtension);
 
         this.fileName = FILE_NAME_TEMPLATE.replace("{fileName}", testNameNoExtension)
                 .replace("{fileExtension}", fileExtension);
