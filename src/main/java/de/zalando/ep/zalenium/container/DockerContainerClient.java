@@ -161,7 +161,7 @@ public class DockerContainerClient implements ContainerClient {
         try {
             dockerClient.stopContainer(containerId, 5);
         } catch (ContainerNotFoundException e) {
-            logger.info("Container {} does not exist - already shut down?.", containerId);
+            logger.debug("Container {} does not exist - already shut down?.", containerId);
         } catch (DockerException | InterruptedException e) {
             logger.warn(nodeId + " Error while stopping the container", e);
             ga.trackException(e);
