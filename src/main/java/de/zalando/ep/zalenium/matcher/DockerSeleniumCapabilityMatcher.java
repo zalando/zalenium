@@ -32,7 +32,7 @@ public class DockerSeleniumCapabilityMatcher extends DefaultCapabilityMatcher {
 
     @Override
     public boolean matches(Map<String, Object> nodeCapability, Map<String, Object> requestedCapability) {
-        logger.info(String.format("Validating %s in node with capabilities %s", requestedCapability,
+        logger.debug(String.format("Validating %s in node with capabilities %s", requestedCapability,
                 nodeCapability));
 
         if (!requestedCapability.containsKey(CapabilityType.BROWSER_NAME)) {
