@@ -7,11 +7,13 @@ public class ProcessedCapabilities {
     private int identityHashCode;
     private long lastProcessedTime;
     private int processedTimes;
+    private final long firstProcessedTime;
 
     public ProcessedCapabilities(Map<String, Object> requestedCapability, int identityHashCode) {
         this.requestedCapability = requestedCapability;
         this.identityHashCode = identityHashCode;
         this.lastProcessedTime = System.currentTimeMillis();
+        this.firstProcessedTime = this.lastProcessedTime;
         this.processedTimes = 1;
     }
 
@@ -43,4 +45,7 @@ public class ProcessedCapabilities {
         this.processedTimes = processedTimes;
     }
 
+    public long getFirstProcessedTime() {
+        return firstProcessedTime;
+    }
 }
