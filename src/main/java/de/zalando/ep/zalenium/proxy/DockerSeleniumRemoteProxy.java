@@ -13,6 +13,8 @@ import de.zalando.ep.zalenium.matcher.DockerSeleniumCapabilityMatcher;
 import de.zalando.ep.zalenium.matcher.ZaleniumCapabilityType;
 import de.zalando.ep.zalenium.util.Environment;
 import de.zalando.ep.zalenium.util.GoogleAnalyticsApi;
+import io.prometheus.client.Gauge;
+
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.compress.utils.IOUtils;
@@ -91,6 +93,9 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     private long timeRegistered = System.currentTimeMillis();
 
     private static final ExecutorService EXECUTOR_SERVICE = Executors.newFixedThreadPool(5);
+
+    static final Gauge seleniumTestSessionsRunning = Gauge.build()
+            .name("selenium_test_sessions_running").help("The number of Selenium test sessions that are running in a container").register();
 
     public DockerSeleniumRemoteProxy(RegistrationRequest request, GridRegistry registry) {
         super(request, registry);
@@ -196,7 +201,11 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         }
 
         if (!this.isBusy() && increaseCounter()) {
-            return createNewSession(requestedCapability);
+            TestSession testSession = createNewSession(requestedCapability);
+            if (testSession != null) {
+                seleniumTestSessionsRunning.inc();
+            }
+            return testSession;
         }
         LOGGER.debug("{} No more sessions allowed", getContainerId());
         return null;
@@ -356,6 +365,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         } catch (Exception e) {
             LOGGER.warn(getContainerId() + " " + e.toString(), e);
         } finally {
+            seleniumTestSessionsRunning.dec();
             super.afterSession(session);
         }
     }
