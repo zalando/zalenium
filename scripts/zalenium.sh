@@ -10,6 +10,7 @@ MAX_DOCKER_SELENIUM_CONTAINERS=${MAX_DOCKER_SELENIUM_CONTAINERS:-10}
 ZALENIUM_ARTIFACT="$(pwd)/${project.build.finalName}.jar"
 DEPRECATED_PARAMETERS=false
 SAUCE_LABS_ENABLED=${SAUCE_LABS_ENABLED:-false}
+PERFECTO_ENABLED=${PERFECTO_ENABLED:-false}
 BROWSER_STACK_ENABLED=${BROWSER_STACK_ENABLED:-false}
 TESTINGBOT_ENABLED=${TESTINGBOT_ENABLED:-false}
 VIDEO_RECORDING_ENABLED=${VIDEO_RECORDING_ENABLED:-true}
@@ -804,6 +805,9 @@ case ${SCRIPT_ACTION} in
                     ;;
                 --sauceLabsEnabled)
                     SAUCE_LABS_ENABLED=${VALUE}
+                    ;;
+				--PerfectoEnabled)
+                    PERFECTO_ENABLED=${VALUE}
                     ;;
                 --browserStackEnabled)
                     BROWSER_STACK_ENABLED=${VALUE}
