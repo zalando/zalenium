@@ -17,6 +17,7 @@ import org.openqa.grid.internal.listeners.SelfHealingProxy;
 import org.openqa.grid.web.Hub;
 import org.openqa.grid.web.servlet.handler.RequestHandler;
 import org.openqa.selenium.remote.DesiredCapabilities;
+import org.openqa.selenium.remote.http.HttpClient;
 import org.openqa.selenium.remote.server.log.LoggingManager;
 
 import de.zalando.ep.zalenium.proxy.AutoStartProxySet;
@@ -24,10 +25,12 @@ import de.zalando.ep.zalenium.proxy.DockerSeleniumRemoteProxy;
 import de.zalando.ep.zalenium.proxy.DockeredSeleniumStarter;
 import de.zalando.ep.zalenium.util.ZaleniumConfiguration;
 
+import java.net.URL;
 import java.time.Clock;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
@@ -79,7 +82,6 @@ public class ZaleniumRegistry extends BaseGridRegistry implements GridRegistry {
      *
      * @param hub the {@link Hub} to associate this registry with
      * @param proxySet the {@link ProxySet} to manage proxies with
-     * @return the registry
      */
     public ZaleniumRegistry(Hub hub, ProxySet proxySet) {
         super(hub);
@@ -447,6 +449,34 @@ public class ZaleniumRegistry extends BaseGridRegistry implements GridRegistry {
         public void uncaughtException(Thread t, Throwable e) {
             LOG.debug("Matcher thread dying due to unhandled exception.", e);
         }
+    }
+
+    @Override
+    public HttpClient getHttpClient(URL url) {
+        // https://github.com/zalando/zalenium/issues/491
+        int maxTries = 3;
+        for (int i = 1; i <= maxTries; i++) {
+            try {
+                HttpClient client = httpClientFactory.createClient(url);
+                if (i > 1) {
+                    String message = String.format("Successfully created HttpClient for url %s, after attempt #%s", url, i);
+                    LOG.warn(message);
+                }
+                return client;
+            } catch (Exception | AssertionError e) {
+                String message = String.format("Error while getting the HttpClient for url %s, attempt #%s", url, i);
+                LOG.debug(message, e);
+                if (i == maxTries) {
+                    throw e;
+                }
+                try {
+                    Thread.sleep((new Random().nextInt(5) + 1) * 1000);
+                } catch (InterruptedException exception) {
+                    LOG.error("Something went wrong while delaying the HttpClient creation after a failed atttempt", exception);
+                }
+            }
+        }
+        throw new IllegalStateException(String.format("Something went wrong while creating a HttpClient for url %s", url));
     }
 
     /**
