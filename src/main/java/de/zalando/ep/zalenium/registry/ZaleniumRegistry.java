@@ -30,6 +30,7 @@ import java.time.Clock;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
@@ -454,26 +455,29 @@ public class ZaleniumRegistry extends BaseGridRegistry implements GridRegistry {
     public HttpClient getHttpClient(URL url) {
         // https://github.com/zalando/zalenium/issues/491
         int maxTries = 3;
-        for (int i = 0; i < maxTries; i++) {
+        for (int i = 1; i <= maxTries; i++) {
             try {
                 HttpClient client = httpClientFactory.createClient(url);
-                if (i > 0) {
-                    String message = String.format("Successfully created HttpClient for url %s, after attempt #%s", url, (i+1));
+                if (i > 1) {
+                    String message = String.format("Successfully created HttpClient for url %s, after attempt #%s", url, i);
                     LOG.warn(message);
                 }
                 return client;
             } catch (Exception | AssertionError e) {
-                String message = String.format("Error while getting the HttpClient for url %s, attempt #%s", url, (i+1));
+                String message = String.format("Error while getting the HttpClient for url %s, attempt #%s", url, i);
                 LOG.debug(message, e);
-                if (i == 2) {
+                if (i == maxTries) {
                     throw e;
+                }
+                try {
+                    Thread.sleep((new Random().nextInt(5) + 1) * 1000);
+                } catch (InterruptedException exception) {
+                    LOG.error("Something went wrong while delaying the HttpClient creation after a failed atttempt", exception);
                 }
             }
         }
-        LOG.warn(String.format("Last attempt to get the HttpClient for url %s", url));
-        return httpClientFactory.createClient(url);
+        throw new IllegalStateException(String.format("Something went wrong while creating a HttpClient for url %s", url));
     }
-
 
     /**
      * iterates the queue of incoming new session request and assign them to proxy after they've been
