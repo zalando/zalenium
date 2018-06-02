@@ -105,32 +105,29 @@ public class AutoStartProxySet extends ProxySet implements Iterable<RemoteProxy>
         this.starter = starter;
         this.clock = clock;
 
-        poller = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                LOGGER.info("Starting poller.");
-                while (true) {
+        poller = new Thread(() -> {
+            LOGGER.info("Starting poller.");
+            while (true) {
 
-                    long now = clock.millis();
-                    if (now - timeOfLastReport > 30000) {
-                        dumpStatus();
-                        timeOfLastReport = now;
-                    }
+                long now = clock.millis();
+                if (now - timeOfLastReport > 30000) {
+                    dumpStatus();
+                    timeOfLastReport = now;
+                }
 
-                    LOGGER.debug("Checking containers...");
-                    try {
-                        checkContainers();
-                    } catch (Exception e) {
-                        LOGGER.error("Failed checking containers.", e);
-                    }
-                    LOGGER.debug("Checked containers.");
+                LOGGER.debug("Checking containers...");
+                try {
+                    checkContainers();
+                } catch (Exception e) {
+                    LOGGER.error("Failed checking containers.", e);
+                }
+                LOGGER.debug("Checked containers.");
 
-                    try {
-                        Thread.sleep(1000);
-                    } catch (InterruptedException e) {
-                        LOGGER.info("Stopping polling thread.");
-                        LOGGER.debug("Stopping polling thread.", e);
-                    }
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    LOGGER.info("Stopping polling thread.");
+                    LOGGER.debug("Stopping polling thread.", e);
                 }
             }
         });
