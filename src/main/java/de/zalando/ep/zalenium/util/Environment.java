@@ -33,7 +33,7 @@ public class Environment {
     }
 
     public String getStringEnvVariable(String envVariableName, String defaultValue) {
-        if (getEnvVariable(envVariableName) != null) {
+        if (getEnvVariable(envVariableName) != null && !getEnvVariable(envVariableName).isEmpty()) {
             try {
                 return String.valueOf(getEnvVariable(envVariableName));
             } catch (Exception e) {
