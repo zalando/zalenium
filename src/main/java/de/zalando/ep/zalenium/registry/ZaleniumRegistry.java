@@ -1,5 +1,6 @@
 package de.zalando.ep.zalenium.registry;
 
+import de.zalando.ep.zalenium.dashboard.Dashboard;
 import net.jcip.annotations.ThreadSafe;
 
 import org.openqa.grid.internal.ActiveTestSessions;
@@ -72,6 +73,8 @@ public class ZaleniumRegistry extends BaseGridRegistry implements GridRegistry {
         boolean waitForAvailableNodes = true;
 
         DockeredSeleniumStarter starter = new DockeredSeleniumStarter();
+        Dashboard.loadTestInformationFromFile();
+        Dashboard.setShutDownHook();
 
         proxies = new AutoStartProxySet(false, minContainers, maxContainers, timeToWaitToStart, waitForAvailableNodes, starter, Clock.systemDefaultZone());
         this.matcherThread.setUncaughtExceptionHandler(new UncaughtExceptionHandler());
@@ -472,7 +475,7 @@ public class ZaleniumRegistry extends BaseGridRegistry implements GridRegistry {
                 try {
                     Thread.sleep((new Random().nextInt(5) + 1) * 1000);
                 } catch (InterruptedException exception) {
-                    LOG.error("Something went wrong while delaying the HttpClient creation after a failed atttempt", exception);
+                    LOG.error("Something went wrong while delaying the HttpClient creation after a failed attempt", exception);
                 }
             }
         }
