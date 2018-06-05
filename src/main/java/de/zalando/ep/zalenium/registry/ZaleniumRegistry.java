@@ -24,7 +24,11 @@ import org.openqa.selenium.remote.server.log.LoggingManager;
 import de.zalando.ep.zalenium.proxy.AutoStartProxySet;
 import de.zalando.ep.zalenium.proxy.DockerSeleniumRemoteProxy;
 import de.zalando.ep.zalenium.proxy.DockeredSeleniumStarter;
+import de.zalando.ep.zalenium.util.Environment;
 import de.zalando.ep.zalenium.util.ZaleniumConfiguration;
+import io.prometheus.client.Collector;
+import io.prometheus.client.Gauge;
+import io.prometheus.client.Histogram;
 
 import java.net.URL;
 import java.time.Clock;
@@ -58,6 +62,23 @@ public class ZaleniumRegistry extends BaseGridRegistry implements GridRegistry {
     private final Matcher matcherThread = new Matcher();
     private final List<RemoteProxy> registeringProxies = new CopyOnWriteArrayList<>();
     private volatile boolean stop = false;
+    
+    private static final Environment defaultEnvironment = new Environment();
+    
+    private static final double[] DEFAULT_TEST_SESSION_LATENCY_BUCKETS =
+            new double[] { 0.5,2.5,5,10,15,20,25,30,35,40,50,60 };
+
+    // Allows overriding of the test session latency buckets for prometheus
+    private static final String ZALENIUM_TEST_SESSION_LATENCY_BUCKETS = "ZALENIUM_TEST_SESSION_LATENCY_BUCKETS";
+    
+    static final Gauge seleniumTestSessionsWaiting = Gauge.build()
+            .name("selenium_test_sessions_waiting").help("The number of Selenium test sessions that are waiting for a container").register();
+    
+    static final Histogram seleniumTestSessionStartLatency = Histogram.build()
+            .name("selenium_test_session_start_latency_seconds")
+            .help("The Selenium test session start time latency in seconds.")
+            .buckets(defaultEnvironment.getDoubleArrayEnvVariable(ZALENIUM_TEST_SESSION_LATENCY_BUCKETS, DEFAULT_TEST_SESSION_LATENCY_BUCKETS))
+            .register();
 
     public ZaleniumRegistry() {
         this(null);
@@ -230,6 +251,7 @@ public class ZaleniumRegistry extends BaseGridRegistry implements GridRegistry {
             requestedCapabilities.forEach((k, v) -> MDC.put(k,v.toString()));
             LOG.info("Adding sessionRequest for " + requestedCapabilities.toString());
             newSessionQueue.add(handler);
+            seleniumTestSessionsWaiting.inc();
             fireMatcherStateChanged();
         } finally {
             MDC.clear();
@@ -273,6 +295,8 @@ public class ZaleniumRegistry extends BaseGridRegistry implements GridRegistry {
                                   remoteName,
                                   timeToAssignProxy / 1000,
                                   timeToAssignProxy));
+            seleniumTestSessionStartLatency.observe(timeToAssignProxy / Collector.MILLISECONDS_PER_SECOND);
+            seleniumTestSessionsWaiting.dec();
             activeTestSessions.add(session);
             handler.bindSession(session);
         }
@@ -417,13 +441,18 @@ public class ZaleniumRegistry extends BaseGridRegistry implements GridRegistry {
      */
     public void clearNewSessionRequests() {
         newSessionQueue.clearNewSessionRequests();
+        seleniumTestSessionsWaiting.set(0);
     }
 
     /**
      * @see GridRegistry#removeNewSessionRequest(RequestHandler)
      */
     public boolean removeNewSessionRequest(RequestHandler request) {
-        return newSessionQueue.removeNewSessionRequest(request);
+        boolean wasRemoved = newSessionQueue.removeNewSessionRequest(request);
+        if (wasRemoved) {
+            seleniumTestSessionsWaiting.dec();
+        }
+        return wasRemoved;
     }
 
     /**

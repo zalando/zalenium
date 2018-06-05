@@ -62,4 +62,22 @@ public class Environment {
         }
     }
 
+    public double[] getDoubleArrayEnvVariable(String envVariableName, double... defaultValues) {
+        String envVariable = getEnvVariable(envVariableName);
+        double[] buckets;
+        if (envVariable != null) {
+            String[] bucketParams = envVariable.split(",");
+            buckets = new double[bucketParams.length];
+
+            for (int i = 0; i < bucketParams.length; i++) {
+                buckets[i] = Double.parseDouble(bucketParams[i]);
+            }
+
+        }
+        else {
+            buckets = defaultValues;
+        }
+
+        return buckets;
+    }
 }
