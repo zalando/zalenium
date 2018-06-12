@@ -139,8 +139,11 @@ public class DockerContainerClient implements ContainerClient {
         }
 
         if (containerList != null) {
-	        return containerList.stream()
-	                .filter(container -> containerNameSearch.equalsIgnoreCase(container.names().get(0)))
+            String containerByName = containerList.stream()
+                    .filter(container -> containerNameSearch.equalsIgnoreCase(container.names().get(0)))
+                    .findFirst().map(Container::id).orElse(null);
+            return containerByName != null ? containerByName : containerList.stream()
+	                .filter(container -> container.names().get(0).contains(containerName))
 	                .findFirst().map(Container::id).orElse(null);
         } else {
         	return null;
@@ -236,7 +239,7 @@ public class DockerContainerClient implements ContainerClient {
     }
 
     public ContainerCreationStatus createContainer(String zaleniumContainerName, String image, Map<String, String> envVars,
-                                                   String nodePort, int collisionAttempts) {                                               
+                                                   String nodePort, int collisionAttempts) {
         String containerName = generateContainerName(zaleniumContainerName);
 
         loadMountedFolders(zaleniumContainerName);
@@ -515,6 +518,10 @@ public class DockerContainerClient implements ContainerClient {
             return zaleniumNetwork;
         }
         String zaleniumContainerId = getContainerId(zaleniumContainerName);
+
+        if (zaleniumContainerId == null) {
+            logger.warn(String.format("Couldn't find selenium container with name or containing: %s, check that the env variable ZALENIUM_CONTAINER_NAME has an appropiate value", zaleniumContainerName));
+        }
         try {
             ContainerInfo containerInfo = dockerClient.inspectContainer(zaleniumContainerId);
             ImmutableMap<String, AttachedNetwork> networks = containerInfo.networkSettings().networks();
