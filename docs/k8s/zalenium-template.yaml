@@ -11,36 +11,64 @@ message: |-
          Username: ${ZALENIUM_USER}
          Password: ${ZALENIUM_PASSWORD}
 parameters:
+  - name: "PROJECT_NAME"
+    displayName: "The name of the project/namespace that zalenium is being deployed to"
+    required: true
   - name: "DESIRED_CONTAINERS"
     displayName: "Number of initial containers."
     description: "This is the number of containers that should be created when Zalenium starts up."
     value: "2"
     required: false
+  - name: "MAX_DOCKER_SELENIUM_CONTAINERS"
+    displayName: "Maximum number of docker selenium containers."
+    description: "This is the maximum number of docker selenium containers that can be running at any one time."
+    value: "10"
+    required: false  
   - name: "MAX_TEST_SESSIONS"
     displayName: "Max amount of tests executed per container."
     description: "This is the number of max amount of tests executed per container/pod."
     value: "4"
     required: false
   - name: "ZALENIUM_KUBERNETES_CPU_REQUEST"
-    displayName: "CPU request for the Selenium Pods."
-    description: "This is the minimum amount of CPU that the container will be configured with."
-    value: "100m"
+    displayName: "CPU request for the Zalenium Hub."
+    description: "This is the minimum amount of CPU that the Zalenium container will be allocated."
+    value: "500m"
     required: true
   - name: "ZALENIUM_KUBERNETES_CPU_LIMIT"
-    displayName: "CPU Limit for the Selenium Pods."
-    description: "This is the maximum amount of CPU that the container will be configured with."
-    value: "200m"
+    displayName: "CPU Limit for the Zalenium Hub."
+    description: "This is the maximum amount of CPU that the Zalenium container will be allowed to use."
+    value: "1000m"
     required: true
   - name: "ZALENIUM_KUBERNETES_MEMORY_REQUEST"
-    displayName: "Memory request for the Selenium Pods."
-    description: "This is the minimum amount of memory that the container will be configured with."
-    value: "250Mi"
+    displayName: "Memory request for the Zalenium Hub."
+    description: "This is the minimum amount of memory that the Zalenium container will be allocated."
+    value: "500Mi"
     required: true
   - name: "ZALENIUM_KUBERNETES_MEMORY_LIMIT"
-    displayName: "Memory limit for the Selenium Pods."
-    description: "This is the maximum amount of memory that the container will be configured with."
-    value: "1Gi"
+    displayName: "Memory limit for the Zalenium Hub."
+    description: "This is the maximum amount of memory that the Zalenium container will be allowed to use, it will be terminated if it exceeds this limit."
+    value: "2Gi"
     required: true
+  - name: "SELENIUM_KUBERNETES_CPU_REQUEST"
+    displayName: "CPU request for the Selenium Pods."
+    description: "This is the minimum amount of CPU that each selenium container will be allocated."
+    value: "250m"
+    required: false
+  - name: "SELENIUM_KUBERNETES_CPU_LIMIT"
+    displayName: "CPU Limit for the Selenium Pods."
+    description: "This is the maximum amount of CPU that each selenium container will be allowed to use."
+    value: "1000m"
+    required: false
+  - name: "SELENIUM_KUBERNETES_MEMORY_REQUEST"
+    displayName: "Memory request for the Selenium Pods."
+    description: "This is the minimum amount of memory that the each selenium container will be allocated."
+    value: "250Mi"
+    required: false
+  - name: "SELENIUM_KUBERNETES_MEMORY_LIMIT"
+    displayName: "Memory limit for the Selenium Pods."
+    description: "This is the maximum amount of memory that the each selenium container will be allowed to use, it will be terminated if it exceeds this limit."
+    value: "2Gi"
+    required: false
   - name: "VOLUME_CAPACITY"
     displayName: "Volume capacity for the disk that contains the test results."
     description: "The volume is used to store all the test results, including logs and video recordings of the tests."
@@ -48,29 +76,27 @@ parameters:
     required: true
   - name: "ZALENIUM_USER"
     displayName: "Basic auth user for Zalenium."
-    description: "This username is used to authenticate towards the Selenium Hub URL."
+    description: "This username is used to authenticate towards the Selenium Hub URL (leave blank if you do not want authentication)."
     value: "zalenium"
-    required: true
+    required: false
   - name: "ZALENIUM_PASSWORD"
     displayName: "Basic auth password for Zalenium."
-    description: "This password is used to authenticate towards the Selenium Hub URL."
+    description: "This password is used to authenticate towards the Selenium Hub URL (leave blank if you do not want authentication)."
     from: '[a-zA-Z0-9]{16}'
     generate: expression
-    required: true
-  - name: "SESSION_SECRET"
-    displayName: "The session secret for the OAuth proxy."
-    description: "This is an auto-generated session secret that the OAuth proxy needs."
-    from: '[a-zA-Z0-9]{43}'
-    generate: expression
-    required: true
+    required: false
+  - name: "SEND_ANONYMOUS_USAGE_INFO"
+    displayName: "Send anonymous statistics back to Zalando."
+    description: "Set to false if you do not want to send statistics back to Zalando."
+    value: "true"
+    required: false
+labels:
+  app: zalenium
 objects:
 - apiVersion: v1
   kind: DeploymentConfig
   metadata:
     generation: 1
-    labels:
-      app: zalenium
-      role: hub
     name: zalenium
   spec:
     replicas: 1
@@ -79,14 +105,9 @@ objects:
       role: hub
     strategy:
       activeDeadlineSeconds: 21600
-      resources: {}
-      rollingParams:
-        intervalSeconds: 1
-        maxSurge: 25%
-        maxUnavailable: 25%
+      recreateParams:
         timeoutSeconds: 600
-        updatePeriodSeconds: 1
-      type: Rolling
+      type: Recreate
     template:
       metadata:
         labels:
@@ -96,31 +117,35 @@ objects:
         containers:
         - args:
           - start
-          - --desiredContainers
-          - ${DESIRED_CONTAINERS}
-          - --maxTestSessions
-          - ${MAX_TEST_SESSIONS}
-          - --seleniumImageName
-          - "elgalu/selenium:latest"
-          - --sendAnonymousUsageInfo
-          - "false"
-          - --gridUser
-          - ${ZALENIUM_USER}
-          - --gridPassword
-          - ${ZALENIUM_PASSWORD}
           env:
           - name: ZALENIUM_KUBERNETES_CPU_REQUEST
-            value: ${ZALENIUM_KUBERNETES_CPU_REQUEST}
+            value: ${SELENIUM_KUBERNETES_CPU_REQUEST}
           - name: ZALENIUM_KUBERNETES_CPU_LIMIT
-            value: ${ZALENIUM_KUBERNETES_CPU_LIMIT}
+            value: ${SELENIUM_KUBERNETES_CPU_LIMIT}
           - name: ZALENIUM_KUBERNETES_MEMORY_REQUEST
-            value: ${ZALENIUM_KUBERNETES_MEMORY_REQUEST}
+            value: ${SELENIUM_KUBERNETES_MEMORY_REQUEST}
           - name: ZALENIUM_KUBERNETES_MEMORY_LIMIT
-            value: ${ZALENIUM_KUBERNETES_MEMORY_LIMIT}
-          - name: ZALENIUM_USER
-            value: zalenium
-          - name: ZALENIUM_PASSWORD
-            value: zalenium
+            value: ${SELENIUM_KUBERNETES_MEMORY_LIMIT}
+          - name: GRID_USER
+            valueFrom:
+                secretKeyRef:
+                  key: zalenium-user
+                  name: zalenium
+          - name: GRID_PASSWORD
+            valueFrom:
+                secretKeyRef:
+                  key: zalenium-password
+                  name: zalenium
+          - name: DESIRED_CONTAINERS
+            value: ${DESIRED_CONTAINERS}
+          - name: MAX_DOCKER_SELENIUM_CONTAINERS
+            value: ${MAX_DOCKER_SELENIUM_CONTAINERS}
+          - name: MAX_TEST_SESSIONS
+            value: ${MAX_TEST_SESSIONS}
+          - name: SEND_ANONYMOUS_USAGE_INFO
+            value: ${SEND_ANONYMOUS_USAGE_INFO}
+          - name: SELENIUM_IMAGE_NAME
+            value: "elgalu/selenium:latest"
           image: dosel/zalenium:latest
           imagePullPolicy: IfNotPresent
           name: zalenium
@@ -129,11 +154,11 @@ objects:
             protocol: TCP
           resources:
             requests:
-              cpu: '100m'
-              memory: 500Mi
+              cpu: ${ZALENIUM_KUBERNETES_CPU_REQUEST}
+              memory: ${ZALENIUM_KUBERNETES_MEMORY_REQUEST}
             limits:
-              cpu: '200m'
-              memory: 1Gi
+              cpu: ${ZALENIUM_KUBERNETES_CPU_LIMIT}
+              memory: ${ZALENIUM_KUBERNETES_MEMORY_LIMIT}
           terminationMessagePath: /dev/termination-log
           terminationMessagePolicy: File
           volumeMounts:
@@ -158,7 +183,7 @@ objects:
   metadata:
     annotations:
       openshift.io/host.generated: 'true'
-      haproxy.router.openshift.io/timeout: "2000s"
+      haproxy.router.openshift.io/timeout: "5m"
     name: zalenium
   spec:
     to:
@@ -177,6 +202,7 @@ objects:
       targetPort: 4444
     selector:
       app: zalenium
+      role: hub
     sessionAffinity: None
     type: ClusterIP
   status:
@@ -242,11 +268,10 @@ objects:
   kind: RoleBinding
   metadata:
     creationTimestamp: null
-    name: zalenium-rolebinding
+    name: zalenium-role
   roleRef:
     name: zalenium-role
+    namespace: ${PROJECT_NAME}
   subjects:
   - kind: ServiceAccount
     name: zalenium
-  userNames:
-  - zalenium
