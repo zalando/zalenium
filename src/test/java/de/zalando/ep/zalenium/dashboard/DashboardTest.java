@@ -50,46 +50,28 @@ public class DashboardTest {
     @Test
     public void testCountOne() {
         Dashboard dashboard = new Dashboard();
-        try {
-            dashboard.updateDashboard(ti);
-            Assert.assertEquals(1, Dashboard.getExecutedTests());
-            Assert.assertEquals(1, Dashboard.getExecutedTestsWithVideo());
-        }
-        catch(Exception e) {
-            Assert.fail(e.toString());
-        }
+        dashboard.updateDashboard(ti);
+        Assert.assertEquals(1, Dashboard.getExecutedTests());
+        Assert.assertEquals(1, Dashboard.getExecutedTestsWithVideo());
     }
 
     @Test
     public void testCountTwo() {
         Dashboard dashboard = new Dashboard();
-        try {
-            dashboard.updateDashboard(ti);
-            dashboard.updateDashboard(ti);
-            Assert.assertEquals(2, Dashboard.getExecutedTests());
-            Assert.assertEquals(2, Dashboard.getExecutedTestsWithVideo());
-        } catch (Exception e) {
-            Assert.fail(e.toString());
-        }
+        dashboard.updateDashboard(ti);
+        dashboard.updateDashboard(ti);
+        Assert.assertEquals(2, Dashboard.getExecutedTests());
+        Assert.assertEquals(2, Dashboard.getExecutedTestsWithVideo());
     }
 
     @Test
     public void missingExecutedTestsFile()  throws IOException {
         Dashboard dashboard = new Dashboard();
-        try
-        {
-            dashboard.updateDashboard(ti);
-        } catch (Exception e) {
-            Assert.fail(e.toString());
-        }
+        dashboard.updateDashboard(ti);
 
         cleanTempVideosFolder();
         TestUtils.ensureRequiredInputFilesExist(temporaryFolder);
-        try {
-            dashboard.updateDashboard(ti);
-        } catch (Exception e) {
-            Assert.fail(e.toString());
-        }
+        dashboard.updateDashboard(ti);
         Assert.assertEquals(1, Dashboard.getExecutedTests());
         Assert.assertEquals(1, Dashboard.getExecutedTestsWithVideo());
     }
