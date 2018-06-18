@@ -17,27 +17,23 @@ public class RemoteSeleniumLogDashboard extends RemoteDashboard {
             return;
         }
 
-
         List<FormField> fields = new ArrayList<>();
 
-        fields.add(new FormFile() {{
-                       keyName = "seleniumlog";
-                       mimeType = ContentType.create("text/plain");
-                       stream = new FileInputStream(Paths.get( testInformation.getVideoFolderPath(), testInformation.getSeleniumLogFileName()).toString());
-                       fileName  = testInformation.getSeleniumLogFileName();
-                   }}
-        );
+        FormFile uploadFile = new FormFile();
+        uploadFile.keyName = "seleniumlog";
+        uploadFile.mimeType = ContentType.create("text/plain");
+        uploadFile.stream = new FileInputStream(Paths.get( testInformation.getVideoFolderPath(), testInformation.getSeleniumLogFileName()).toString());
+        uploadFile.fileName  = testInformation.getSeleniumLogFileName();
+        fields.add(uploadFile);
 
         this.setupMetadata(testInformation).addProperty("Type", "logfile");
+        FormKeyValuePair kvp = new FormKeyValuePair();
+        kvp.keyName = "metadata";
+        kvp.mimeType = ContentType.create("application/json");
+        kvp.value = jsonToString(testInformation.getMetadata());
+        fields.add(kvp);
 
-        fields.add(new FormKeyValuePair() {{
-                       keyName = "metadata";
-                       mimeType = ContentType.create("application/json");
-                       value = jsonToString(testInformation.getMetadata());
-                   }}
-        );
-
-        this.getFormPoster().Post(fields);
+        this.getFormPoster().post(fields);
 
     }
 }

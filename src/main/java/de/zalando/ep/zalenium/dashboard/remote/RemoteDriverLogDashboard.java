@@ -1,6 +1,5 @@
 package de.zalando.ep.zalenium.dashboard.remote;
 
-import com.google.gson.JsonObject;
 import de.zalando.ep.zalenium.dashboard.TestInformation;
 import org.apache.http.entity.ContentType;
 
@@ -20,25 +19,20 @@ public class RemoteDriverLogDashboard extends RemoteDashboard {
         }
 
         List<FormField> fields = new ArrayList<>();
-
-        fields.add(new FormFile() {{
-               keyName = "driverlog";
-               mimeType = ContentType.create("text/plain");
-               stream = new FileInputStream(Paths.get( testInformation.getVideoFolderPath(), testInformation.getBrowserDriverLogFileName()).toString());
-               fileName = testInformation.getBrowserDriverLogFileName();
-           }}
-        );
+        FormFile uploadFile = new FormFile();
+        uploadFile.keyName = "driverlog";
+        uploadFile.mimeType = ContentType.create("text/plain");
+        uploadFile.stream = new FileInputStream(Paths.get( testInformation.getVideoFolderPath(), testInformation.getBrowserDriverLogFileName()).toString());
+        uploadFile.fileName = testInformation.getBrowserDriverLogFileName();
+        fields.add(uploadFile);
 
         this.setupMetadata(testInformation).addProperty("Type", "logfile");
+        FormKeyValuePair kvp = new FormKeyValuePair();
+        kvp.keyName = "metadata";
+        kvp.mimeType = ContentType.create("application/json");
+        kvp.value = jsonToString(testInformation.getMetadata());
+        fields.add(kvp);
 
-
-        fields.add(new FormKeyValuePair() {{
-               keyName = "metadata";
-               mimeType = ContentType.create("application/json");
-               value = jsonToString(testInformation.getMetadata());
-            }}
-        );
-
-        this.getFormPoster().Post(fields);
+        this.getFormPoster().post(fields);
     }
 }

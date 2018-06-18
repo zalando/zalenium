@@ -25,8 +25,8 @@ public class FormPoster {
         return remoteHost;
     }
 
-    public HttpResponse Post(List<FormField> fields) throws Exception {
-        if( null == remoteHost || 0 == remoteHost.toString().length() ) {
+    public HttpResponse post(List<FormField> fields) throws Exception {
+        if( null == remoteHost || 0 == remoteHost.length() ) {
             throw new IllegalArgumentException("remoteHost");
         }
         if( null == fields ) {

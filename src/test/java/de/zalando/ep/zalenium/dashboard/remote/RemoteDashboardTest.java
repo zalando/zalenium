@@ -1,7 +1,5 @@
 package de.zalando.ep.zalenium.dashboard.remote;
 
-
-
 import de.zalando.ep.zalenium.dashboard.Dashboard;
 import de.zalando.ep.zalenium.dashboard.TestInformation;
 import de.zalando.ep.zalenium.util.CommonProxyUtilities;
@@ -25,12 +23,7 @@ public class RemoteDashboardTest {
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
-    private List<RemoteDashboard> dashboardsToTest = new ArrayList<RemoteDashboard>() {{
-        add(new RemoteVideoDashboard());
-        add(new RemoteSeleniumLogDashboard());
-        add(new RemoteDriverLogDashboard());
-    }};
-    private CommonProxyUtilities  utils ;
+    private List<RemoteDashboard> dashboardsToTest = new ArrayList<RemoteDashboard>();
 
     private TestInformation.TestInformationBuilder builder = new TestInformation.TestInformationBuilder()
             .withSeleniumSessionId("seleniumSessionId")
@@ -44,11 +37,17 @@ public class RemoteDashboardTest {
             .withTestStatus(TestInformation.TestStatus.COMPLETED);
 
 
+    public RemoteDashboardTest() {
+        dashboardsToTest.add(new RemoteVideoDashboard());
+        dashboardsToTest.add(new RemoteSeleniumLogDashboard());
+        dashboardsToTest.add(new RemoteDriverLogDashboard());
+    }
+
     @Test
-    public void RemoteHostNotSet() throws Exception {
+    public void remoteHostNotSet() throws Exception {
         FormPoster mockFormPoster = mock(FormPoster.class);
         when(mockFormPoster.getRemoteHost()).thenReturn(null);
-        when(mockFormPoster.Post(any())).thenThrow(new AssertionError("Remote dashboard classes may not Post() if Url is not set."));
+        when(mockFormPoster.post(any())).thenThrow(new AssertionError("Remote dashboard classes may not Post() if Url is not set."));
 
         TestInformation ti = this.builder.build();
         for( RemoteDashboard  d: this.dashboardsToTest) {
@@ -58,9 +57,9 @@ public class RemoteDashboardTest {
     }
 
     @Test
-    public void FilesDoNotExist() throws Exception {
+    public void filesDoNotExist() throws Exception {
         FormPoster mockFormPoster = mock(FormPoster.class);
-        when(mockFormPoster.Post(any())).thenThrow(new AssertionError("Remote dashboard may not Post() when file does not exist"));
+        when(mockFormPoster.post(any())).thenThrow(new AssertionError("Remote dashboard may not Post() when file does not exist"));
         when(mockFormPoster.getRemoteHost()).thenReturn("http://localhost");
 
         CommonProxyUtilities proxyUtilities = TestUtils.mockCommonProxyUtilitiesForDashboardTesting(temporaryFolder);

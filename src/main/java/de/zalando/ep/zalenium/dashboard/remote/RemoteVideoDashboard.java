@@ -19,23 +19,21 @@ public class RemoteVideoDashboard extends RemoteDashboard {
 
         List<FormField> fields = new ArrayList<>();
 
-        fields.add(new FormFile() {{
-                       keyName = "video";
-                       mimeType = ContentType.create("video/mp4");
-                       stream = new FileInputStream(Paths.get(testInformation.getVideoFolderPath(), testInformation.getFileName()).toString());
-                       fileName = testInformation.getFileName();
-                   }}
-        );
+        FormFile uploadFile = new FormFile();
+        uploadFile.keyName = "video";
+        uploadFile.mimeType = ContentType.create("video/mp4");
+        uploadFile.stream = new FileInputStream(Paths.get(testInformation.getVideoFolderPath(), testInformation.getFileName()).toString());
+        uploadFile.fileName = testInformation.getFileName();
+        fields.add(uploadFile);
 
         this.setupMetadata(testInformation).addProperty("Type", "video");
 
-        fields.add(new FormKeyValuePair() {{
-               keyName = "metadata";
-               mimeType = ContentType.create("application/json");
-               value = jsonToString(testInformation.getMetadata());
-           }}
-        );
+        FormKeyValuePair kvp = new FormKeyValuePair();
+        kvp.keyName = "metadata";
+        kvp.mimeType = ContentType.create("application/json");
+        kvp.value = jsonToString(testInformation.getMetadata());
+        fields.add(kvp);
 
-        this.getFormPoster().Post(fields);
+        this.getFormPoster().post(fields);
     }
 }

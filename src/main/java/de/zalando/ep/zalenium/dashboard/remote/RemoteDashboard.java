@@ -6,7 +6,6 @@ import com.google.gson.JsonObject;
 import de.zalando.ep.zalenium.dashboard.DashboardInterface;
 import de.zalando.ep.zalenium.dashboard.TestInformation;
 import de.zalando.ep.zalenium.util.CommonProxyUtilities;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 import java.util.logging.Logger;
 import java.util.logging.Level;
 
@@ -46,6 +45,6 @@ public abstract class RemoteDashboard implements DashboardInterface {
         }
     }
 
-    public void cleanupDashboard() throws Exception {throw new NotImplementedException();}
+    public void cleanupDashboard() throws Exception {throw new UnsupportedOperationException();}
     public abstract void updateDashboard(TestInformation testInformation) throws Exception;
 }
