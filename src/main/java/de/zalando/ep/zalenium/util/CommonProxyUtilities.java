@@ -31,6 +31,7 @@ import org.slf4j.LoggerFactory;
 public class CommonProxyUtilities {
 
     private static final Logger LOG = LoggerFactory.getLogger(CommonProxyUtilities.class.getName());
+    public static final String metadataCookieName = "zaleniumMetadata";
 
     /*
         Reading a JSON with DockerSelenium capabilities from a given URL

@@ -1,6 +1,8 @@
 package de.zalando.ep.zalenium.dashboard;
 
+
 import com.google.common.base.Strings;
+import com.google.gson.JsonObject;
 import de.zalando.ep.zalenium.util.CommonProxyUtilities;
 
 import java.util.List;
@@ -36,6 +38,7 @@ public class TestInformation {
     private String build;
     private TestStatus testStatus;
     private boolean videoRecorded;
+    private JsonObject metadata;
 
     public boolean isVideoRecorded() {
         return videoRecorded;
@@ -154,6 +157,9 @@ public class TestInformation {
         return String.format("%s %s, %s", browser, browserVersion, platform);
     }
 
+    public JsonObject getMetadata() { return this.metadata;}
+    public void setMetadata(JsonObject metadata) { this.metadata = metadata;}
+
     public enum TestStatus {
         COMPLETED("Completed", "primary", " 'Zalenium', 'TEST COMPLETED', --icon=/home/seluser/images/completed.png"),
         TIMEOUT("Timeout", "warning", " 'Zalenium', 'TEST TIMED OUT', --icon=/home/seluser/images/timeout.png"),
@@ -199,6 +205,7 @@ public class TestInformation {
         this.build = Optional.ofNullable(builder.build).orElse("");
         this.testStatus = builder.testStatus;
         this.videoRecorded = true;
+        this.metadata = builder.metadata;
         buildVideoFileName();
     }
 
@@ -217,6 +224,7 @@ public class TestInformation {
         private String timeZone;
         private String build;
         private TestStatus testStatus;
+        private JsonObject metadata;
 
         public TestInformationBuilder withSeleniumSessionId(String seleniumSessionId) {
             this.seleniumSessionId = seleniumSessionId;
@@ -285,6 +293,11 @@ public class TestInformation {
 
         public TestInformationBuilder withTestStatus(TestStatus testStatus) {
             this.testStatus = testStatus;
+            return this;
+        }
+
+        public TestInformationBuilder withMetadata(JsonObject metadata) {
+            this.metadata = metadata;
             return this;
         }
 

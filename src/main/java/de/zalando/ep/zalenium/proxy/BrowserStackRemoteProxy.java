@@ -113,6 +113,7 @@ public class BrowserStackRemoteProxy extends CloudTestingRemoteProxy {
                 .withFileExtension(getVideoFileExtension())
                 .withVideoUrl(videoUrl)
                 .withLogUrls(logUrls)
+                .withMetadata(getMetadata())
                 .build();
     }
 

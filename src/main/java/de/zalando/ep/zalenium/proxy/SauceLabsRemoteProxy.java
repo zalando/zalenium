@@ -125,6 +125,7 @@ public class SauceLabsRemoteProxy extends CloudTestingRemoteProxy {
                 .withFileExtension(getVideoFileExtension())
                 .withVideoUrl(sauceLabsVideoUrl)
                 .withLogUrls(logUrls)
+                .withMetadata(getMetadata())
                 .build();
     }
 
