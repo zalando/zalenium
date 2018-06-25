@@ -19,7 +19,7 @@ import org.slf4j.LoggerFactory;
 @ManagedService(description = "BrowserStack TestSlots")
 public class BrowserStackRemoteProxy extends CloudTestingRemoteProxy {
 
-    private static final String BROWSER_STACK_URL = "http://hub-cloud.browserstack.com:80";
+    private static final String BROWSER_STACK_URL = getEnv().getStringEnvVariable("BROWSER_STACK_URL", "http://hub-cloud.browserstack.com:80");
     private static final String BROWSER_STACK_ACCOUNT_INFO = "https://www.browserstack.com/automate/plan.json";
     private static final Logger logger = LoggerFactory.getLogger(BrowserStackRemoteProxy.class.getName());
     private static final String BROWSER_STACK_USER = getEnv().getStringEnvVariable("BROWSER_STACK_USER", "");

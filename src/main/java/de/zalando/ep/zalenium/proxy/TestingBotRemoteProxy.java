@@ -19,7 +19,7 @@ import org.slf4j.LoggerFactory;
 @ManagedService(description = "TestingBot TestSlots")
 public class TestingBotRemoteProxy extends CloudTestingRemoteProxy {
 
-    private static final String TESTINGBOT_URL = "http://hub.testingbot.com:80";
+    private static final String TESTINGBOT_URL = getEnv().getStringEnvVariable("TESTINGBOT_URL", "http://hub.testingbot.com:80");
     private static final String TESTINGBOT_ACCOUNT_INFO = "https://api.testingbot.com/v1/user";
     private static final String TESTINGBOT_KEY = getEnv().getStringEnvVariable("TESTINGBOT_KEY", "");
     private static final String TESTINGBOT_SECRET = getEnv().getStringEnvVariable("TESTINGBOT_SECRET", "");
