@@ -146,7 +146,7 @@ public class Dashboard implements DashboardInterface {
         File dashboardHtml = new File(getLocalVideosPath(), DASHBOARD_FILE);
         File logsFolder = new File(getLocalVideosPath(), LOGS_FOLDER_NAME);
         File videosFolder = new File(getLocalVideosPath());
-        String[] extensions = new String[] { "mp4", "mkv", "flv" };
+        String[] extensions = new String[] { "mp4", "mkv" };
         for (File file : FileUtils.listFiles(videosFolder, extensions, true)) {
             deleteIfExists(file);
         }
