@@ -87,11 +87,6 @@ public class SauceLabsRemoteProxy extends CloudTestingRemoteProxy {
     }
 
     @Override
-    public boolean convertVideoFileToMP4() {
-        return true;
-    }
-
-    @Override
     public boolean useAuthenticationToDownloadFile() {
         return true;
     }
@@ -101,7 +96,7 @@ public class SauceLabsRemoteProxy extends CloudTestingRemoteProxy {
         // https://saucelabs.com/rest/v1/SL_USER/jobs/SELENIUM_SESSION_ID
         String sauceLabsTestUrl = "https://saucelabs.com/rest/v1/%s/jobs/%s";
         sauceLabsTestUrl = String.format(sauceLabsTestUrl, SAUCE_LABS_USER_NAME, seleniumSessionId);
-        String sauceLabsVideoUrl = sauceLabsTestUrl + "/assets/video.flv";
+        String sauceLabsVideoUrl = sauceLabsTestUrl + "/assets/video.mp4";
         String sauceLabsBrowserLogUrl = sauceLabsTestUrl + "/assets/log.json";
         String sauceLabsSeleniumLogUrl = sauceLabsTestUrl + "/assets/selenium-server.log";
         JsonObject testData = getCommonProxyUtilities().readJSONFromUrl(sauceLabsTestUrl, SAUCE_LABS_USER_NAME,
@@ -131,7 +126,7 @@ public class SauceLabsRemoteProxy extends CloudTestingRemoteProxy {
 
     @Override
     public String getVideoFileExtension() {
-        return ".flv";
+        return ".mp4";
     }
 
     @Override

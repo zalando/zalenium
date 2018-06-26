@@ -257,10 +257,6 @@ public class CloudTestingRemoteProxy extends DefaultRemoteProxy {
         return false;
     }
 
-    public boolean convertVideoFileToMP4() {
-        return false;
-    }
-
     public void addTestToDashboard(String seleniumSessionId, boolean testCompleted) {
         addToDashboardCalled = false;
         new Thread(() -> {
@@ -272,9 +268,6 @@ public class CloudTestingRemoteProxy extends DefaultRemoteProxy {
                 String fileNameWithFullPath = testInformation.getVideoFolderPath() + "/" + testInformation.getFileName();
                 commonProxyUtilities.downloadFile(testInformation.getVideoUrl(), fileNameWithFullPath,
                         getUserNameValue(), getAccessKeyValue(), useAuthenticationToDownloadFile());
-                if (convertVideoFileToMP4()) {
-                    commonProxyUtilities.convertFlvFileToMP4(testInformation);
-                }
                 for (String logUrl : testInformation.getLogUrls()) {
                     String fileName = logUrl.substring(logUrl.lastIndexOf('/') + 1);
                     fileNameWithFullPath = testInformation.getLogsFolderPath() + "/" + fileName;
