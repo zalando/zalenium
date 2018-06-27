@@ -109,6 +109,7 @@ public class TestingBotRemoteProxy extends CloudTestingRemoteProxy {
                     .withFileExtension(getVideoFileExtension())
                     .withVideoUrl(videoUrl)
                     .withLogUrls(logUrls)
+                    .withMetadata(getMetadata())
                     .build();
             // Sometimes the video URL is not ready right away, so we need to wait a bit and fetch again.
             if (videoUrl.startsWith("http")) {
