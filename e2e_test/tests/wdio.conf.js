@@ -10,11 +10,11 @@ exports.config = {
     // directory is where your package.json resides, so `wdio` will be called from there.
     //
     specs: [
-        './*-test.js'
+        "./*-test.js"
     ],
     // Patterns to exclude.
     exclude: [
-        // 'path/to/excluded/files'
+        // "path/to/excluded/files"
     ],
     //
     // ============
@@ -44,7 +44,7 @@ exports.config = {
         // 5 instances get started at a time.
         maxInstances: 5,
         //
-        browserName: 'firefox'
+        browserName: "firefox"
     }],
     //
     // ===================
@@ -58,7 +58,7 @@ exports.config = {
     sync: true,
     //
     // Level of logging verbosity: silent | verbose | command | data | result | error
-    logLevel: 'silent',
+    logLevel: "silent",
     //
     // Enables colors for log output.
     coloredLogs: true,
@@ -71,13 +71,13 @@ exports.config = {
     bail: 0,
     //
     // Saves a screenshot to a given path if a command fails.
-    screenshotPath: './errorShots/',
+    screenshotPath: "./errorShots/",
     //
     // Set a base URL in order to shorten url command calls. If your `url` parameter starts
     // with `/`, the base url gets prepended, not including the path portion of your baseUrl.
     // If your `url` parameter starts without a scheme or `/` (like `some/path`), the base url
     // gets prepended directly.
-    baseUrl: 'http://localhost:3000',
+    baseUrl: "http://localhost:3000",
     //
     // Default timeout for all waitFor* commands.
     waitforTimeout: 10000,
@@ -118,18 +118,18 @@ exports.config = {
     //
     // Make sure you have the wdio adapter package for the specific framework installed
     // before running any tests.
-    framework: 'mocha',
+    framework: "mocha",
     //
     // Test reporter for stdout.
     // The only one supported by default is 'dot'
     // see also: http://webdriver.io/guide/reporters/dot.html
-    reporters: ['dot'],
+    reporters: ["dot"],
 
     //
     // Options to be passed to Mocha.
     // See the full list at http://mochajs.org/
     mochaOpts: {
-        ui: 'bdd'
+        ui: "bdd"
     },
     //
     // =====
@@ -242,4 +242,4 @@ exports.config = {
      */
     // onComplete: function(exitCode, config, capabilities) {
     // }
-}
+};

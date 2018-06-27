@@ -1,4 +1,5 @@
-FROM node
+FROM node:latest
+MAINTAINER brian.maher@zalando.de
 
 WORKDIR /opt/app
 COPY package.json /opt/app/
