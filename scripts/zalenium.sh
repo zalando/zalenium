@@ -399,6 +399,7 @@ StartUp()
     fi
 
     echo "Copying files for Dashboard..."
+    sudo chown -R seluser.seluser  /home/seluser/videos
     cp /home/seluser/index.html /home/seluser/videos/index.html
     cp -r /home/seluser/css /home/seluser/videos
     cp -r /home/seluser/js /home/seluser/videos
