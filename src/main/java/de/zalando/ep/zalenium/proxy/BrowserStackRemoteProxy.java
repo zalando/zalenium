@@ -83,38 +83,52 @@ public class BrowserStackRemoteProxy extends CloudTestingRemoteProxy {
         // https://BS_USER:BS_KEY@www.browserstack.com/automate/sessions/SELENIUM_SESSION_ID.json
         String browserStackBaseTestUrl = "https://www.browserstack.com/automate/sessions/";
         String browserStackTestUrl = browserStackBaseTestUrl + String.format("%s.json", seleniumSessionId);
-        JsonObject testData = getCommonProxyUtilities().readJSONFromUrl(browserStackTestUrl, BROWSER_STACK_USER,
-                BROWSER_STACK_KEY).getAsJsonObject();
-        JsonObject automation_session = testData.getAsJsonObject("automation_session");
-        String testName = automation_session.get("name").isJsonNull() ? null : automation_session.get("name").getAsString();
-        String browser = "N/A";
-        if (automation_session.get("browser").isJsonNull()) {
-            if (!automation_session.get("device").isJsonNull()) {
-                browser = automation_session.get("device").getAsString();
+        for (int i = 0; i < 5; i++) {
+            try {
+                JsonObject testData = getCommonProxyUtilities().readJSONFromUrl(browserStackTestUrl, BROWSER_STACK_USER,
+                    BROWSER_STACK_KEY).getAsJsonObject();
+                JsonObject automation_session = testData.getAsJsonObject("automation_session");
+                String testName = automation_session.get("name").isJsonNull() ? null : automation_session.get("name").getAsString();
+                String browser = "N/A";
+                if (automation_session.get("browser").isJsonNull()) {
+                    if (!automation_session.get("device").isJsonNull()) {
+                        browser = automation_session.get("device").getAsString();
+                    }
+                } else {
+                    browser = automation_session.get("browser").getAsString();
+                }
+                String browserVersion = automation_session.get("browser_version").isJsonNull()
+                    ? "N/A" : automation_session.get("browser_version").getAsString();
+                String platform = automation_session.get("os").getAsString();
+                String platformVersion = automation_session.get("os_version").getAsString();
+                String videoUrl = automation_session.get("video_url").getAsString();
+                List<String> logUrls = new ArrayList<>();
+                if (videoUrl.startsWith("http")) {
+                    return new TestInformation.TestInformationBuilder()
+                        .withSeleniumSessionId(seleniumSessionId)
+                        .withTestName(testName)
+                        .withProxyName(getProxyName())
+                        .withBrowser(browser)
+                        .withBrowserVersion(browserVersion)
+                        .withPlatform(platform)
+                        .withTestStatus(TestInformation.TestStatus.COMPLETED)
+                        .withPlatformVersion(platformVersion)
+                        .withFileExtension(getVideoFileExtension())
+                        .withVideoUrl(videoUrl)
+                        .withLogUrls(logUrls)
+                        .withMetadata(getMetadata())
+                        .build();
+                }
+            } catch (Exception e) {
+                logger.debug(e.toString(), e);
+                try {
+                    Thread.sleep(1000 * 10);
+                } catch (InterruptedException ie) {
+                    logger.debug(ie.toString(), ie);
+                }
             }
-        } else {
-            browser = automation_session.get("browser").getAsString();
         }
-        String browserVersion = automation_session.get("browser_version").isJsonNull()
-                ? "N/A" : automation_session.get("browser_version").getAsString();
-        String platform = automation_session.get("os").getAsString();
-        String platformVersion = automation_session.get("os_version").getAsString();
-        String videoUrl = automation_session.get("video_url").getAsString();
-        List<String> logUrls = new ArrayList<>();
-        return new TestInformation.TestInformationBuilder()
-                .withSeleniumSessionId(seleniumSessionId)
-                .withTestName(testName)
-                .withProxyName(getProxyName())
-                .withBrowser(browser)
-                .withBrowserVersion(browserVersion)
-                .withPlatform(platform)
-                .withTestStatus(TestInformation.TestStatus.COMPLETED)
-                .withPlatformVersion(platformVersion)
-                .withFileExtension(getVideoFileExtension())
-                .withVideoUrl(videoUrl)
-                .withLogUrls(logUrls)
-                .withMetadata(getMetadata())
-                .build();
+        return null;
     }
 
     @Override
