@@ -197,7 +197,7 @@ objects:
     name: zalenium
   spec:
     ports:
-    - port: 443
+    - port: 4444
       protocol: TCP
       targetPort: 4444
     selector:
