@@ -2,12 +2,7 @@ package de.zalando.ep.zalenium.util;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
-import de.zalando.ep.zalenium.dashboard.TestInformation;
 import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.exec.CommandLine;
-import org.apache.commons.exec.DefaultExecutor;
-import org.apache.commons.exec.ExecuteWatchdog;
-import org.apache.commons.io.FileUtils;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
@@ -31,6 +26,7 @@ import org.slf4j.LoggerFactory;
 public class CommonProxyUtilities {
 
     private static final Logger LOG = LoggerFactory.getLogger(CommonProxyUtilities.class.getName());
+    public static final String metadataCookieName = "zaleniumMetadata";
 
     /*
         Reading a JSON with DockerSelenium capabilities from a given URL
@@ -141,35 +137,6 @@ public class CommonProxyUtilities {
                 LOG.error(e.toString(), e);
             }
         }
-    }
-
-    public void convertFlvFileToMP4(TestInformation testInformation) {
-        // Names of the old and the new file
-        String flvVideoFile = testInformation.getVideoFolderPath() + "/" + testInformation.getFileName();
-        testInformation.setFileExtension(".mp4");
-        testInformation.buildVideoFileName();
-        String mp4VideoFile = testInformation.getVideoFolderPath() + "/" + testInformation.getFileName();
-
-        // Command to convert the file to MP4
-        CommandLine commandLine = new CommandLine("ffmpeg");
-        commandLine.addArgument("-i");
-        commandLine.addArgument(flvVideoFile);
-        commandLine.addArgument(mp4VideoFile);
-        DefaultExecutor defaultExecutor = new DefaultExecutor();
-        ExecuteWatchdog executeWatchdog = new ExecuteWatchdog(10 * 1000);
-        defaultExecutor.setWatchdog(executeWatchdog);
-        try {
-            int exitValue = defaultExecutor.execute(commandLine);
-            if (exitValue != 0) {
-                LOG.warn("File " + flvVideoFile + " could not be converted to MP4. Exit value: " +
-                exitValue);
-            }
-        } catch (IOException e) {
-            LOG.error(e.toString(), e);
-        }
-
-        // Deleting the FLV file
-        FileUtils.deleteQuietly(new File(flvVideoFile));
     }
 
     @SuppressWarnings("WeakerAccess")

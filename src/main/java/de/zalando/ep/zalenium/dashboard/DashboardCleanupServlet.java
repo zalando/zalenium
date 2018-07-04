@@ -51,7 +51,7 @@ public class DashboardCleanupServlet extends RegistryBasedServlet {
         String resultMsg;
         int responseStatus;
         if (DO_CLEANUP_ALL.equals(action)) {
-            Dashboard.cleanupDashboard();
+            DashboardCollection.cleanupDashboard();
             resultMsg = "SUCCESS";
             responseStatus = 200;
         } else {

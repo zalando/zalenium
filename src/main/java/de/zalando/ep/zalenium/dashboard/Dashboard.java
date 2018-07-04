@@ -25,7 +25,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
  */
 
 @SuppressWarnings({"ResultOfMethodCallIgnored", "WeakerAccess"})
-public class Dashboard {
+public class Dashboard implements DashboardInterface {
 
     public static final String VIDEOS_FOLDER_NAME = "videos";
     public static final String LOGS_FOLDER_NAME = "logs";
@@ -75,7 +75,7 @@ public class Dashboard {
         Dashboard.executedTestsWithVideo = executedTestsWithVideo;
     }
 
-    public static synchronized void updateDashboard(TestInformation testInformation) {
+    public synchronized void updateDashboard(TestInformation testInformation) {
         File testCountFile = new File(getLocalVideosPath(), TEST_COUNT_FILE);
         try {
             synchronizeExecutedTestsValues(testCountFile);
@@ -140,13 +140,13 @@ public class Dashboard {
         }
     }
 
-    public static synchronized void cleanupDashboard() throws IOException {
+    public synchronized void cleanupDashboard() throws IOException {
         File testList = new File(getLocalVideosPath(), TEST_LIST_FILE);
         File testCountFile = new File(getLocalVideosPath(), TEST_COUNT_FILE);
         File dashboardHtml = new File(getLocalVideosPath(), DASHBOARD_FILE);
         File logsFolder = new File(getLocalVideosPath(), LOGS_FOLDER_NAME);
         File videosFolder = new File(getLocalVideosPath());
-        String[] extensions = new String[] { "mp4", "mkv", "flv" };
+        String[] extensions = new String[] { "mp4", "mkv" };
         for (File file : FileUtils.listFiles(videosFolder, extensions, true)) {
             deleteIfExists(file);
         }
@@ -159,7 +159,7 @@ public class Dashboard {
                 replace("{executedTests}", "0");
         FileUtils.writeStringToFile(dashboardHtml, dashboard, UTF_8);
     }
-    
+
     public static void deleteIfExists(File file) {
         if (file.exists()) {
             try {
