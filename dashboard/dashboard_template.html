@@ -160,8 +160,8 @@
                     Are you sure you wan't to cleanup all video's?
                   </div>
                   <div class="modal-footer">
-                    <button type="button" class="btn btn-danger" id="cleanupModalConfirm" data-dismiss="modal">No</button>
-                    <button type="button" class="btn btn-success">Yes</button>
+                    <button type="button" class="btn btn-danger" data-dismiss="modal">No</button>
+                    <button type="button" class="btn btn-success" id="cleanupModalConfirm">Yes</button>
                   </div>
                 </div>
               </div>
@@ -284,7 +284,7 @@
           $('#cleanupModal').modal('show');
         });
 
-        $(document).on('click', '#cleanUpModalConfirm', function () {
+        $("#cleanupModalConfirm").click(function () {
           var url = [location.protocol, '//', location.host, location.pathname].join('');
           $.post(url + 'cleanup?action=doCleanupAll', '');
           $('#tests').load(document.URL +  ' #tests');
