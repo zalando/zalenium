@@ -90,6 +90,8 @@ spec:
             - '{{ .Values.hub.browserStackEnabled }}'
             - '--testingBotEnabled'
             - '{{ .Values.hub.testingBotEnabled }}'
+            - '--videoRecordingEnabled'
+            - '{{ .Values.hub.videoRecordingEnabled }}'
             - '--screenWidth'
             - '{{ .Values.hub.screenWidth }}'
             - '--screenHeight'
@@ -98,6 +100,12 @@ spec:
             - '{{ .Values.hub.timeZone }}'
             - '--seleniumImageName'
             - '{{ .Values.hub.seleniumImageName }}'
+            - '--maxTestSessions'
+            - '{{ .Values.hub.maxTestSessions }}'
+            - '--debugEnabled'
+            - '{{ .Values.hub.debugEnabled }}'
+            - '--sendAnonymousUsageInfo'
+            - '{{ .Values.hub.sendAnonymousUsageInfo }}'
           resources:
 {{ toYaml .Values.hub.resources | indent 12 }}
           volumeMounts:
