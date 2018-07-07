@@ -70,7 +70,14 @@ public class DockeredSeleniumStarter {
     private static Dimension configuredScreenSize;
     private static String containerName;
     private static String dockerSeleniumImageName;
+    private static Map<String, String> zaleniumProxyVars = new HashMap<>();
 
+    private static final String[] HTTP_PROXY_ENV_VARS = {
+            "zalenium_http_proxy",
+            "zalenium_https_proxy",
+            "zalenium_no_proxy"
+    };
+    
     /*
      * Reading configuration values from the env variables, if a value was not provided it falls back to defaults.
      */
@@ -94,6 +101,18 @@ public class DockeredSeleniumStarter {
         setSeleniumNodeParameters(seleniumNodeParams);
 
         sendAnonymousUsageInfo = env.getBooleanEnvVariable("ZALENIUM_SEND_ANONYMOUS_USAGE_INFO", false);
+        
+        addProxyVars();
+    }
+    
+    private static void addProxyVars() {
+        Arrays.asList(HTTP_PROXY_ENV_VARS).forEach(httpEnvVar -> {
+            String proxyValue = env.getStringEnvVariable(httpEnvVar, null);
+            String httpEnvVarToAdd = httpEnvVar.replace("zalenium_", "");
+            if (proxyValue != null) {
+                zaleniumProxyVars.put(httpEnvVarToAdd, proxyValue);
+            }
+        });
     }
     
     static {
@@ -277,6 +296,9 @@ public class DockeredSeleniumStarter {
             envVars.put("CHROME", "false");
             envVars.put("FIREFOX", "false");
             envVars.put("SELENIUM_NODE_PARAMS", seleniumNodeParams);
+            
+            // Add the proxy vars
+            envVars.putAll(zaleniumProxyVars);
             return envVars;
     }
 

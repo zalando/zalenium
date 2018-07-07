@@ -60,11 +60,7 @@ public class DockerContainerClient implements ContainerClient {
             "/home/seluser/videos",
             "/dev/shm"
     };
-    private static final String[] HTTP_PROXY_ENV_VARS = {
-            "zalenium_http_proxy",
-            "zalenium_https_proxy",
-            "zalenium_no_proxy"
-    };
+
     private static final Environment defaultEnvironment = new Environment();
     private static Environment env = defaultEnvironment;
     /** Number of times to attempt to create a container when the generated name is not unique. */
@@ -441,15 +437,6 @@ public class DockerContainerClient implements ContainerClient {
                 if (containerMount.destination().startsWith(NODE_MOUNT_POINT)) {
                     this.mntFolders.add(containerMount);
                 }
-            }
-
-            for (String envVar : containerInfo.config().env()) {
-                Arrays.asList(HTTP_PROXY_ENV_VARS).forEach(httpEnvVar -> {
-                    String httpEnvVarToAdd = envVar.replace("zalenium_", "");
-                    if (envVar.contains(httpEnvVar) && !zaleniumHttpEnvVars.contains(httpEnvVarToAdd)) {
-                        zaleniumHttpEnvVars.add(httpEnvVarToAdd);
-                    }
-                });
             }
         }
     }
