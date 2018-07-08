@@ -55,11 +55,6 @@ hub:
   ## ref: https://kubernetes.io/docs/user-guide/services/
   serviceSessionAffinity: "None"
 
-  # Zalenium hub uses these values to schedule pods through the k8s apiserver.
-  cpuRequest: 500m
-  cpuLimit: 1000m
-  memRequest: 500Mi
-
   ## Start arguments for Zalenium hub itself
   ## https://github.com/zalando/zalenium/blob/master/docs/usage_examples.md
   desiredContainers: 2
