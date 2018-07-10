@@ -55,8 +55,8 @@
         <docker-client.version>8.11.7</docker-client.version>
         <kubernetes-client.version>4.0.0</kubernetes-client.version>
         <junit.version>4.12</junit.version>
-        <mockito.version>2.18.3</mockito.version>
-        <awaitility.version>3.1.0</awaitility.version>
+        <mockito.version>2.19.0</mockito.version>
+        <awaitility.version>3.1.1</awaitility.version>
         <testng.version>6.14.3</testng.version>
         <slf4j.version>1.7.25</slf4j.version>
         <logstash-logback-encoder.version>5.1</logstash-logback-encoder.version>
@@ -66,13 +66,13 @@
         <maven.compiler.plugin>3.7.0</maven.compiler.plugin>
         <maven-resources-plugin.version>3.0.2</maven-resources-plugin.version>
         <maven-shade-plugin.version>3.1.0</maven-shade-plugin.version>
-        <maven-surefire-plugin.version>2.21.0</maven-surefire-plugin.version>
-        <maven-failsafe-plugin.version>2.21.0</maven-failsafe-plugin.version>
+        <maven-surefire-plugin.version>2.22.0</maven-surefire-plugin.version>
+        <maven-failsafe-plugin.version>2.22.0</maven-failsafe-plugin.version>
         <versions-maven-plugin.version>2.5</versions-maven-plugin.version>
         <exec-maven-plugin.version>1.6.0</exec-maven-plugin.version>
         <jacoco-maven-plugin.version>0.7.9</jacoco-maven-plugin.version>
-        <prometheus.version>0.3.0</prometheus.version>
-        <aspectj.version>1.8.13</aspectj.version>
+        <prometheus.version>0.4.0</prometheus.version>
+        <aspectj.version>1.9.1</aspectj.version>
         <aspectj-maven-plugin.version>1.11</aspectj-maven-plugin.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
