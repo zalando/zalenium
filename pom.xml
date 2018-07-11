@@ -72,7 +72,7 @@
         <exec-maven-plugin.version>1.6.0</exec-maven-plugin.version>
         <jacoco-maven-plugin.version>0.7.9</jacoco-maven-plugin.version>
         <prometheus.version>0.4.0</prometheus.version>
-        <aspectj.version>1.9.1</aspectj.version>
+        <aspectj.version>1.8.13</aspectj.version>
         <aspectj-maven-plugin.version>1.11</aspectj-maven-plugin.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
