@@ -34,10 +34,6 @@ hub:
   ## ref: http://openjdk.java.net/groups/jmx/
   # jmxPort: 4000
 
-  ## Use persistent storage or local?
-  persistentVolumesEnabled: false
-  localVolumesRoot: '/tmp'
-
   ## Configure resource requests and limits
   ## ref: http://kubernetes.io/docs/user-guide/compute-resources/
   resources:
@@ -72,6 +68,7 @@ hub:
   seleniumImageName: "elgalu/selenium"
   maxTestSessions: 1
   debugEnabled: false
+  keepOnlyFailedTests: false
   sendAnonymousUsageInfo: true
 
   # Environment variables passed to Zalenium hub.
@@ -81,3 +78,58 @@ hub:
   browserStackKey: blank
   testingBotKey: blank
   testingBotSecret: blank
+
+serviceAccount:
+  create: false
+  ## Use the following Kubernetes Service Account name if not created
+  name: 
+
+## Enable persistence using Persistent Volume Claims
+## ref: http://kubernetes.io/docs/user-guide/persistent-volumes/
+##
+persistence:
+  enabled: false
+  data:
+    ## If true will use existing PVC instead of creating one
+    # useExisting: false
+    ## Name of existing PVC to be used in the zalenium deployment
+    # name:
+    ## If defined, storageClassName: <storageClass>
+    ## If set to "-", storageClassName: "", which disables dynamic provisioning
+    ## If undefined (the default) or set to null, no storageClassName spec is
+    ##   set, choosing the default provisioner.  (gp2 on AWS, standard on
+    ##   GKE, AWS & OpenStack)
+    ##
+    # storageClass: "-"
+    accessMode: ReadWriteMany
+    size: 80Gi
+  video:
+    ## If true will use existing PVC instead of creating one
+    # useExisting: false
+    ## Name of existing PVC to be used in the zalenium deployment
+    # name:
+    ## If defined, storageClassName: <storageClass>
+    ## If set to "-", storageClassName: "", which disables dynamic provisioning
+    ## If undefined (the default) or set to null, no storageClassName spec is
+    ##   set, choosing the default provisioner.  (gp2 on AWS, standard on
+    ##   GKE, AWS & OpenStack)
+    ##
+    # storageClass: "-"
+    accessMode: ReadWriteMany
+    size: 80Gi
+
+ingress:
+  enabled: false
+  tls: false
+  # secretName: my-tls-cert # only needed if tls above is true
+  hostname: zalenium.foobar.com
+  annotations:
+    # kubernetes.io/ingress.class: "nginx"
+    # kubernetes.io/tls-acme: "true"
+  ## For RBAC support:
+  
+rbac:
+  create: false
+  ## Run the zalenium hub container with the ability to deploy/manage containers of jobs
+  ## cluster-wide or only within namespace
+  clusterWideAccess: false
