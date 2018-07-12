@@ -44,17 +44,20 @@ See Zalenium's [usage examples](https://github.com/zalando/zalenium/blob/master/
 
 | Parameter | Description | Default |
 | --------- | ----------- | ------- |
+| `persistence` | Whether to use a persistent volume claim for storage. Set persistence.enabled to true | false |
+| `rbac` | If your cluster has RBAC enabled, you can choose to either have the chart create its own service account or provide one.To have the chart create the service account for you, set rbac.create to true | false |
+| `serviceAccount` | Set serviceAccount.create to true if you want to create an service account for zalenium | false |
+| `ingress` | Set ingress.enabled to true if you want to create an ingress entry for zalenium | false |
 | `hub.image` | The zalenium hub image | `dosel/zalenium` |
 | `hub.tag` | The zalenium hub image tag | `3` |
 | `hub.pullPolicy` | The pull policy for the hub image | `IfNotPresent` |
 | `hub.port` | The port the hub listens on | `4444` |
+| `hub.readinessTimeout` | Timeout for probe Hub readiness via HTTP request on Hub console | `1` |
 | `hub.javaOpts` | The java options for the selenium hub JVM, default sets the maximum heap size to 400 mb | `-Xmx400m -XX:+UseSerialGC` |
-| `hub.persistentVolumesEnabled` | Whether to use a persistent volume claim for storage.  This chart uses AWS Elastic File Service. | true |
 | `hub.localVolumesRoot` | The root directory to store HostPath volumes (e.g. if running in minikube) | `/tmp` |
 | `hub.resources` | The resources for the hub container, defaults to minimum half a cpu and maximum 512 mb RAM | `{"limits":{"cpu":".5", "memory":"512Mi"}}` |
-| `hub.serviceType` | The Service type | `ClusterIP` |
+| `hub.serviceType` | The Service type | `NodePort` |
 | `hub.serviceSessionAffinity` | The session affinity for the hub service| `None` |
-| `hub.timeZone` | The time zone for the container | `nil` |
 | `hub.desiredContainers` | How many pods to launch at start | 2 |
 | `hub.maxDockerSeleniumContainers` | Maximum number of Selenium containers to run simultaneously | 10 |
 | `hub.sauceLabsEnabled` | Enable SauceLabs | false |
@@ -69,6 +72,9 @@ See Zalenium's [usage examples](https://github.com/zalando/zalenium/blob/master/
 | `hub.timeZone` | Time zone | UTC |
 | `hub.seleniumImageName` | The Selenium grid image | `elgalu/selenium` |
 | `hub.maxTestSessions` | The number of tests to run on each grid container before killing it and starting a new one | 1 |
+| `hub.debugEnabled` | 	Enables LogLevel.FINE | false |
+| `hub.keepOnlyFailedTests` | Keeps only failed tests on the dashboard (you need to send a cookie with the test result) | false |
+| `hub.sendAnonymousUsageInfo` | Allows sending anonymous usage info | true |
 | `hub.sauceUserName` | Username to log into saucelabs | blank |
 | `hub.sauceAccessKey` | Access key to log into saucelabs | blank |
 | `hub.browserStackUser` | Credentials for browserstack | blank |
