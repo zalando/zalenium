@@ -48,7 +48,7 @@
     </developers>
 
     <properties>
-        <selenium-server.major-minor.version>3.12</selenium-server.major-minor.version>
+        <selenium-server.major-minor.version>3.13</selenium-server.major-minor.version>
         <selenium-server.patch-level.version>0</selenium-server.patch-level.version>
         <!-- This needs to match what is in the Selenium Server pom file -->
         <jetty.version>9.4.8.v20171121</jetty.version>
