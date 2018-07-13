@@ -45,6 +45,13 @@
             <organization>Zalando SE</organization>
             <organizationUrl>https://tech.zalando.com/</organizationUrl>
         </developer>
+        <developer>
+            <name>Joel Pearson</name>
+            <email>japearson@agiledigital.com.au</email>
+            <url>https://github.com/pearj</url>
+            <organization>Agile Digital</organization>
+            <organizationUrl>https://agiledigital.com.au/</organizationUrl>
+        </developer>
     </developers>
 
     <properties>
