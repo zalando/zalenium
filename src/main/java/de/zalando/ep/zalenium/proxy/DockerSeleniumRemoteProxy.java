@@ -645,13 +645,14 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                 outputStream.close();
             }
             LOGGER.info("{} Logs copied to: {}", new Object[]{getContainerId(), testInformation.getLogsFolderPath()});
-        } catch (IOException e) {
+        } catch (IOException | NullPointerException e) {
             // This error happens in k8s, but the file is ok, nevertheless the size is not accurate
-            boolean isPipeClosed = e.getMessage().toLowerCase().contains("pipe closed");
+            String exceptionMessage = Optional.ofNullable(e.getMessage()).orElse("");
+            boolean isPipeClosed = exceptionMessage.toLowerCase().contains("pipe closed");
             if (ContainerFactory.getIsKubernetes().get() && isPipeClosed) {
                 LOGGER.info("{} Logs copied to: {}", new Object[]{getContainerId(), testInformation.getLogsFolderPath()});
             } else {
-                LOGGER.warn(getContainerId() + " Error while copying the logs", e);
+                LOGGER.debug(getContainerId() + " Error while copying the logs", e);
             }
             ga.trackException(e);
         }
