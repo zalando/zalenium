@@ -10,13 +10,18 @@ public class ZaleniumConfiguration {
 
 
     @VisibleForTesting
-    public static final int DEFAULT_AMOUNT_DESIRED_CONTAINERS = 0;
+    public static final int DEFAULT_AMOUNT_DESIRED_CONTAINERS = 1;
     @VisibleForTesting
     public static final int DEFAULT_AMOUNT_DOCKER_SELENIUM_CONTAINERS_RUNNING = 10;
     @VisibleForTesting
     public static final String ZALENIUM_DESIRED_CONTAINERS = "ZALENIUM_DESIRED_CONTAINERS";
     @VisibleForTesting
     public static final String ZALENIUM_MAX_DOCKER_SELENIUM_CONTAINERS = "ZALENIUM_MAX_DOCKER_SELENIUM_CONTAINERS";
+
+    // Intended to start Zalenium locally for debugging or development. See ZaleniumRegistryTest#runLocally
+    @VisibleForTesting
+    public static final String ZALENIUM_RUNNING_LOCALLY_ENV_VAR = "runningLocally";
+    public static boolean ZALENIUM_RUNNING_LOCALLY = false;
 
     private static final Environment defaultEnvironment = new Environment();
 
@@ -37,6 +42,8 @@ public class ZaleniumConfiguration {
         int maxDSContainers = env.getIntEnvVariable(ZALENIUM_MAX_DOCKER_SELENIUM_CONTAINERS,
                 DEFAULT_AMOUNT_DOCKER_SELENIUM_CONTAINERS_RUNNING);
         setMaxDockerSeleniumContainers(maxDSContainers);
+
+        ZALENIUM_RUNNING_LOCALLY = Boolean.valueOf(System.getProperty(ZALENIUM_RUNNING_LOCALLY_ENV_VAR));
     }
 
     static {

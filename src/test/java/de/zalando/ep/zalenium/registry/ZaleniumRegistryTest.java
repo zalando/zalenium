@@ -89,4 +89,19 @@ public class ZaleniumRegistryTest {
             registry.stop();
         }
     }
+
+    /*
+        Uncomment the two bottom lines to run Zalenium in development mode.
+        Useful for implementing new features or debugging issues.
+     */
+    @Test
+    public void runLocally() {
+        System.setProperty("runningLocally", "true");
+        GridHubConfiguration gridHubConfiguration = new GridHubConfiguration();
+        gridHubConfiguration.registry = ZaleniumRegistry.class.getCanonicalName();
+        gridHubConfiguration.port = 4445;
+        Hub hub = new Hub(gridHubConfiguration);
+        // hub.start();
+        // Thread.sleep(1000 * 60 * 60);
+    }
 }
