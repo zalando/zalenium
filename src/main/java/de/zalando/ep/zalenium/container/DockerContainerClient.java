@@ -14,6 +14,7 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
+import com.spotify.docker.client.messages.PortBinding;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.slf4j.Logger;
@@ -42,6 +43,10 @@ import com.spotify.docker.client.messages.NetworkSettings;
 import de.zalando.ep.zalenium.proxy.DockeredSeleniumStarter;
 import de.zalando.ep.zalenium.util.Environment;
 import de.zalando.ep.zalenium.util.GoogleAnalyticsApi;
+
+import static com.spotify.docker.client.DockerClient.ListContainersParam.withStatusCreated;
+import static com.spotify.docker.client.DockerClient.ListContainersParam.withStatusRunning;
+import static de.zalando.ep.zalenium.util.ZaleniumConfiguration.ZALENIUM_RUNNING_LOCALLY;
 
 @SuppressWarnings("ConstantConditions")
 public class DockerContainerClient implements ContainerClient {
@@ -100,7 +105,7 @@ public class DockerContainerClient implements ContainerClient {
     private String getContainerId(URL remoteUrl) {
         List<Container> containerList = null;
         try {
-            containerList = dockerClient.listContainers(DockerClient.ListContainersParam.allContainers());
+            containerList = dockerClient.listContainers(withStatusRunning(), withStatusCreated());
         } catch (DockerException | InterruptedException e) {
             logger.debug(nodeId + " Error while getting containerId", e);
             ga.trackException(e);
@@ -109,11 +114,12 @@ public class DockerContainerClient implements ContainerClient {
         if (containerList != null) {
 	        return containerList.stream()
                     .filter(container -> {
+                        if (ZALENIUM_RUNNING_LOCALLY) {
+                            return container.ports().stream().anyMatch(port -> port.publicPort() == remoteUrl.getPort());
+                        }
                         NetworkSettings networkSettings = container.networkSettings();
                         return networkSettings.networks().values().stream()
-                                .filter(network ->  Objects.equals(network.ipAddress(), remoteUrl.getHost()))
-                                .findFirst()
-                                .isPresent();
+                                .anyMatch(network ->  Objects.equals(network.ipAddress(), remoteUrl.getHost()));
                     })
 	                .findFirst().map(Container::id).orElse(null);
         } else {
@@ -128,7 +134,7 @@ public class DockerContainerClient implements ContainerClient {
 
         List<Container> containerList = null;
         try {
-            containerList = dockerClient.listContainers(DockerClient.ListContainersParam.allContainers());
+            containerList = dockerClient.listContainers(withStatusRunning(), withStatusCreated());
         } catch (DockerException | InterruptedException e) {
             logger.debug(nodeId + " Error while getting containerId", e);
             ga.trackException(e);
@@ -184,7 +190,7 @@ public class DockerContainerClient implements ContainerClient {
                     ga.trackException(e);
                 }
             }
-        } catch (DockerException | InterruptedException e) {
+        } catch (DockerException | InterruptedException | NullPointerException e) {
             logger.debug(nodeId + " Error while executing the command", e);
             ga.trackException(e);
         }
@@ -214,7 +220,7 @@ public class DockerContainerClient implements ContainerClient {
 
     public int getRunningContainers(String image) {
         try {
-            List<Container> containerList = dockerClient.listContainers(DockerClient.ListContainersParam.allContainers());
+            List<Container> containerList = dockerClient.listContainers(withStatusRunning(), withStatusCreated());
             int numberOfDockerSeleniumContainers = 0;
             for (Container container : containerList) {
                 if (container.image().contains(image) && !"exited".equalsIgnoreCase(container.state())) {
@@ -272,14 +278,26 @@ public class DockerContainerClient implements ContainerClient {
         final List<String> hubExtraHosts = getContainerExtraHosts(zaleniumContainerName);
         extraHosts.addAll(hubExtraHosts);
 
-        HostConfig hostConfig = HostConfig.builder()
-                .appendBinds(binds)
-                .networkMode(networkMode)
-                .extraHosts(extraHosts)
-                .autoRemove(true)
-                .storageOpt(storageOpt)
-                .privileged(isZaleniumPrivileged)
-                .build();
+        HostConfig.Builder hostConfigBuilder = HostConfig.builder()
+            .appendBinds(binds)
+            .networkMode(networkMode)
+            .extraHosts(extraHosts)
+            .autoRemove(true)
+            .storageOpt(storageOpt)
+            .privileged(isZaleniumPrivileged);
+
+        if (ZALENIUM_RUNNING_LOCALLY) {
+            final Map<String, List<PortBinding>> portBindings = new HashMap<>();
+            List<PortBinding> hostPorts = new ArrayList<>();
+            hostPorts.add(PortBinding.of("", nodePort));
+            portBindings.put(nodePort, hostPorts);
+            hostPorts = new ArrayList<>();
+            hostPorts.add(PortBinding.of("", noVncPort));
+            portBindings.put(noVncPort, hostPorts);
+            hostConfigBuilder.portBindings(portBindings);
+        }
+
+        HostConfig hostConfig = hostConfigBuilder.build();
 
 
         List<String> flattenedEnvVars = envVars.entrySet().stream()
@@ -469,8 +487,8 @@ public class DockerContainerClient implements ContainerClient {
         try {
             containerInfo = dockerClient.inspectContainer(containerId);
             zaleniumExtraHosts = containerInfo.hostConfig().extraHosts();
-        } catch (DockerException | InterruptedException e) {
-            logger.warn(nodeId + " Error while getting Zalenium extra hosts.", e);
+        } catch (DockerException | InterruptedException | NullPointerException e) {
+            logger.debug(nodeId + " Error while getting Zalenium extra hosts.", e);
             ga.trackException(e);
         }
         return Optional.ofNullable(zaleniumExtraHosts).orElse(DEFAULT_DOCKER_EXTRA_HOSTS);
@@ -518,8 +536,8 @@ public class DockerContainerClient implements ContainerClient {
                     return zaleniumNetwork;
                 }
             }
-        } catch (DockerException | InterruptedException e) {
-            logger.debug(nodeId + " Error while getting Zalenium network.", e);
+        } catch (DockerException | InterruptedException | NullPointerException e) {
+            logger.debug(nodeId + " Error while getting Zalenium network. Falling back to default.", e);
             ga.trackException(e);
         }
         zaleniumNetwork = DEFAULT_DOCKER_NETWORK_MODE;
@@ -549,6 +567,9 @@ public class DockerContainerClient implements ContainerClient {
     @Override
     public boolean isReady(ContainerCreationStatus container) {
         String containerIp = this.getContainerIp(container.getContainerName());
+        if (ZALENIUM_RUNNING_LOCALLY) {
+            containerIp = "localhost";
+        }
         if (containerIp != null) {
 	        try {
 	            URL statusUrl = new URL(String.format("http://%s:%s/wd/hub/status", containerIp, container.getNodePort()));
@@ -576,10 +597,7 @@ public class DockerContainerClient implements ContainerClient {
         } catch (ContainerNotFoundException e) {
             logger.info("Container {} not found - it is terminated.", container);
             return true;
-        } catch (DockerException e) {
-            logger.warn("Failed to fetch container status [" + container + "].", e);
-            return false;
-        } catch (InterruptedException e) {
+        } catch (DockerException | InterruptedException e) {
             logger.warn("Failed to fetch container status [" + container + "].", e);
             return false;
         }

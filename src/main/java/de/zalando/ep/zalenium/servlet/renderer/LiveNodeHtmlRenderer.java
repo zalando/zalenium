@@ -12,6 +12,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
+import static de.zalando.ep.zalenium.util.ZaleniumConfiguration.ZALENIUM_RUNNING_LOCALLY;
+
 public class LiveNodeHtmlRenderer implements HtmlRenderer {
 
     private DockerSeleniumRemoteProxy proxy;
@@ -52,6 +54,11 @@ public class LiveNodeHtmlRenderer implements HtmlRenderer {
         String noVncViewBaseUrl = "/vnc/host/%s/port/%s/?nginx=%s:%s&view_only=%s";
         String noVncReadOnlyUrl = String.format(noVncViewBaseUrl, noVncIpAddress, noVncPort, noVncIpAddress, noVncPort, "true");
         String noVncInteractUrl = String.format(noVncViewBaseUrl, noVncIpAddress, noVncPort, noVncIpAddress, noVncPort, "false");
+
+        if (ZALENIUM_RUNNING_LOCALLY) {
+            noVncReadOnlyUrl = String.format("http://localhost:%s/?view_only=false", noVncPort);
+            noVncInteractUrl = String.format("http://localhost:%s/?view_only=true", noVncPort);
+        }
 
         Map<String, String> renderSummaryValues = new HashMap<>();
         renderSummaryValues.put("{{proxyName}}", proxy.getClass().getSimpleName());

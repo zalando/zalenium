@@ -30,6 +30,8 @@ import de.zalando.ep.zalenium.container.ContainerFactory;
 import de.zalando.ep.zalenium.matcher.ZaleniumCapabilityType;
 import de.zalando.ep.zalenium.util.Environment;
 
+import static de.zalando.ep.zalenium.util.ZaleniumConfiguration.ZALENIUM_RUNNING_LOCALLY;
+
 public class DockeredSeleniumStarter {
 
     public static final int NO_VNC_PORT_GAP = 10000;
@@ -268,38 +270,42 @@ public class DockeredSeleniumStarter {
     private Map<String, String> buildEnvVars(TimeZone timeZone, Dimension screenSize, String hostIpAddress,
             boolean sendAnonymousUsageInfo, String nodePolling, String nodeRegisterCycle,
             String seleniumNodeParams, int containerPort) {
-            final int noVncPort = containerPort + NO_VNC_PORT_GAP;
-            final int vncPort = containerPort + VNC_PORT_GAP;
-            Map<String, String> envVars = new HashMap<>();
-            envVars.put("ZALENIUM", "true");
-            envVars.put("SELENIUM_HUB_HOST", hostIpAddress);
-            envVars.put("SELENIUM_HUB_PORT", "4445");
-            envVars.put("SELENIUM_NODE_HOST", "{{CONTAINER_IP}}");
-            envVars.put("GRID", "false");
-            envVars.put("WAIT_TIMEOUT", "120s");
-            envVars.put("PICK_ALL_RANDOM_PORTS", "false");
-            envVars.put("VIDEO_STOP_SLEEP_SECS", "1");
-            envVars.put("WAIT_TIME_OUT_VIDEO_STOP", "20s");
-            envVars.put("SEND_ANONYMOUS_USAGE_INFO", String.valueOf(sendAnonymousUsageInfo));
-            envVars.put("BUILD_URL", env.getStringEnvVariable("BUILD_URL", ""));
-            envVars.put("NOVNC", "true");
-            envVars.put("NOVNC_PORT", String.valueOf(noVncPort));
-            envVars.put("VNC_PORT", String.valueOf(vncPort));
-            envVars.put("SCREEN_WIDTH", String.valueOf(screenSize.getWidth()));
-            envVars.put("SCREEN_HEIGHT", String.valueOf(screenSize.getHeight()));
-            envVars.put("TZ", timeZone.getID());
-            envVars.put("SELENIUM_NODE_REGISTER_CYCLE", nodeRegisterCycle);
-            envVars.put("SEL_NODEPOLLING_MS", nodePolling);
-            envVars.put("SELENIUM_NODE_PROXY_PARAMS", "de.zalando.ep.zalenium.proxy.DockerSeleniumRemoteProxy");
-            envVars.put("MULTINODE", "true");
-            envVars.put("SELENIUM_MULTINODE_PORT", String.valueOf(containerPort));
-            envVars.put("CHROME", "false");
-            envVars.put("FIREFOX", "false");
+        final int noVncPort = containerPort + NO_VNC_PORT_GAP;
+        final int vncPort = containerPort + VNC_PORT_GAP;
+        Map<String, String> envVars = new HashMap<>();
+        envVars.put("ZALENIUM", "true");
+        envVars.put("SELENIUM_HUB_HOST", hostIpAddress);
+        envVars.put("SELENIUM_HUB_PORT", "4445");
+        envVars.put("SELENIUM_NODE_HOST", "{{CONTAINER_IP}}");
+        envVars.put("GRID", "false");
+        envVars.put("WAIT_TIMEOUT", "120s");
+        envVars.put("PICK_ALL_RANDOM_PORTS", "false");
+        envVars.put("VIDEO_STOP_SLEEP_SECS", "1");
+        envVars.put("WAIT_TIME_OUT_VIDEO_STOP", "20s");
+        envVars.put("SEND_ANONYMOUS_USAGE_INFO", String.valueOf(sendAnonymousUsageInfo));
+        envVars.put("BUILD_URL", env.getStringEnvVariable("BUILD_URL", ""));
+        envVars.put("NOVNC", "true");
+        envVars.put("NOVNC_PORT", String.valueOf(noVncPort));
+        envVars.put("VNC_PORT", String.valueOf(vncPort));
+        envVars.put("SCREEN_WIDTH", String.valueOf(screenSize.getWidth()));
+        envVars.put("SCREEN_HEIGHT", String.valueOf(screenSize.getHeight()));
+        envVars.put("TZ", timeZone.getID());
+        envVars.put("SELENIUM_NODE_REGISTER_CYCLE", nodeRegisterCycle);
+        envVars.put("SEL_NODEPOLLING_MS", nodePolling);
+        envVars.put("SELENIUM_NODE_PROXY_PARAMS", "de.zalando.ep.zalenium.proxy.DockerSeleniumRemoteProxy");
+        envVars.put("MULTINODE", "true");
+        envVars.put("SELENIUM_MULTINODE_PORT", String.valueOf(containerPort));
+        envVars.put("CHROME", "false");
+        envVars.put("FIREFOX", "false");
+        if (ZALENIUM_RUNNING_LOCALLY) {
+            envVars.put("SELENIUM_NODE_PARAMS", String.format("-remoteHost http://%s:%s", hostIpAddress, containerPort));
+        } else {
             envVars.put("SELENIUM_NODE_PARAMS", seleniumNodeParams);
-            
-            // Add the proxy vars
-            envVars.putAll(zaleniumProxyVars);
-            return envVars;
+        }
+
+        // Add the proxy vars
+        envVars.putAll(zaleniumProxyVars);
+        return envVars;
     }
 
     public boolean containerHasStarted(ContainerCreationStatus creationStatus) {
