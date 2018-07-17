@@ -14,7 +14,6 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
-import com.spotify.docker.client.DockerClient.ListContainersParam;
 import com.spotify.docker.client.messages.PortBinding;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -135,7 +134,7 @@ public class DockerContainerClient implements ContainerClient {
 
         List<Container> containerList = null;
         try {
-            containerList = dockerClient.listContainers(ListContainersParam.allContainers());
+            containerList = dockerClient.listContainers(withStatusRunning(), withStatusCreated());
         } catch (DockerException | InterruptedException e) {
             logger.debug(nodeId + " Error while getting containerId", e);
             ga.trackException(e);
@@ -221,7 +220,7 @@ public class DockerContainerClient implements ContainerClient {
 
     public int getRunningContainers(String image) {
         try {
-            List<Container> containerList = dockerClient.listContainers(ListContainersParam.allContainers());
+            List<Container> containerList = dockerClient.listContainers(withStatusRunning(), withStatusCreated());
             int numberOfDockerSeleniumContainers = 0;
             for (Container container : containerList) {
                 if (container.image().contains(image) && !"exited".equalsIgnoreCase(container.state())) {
