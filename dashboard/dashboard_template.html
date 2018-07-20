@@ -185,12 +185,21 @@
         $(document).on('keyup', '#search', function () {
             var current_query = $('#search').val().toUpperCase();
             if (current_query !== "") {
+                var tokens_crt_query = current_query.split(" ");
                 $(".list-group li").each(function(){
                     var current_id = $(this).attr('id');
                     if (current_id !== "testsHeader") {
                         $(this).hide();
                         var current_keyword = $(this).text().toUpperCase();
-                        if (current_keyword.indexOf(current_query) >=0) {
+                        var all_tokens_found = true;
+                        for (var i = 0; i < tokens_crt_query.length; i++) {
+                            var crt_token = tokens_crt_query[i];
+                            if (current_keyword.indexOf(crt_token) <0) {
+                                all_tokens_found = false;
+                                break;
+                            }
+                        }
+                        if (all_tokens_found) {
                             $(this).show();
                         }
                     }
