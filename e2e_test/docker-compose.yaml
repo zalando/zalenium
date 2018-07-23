@@ -2,7 +2,7 @@ version: '3'
 
 services:
   zalenium:
-    image: "zalenium:${CDP_BUILD_VERSION}"
+    image: "registry.opensource.zalan.do/tip/zalenium:${CDP_BUILD_VERSION}"
     container_name: zalenium
     hostname: zalenium
     tty: true
