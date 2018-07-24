@@ -43,6 +43,7 @@ pipeline:
 
   - desc: Push Zalenium image
     cmd: |
+      IMAGE="registry.opensource.zalan.do/tip/zalenium:${CDP_BUILD_VERSION}"
       if [ -z "$CDP_PULL_REQUEST_NUMBER" ]; then
         docker push $IMAGE
       fi
