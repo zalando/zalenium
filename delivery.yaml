@@ -24,7 +24,7 @@ pipeline:
 
   - desc: Build Zalenium image
     cmd: |
-      IMAGE="registry.opensource.zalan.do/tip/zalenium:${CDP_BUILD_VERSION}"
+      IMAGE="registry-write.opensource.zalan.do/tip/zalenium:${CDP_BUILD_VERSION}"
       mvn clean package
       cd target
       docker build -t $IMAGE .
@@ -43,14 +43,14 @@ pipeline:
 
   - desc: Push Zalenium image
     cmd: |
-      IMAGE="registry.opensource.zalan.do/tip/zalenium:${CDP_BUILD_VERSION}"
+      IMAGE="registry-write.opensource.zalan.do/tip/zalenium:${CDP_BUILD_VERSION}"
       if [ -z "$CDP_PULL_REQUEST_NUMBER" ]; then
         docker push $IMAGE
       fi
 
   - desc: Push Docker-Selenium image
     cmd: |
-      IMAGE="registry.opensource.zalan.do/tip/docker-selenium:${CDP_BUILD_VERSION}"
+      IMAGE="registry-write.opensource.zalan.do/tip/docker-selenium:${CDP_BUILD_VERSION}"
       docker tag elgalu/selenium $IMAGE
       if [ -z "$CDP_PULL_REQUEST_NUMBER" ]; then
         docker push $IMAGE
