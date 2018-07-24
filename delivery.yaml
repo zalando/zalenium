@@ -47,3 +47,11 @@ pipeline:
       if [ -z "$CDP_PULL_REQUEST_NUMBER" ]; then
         docker push $IMAGE
       fi
+
+  - desc: Push Docker-Selenium image
+    cmd: |
+      IMAGE="registry.opensource.zalan.do/tip/docker-selenium:${CDP_BUILD_VERSION}"
+      docker tag elgalu/selenium $IMAGE
+      if [ -z "$CDP_PULL_REQUEST_NUMBER" ]; then
+        docker push $IMAGE
+      fi
