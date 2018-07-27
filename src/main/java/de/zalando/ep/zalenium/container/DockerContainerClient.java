@@ -51,14 +51,9 @@ import static de.zalando.ep.zalenium.util.ZaleniumConfiguration.ZALENIUM_RUNNING
 @SuppressWarnings("ConstantConditions")
 public class DockerContainerClient implements ContainerClient {
 
-    // Allows access from the docker-selenium containers to a Mac host. Fix until docker for mac supports it natively.
-    // See https://github.com/moby/moby/issues/22753
-    private static final String DOCKER_FOR_MAC_LOCALHOST_IP = "192.168.65.2";
-    private static final String DOCKER_FOR_MAC_LOCALHOST_NAME = "mac.host.local";
     private static final String DEFAULT_DOCKER_NETWORK_MODE = "default";
     private static final String DEFAULT_DOCKER_NETWORK_NAME = "bridge";
     private static final String DOCKER_NETWORK_HOST_MODE_NAME = "host";
-    private static final List<String> DEFAULT_DOCKER_EXTRA_HOSTS = new ArrayList<>();
     private static final String NODE_MOUNT_POINT = "/tmp/node";
     private static final String[] PROTECTED_NODE_MOUNT_POINTS = {
             "/var/run/docker.sock",
@@ -77,7 +72,6 @@ public class DockerContainerClient implements ContainerClient {
     private String zaleniumNetwork;
     private List<String> zaleniumExtraHosts;
     private List<ContainerMount> mntFolders = new ArrayList<>();
-    private List<String> zaleniumHttpEnvVars = new ArrayList<>();
     private Map<String, String> seleniumContainerLabels = new HashMap<>();
     private boolean pullSeleniumImage = false;
     private boolean isZaleniumPrivileged = true;
@@ -259,7 +253,6 @@ public class DockerContainerClient implements ContainerClient {
         String networkMode = getZaleniumNetwork(zaleniumContainerName);
 
         List<String> extraHosts = new ArrayList<>();
-        extraHosts.add(String.format("%s:%s", DOCKER_FOR_MAC_LOCALHOST_NAME, DOCKER_FOR_MAC_LOCALHOST_IP));
 
         // Allows "--net=host" work. Only supported for Linux.
         if (DOCKER_NETWORK_HOST_MODE_NAME.equalsIgnoreCase(networkMode)) {
@@ -303,8 +296,6 @@ public class DockerContainerClient implements ContainerClient {
         List<String> flattenedEnvVars = envVars.entrySet().stream()
                 .map(e -> e.getKey() + "=" + e.getValue())
                 .collect(Collectors.toList());
-        flattenedEnvVars.addAll(zaleniumHttpEnvVars);
-
 
         final String[] exposedPorts = {nodePort, noVncPort};
         ContainerConfig.Builder builder = ContainerConfig.builder()
@@ -491,7 +482,7 @@ public class DockerContainerClient implements ContainerClient {
             logger.debug(nodeId + " Error while getting Zalenium extra hosts.", e);
             ga.trackException(e);
         }
-        return Optional.ofNullable(zaleniumExtraHosts).orElse(DEFAULT_DOCKER_EXTRA_HOSTS);
+        return Optional.ofNullable(zaleniumExtraHosts).orElse(new ArrayList<>());
     }
 
     @Override
