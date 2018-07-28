@@ -11,9 +11,9 @@ metadata:
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: {{ if .Values.rbac.clusterWideAccess }}"ClusterRole"{{ else }}"Role"{{ end }}
-  name: {{ template "fullname" . }}
+  name: {{ template "name" . }}
 subjects:
 - kind: ServiceAccount
-  name: {{ template "fullname" . }}
+  name: {{ template "name" . }}
   namespace: "{{ .Release.Namespace }}"
 {{- end -}}
