@@ -1,9 +1,9 @@
 #== Ubuntu xenial is 16.04, i.e. FROM ubuntu:16.04
 # Find latest images at https://hub.docker.com/r/library/ubuntu/
 # Layer size: big: ~130 MB
-FROM ubuntu:xenial-20180525
+FROM ubuntu:xenial-20180726
 ENV UBUNTU_FLAVOR="xenial" \
-    UBUNTU_DATE="20180525"
+    UBUNTU_DATE="20180726"
 
 ARG UBUNTU_MIRROR=http://archive.ubuntu.com/ubuntu
 
