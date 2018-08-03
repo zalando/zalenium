@@ -229,12 +229,16 @@ public class DockerContainerClient implements ContainerClient {
         return 0;
     }
 
-    public ContainerCreationStatus createContainer(String zaleniumContainerName, String image, Map<String, String> envVars,
+    public ContainerCreationStatus createContainer(String zaleniumContainerName, String image,
+                                                   String cpuLimit, String memoryLimit,
+                                                   Map<String, String> envVars,
                                                    String nodePort) {
-        return createContainer(zaleniumContainerName, image, envVars, nodePort, NAME_COLLISION_RETRIES);
+        return createContainer(zaleniumContainerName, image, cpuLimit, memoryLimit, envVars, nodePort, NAME_COLLISION_RETRIES);
     }
 
-    public ContainerCreationStatus createContainer(String zaleniumContainerName, String image, Map<String, String> envVars,
+    public ContainerCreationStatus createContainer(String zaleniumContainerName, String image,
+                                                   String cpuLimit, String memoryLimit,
+                                                   Map<String, String> envVars,
                                                    String nodePort, int collisionAttempts) {
         String containerName = generateContainerName(zaleniumContainerName);
 
@@ -272,12 +276,14 @@ public class DockerContainerClient implements ContainerClient {
         extraHosts.addAll(hubExtraHosts);
 
         HostConfig.Builder hostConfigBuilder = HostConfig.builder()
-            .appendBinds(binds)
-            .networkMode(networkMode)
-            .extraHosts(extraHosts)
-            .autoRemove(true)
-            .storageOpt(storageOpt)
-            .privileged(isZaleniumPrivileged);
+                .appendBinds(binds)
+                .networkMode(networkMode)
+                .extraHosts(extraHosts)
+                .autoRemove(true)
+                .storageOpt(storageOpt)
+                .nanoCpus(Long.valueOf(cpuLimit))
+                .memory(Long.valueOf(memoryLimit))
+                .privileged(isZaleniumPrivileged);
 
         if (ZALENIUM_RUNNING_LOCALLY) {
             final Map<String, List<PortBinding>> portBindings = new HashMap<>();
@@ -331,7 +337,7 @@ public class DockerContainerClient implements ContainerClient {
         } catch (DockerRequestException e) {
             if (isNameCollision(e, containerName) && hasRemainingAttempts(collisionAttempts)) {
                 logger.debug("Name {} collided. Will generate a new name.", containerName);
-                return createContainer(zaleniumContainerName, image, envVars, nodePort, collisionAttempts - 1);
+                return createContainer(zaleniumContainerName, image, cpuLimit, memoryLimit, envVars, nodePort, collisionAttempts - 1);
             }
 
             logger.warn(nodeId + " Error while starting a new container", e);

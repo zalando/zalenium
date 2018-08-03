@@ -5,7 +5,7 @@ import java.net.URL;
 import java.util.Map;
 
 public interface ContainerClient {
-    
+
     void setNodeId(String nodeId);
 
     ContainerClientRegistration registerNode(String zaleniumContainerName, URL remoteHost);
@@ -20,13 +20,13 @@ public interface ContainerClient {
 
     int getRunningContainers(String image);
 
-    ContainerCreationStatus createContainer(String zaleniumContainerName, String image, Map<String, String> envVars, String nodePort);
+    ContainerCreationStatus createContainer(String zaleniumContainerName, String image, String cpuLimit, String memoryLimit, Map<String, String> envVars, String nodePort);
 
     void initialiseContainerEnvironment();
 
     String getContainerIp(String containerName);
-    
+
     boolean isReady(ContainerCreationStatus container);
-    
+
     boolean isTerminated(ContainerCreationStatus container);
 }
