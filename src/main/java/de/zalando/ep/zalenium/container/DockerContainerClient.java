@@ -1,25 +1,5 @@
 package de.zalando.ep.zalenium.container;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.stream.Collectors;
-
-import com.spotify.docker.client.messages.PortBinding;
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.RandomStringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 import com.spotify.docker.client.AnsiProgressHandler;
@@ -29,23 +9,27 @@ import com.spotify.docker.client.LogStream;
 import com.spotify.docker.client.exceptions.ContainerNotFoundException;
 import com.spotify.docker.client.exceptions.DockerException;
 import com.spotify.docker.client.exceptions.DockerRequestException;
-import com.spotify.docker.client.messages.AttachedNetwork;
-import com.spotify.docker.client.messages.Container;
-import com.spotify.docker.client.messages.ContainerConfig;
-import com.spotify.docker.client.messages.ContainerCreation;
-import com.spotify.docker.client.messages.ContainerInfo;
-import com.spotify.docker.client.messages.ContainerMount;
-import com.spotify.docker.client.messages.ExecCreation;
-import com.spotify.docker.client.messages.HostConfig;
-import com.spotify.docker.client.messages.Image;
-import com.spotify.docker.client.messages.NetworkSettings;
-
+import com.spotify.docker.client.messages.*;
 import de.zalando.ep.zalenium.proxy.DockeredSeleniumStarter;
 import de.zalando.ep.zalenium.util.Environment;
 import de.zalando.ep.zalenium.util.GoogleAnalyticsApi;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.RandomStringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
 import static com.spotify.docker.client.DockerClient.ListContainersParam.withStatusCreated;
 import static com.spotify.docker.client.DockerClient.ListContainersParam.withStatusRunning;
+import static de.zalando.ep.zalenium.proxy.DockeredSeleniumStarter.DEFAULT_SELENIUM_CONTAINER_CPU_LIMIT;
+import static de.zalando.ep.zalenium.proxy.DockeredSeleniumStarter.DEFAULT_SELENIUM_CONTAINER_MEMORY_LIMIT;
 import static de.zalando.ep.zalenium.util.ZaleniumConfiguration.ZALENIUM_RUNNING_LOCALLY;
 
 @SuppressWarnings("ConstantConditions")
@@ -227,6 +211,11 @@ public class DockerContainerClient implements ContainerClient {
             ga.trackException(e);
         }
         return 0;
+    }
+
+    @Override
+    public ContainerCreationStatus createContainer(String zaleniumContainerName, String image, Map<String, String> envVars, String nodePort) {
+        return createContainer(zaleniumContainerName, image, DEFAULT_SELENIUM_CONTAINER_CPU_LIMIT, DEFAULT_SELENIUM_CONTAINER_MEMORY_LIMIT, envVars, nodePort, NAME_COLLISION_RETRIES);
     }
 
     public ContainerCreationStatus createContainer(String zaleniumContainerName, String image,

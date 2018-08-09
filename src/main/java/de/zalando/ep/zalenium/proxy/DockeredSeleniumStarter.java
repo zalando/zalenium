@@ -47,10 +47,10 @@ public class DockeredSeleniumStarter {
     private static final Logger LOGGER = Logger.getLogger(DockeredSeleniumStarter.class.getName());
     private static final String DEFAULT_DOCKER_SELENIUM_IMAGE = "elgalu/selenium";
     private static final String ZALENIUM_SELENIUM_IMAGE_NAME = "ZALENIUM_SELENIUM_IMAGE_NAME";
-    private static final String DEFAULT_DOCKER_SELENIUM_CONTAINER_CPU_LIMIT = ".5";
-    private static final String DEFAULT_DOCKER_SELENIUM_CONTAINER_MEMORY_LIMIT = "1024m";
-    private static final String ZALENIUM_MAX_DOCKER_SELENIUM_CPU_LIMIT = "ZALENIUM_MAX_DOCKER_SELENIUM_CPU_LIMIT";
-    private static final String ZALENIUM_MAX_DOCKER_SELENIUM_MEMORY_LIMIT = "ZALENIUM_MAX_DOCKER_SELENIUM_MEMORY_LIMIT";
+    public static final String DEFAULT_SELENIUM_CONTAINER_CPU_LIMIT = "100000000";
+    public static final String DEFAULT_SELENIUM_CONTAINER_MEMORY_LIMIT = "1073741824";
+    public static final String ZALENIUM_SELENIUM_CONTAINER_CPU_LIMIT = "ZALENIUM_SELENIUM_CONTAINER_CPU_LIMIT";
+    public static final String ZALENIUM_SELENIUM_CONTAINER_MEMORY_LIMIT = "ZALENIUM_SELENIUM_CONTAINER_MEMORY_LIMIT";
     private static final int LOWER_PORT_BOUNDARY = 40000;
     private static final int UPPER_PORT_BOUNDARY = 49999;
     private static final ContainerClient defaultContainerClient = ContainerFactory.getContainerClient();
@@ -67,8 +67,8 @@ public class DockeredSeleniumStarter {
     private static Dimension configuredScreenSize;
     private static String containerName;
     private static String dockerSeleniumImageName;
-    private static String maxDockerSeleniumCpuLimit;
-    private static String maxDockerSeleniumMemoryLimit;
+    private static String seleniumContainerCpuLimit;
+    private static String seleniumContainerMemoryLimit;
     private static Map<String, String> zaleniumProxyVars = new HashMap<>();
 
     private static final String[] HTTP_PROXY_ENV_VARS = {
@@ -96,13 +96,13 @@ public class DockeredSeleniumStarter {
         String seleniumImageName = env.getStringEnvVariable(ZALENIUM_SELENIUM_IMAGE_NAME, DEFAULT_DOCKER_SELENIUM_IMAGE);
         setDockerSeleniumImageName(seleniumImageName);
 
-        String cpuLimit = env.getStringEnvVariable(ZALENIUM_MAX_DOCKER_SELENIUM_CPU_LIMIT,
-                DEFAULT_DOCKER_SELENIUM_CONTAINER_CPU_LIMIT);
-        setMaxDockerSeleniumCpuLimit(cpuLimit);
+        String cpuLimit = env.getStringEnvVariable(ZALENIUM_SELENIUM_CONTAINER_CPU_LIMIT,
+                DEFAULT_SELENIUM_CONTAINER_CPU_LIMIT);
+        setSeleniumContainerCpuLimit(cpuLimit);
 
-        String memoryLimit = env.getStringEnvVariable(ZALENIUM_MAX_DOCKER_SELENIUM_MEMORY_LIMIT,
-                DEFAULT_DOCKER_SELENIUM_CONTAINER_MEMORY_LIMIT);
-        setMaxDockerSeleniumMemoryLimit(memoryLimit);
+        String memoryLimit = env.getStringEnvVariable(ZALENIUM_SELENIUM_CONTAINER_MEMORY_LIMIT,
+                DEFAULT_SELENIUM_CONTAINER_MEMORY_LIMIT);
+        setSeleniumContainerMemoryLimit(memoryLimit);
 
         String seleniumNodeParams = env.getStringEnvVariable(SELENIUM_NODE_PARAMS, DEFAULT_SELENIUM_NODE_PARAMS);
         setSeleniumNodeParameters(seleniumNodeParams);
@@ -177,20 +177,20 @@ public class DockeredSeleniumStarter {
         DockeredSeleniumStarter.dockerSeleniumImageName = dockerSeleniumImageName;
     }
 
-    public static String getMaxDockerSeleniumCpuLimit() {
-        return Optional.ofNullable(maxDockerSeleniumCpuLimit).orElse(DEFAULT_DOCKER_SELENIUM_CONTAINER_CPU_LIMIT);
+    public static String getSeleniumContainerCpuLimit() {
+        return Optional.ofNullable(seleniumContainerCpuLimit).orElse(DEFAULT_SELENIUM_CONTAINER_CPU_LIMIT);
     }
 
-    public static void setMaxDockerSeleniumCpuLimit(String maxDockerSeleniumCpuLimit) {
-        DockeredSeleniumStarter.maxDockerSeleniumCpuLimit = maxDockerSeleniumCpuLimit;
+    public static void setSeleniumContainerCpuLimit(String seleniumContainerCpuLimit) {
+        DockeredSeleniumStarter.seleniumContainerCpuLimit = seleniumContainerCpuLimit;
     }
 
-    public static String getMaxDockerSeleniumMemoryLimit() {
-        return Optional.ofNullable(maxDockerSeleniumMemoryLimit).orElse(DEFAULT_DOCKER_SELENIUM_CONTAINER_MEMORY_LIMIT);
+    public static String getSeleniumContainerMemoryLimit() {
+        return Optional.ofNullable(seleniumContainerMemoryLimit).orElse(DEFAULT_SELENIUM_CONTAINER_MEMORY_LIMIT);
     }
 
-    public static void setMaxDockerSeleniumMemoryLimit(String maxDockerSeleniumMemoryLimit) {
-        DockeredSeleniumStarter.maxDockerSeleniumMemoryLimit = maxDockerSeleniumMemoryLimit;
+    public static void setSeleniumContainerMemoryLimit(String seleniumContainerMemoryLimit) {
+        DockeredSeleniumStarter.seleniumContainerMemoryLimit = seleniumContainerMemoryLimit;
     }
 
     public static String getSeleniumNodeParameters() {
@@ -276,8 +276,8 @@ public class DockeredSeleniumStarter {
         String nodeRegisterCycle = String.valueOf(RandomUtils.nextInt(15, 25) * 1000);
         String seleniumNodeParams = getSeleniumNodeParameters();
         String latestImage = getLatestDownloadedImage(getDockerSeleniumImageName());
-        String cpuLimit = getMaxDockerSeleniumCpuLimit();
-        String memoryLimit = getMaxDockerSeleniumMemoryLimit();
+        String cpuLimit = getSeleniumContainerCpuLimit();
+        String memoryLimit = getSeleniumContainerMemoryLimit();
 
         int containerPort = LOWER_PORT_BOUNDARY;
         if (containerClient instanceof DockerContainerClient) {

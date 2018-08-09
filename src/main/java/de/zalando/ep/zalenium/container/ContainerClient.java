@@ -20,6 +20,8 @@ public interface ContainerClient {
 
     int getRunningContainers(String image);
 
+    ContainerCreationStatus createContainer(String zaleniumContainerName, String image, Map<String, String> envVars, String nodePort);
+
     ContainerCreationStatus createContainer(String zaleniumContainerName, String image, String cpuLimit, String memoryLimit, Map<String, String> envVars, String nodePort);
 
     void initialiseContainerEnvironment();
