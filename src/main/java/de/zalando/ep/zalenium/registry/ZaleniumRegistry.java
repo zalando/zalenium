@@ -1,5 +1,6 @@
 package de.zalando.ep.zalenium.registry;
 
+import de.zalando.ep.zalenium.dashboard.Dashboard;
 import net.jcip.annotations.ThreadSafe;
 
 import org.openqa.grid.internal.ActiveTestSessions;
@@ -17,17 +18,24 @@ import org.openqa.grid.internal.listeners.SelfHealingProxy;
 import org.openqa.grid.web.Hub;
 import org.openqa.grid.web.servlet.handler.RequestHandler;
 import org.openqa.selenium.remote.DesiredCapabilities;
+import org.openqa.selenium.remote.http.HttpClient;
 import org.openqa.selenium.remote.server.log.LoggingManager;
 
 import de.zalando.ep.zalenium.proxy.AutoStartProxySet;
 import de.zalando.ep.zalenium.proxy.DockerSeleniumRemoteProxy;
 import de.zalando.ep.zalenium.proxy.DockeredSeleniumStarter;
+import de.zalando.ep.zalenium.util.Environment;
 import de.zalando.ep.zalenium.util.ZaleniumConfiguration;
+import io.prometheus.client.Collector;
+import io.prometheus.client.Gauge;
+import io.prometheus.client.Histogram;
 
+import java.net.URL;
 import java.time.Clock;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
@@ -54,6 +62,23 @@ public class ZaleniumRegistry extends BaseGridRegistry implements GridRegistry {
     private final Matcher matcherThread = new Matcher();
     private final List<RemoteProxy> registeringProxies = new CopyOnWriteArrayList<>();
     private volatile boolean stop = false;
+    
+    private static final Environment defaultEnvironment = new Environment();
+    
+    private static final double[] DEFAULT_TEST_SESSION_LATENCY_BUCKETS =
+            new double[] { 0.5,2.5,5,10,15,20,25,30,35,40,50,60 };
+
+    // Allows overriding of the test session latency buckets for prometheus
+    private static final String ZALENIUM_TEST_SESSION_LATENCY_BUCKETS = "ZALENIUM_TEST_SESSION_LATENCY_BUCKETS";
+    
+    static final Gauge seleniumTestSessionsWaiting = Gauge.build()
+            .name("selenium_test_sessions_waiting").help("The number of Selenium test sessions that are waiting for a container").register();
+    
+    static final Histogram seleniumTestSessionStartLatency = Histogram.build()
+            .name("selenium_test_session_start_latency_seconds")
+            .help("The Selenium test session start time latency in seconds.")
+            .buckets(defaultEnvironment.getDoubleArrayEnvVariable(ZALENIUM_TEST_SESSION_LATENCY_BUCKETS, DEFAULT_TEST_SESSION_LATENCY_BUCKETS))
+            .register();
 
     public ZaleniumRegistry() {
         this(null);
@@ -69,6 +94,8 @@ public class ZaleniumRegistry extends BaseGridRegistry implements GridRegistry {
         boolean waitForAvailableNodes = true;
 
         DockeredSeleniumStarter starter = new DockeredSeleniumStarter();
+        Dashboard.loadTestInformationFromFile();
+        Dashboard.setShutDownHook();
 
         proxies = new AutoStartProxySet(false, minContainers, maxContainers, timeToWaitToStart, waitForAvailableNodes, starter, Clock.systemDefaultZone());
         this.matcherThread.setUncaughtExceptionHandler(new UncaughtExceptionHandler());
@@ -79,7 +106,6 @@ public class ZaleniumRegistry extends BaseGridRegistry implements GridRegistry {
      *
      * @param hub the {@link Hub} to associate this registry with
      * @param proxySet the {@link ProxySet} to manage proxies with
-     * @return the registry
      */
     public ZaleniumRegistry(Hub hub, ProxySet proxySet) {
         super(hub);
@@ -225,6 +251,7 @@ public class ZaleniumRegistry extends BaseGridRegistry implements GridRegistry {
             requestedCapabilities.forEach((k, v) -> MDC.put(k,v.toString()));
             LOG.info("Adding sessionRequest for " + requestedCapabilities.toString());
             newSessionQueue.add(handler);
+            seleniumTestSessionsWaiting.inc();
             fireMatcherStateChanged();
         } finally {
             MDC.clear();
@@ -268,6 +295,8 @@ public class ZaleniumRegistry extends BaseGridRegistry implements GridRegistry {
                                   remoteName,
                                   timeToAssignProxy / 1000,
                                   timeToAssignProxy));
+            seleniumTestSessionStartLatency.observe(timeToAssignProxy / Collector.MILLISECONDS_PER_SECOND);
+            seleniumTestSessionsWaiting.dec();
             activeTestSessions.add(session);
             handler.bindSession(session);
         }
@@ -412,13 +441,18 @@ public class ZaleniumRegistry extends BaseGridRegistry implements GridRegistry {
      */
     public void clearNewSessionRequests() {
         newSessionQueue.clearNewSessionRequests();
+        seleniumTestSessionsWaiting.set(0);
     }
 
     /**
      * @see GridRegistry#removeNewSessionRequest(RequestHandler)
      */
     public boolean removeNewSessionRequest(RequestHandler request) {
-        return newSessionQueue.removeNewSessionRequest(request);
+        boolean wasRemoved = newSessionQueue.removeNewSessionRequest(request);
+        if (wasRemoved) {
+            seleniumTestSessionsWaiting.dec();
+        }
+        return wasRemoved;
     }
 
     /**
@@ -447,6 +481,34 @@ public class ZaleniumRegistry extends BaseGridRegistry implements GridRegistry {
         public void uncaughtException(Thread t, Throwable e) {
             LOG.debug("Matcher thread dying due to unhandled exception.", e);
         }
+    }
+
+    @Override
+    public HttpClient getHttpClient(URL url) {
+        // https://github.com/zalando/zalenium/issues/491
+        int maxTries = 3;
+        for (int i = 1; i <= maxTries; i++) {
+            try {
+                HttpClient client = httpClientFactory.createClient(url);
+                if (i > 1) {
+                    String message = String.format("Successfully created HttpClient for url %s, after attempt #%s", url, i);
+                    LOG.warn(message);
+                }
+                return client;
+            } catch (Exception | AssertionError e) {
+                String message = String.format("Error while getting the HttpClient for url %s, attempt #%s", url, i);
+                LOG.debug(message, e);
+                if (i == maxTries) {
+                    throw e;
+                }
+                try {
+                    Thread.sleep((new Random().nextInt(5) + 1) * 1000);
+                } catch (InterruptedException exception) {
+                    LOG.error("Something went wrong while delaying the HttpClient creation after a failed attempt", exception);
+                }
+            }
+        }
+        throw new IllegalStateException(String.format("Something went wrong while creating a HttpClient for url %s", url));
     }
 
     /**

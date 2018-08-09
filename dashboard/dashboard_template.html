@@ -29,8 +29,7 @@
             <ul class="navbar-nav mr-auto">
             </ul>
             <form class="form-inline mt-2 mt-md-0">
-                <button class="btn btn-danger my-2 my-sm-0" type="button" id="cleanupButton"
-                        title="Important: this will remove all video files and logs!">Cleanup</button>
+                <button class="btn btn-danger my-2 my-sm-0" type="button" id="cleanupButton">Cleanup</button>
             </form>
         </div>
     </nav>
@@ -148,6 +147,26 @@
                 </div>
             </main>
 
+            <div class="modal fade" id="cleanupModal" tabindex="-1" role="dialog">
+              <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title" id="cleanupModalLabel">Confirmation</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                      <span aria-hidden="true">&times;</span>
+                    </button>
+                  </div>
+                  <div class="modal-body">
+                    Are you sure you want to cleanup all videos?
+                  </div>
+                  <div class="modal-footer">
+                    <button type="button" class="btn btn-danger" data-dismiss="modal">No</button>
+                    <button type="button" class="btn btn-success" id="cleanupModalConfirm">Yes</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
         </div>
     </div>
 
@@ -166,12 +185,21 @@
         $(document).on('keyup', '#search', function () {
             var current_query = $('#search').val().toUpperCase();
             if (current_query !== "") {
+                var tokens_crt_query = current_query.split(" ");
                 $(".list-group li").each(function(){
                     var current_id = $(this).attr('id');
                     if (current_id !== "testsHeader") {
                         $(this).hide();
                         var current_keyword = $(this).text().toUpperCase();
-                        if (current_keyword.indexOf(current_query) >=0) {
+                        var all_tokens_found = true;
+                        for (var i = 0; i < tokens_crt_query.length; i++) {
+                            var crt_token = tokens_crt_query[i];
+                            if (current_keyword.indexOf(crt_token) <0) {
+                                all_tokens_found = false;
+                                break;
+                            }
+                        }
+                        if (all_tokens_found) {
                             $(this).show();
                         }
                     }
@@ -261,13 +289,18 @@
             }
         }, 5000);
 
-        $(document).on('click', '#cleanupButton', function () {
-            var url = [location.protocol, '//', location.host, location.pathname].join('');
-            $.post(url + 'cleanup?action=doCleanupAll', '');
-            $('#tests').load(document.URL +  ' #tests');
-            playVideo("");
-            loadLogs("", "");
-            setTestInformation("", "", "", "", "", "", "", "", "");
+        $("#cleanupButton").click(function () {
+          $('#cleanupModal').modal('show');
+        });
+
+        $("#cleanupModalConfirm").click(function () {
+          var url = [location.protocol, '//', location.host, location.pathname].join('');
+          $.post(url + 'cleanup?action=doCleanupAll', '');
+          $('#tests').load(document.URL +  ' #tests');
+          playVideo("");
+          loadLogs("", "");
+          setTestInformation("", "", "", "", "", "", "", "", "");
+          $('#cleanupModal').modal('hide');
         });
 
     </script>

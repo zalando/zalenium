@@ -33,7 +33,7 @@ public class Environment {
     }
 
     public String getStringEnvVariable(String envVariableName, String defaultValue) {
-        if (getEnvVariable(envVariableName) != null) {
+        if (getEnvVariable(envVariableName) != null && !getEnvVariable(envVariableName).isEmpty()) {
             try {
                 return String.valueOf(getEnvVariable(envVariableName));
             } catch (Exception e) {
@@ -62,4 +62,22 @@ public class Environment {
         }
     }
 
+    public double[] getDoubleArrayEnvVariable(String envVariableName, double... defaultValues) {
+        String envVariable = getEnvVariable(envVariableName);
+        double[] buckets;
+        if (envVariable != null) {
+            String[] bucketParams = envVariable.split(",");
+            buckets = new double[bucketParams.length];
+
+            for (int i = 0; i < bucketParams.length; i++) {
+                buckets[i] = Double.parseDouble(bucketParams[i]);
+            }
+
+        }
+        else {
+            buckets = defaultValues;
+        }
+
+        return buckets;
+    }
 }

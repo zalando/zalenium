@@ -1,0 +1,57 @@
+version: "2017-09-20"
+
+pipeline:
+- id: build
+  type: script
+  commands:
+  - desc: Install dependencies
+    cmd: |
+      # Install Docker
+      curl -fsSL https://delivery.cloud.zalando.com/utils/ensure-docker | sh
+      # Install docker-compose
+      curl -L https://github.com/docker/compose/releases/download/1.21.2/docker-compose-`uname -s`-`uname -m` > docker-compose
+      chmod +x docker-compose
+      sudo mv docker-compose /usr/local/bin
+      # Install Maven and JDK
+      apt-get update
+      apt-get install -y maven openjdk-8-jdk-headless
+      # Install docker-selenium
+      docker pull elgalu/selenium
+
+  - desc: Run unit tests
+    cmd: |
+      mvn clean test
+
+  - desc: Build Zalenium image
+    cmd: |
+      IMAGE="registry-write.opensource.zalan.do/tip/zalenium:${CDP_BUILD_VERSION}"
+      mvn clean package
+      cd target
+      docker build -t $IMAGE .
+
+  - desc: Build E2E test images
+    cmd: |
+      cd e2e_test
+      TEST_APP_IMAGE="test-app:${CDP_BUILD_VERSION}"
+      docker build -t $TEST_APP_IMAGE .
+      TEST_RUNNER_IMAGE="test-runner:${CDP_BUILD_VERSION}"
+      docker build -t $TEST_RUNNER_IMAGE -f tests/Dockerfile .
+
+  - desc: Run E2E test
+    cmd: |
+      docker-compose -f ./e2e_test/docker-compose.yaml up --abort-on-container-exit --timeout 30
+
+  - desc: Push Zalenium image
+    cmd: |
+      IMAGE="registry-write.opensource.zalan.do/tip/zalenium:${CDP_BUILD_VERSION}"
+      if [ -z "$CDP_PULL_REQUEST_NUMBER" ]; then
+        docker push $IMAGE
+      fi
+
+  - desc: Push Docker-Selenium image
+    cmd: |
+      IMAGE="registry-write.opensource.zalan.do/tip/docker-selenium:${CDP_BUILD_VERSION}"
+      docker tag elgalu/selenium $IMAGE
+      if [ -z "$CDP_PULL_REQUEST_NUMBER" ]; then
+        docker push $IMAGE
+      fi

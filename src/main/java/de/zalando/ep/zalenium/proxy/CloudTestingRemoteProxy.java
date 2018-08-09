@@ -6,9 +6,10 @@ package de.zalando.ep.zalenium.proxy;
  */
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import de.zalando.ep.zalenium.dashboard.Dashboard;
+import de.zalando.ep.zalenium.dashboard.DashboardCollection;
 import de.zalando.ep.zalenium.dashboard.TestInformation;
 import de.zalando.ep.zalenium.matcher.ZaleniumCapabilityMatcher;
 import de.zalando.ep.zalenium.servlet.renderer.CloudProxyHtmlRenderer;
@@ -43,6 +44,7 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
+import java.util.Optional;
 
 @SuppressWarnings("WeakerAccess")
 @ManagedService(description = "CloudTesting TestSlots")
@@ -63,6 +65,7 @@ public class CloudTestingRemoteProxy extends DefaultRemoteProxy {
     private CloudProxyNodePoller cloudProxyNodePoller = null;
     private CapabilityMatcher capabilityHelper;
     private long maxTestIdleTime = DEFAULT_MAX_TEST_IDLE_TIME_SECS;
+    private JsonObject metadata;
 
     @SuppressWarnings("WeakerAccess")
     public CloudTestingRemoteProxy(RegistrationRequest request, GridRegistry registry) {
@@ -140,6 +143,15 @@ public class CloudTestingRemoteProxy extends DefaultRemoteProxy {
         return super.getNewSession(requestedCapability);
     }
 
+
+    public JsonObject getMetadata() {
+        return metadata;
+    }
+
+    public void setMetadata(JsonObject metadata) {
+        this.metadata = metadata;
+    }
+
     @Override
     public void beforeCommand(TestSession session, HttpServletRequest request, HttpServletResponse response) {
         if (request instanceof WebDriverRequest && "POST".equalsIgnoreCase(request.getMethod())) {
@@ -163,6 +175,19 @@ public class CloudTestingRemoteProxy extends DefaultRemoteProxy {
                 } catch (UnsupportedEncodingException e) {
                     logger.error("Error while setting the body request in " + getProxyName()
                             + ", " + jsonObject.toString());
+                }
+            }
+
+            if (seleniumRequest.getPathInfo() != null && seleniumRequest.getPathInfo().endsWith("cookie")) {
+                logger.info(getId() + " Checking for cookies..." + seleniumRequest.getBody());
+                JsonElement bodyRequest = new JsonParser().parse(seleniumRequest.getBody());
+                JsonObject cookie = bodyRequest.getAsJsonObject().getAsJsonObject("cookie");
+                JsonObject emptyName = new JsonObject();
+                emptyName.addProperty("name", "");
+                String cookieName = Optional.ofNullable(cookie.get("name")).orElse(emptyName.get("name")).getAsString();
+                if(CommonProxyUtilities.metadataCookieName.equalsIgnoreCase(cookieName)) {
+                    JsonObject metadata = new JsonParser().parse(cookie.get("value").getAsString()).getAsJsonObject();
+                    this.setMetadata(metadata);
                 }
             }
         }
@@ -232,10 +257,6 @@ public class CloudTestingRemoteProxy extends DefaultRemoteProxy {
         return false;
     }
 
-    public boolean convertVideoFileToMP4() {
-        return false;
-    }
-
     public void addTestToDashboard(String seleniumSessionId, boolean testCompleted) {
         addToDashboardCalled = false;
         new Thread(() -> {
@@ -247,9 +268,6 @@ public class CloudTestingRemoteProxy extends DefaultRemoteProxy {
                 String fileNameWithFullPath = testInformation.getVideoFolderPath() + "/" + testInformation.getFileName();
                 commonProxyUtilities.downloadFile(testInformation.getVideoUrl(), fileNameWithFullPath,
                         getUserNameValue(), getAccessKeyValue(), useAuthenticationToDownloadFile());
-                if (convertVideoFileToMP4()) {
-                    commonProxyUtilities.convertFlvFileToMP4(testInformation);
-                }
                 for (String logUrl : testInformation.getLogUrls()) {
                     String fileName = logUrl.substring(logUrl.lastIndexOf('/') + 1);
                     fileNameWithFullPath = testInformation.getLogsFolderPath() + "/" + fileName;
@@ -257,7 +275,7 @@ public class CloudTestingRemoteProxy extends DefaultRemoteProxy {
                             getUserNameValue(), getAccessKeyValue(), useAuthenticationToDownloadFile());
                 }
                 createFeatureNotImplementedFile(testInformation.getLogsFolderPath());
-                Dashboard.updateDashboard(testInformation);
+                DashboardCollection.updateDashboard(testInformation);
                 addToDashboardCalled = true;
             } catch (Exception e) {
                 logger.error(e.toString(), e);

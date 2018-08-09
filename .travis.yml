@@ -48,7 +48,7 @@ jobs:
       - docker pull elgalu/selenium
       - travis_retry ./kubernetes/minikube-ci-initialize.sh
       - mvn clean package -Pbuild-docker-image -DskipTests=true
-      - cd target && docker build -t dosel/zalenium:minikube . && cd ..
+      - cd target && docker build -t dosel/zalenium:latest . && cd ..
       - ./kubernetes/start-zalenium-in-minikube.sh
       - ./run_integration_tests.sh minikube
 

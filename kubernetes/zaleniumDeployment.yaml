@@ -18,7 +18,7 @@ spec:
         - "bar.local"
       containers:
         - name: zalenium
-          image: dosel/zalenium:minikube
+          image: dosel/zalenium:latest
           args:
             - start
             - '--desiredContainers'

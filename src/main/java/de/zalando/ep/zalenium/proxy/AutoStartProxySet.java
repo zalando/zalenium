@@ -29,6 +29,7 @@ import de.vandermeer.asciitable.AsciiTable;
 import de.vandermeer.asciitable.CWC_LongestLine;
 import de.vandermeer.skb.interfaces.transformers.textformat.TextAlignment;
 import de.zalando.ep.zalenium.container.ContainerCreationStatus;
+import io.prometheus.client.Gauge;
 import net.jcip.annotations.ThreadSafe;
 
 /**
@@ -87,7 +88,13 @@ public class AutoStartProxySet extends ProxySet implements Iterable<RemoteProxy>
     private long timeOfLastReport = 0;
 
     private Clock clock;
-
+    
+    static final Gauge seleniumContainersStarting = Gauge.build()
+            .name("selenium_containers_starting").help("The number of Selenium Containers that are starting.").register();
+    
+    static final Gauge seleniumContainersRunning = Gauge.build()
+            .name("selenium_containers_running").help("The number of Selenium Containers that are running.").register();
+    
     public AutoStartProxySet(boolean throwOnCapabilityNotPresent, long minContainers, long maxContainers,
             long timeToWaitToStart, boolean waitForAvailableNodes, DockeredSeleniumStarter starter, Clock clock) {
         super(throwOnCapabilityNotPresent);
@@ -98,32 +105,29 @@ public class AutoStartProxySet extends ProxySet implements Iterable<RemoteProxy>
         this.starter = starter;
         this.clock = clock;
 
-        poller = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                LOGGER.info("Starting poller.");
-                while (true) {
+        poller = new Thread(() -> {
+            LOGGER.info("Starting poller.");
+            while (true) {
 
-                    long now = clock.millis();
-                    if (now - timeOfLastReport > 30000) {
-                        dumpStatus();
-                        timeOfLastReport = now;
-                    }
+                long now = clock.millis();
+                if (now - timeOfLastReport > 30000) {
+                    dumpStatus();
+                    timeOfLastReport = now;
+                }
 
-                    LOGGER.debug("Checking containers...");
-                    try {
-                        checkContainers();
-                    } catch (Exception e) {
-                        LOGGER.error("Failed checking containers.", e);
-                    }
-                    LOGGER.debug("Checked containers.");
+                LOGGER.debug("Checking containers...");
+                try {
+                    checkContainers();
+                } catch (Exception e) {
+                    LOGGER.error("Failed checking containers.", e);
+                }
+                LOGGER.debug("Checked containers.");
 
-                    try {
-                        Thread.sleep(1000);
-                    } catch (InterruptedException e) {
-                        LOGGER.info("Stopping polling thread.");
-                        LOGGER.debug("Stopping polling thread.", e);
-                    }
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    LOGGER.info("Stopping polling thread.");
+                    LOGGER.debug("Stopping polling thread.", e);
                 }
             }
         });
@@ -162,6 +166,9 @@ public class AutoStartProxySet extends ProxySet implements Iterable<RemoteProxy>
         if (newSession == null) {
             this.start(desiredCapabilities);
         }
+        else {
+            filter.testSessionHasStarted(desiredCapabilities);
+        }
         return newSession;
     }
 
@@ -190,6 +197,7 @@ public class AutoStartProxySet extends ProxySet implements Iterable<RemoteProxy>
             try {
                 LOGGER.info("Stopping removed container [" + containerId + "].");
                 starter.stopContainer(containerId);
+                seleniumContainersRunning.dec();
             } catch (Exception e) {
                 LOGGER.error("Failed to stop container [" + containerId + "].", e);
             }
@@ -268,6 +276,8 @@ public class AutoStartProxySet extends ProxySet implements Iterable<RemoteProxy>
             return false;
         } else {
             LOGGER.info("Registered a container {} {}.", containerId, proxy);
+            seleniumContainersStarting.dec();
+            seleniumContainersRunning.inc();
             return true;
         }
     }
@@ -375,6 +385,7 @@ public class AutoStartProxySet extends ProxySet implements Iterable<RemoteProxy>
             startedContainers.put(startedContainer,
                     new ContainerStatus(startedContainer.getContainerName(), clock.millis()));
             LOGGER.info("Created {}.", startedContainer);
+            seleniumContainersStarting.inc();
         }
     }
 

@@ -1,5 +1,8 @@
 package de.zalando.ep.zalenium.dashboard;
 
+
+import com.google.common.base.Strings;
+import com.google.gson.JsonObject;
 import de.zalando.ep.zalenium.util.CommonProxyUtilities;
 
 import java.util.List;
@@ -10,7 +13,7 @@ import java.util.Optional;
  */
 @SuppressWarnings("WeakerAccess")
 public class TestInformation {
-    private static final String TEST_FILE_NAME_TEMPLATE = "{buildName}{proxyName}_{testName}_{browser}_{platform}_{timestamp}";
+    private static final String TEST_FILE_NAME_TEMPLATE = "{proxyName}_{testName}_{browser}_{platform}_{timestamp}_{testStatus}";
     private static final String FILE_NAME_TEMPLATE = "{fileName}{fileExtension}";
     private static final String ZALENIUM_PROXY_NAME = "Zalenium";
     private static final String SAUCE_LABS_PROXY_NAME = "SauceLabs";
@@ -35,6 +38,7 @@ public class TestInformation {
     private String build;
     private TestStatus testStatus;
     private boolean videoRecorded;
+    private JsonObject metadata;
 
     public boolean isVideoRecorded() {
         return videoRecorded;
@@ -122,10 +126,10 @@ public class TestInformation {
 
     public void buildVideoFileName() {
         String buildName;
-        if ("N/A".equalsIgnoreCase(this.build) || this.build.trim().isEmpty()) {
+        if ("N/A".equalsIgnoreCase(this.build) || Strings.isNullOrEmpty(this.build)) {
             buildName = "";
         } else {
-            buildName = this.build.replace(" ", "_").replace("/", "_") + "/";
+            buildName = this.build.replaceAll("[^a-zA-Z0-9]", "_") + "/";
         }
 
         this.testNameNoExtension = TEST_FILE_NAME_TEMPLATE
@@ -134,9 +138,9 @@ public class TestInformation {
                 .replace("{browser}", this.browser)
                 .replace("{platform}", this.platform)
                 .replace("{timestamp}", commonProxyUtilities.getCurrentDateAndTimeFormatted())
-                .replace(" ", "_")
-                .replace("/", "_");
-        this.testNameNoExtension = this.testNameNoExtension.replace("{buildName}", buildName);
+                .replace("{testStatus}", getTestStatus().toString())
+                .replaceAll("[^a-zA-Z0-9]", "_");
+        this.testNameNoExtension = buildName.concat(this.testNameNoExtension);
 
         this.fileName = FILE_NAME_TEMPLATE.replace("{fileName}", testNameNoExtension)
                 .replace("{fileExtension}", fileExtension);
@@ -152,6 +156,9 @@ public class TestInformation {
         }
         return String.format("%s %s, %s", browser, browserVersion, platform);
     }
+
+    public JsonObject getMetadata() { return this.metadata;}
+    public void setMetadata(JsonObject metadata) { this.metadata = metadata;}
 
     public enum TestStatus {
         COMPLETED("Completed", "primary", " 'Zalenium', 'TEST COMPLETED', --icon=/home/seluser/images/completed.png"),
@@ -198,6 +205,7 @@ public class TestInformation {
         this.build = Optional.ofNullable(builder.build).orElse("");
         this.testStatus = builder.testStatus;
         this.videoRecorded = true;
+        this.metadata = builder.metadata;
         buildVideoFileName();
     }
 
@@ -216,6 +224,7 @@ public class TestInformation {
         private String timeZone;
         private String build;
         private TestStatus testStatus;
+        private JsonObject metadata;
 
         public TestInformationBuilder withSeleniumSessionId(String seleniumSessionId) {
             this.seleniumSessionId = seleniumSessionId;
@@ -284,6 +293,11 @@ public class TestInformation {
 
         public TestInformationBuilder withTestStatus(TestStatus testStatus) {
             this.testStatus = testStatus;
+            return this;
+        }
+
+        public TestInformationBuilder withMetadata(JsonObject metadata) {
+            this.metadata = metadata;
             return this;
         }
 

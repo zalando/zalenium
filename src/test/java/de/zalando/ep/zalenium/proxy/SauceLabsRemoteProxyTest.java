@@ -3,7 +3,6 @@ package de.zalando.ep.zalenium.proxy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.timeout;
@@ -176,7 +175,6 @@ public class SauceLabsRemoteProxyTest {
             JsonElement informationSample = TestUtils.getTestInformationSample("saucelabs_testinformation.json");
             CommonProxyUtilities commonProxyUtilities = mock(CommonProxyUtilities.class);
             when(commonProxyUtilities.readJSONFromUrl(anyString(), anyString(), anyString())).thenReturn(informationSample);
-            doCallRealMethod().when(commonProxyUtilities).convertFlvFileToMP4(any(TestInformation.class));
             SauceLabsRemoteProxy.setCommonProxyUtilities(commonProxyUtilities);
 
             TestSession testSession = sauceLabsSpyProxy.getNewSession(requestedCapability);
@@ -199,7 +197,7 @@ public class SauceLabsRemoteProxyTest {
                     CoreMatchers.containsString("saucelabs_72e4f8ecf04440fe965faf657864ed52_googlechrome_Windows_2008"));
             Assert.assertEquals("googlechrome 56, Windows 2008", testInformation.getBrowserAndPlatform());
             Assert.assertThat(testInformation.getVideoUrl(),
-                    CoreMatchers.containsString("jobs/72e4f8ecf04440fe965faf657864ed52/assets/video.flv"));
+                    CoreMatchers.containsString("jobs/72e4f8ecf04440fe965faf657864ed52/assets/video.mp4"));
         } finally {
             SauceLabsRemoteProxy.restoreCommonProxyUtilities();
         }

@@ -1,4 +1,3 @@
-{{- $serviceName := include "fullname" . -}}
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
@@ -20,20 +19,29 @@ spec:
       annotations:
     spec:
       volumes:
-        {{- if eq true .Values.hub.persistentVolumesEnabled }}
         - name: {{ template "hub.fullname" . }}-videos
+        {{- if .Values.persistence.enabled }}
+          {{- if not (empty .Values.persistence.video.name) }}
+          persistentVolumeClaim:
+            claimName: {{ .Values.persistence.video.name }}
+          {{- else }}
           persistentVolumeClaim:
             claimName: {{ template "hub.fullname" . }}-videos
-        - name: {{ template "hub.fullname" . }}-shared
-          persistentVolumeClaim:
-            claimName: {{ template "hub.fullname" . }}-shared
+          {{- end }}
         {{- else }}
-        - name: {{ template "hub.fullname" . }}-videos
-          hostPath:
-            path: {{ .Values.hub.localVolumesRoot }}/{{ .Chart.Name }}-videos
-        - name: {{ template "hub.fullname" . }}-shared
-          hostPath:
-            path: {{ .Values.hub.localVolumesRoot }}/{{ .Chart.Name }}-shared
+          emptyDir: {}
+        {{- end }}
+        - name: {{ template "hub.fullname" . }}-data
+        {{- if .Values.persistence.enabled }}
+          {{- if not (empty .Values.persistence.data.name) }}
+          persistentVolumeClaim:
+            claimName: {{ .Values.persistence.data.name }}
+          {{- else }}
+          persistentVolumeClaim:
+            claimName: {{ template "hub.fullname" . }}-data
+          {{- end }}
+        {{- else }}
+          emptyDir: {}
         {{- end }}
       containers:
         - name: {{ .Chart.Name }}
@@ -90,6 +98,8 @@ spec:
             - '{{ .Values.hub.browserStackEnabled }}'
             - '--testingBotEnabled'
             - '{{ .Values.hub.testingBotEnabled }}'
+            - '--videoRecordingEnabled'
+            - '{{ .Values.hub.videoRecordingEnabled }}'
             - '--screenWidth'
             - '{{ .Values.hub.screenWidth }}'
             - '--screenHeight'
@@ -98,12 +108,19 @@ spec:
             - '{{ .Values.hub.timeZone }}'
             - '--seleniumImageName'
             - '{{ .Values.hub.seleniumImageName }}'
+            - '--maxTestSessions'
+            - '{{ .Values.hub.maxTestSessions }}'
+            - '--debugEnabled'
+            - '{{ .Values.hub.debugEnabled }}'
+            - '--sendAnonymousUsageInfo'
+            - '{{ .Values.hub.sendAnonymousUsageInfo }}'
+            - '--keepOnlyFailedTests'
+            - '{{ .Values.hub.keepOnlyFailedTests }}'
           resources:
 {{ toYaml .Values.hub.resources | indent 12 }}
           volumeMounts:
             - name: {{ template "hub.fullname" . }}-videos
               mountPath: /home/seluser/videos
-            - name: {{ template "hub.fullname" . }}-shared
+            - name: {{ template "hub.fullname" . }}-data
               mountPath: /tmp/mounted
-      serviceAccountName: {{ $serviceName }}
-      serviceAccount: {{ $serviceName }}
+      serviceAccountName: {{ template "serviceAccountName" . }}

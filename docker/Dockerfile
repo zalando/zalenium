@@ -1,14 +1,16 @@
 #== Ubuntu xenial is 16.04, i.e. FROM ubuntu:16.04
 # Find latest images at https://hub.docker.com/r/library/ubuntu/
 # Layer size: big: ~130 MB
-FROM ubuntu:xenial-20180417
+FROM ubuntu:xenial-20180726
 ENV UBUNTU_FLAVOR="xenial" \
-    UBUNTU_DATE="20180417"
+    UBUNTU_DATE="20180726"
+
+ARG UBUNTU_MIRROR=http://archive.ubuntu.com/ubuntu
 
 #== Ubuntu flavors - common
-RUN  echo "deb http://archive.ubuntu.com/ubuntu ${UBUNTU_FLAVOR} main universe\n" > /etc/apt/sources.list \
-  && echo "deb http://archive.ubuntu.com/ubuntu ${UBUNTU_FLAVOR}-updates main universe\n" >> /etc/apt/sources.list \
-  && echo "deb http://archive.ubuntu.com/ubuntu ${UBUNTU_FLAVOR}-security main universe\n" >> /etc/apt/sources.list
+RUN  echo "deb ${UBUNTU_MIRROR} ${UBUNTU_FLAVOR} main universe\n" > /etc/apt/sources.list \
+  && echo "deb ${UBUNTU_MIRROR} ${UBUNTU_FLAVOR}-updates main universe\n" >> /etc/apt/sources.list \
+  && echo "deb ${UBUNTU_MIRROR} ${UBUNTU_FLAVOR}-security main universe\n" >> /etc/apt/sources.list
 
 MAINTAINER Team EP <diemol+team-ep@gmail.com>
 # https://github.com/docker/docker/pull/25466#discussion-diff-74622923R677
@@ -119,36 +121,6 @@ RUN apt-get -qqy update \
   && chmod -R 777 /usr/share/nginx/ \
   && chmod -R 777 /tmp
 
-#=================================================
-# ffmpeg/libav/avconv video codecs & dependencies
-#=================================================
-# MP4Box (gpac) to clean the video credits to @taskworld @dtinth
-# ponchio/untrunc dependencies to restore a damaged (truncated) video
-#   libavformat-dev libavcodec-dev libavutil-dev libqt4-dev make g++ libz-dev
-# Layer size: medium: 11.56 MB (with --no-install-recommends)
-# Layer size: medium: 20.76 MB
-RUN apt-get -qqy update \
-  && apt-get -qqy --no-install-recommends install \
-    libx264-dev \
-    libvorbis-dev \
-    libx11-dev \
-    gpac \
-  && rm -rf /var/lib/apt/lists/*
-
-#==============
-# libav/avconv
-#==============
-# Layer size: medium: 11.58 MB (with --no-install-recommends)
-# Layer size: medium: 16.75 MB
-# libav-tools (avconv): a fork of ffmpeg
-#   a better alternative to Pyvnc2swf
-#   (use in Ubuntu <= 14) packages: libav-tools libx264-142
-RUN apt-get -qqy update \
-  && apt-get -qqy --no-install-recommends install \
-    libav-tools \
-  && rm -rf /var/lib/apt/lists/*
-
-
 #==============================
 # Locale and encoding settings
 #==============================
@@ -237,14 +209,25 @@ RUN apt-get -qqy update \
   && rm -rf /var/lib/apt/lists/*
 
 #==============================================================
+# Kubernetes doesn't need gosu or docker
+# So if you set a build arg of kubernetesSlimVersion=true then
+# the unneeded layers will be excluded
+#==============================================================
+ARG kubernetesSlimVersion=false
+
+#==============================================================
 # Simple Go-based setuid+setgid+setgroups+exec
 # drop-in replacement to avoid using `su` as is buggy in docker
 #==============================================================
 # https://github.com/tianon/gosu
-RUN wget -nv -O /usr/bin/gosu \
-        "https://github.com/tianon/gosu/releases/download/1.10/gosu-amd64" \
-  && chmod +x /usr/bin/gosu \
-  && gosu root bash -c 'whoami' | grep root
+RUN if [ "${kubernetesSlimVersion}" = "false" ]; then \
+        wget -nv -O /usr/bin/gosu \
+            "https://github.com/tianon/gosu/releases/download/1.10/gosu-amd64" \
+        && chmod +x /usr/bin/gosu \
+        && gosu root bash -c 'whoami' | grep root; \
+    else \
+        echo "Skipping gosu because building in kubernetes slim mode"; \
+    fi
 
 #=====================
 # Get docker binaries
@@ -259,28 +242,36 @@ ENV DOCKER_HOST="unix:///var/run/docker.sock" \
 #----------------------------
 # https://github.com/docker-library/docker/blob/master/17.09/Dockerfile
 # Note: Starting with 1.13, newer CLIs can talk to older daemons
-RUN set -x \
-  && DOCKER_VERSION="17.09.1-ce" \
-  && curl -fSL "https://${DOCKER_BUCKET}/linux/static/stable/x86_64/docker-${DOCKER_VERSION}.tgz" \
-          -o docker.tgz \
-  && tar -xzvf docker.tgz \
-  && mv docker/docker /usr/bin/docker-${DOCKER_VERSION} \
-  && rm -rf docker/ && rm docker.tgz \
-  && docker-${DOCKER_VERSION} --version | grep "${DOCKER_VERSION}"
+RUN if [ "${kubernetesSlimVersion}" = "false" ]; then \
+        set -x \
+        && DOCKER_VERSION="17.09.1-ce" \
+        && curl -fSL "https://${DOCKER_BUCKET}/linux/static/stable/x86_64/docker-${DOCKER_VERSION}.tgz" \
+                -o docker.tgz \
+        && tar -xzvf docker.tgz \
+        && mv docker/docker /usr/bin/docker-${DOCKER_VERSION} \
+        && rm -rf docker/ && rm docker.tgz \
+        && docker-${DOCKER_VERSION} --version | grep "${DOCKER_VERSION}"; \
+    else \
+        echo "Skipping adding Docker because of kubernetes slim mode"; \
+    fi
 
 #----------------------------
 # Docker 17.12.0-ce -- 15 MB
 #----------------------------
 # https://github.com/docker-library/docker/blob/master/17.09/Dockerfile
 # Note: Starting with 1.13, newer CLIs can talk to older daemons
-RUN set -x \
-  && DOCKER_VERSION="17.12.0-ce" \
-  && curl -fSL "https://${DOCKER_BUCKET}/linux/static/stable/x86_64/docker-${DOCKER_VERSION}.tgz" \
-          -o docker.tgz \
-  && tar -xzvf docker.tgz \
-  && mv docker/docker /usr/bin/docker-${DOCKER_VERSION} \
-  && rm -rf docker/ && rm docker.tgz \
-  && docker-${DOCKER_VERSION} --version | grep "${DOCKER_VERSION}"
+RUN if [ "${kubernetesSlimVersion}" = "false" ]; then \
+        set -x \
+        && DOCKER_VERSION="17.12.0-ce" \
+        && curl -fSL "https://${DOCKER_BUCKET}/linux/static/stable/x86_64/docker-${DOCKER_VERSION}.tgz" \
+                -o docker.tgz \
+        && tar -xzvf docker.tgz \
+        && mv docker/docker /usr/bin/docker-${DOCKER_VERSION} \
+        && rm -rf docker/ && rm docker.tgz \
+        && docker-${DOCKER_VERSION} --version | grep "${DOCKER_VERSION}"; \
+    else \
+        echo "Skipping adding Docker because of kubernetes slim mode"; \
+    fi
 
 
 # ------------------------#
@@ -288,7 +279,7 @@ RUN set -x \
 # ------------------------#
 # https://docs.saucelabs.com/reference/sauce-connect/
 # Layer size: medium: ~13 MB
-ENV SAUCE_CONN_VER="sc-4.4.12-linux" \
+ENV SAUCE_CONN_VER="sc-4.5.0-linux" \
     SAUCE_CONN_DOWN_URL="https://saucelabs.com/downloads"
 RUN cd /tmp \
   && wget -nv "${SAUCE_CONN_DOWN_URL}/${SAUCE_CONN_VER}.tar.gz" \

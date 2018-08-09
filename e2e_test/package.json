@@ -1,0 +1,21 @@
+{
+  "name": "e2e_test",
+  "version": "1.0.0",
+  "description": "A simple express application for testing with Zalenium.",
+  "main": "app.js",
+  "dependencies": {
+    "express": "^4.16.3",
+    "npm": "^6.1.0",
+    "webdriverio": "^4.13.1"
+  },
+  "devDependencies": {
+    "wdio-dot-reporter": "0.0.9",
+    "wdio-mocha-framework": "^0.5.13"
+  },
+  "scripts": {
+    "start": "node app.js",
+    "test": "wdio tests/wdio.conf.js"
+  },
+  "author": "Brian Maher <brian.maher@zalando.de>",
+  "license": "Apache 2.0"
+}

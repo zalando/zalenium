@@ -7,12 +7,15 @@ import com.google.gson.JsonParser;
 import de.zalando.ep.zalenium.container.ContainerClient;
 import de.zalando.ep.zalenium.container.ContainerClientRegistration;
 import de.zalando.ep.zalenium.container.ContainerFactory;
-import de.zalando.ep.zalenium.dashboard.Dashboard;
+import de.zalando.ep.zalenium.dashboard.DashboardCollection;
 import de.zalando.ep.zalenium.dashboard.TestInformation;
 import de.zalando.ep.zalenium.matcher.DockerSeleniumCapabilityMatcher;
 import de.zalando.ep.zalenium.matcher.ZaleniumCapabilityType;
+import de.zalando.ep.zalenium.util.CommonProxyUtilities;
 import de.zalando.ep.zalenium.util.Environment;
 import de.zalando.ep.zalenium.util.GoogleAnalyticsApi;
+import io.prometheus.client.Gauge;
+
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.compress.utils.IOUtils;
@@ -91,6 +94,9 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     private long timeRegistered = System.currentTimeMillis();
 
     private static final ExecutorService EXECUTOR_SERVICE = Executors.newFixedThreadPool(5);
+
+    static final Gauge seleniumTestSessionsRunning = Gauge.build()
+            .name("selenium_test_sessions_running").help("The number of Selenium test sessions that are running in a container").register();
 
     public DockerSeleniumRemoteProxy(RegistrationRequest request, GridRegistry registry) {
         super(request, registry);
@@ -196,7 +202,11 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         }
 
         if (!this.isBusy() && increaseCounter()) {
-            return createNewSession(requestedCapability);
+            TestSession testSession = createNewSession(requestedCapability);
+            if (testSession != null) {
+                seleniumTestSessionsRunning.inc();
+            }
+            return testSession;
         }
         LOGGER.debug("{} No more sessions allowed", getContainerId());
         return null;
@@ -300,6 +310,11 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                     processContainerAction(DockerSeleniumContainerAction.SEND_NOTIFICATION, messageCommand,
                             getContainerId());
                 }
+                else if(CommonProxyUtilities.metadataCookieName.equalsIgnoreCase(cookieName)) {
+                    JsonParser jsonParser = new JsonParser();
+                    JsonObject metadata = jsonParser.parse(cookie.get("value").getAsString()).getAsJsonObject();
+                    testInformation.setMetadata(metadata);
+                }
             }
         }
     }
@@ -356,6 +371,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         } catch (Exception e) {
             LOGGER.warn(getContainerId() + " " + e.toString(), e);
         } finally {
+            seleniumTestSessionsRunning.dec();
             super.afterSession(session);
         }
     }
@@ -629,13 +645,14 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                 outputStream.close();
             }
             LOGGER.info("{} Logs copied to: {}", new Object[]{getContainerId(), testInformation.getLogsFolderPath()});
-        } catch (IOException e) {
+        } catch (IOException | NullPointerException e) {
             // This error happens in k8s, but the file is ok, nevertheless the size is not accurate
-            boolean isPipeClosed = e.getMessage().toLowerCase().contains("pipe closed");
+            String exceptionMessage = Optional.ofNullable(e.getMessage()).orElse("");
+            boolean isPipeClosed = exceptionMessage.toLowerCase().contains("pipe closed");
             if (ContainerFactory.getIsKubernetes().get() && isPipeClosed) {
                 LOGGER.info("{} Logs copied to: {}", new Object[]{getContainerId(), testInformation.getLogsFolderPath()});
             } else {
-                LOGGER.warn(getContainerId() + " Error while copying the logs", e);
+                LOGGER.debug(getContainerId() + " Error while copying the logs", e);
             }
             ga.trackException(e);
         }
@@ -661,8 +678,9 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
             videoRecording(DockerSeleniumContainerAction.STOP_RECORDING);
             processContainerAction(DockerSeleniumContainerAction.TRANSFER_LOGS, getContainerId());
             processContainerAction(DockerSeleniumContainerAction.CLEANUP_CONTAINER, getContainerId());
+
             if (testInformation != null && keepVideoAndLogs()) {
-                Dashboard.updateDashboard(testInformation);
+                DashboardCollection.updateDashboard(testInformation);
             }
         } finally {
             this.setCleaningUpBeforeNextSession(false);

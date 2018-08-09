@@ -1,0 +1,40 @@
+version: '3'
+
+services:
+  zalenium:
+    image: "registry-write.opensource.zalan.do/tip/zalenium:${CDP_BUILD_VERSION}"
+    container_name: zalenium
+    hostname: zalenium
+    tty: true
+    volumes:
+      - /tmp/videos:/home/seluser/videos
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /usr/bin/docker:/usr/bin/docker
+    ports:
+      - 4444:4444
+    command: >
+      start --desiredContainers 2
+            --maxDockerSeleniumContainers 8
+            --screenWidth 800 --screenHeight 600
+            --timeZone "Europe/Berlin"
+            --videoRecordingEnabled true
+    environment:
+      - HOST_UID
+      - HOST_GID
+
+  test-app:
+    image: "test-app:${CDP_BUILD_VERSION}"
+    container_name: test-app
+    depends_on:
+      - zalenium
+    ports:
+      - 3000:3000
+
+  test-runner:
+    image: "test-runner:${CDP_BUILD_VERSION}"
+    container_name: test-runner
+    depends_on:
+      - zalenium
+      - test-app
+    command: >
+      ./wait-for-grid.sh -- /opt/app/node_modules/.bin/wdio wdio.conf.js --host zalenium --baseUrl http://test-app:3000
