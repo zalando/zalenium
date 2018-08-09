@@ -77,6 +77,7 @@ public class DockeredSeleniumStarter {
             "zalenium_no_proxy"
     };
 
+    
     /*
      * Reading configuration values from the env variables, if a value was not provided it falls back to defaults.
      */
@@ -108,10 +109,10 @@ public class DockeredSeleniumStarter {
         setSeleniumNodeParameters(seleniumNodeParams);
 
         sendAnonymousUsageInfo = env.getBooleanEnvVariable("ZALENIUM_SEND_ANONYMOUS_USAGE_INFO", false);
-
+      
         addProxyVars();
     }
-
+    
     private static void addProxyVars() {
         Arrays.asList(HTTP_PROXY_ENV_VARS).forEach(httpEnvVar -> {
             String proxyValue = env.getStringEnvVariable(httpEnvVar, null);
@@ -125,7 +126,6 @@ public class DockeredSeleniumStarter {
     static {
         readConfigurationFromEnvVariables();
     }
-
     @SuppressWarnings("ConstantConditions")
     @VisibleForTesting
     public static List<MutableCapabilities> getCapabilities() {
