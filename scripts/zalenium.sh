@@ -7,6 +7,8 @@ CHROME_CONTAINERS=1
 FIREFOX_CONTAINERS=1
 DESIRED_CONTAINERS=${DESIRED_CONTAINERS:-2}
 MAX_DOCKER_SELENIUM_CONTAINERS=${MAX_DOCKER_SELENIUM_CONTAINERS:-10}
+SELENIUM_CONTAINER_CPU_LIMIT=${SELENIUM_CONTAINER_CPU_LIMIT:100000000}
+SELENIUM_CONTAINER_MEMORY_LIMIT=${SELENIUM_CONTAINER_MEMORY_LIMIT:1073741824}
 ZALENIUM_ARTIFACT="$(pwd)/${project.build.finalName}.jar"
 DEPRECATED_PARAMETERS=false
 SAUCE_LABS_ENABLED=${SAUCE_LABS_ENABLED:-false}
@@ -354,6 +356,8 @@ StartUp()
     fi
     export ZALENIUM_DESIRED_CONTAINERS=${DESIRED_CONTAINERS}
     export ZALENIUM_MAX_DOCKER_SELENIUM_CONTAINERS=${MAX_DOCKER_SELENIUM_CONTAINERS}
+    export ZALENIUM_SELENIUM_CONTAINER_CPU_LIMIT=${SELENIUM_CONTAINER_CPU_LIMIT}
+    export ZALENIUM_SELENIUM_CONTAINER_MEMORY_LIMIT=${SELENIUM_CONTAINER_MEMORY_LIMIT}
     export ZALENIUM_VIDEO_RECORDING_ENABLED=${VIDEO_RECORDING_ENABLED}
     export ZALENIUM_TZ=${TZ}
     export ZALENIUM_SCREEN_WIDTH=${SCREEN_WIDTH}
@@ -571,7 +575,7 @@ StartUp()
             --maxTestSessions $MAX_TEST_SESSIONS --sauceLabsEnabled $SAUCE_LABS_ENABLED
             --browserStackEnabled $BROWSER_STACK_ENABLED --testingBotEnabled $TESTINGBOT_ENABLED
             --videoRecordingEnabled $VIDEO_RECORDING_ENABLED --screenWidth $SCREEN_WIDTH --screenHeight $SCREEN_HEIGHT
-            --timeZone $TZ"
+            --timeZone $TZ --cpuLimit $SELENIUM_CONTAINER_CPU_LIMIT --memoryLimit $SELENIUM_CONTAINER_MEMORY_LIMIT"
 
         local args=(
             --max-time 10
@@ -758,6 +762,8 @@ function usage()
     echo -e "\t --gridPassword -> allows you to specify a password to enable basic auth protection, --gridUser must be provided also."
     echo -e "\t --maxTestSessions -> max amount of tests executed per container, defaults to '1'."
     echo -e "\t --keepOnlyFailedTests -> Keeps only videos of failed tests (you need to send a cookie). Defaults to 'false'"
+    echo -e "\t --cpuLimit -> Selenium Container Cpu Limit (you need to send a cookie). Defaults to '100000000' 1 CPU"
+    echo -e "\t --memoryLimit -> Selenium Container Memory Limit (you need to send a cookie). Defaults to '1073741824' is 1GB"
     echo ""
     echo -e "\t stop"
     echo ""
@@ -801,6 +807,12 @@ case ${SCRIPT_ACTION} in
                     ;;
                 --maxDockerSeleniumContainers)
                     MAX_DOCKER_SELENIUM_CONTAINERS=${VALUE}
+                    ;;
+                --cpuLimit)
+                    SELENIUM_CONTAINER_CPU_LIMIT=${VALUE}
+                    ;;
+                --memoryLimit)
+                    SELENIUM_CONTAINER_MEMORY_LIMIT=${VALUE}
                     ;;
                 --sauceLabsEnabled)
                     SAUCE_LABS_ENABLED=${VALUE}

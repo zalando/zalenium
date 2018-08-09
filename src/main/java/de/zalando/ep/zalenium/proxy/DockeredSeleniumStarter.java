@@ -1,17 +1,12 @@
 package de.zalando.ep.zalenium.proxy;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.TimeZone;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
+import com.google.common.annotations.VisibleForTesting;
+import de.zalando.ep.zalenium.container.ContainerClient;
+import de.zalando.ep.zalenium.container.ContainerCreationStatus;
+import de.zalando.ep.zalenium.container.ContainerFactory;
 import de.zalando.ep.zalenium.container.DockerContainerClient;
+import de.zalando.ep.zalenium.matcher.ZaleniumCapabilityType;
+import de.zalando.ep.zalenium.util.Environment;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.RandomUtils;
 import org.openqa.grid.common.RegistrationRequest;
@@ -22,13 +17,9 @@ import org.openqa.selenium.net.NetworkUtils;
 import org.openqa.selenium.remote.BrowserType;
 import org.openqa.selenium.remote.CapabilityType;
 
-import com.google.common.annotations.VisibleForTesting;
-
-import de.zalando.ep.zalenium.container.ContainerClient;
-import de.zalando.ep.zalenium.container.ContainerCreationStatus;
-import de.zalando.ep.zalenium.container.ContainerFactory;
-import de.zalando.ep.zalenium.matcher.ZaleniumCapabilityType;
-import de.zalando.ep.zalenium.util.Environment;
+import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import static de.zalando.ep.zalenium.util.ZaleniumConfiguration.ZALENIUM_RUNNING_LOCALLY;
 
@@ -56,6 +47,10 @@ public class DockeredSeleniumStarter {
     private static final Logger LOGGER = Logger.getLogger(DockeredSeleniumStarter.class.getName());
     private static final String DEFAULT_DOCKER_SELENIUM_IMAGE = "elgalu/selenium";
     private static final String ZALENIUM_SELENIUM_IMAGE_NAME = "ZALENIUM_SELENIUM_IMAGE_NAME";
+    public static final String DEFAULT_SELENIUM_CONTAINER_CPU_LIMIT = "100000000";
+    public static final String DEFAULT_SELENIUM_CONTAINER_MEMORY_LIMIT = "1073741824";
+    public static final String ZALENIUM_SELENIUM_CONTAINER_CPU_LIMIT = "ZALENIUM_SELENIUM_CONTAINER_CPU_LIMIT";
+    public static final String ZALENIUM_SELENIUM_CONTAINER_MEMORY_LIMIT = "ZALENIUM_SELENIUM_CONTAINER_MEMORY_LIMIT";
     private static final int LOWER_PORT_BOUNDARY = 40000;
     private static final int UPPER_PORT_BOUNDARY = 49999;
     private static final ContainerClient defaultContainerClient = ContainerFactory.getContainerClient();
@@ -72,6 +67,8 @@ public class DockeredSeleniumStarter {
     private static Dimension configuredScreenSize;
     private static String containerName;
     private static String dockerSeleniumImageName;
+    private static String seleniumContainerCpuLimit;
+    private static String seleniumContainerMemoryLimit;
     private static Map<String, String> zaleniumProxyVars = new HashMap<>();
 
     private static final String[] HTTP_PROXY_ENV_VARS = {
@@ -79,7 +76,7 @@ public class DockeredSeleniumStarter {
             "zalenium_https_proxy",
             "zalenium_no_proxy"
     };
-    
+
     /*
      * Reading configuration values from the env variables, if a value was not provided it falls back to defaults.
      */
@@ -99,14 +96,22 @@ public class DockeredSeleniumStarter {
         String seleniumImageName = env.getStringEnvVariable(ZALENIUM_SELENIUM_IMAGE_NAME, DEFAULT_DOCKER_SELENIUM_IMAGE);
         setDockerSeleniumImageName(seleniumImageName);
 
+        String cpuLimit = env.getStringEnvVariable(ZALENIUM_SELENIUM_CONTAINER_CPU_LIMIT,
+                DEFAULT_SELENIUM_CONTAINER_CPU_LIMIT);
+        setSeleniumContainerCpuLimit(cpuLimit);
+
+        String memoryLimit = env.getStringEnvVariable(ZALENIUM_SELENIUM_CONTAINER_MEMORY_LIMIT,
+                DEFAULT_SELENIUM_CONTAINER_MEMORY_LIMIT);
+        setSeleniumContainerMemoryLimit(memoryLimit);
+
         String seleniumNodeParams = env.getStringEnvVariable(SELENIUM_NODE_PARAMS, DEFAULT_SELENIUM_NODE_PARAMS);
         setSeleniumNodeParameters(seleniumNodeParams);
 
         sendAnonymousUsageInfo = env.getBooleanEnvVariable("ZALENIUM_SEND_ANONYMOUS_USAGE_INFO", false);
-        
+
         addProxyVars();
     }
-    
+
     private static void addProxyVars() {
         Arrays.asList(HTTP_PROXY_ENV_VARS).forEach(httpEnvVar -> {
             String proxyValue = env.getStringEnvVariable(httpEnvVar, null);
@@ -116,9 +121,9 @@ public class DockeredSeleniumStarter {
             }
         });
     }
-    
+
     static {
-    	readConfigurationFromEnvVariables();
+        readConfigurationFromEnvVariables();
     }
 
     @SuppressWarnings("ConstantConditions")
@@ -159,17 +164,33 @@ public class DockeredSeleniumStarter {
     public static String getContainerName() {
         return Optional.ofNullable(containerName).orElse(DEFAULT_ZALENIUM_CONTAINER_NAME);
     }
-    
+
     private static void setContainerName(String containerName) {
         DockeredSeleniumStarter.containerName = containerName;
     }
-    
+
     public static String getDockerSeleniumImageName() {
         return Optional.ofNullable(dockerSeleniumImageName).orElse(DEFAULT_DOCKER_SELENIUM_IMAGE);
     }
 
     public static void setDockerSeleniumImageName(String dockerSeleniumImageName) {
         DockeredSeleniumStarter.dockerSeleniumImageName = dockerSeleniumImageName;
+    }
+
+    public static String getSeleniumContainerCpuLimit() {
+        return Optional.ofNullable(seleniumContainerCpuLimit).orElse(DEFAULT_SELENIUM_CONTAINER_CPU_LIMIT);
+    }
+
+    public static void setSeleniumContainerCpuLimit(String seleniumContainerCpuLimit) {
+        DockeredSeleniumStarter.seleniumContainerCpuLimit = seleniumContainerCpuLimit;
+    }
+
+    public static String getSeleniumContainerMemoryLimit() {
+        return Optional.ofNullable(seleniumContainerMemoryLimit).orElse(DEFAULT_SELENIUM_CONTAINER_MEMORY_LIMIT);
+    }
+
+    public static void setSeleniumContainerMemoryLimit(String seleniumContainerMemoryLimit) {
+        DockeredSeleniumStarter.seleniumContainerMemoryLimit = seleniumContainerMemoryLimit;
     }
 
     public static String getSeleniumNodeParameters() {
@@ -233,18 +254,17 @@ public class DockeredSeleniumStarter {
 
         // Check and configure time zone capabilities when they have been passed in the test config.
         TimeZone timeZone = getConfiguredTimeZoneFromCapabilities(requestedCapability);
-        
+
         ContainerCreationStatus containerCreationStatus = startDockerSeleniumContainer(timeZone, screenSize);
         if (containerCreationStatus.isCreated()) {
             LOGGER.info(String.format("Created container [%s] with dimensions [%s] and tz [%s].", containerCreationStatus.getContainerName(), screenSize, timeZone));
-            return containerCreationStatus;        	
-        }
-        else {
-        	LOGGER.info("No container was created, will wait until request is processed again...");
-        	return null;
+            return containerCreationStatus;
+        } else {
+            LOGGER.info("No container was created, will wait until request is processed again...");
+            return null;
         }
     }
-    
+
     public ContainerCreationStatus startDockerSeleniumContainer(final TimeZone timeZone, final Dimension screenSize) {
 
         TimeZone effectiveTimeZone = ObjectUtils.defaultIfNull(timeZone, DEFAULT_TZ);
@@ -256,20 +276,22 @@ public class DockeredSeleniumStarter {
         String nodeRegisterCycle = String.valueOf(RandomUtils.nextInt(15, 25) * 1000);
         String seleniumNodeParams = getSeleniumNodeParameters();
         String latestImage = getLatestDownloadedImage(getDockerSeleniumImageName());
+        String cpuLimit = getSeleniumContainerCpuLimit();
+        String memoryLimit = getSeleniumContainerMemoryLimit();
 
         int containerPort = LOWER_PORT_BOUNDARY;
         if (containerClient instanceof DockerContainerClient) {
             containerPort = findFreePortInRange();
         }
         Map<String, String> envVars = buildEnvVars(effectiveTimeZone, effectiveScreenSize, hostIpAddress, sendAnonymousUsageInfo,
-            nodePolling, nodeRegisterCycle, seleniumNodeParams, containerPort);
+                nodePolling, nodeRegisterCycle, seleniumNodeParams, containerPort);
 
-        return containerClient.createContainer(getContainerName(), latestImage, envVars, String.valueOf(containerPort));
+        return containerClient.createContainer(getContainerName(), latestImage, cpuLimit, memoryLimit, envVars, String.valueOf(containerPort));
     }
 
     private Map<String, String> buildEnvVars(TimeZone timeZone, Dimension screenSize, String hostIpAddress,
-            boolean sendAnonymousUsageInfo, String nodePolling, String nodeRegisterCycle,
-            String seleniumNodeParams, int containerPort) {
+                                             boolean sendAnonymousUsageInfo, String nodePolling, String nodeRegisterCycle,
+                                             String seleniumNodeParams, int containerPort) {
         final int noVncPort = containerPort + NO_VNC_PORT_GAP;
         final int vncPort = containerPort + VNC_PORT_GAP;
         Map<String, String> envVars = new HashMap<>();
@@ -309,15 +331,15 @@ public class DockeredSeleniumStarter {
     }
 
     public boolean containerHasStarted(ContainerCreationStatus creationStatus) {
-    	return containerClient.isReady(creationStatus);
+        return containerClient.isReady(creationStatus);
     }
 
     public boolean containerHasFinished(ContainerCreationStatus creationStatus) {
-    	return containerClient.isTerminated(creationStatus);
+        return containerClient.isTerminated(creationStatus);
     }
-    
+
     public void stopContainer(String containerId) {
-    	containerClient.stopContainer(containerId);
+        containerClient.stopContainer(containerId);
     }
 
     /*
@@ -380,7 +402,7 @@ public class DockeredSeleniumStarter {
             If by any chance one of the first allocated ports is still used, it will be skipped by the
             existing validation.
          */
-        synchronized (allocatedPorts){
+        synchronized (allocatedPorts) {
             if (allocatedPorts.size() > (UPPER_PORT_BOUNDARY - LOWER_PORT_BOUNDARY - 200)) {
                 allocatedPorts.clear();
                 LOGGER.info("Cleaning allocated ports list.");
@@ -389,7 +411,7 @@ public class DockeredSeleniumStarter {
                 int noVncPortNumber = portNumber + NO_VNC_PORT_GAP;
                 int vncPortNumber = portNumber + VNC_PORT_GAP;
                 if (!allocatedPorts.contains(portNumber) && !allocatedPorts.contains(noVncPortNumber)
-                    && !allocatedPorts.contains(vncPortNumber)) {
+                        && !allocatedPorts.contains(vncPortNumber)) {
                     allocatedPorts.add(portNumber);
                     allocatedPorts.add(noVncPortNumber);
                     allocatedPorts.add(vncPortNumber);
