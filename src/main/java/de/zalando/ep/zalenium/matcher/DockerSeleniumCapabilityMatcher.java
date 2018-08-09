@@ -26,10 +26,6 @@ public class DockerSeleniumCapabilityMatcher extends DefaultCapabilityMatcher {
     private static String firefoxVersion = null;
     private final Logger logger = LoggerFactory.getLogger(DockerSeleniumCapabilityMatcher.class.getName());
 
-    public DockerSeleniumCapabilityMatcher() {
-        super();
-    }
-
     @Override
     public boolean matches(Map<String, Object> nodeCapability, Map<String, Object> requestedCapability) {
         logger.debug(String.format("Validating %s in node with capabilities %s", requestedCapability,
@@ -129,11 +125,11 @@ public class DockerSeleniumCapabilityMatcher extends DefaultCapabilityMatcher {
         return timeZoneCapabilityMatches;
     }
 
-    static String getChromeVersion() {
+    public static String getChromeVersion() {
       return chromeVersion;
     }
 
-    static String getFirefoxVersion() {
+    public static String getFirefoxVersion() {
       return firefoxVersion;
     }
 }
