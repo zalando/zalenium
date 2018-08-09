@@ -1,10 +1,15 @@
+kind: Namespace
 apiVersion: v1
+metadata:
+  name: zalenium
+---
 kind: Service
+apiVersion: v1
 metadata:
   labels:
     app: zalenium
   name: zalenium
-  namespace: default
+  namespace: zalenium
 spec:
   ports:
   - name: zalenium
