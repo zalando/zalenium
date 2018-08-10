@@ -44,7 +44,7 @@ After starting Minikube locally, follow these steps:
     # Dashboard
     minikube dashboard
     # Grid Console
-    minikube service zalenium
+    minikube service --namespace zalenium zalenium
 {% endhighlight %}
 
 That's it, you can point your tests to the url obtained in the last step.
