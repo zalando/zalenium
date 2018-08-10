@@ -14,6 +14,7 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
+import com.google.common.base.Strings;
 import com.spotify.docker.client.messages.PortBinding;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -316,9 +317,9 @@ public class DockerContainerClient implements ContainerClient {
         String cpuLimit = getSeleniumContainerCpuLimit();
         String memoryLimit = getSeleniumContainerMemoryLimit();
 
-        if (cpuLimit != null)
-        hostConfigBuilder.nanoCpus(Long.valueOf(cpuLimit));
-        if(memoryLimit != null)
+        if (Strings.isNullOrEmpty(cpuLimit))
+            hostConfigBuilder.nanoCpus(Long.valueOf(cpuLimit));
+        if(Strings.isNullOrEmpty(memoryLimit))
             hostConfigBuilder.memory(Long.valueOf(memoryLimit));
 
         if (ZALENIUM_RUNNING_LOCALLY) {
