@@ -2,10 +2,10 @@
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
-  name: {{ template "name" . }}
+  name: {{ template "zalenium.fullname" . }}
   labels:
-    app: {{ template "fullname" . }}
-    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    app: {{ template "zalenium.name" . }}
+    chart: {{ template "zalenium.chart" . }}
     release: "{{ .Release.Name }}"
     heritage: "{{ .Release.Service }}"
   annotations:
@@ -23,6 +23,6 @@ spec:
       paths:
       - path: /
         backend:
-          serviceName: {{ template "name" . }}
+          serviceName: {{ template "zalenium.fullname" . }}
           servicePort: {{ .Values.hub.port }}
 {{- end -}}

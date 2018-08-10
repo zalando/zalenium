@@ -2,18 +2,18 @@
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: {{ if .Values.rbac.clusterWideAccess }}"ClusterRoleBinding"{{ else }}"RoleBinding"{{ end }}
 metadata:
-  name: {{ template "name" . }}
+  name: {{ template "zalenium.fullname" . }}
   labels:
-    app: {{ template "fullname" . }}
-    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    app: {{ template "zalenium.name" . }}
+    chart: {{ template "zalenium.chart" . }}
     release: "{{ .Release.Name }}"
     heritage: "{{ .Release.Service }}"
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: {{ if .Values.rbac.clusterWideAccess }}"ClusterRole"{{ else }}"Role"{{ end }}
-  name: {{ template "name" . }}
+  name: {{ template "fullname" . }}
 subjects:
 - kind: ServiceAccount
-  name: {{ template "name" . }}
+  name: {{ template "zalenium.serviceAccount" . }}
   namespace: "{{ .Release.Namespace }}"
 {{- end -}}
