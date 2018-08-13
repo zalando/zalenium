@@ -1,11 +1,11 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ template "name" . }}
+  name: {{ template "zalenium.fullname" . }}
   labels:
-    app: {{ template "fullname" . }}
+    app: {{ template "zalenium.name" . }}
     role: grid
-    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    chart: {{ template "zalenium.chart" . }}
     release: "{{ .Release.Name }}"
     heritage: "{{ .Release.Service }}"
 {{- if .Values.hub.serviceAnnotations }}
@@ -20,5 +20,5 @@ spec:
     port: {{ .Values.hub.port }}
     targetPort: {{ .Values.hub.port }}
   selector:
-    app: {{ template "hub.fullname" . }}
-    role: grid
+    app: {{ template "zalenium.name" . }}
+    release: "{{ .Release.Name }}"

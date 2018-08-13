@@ -1,12 +1,12 @@
-{{- if and (.Values.persistence.enabled) (not .Values.persistence.useExisting) }}
+{{- if and (.Values.persistence.enabled) (not .Values.persistence.data.useExisting) }}
 kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
-  name:  "{{- if not (empty .Values.persistence.data.name) }}{{ .Values.persistence.data.name }}{{- else }}{{ template "hub.fullname" . }}{{- end }}-data"
+  name: {{ template "zalenium.fullname" . }}-data"
   labels:
-    app: "{{- if not (empty .Values.persistence.data.name) }}{{ .Values.persistence.data.name }}{{- else }}{{ template "fullname" . }}{{- end }}"
+    app: {{ template "zalenium.name" . }}
     role: grid
-    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    chart: {{ template "zalenium.chart" . }}
     release: "{{ .Release.Name }}"
     heritage: "{{ .Release.Service }}"
 spec:
@@ -22,15 +22,17 @@ spec:
   storageClassName: "{{ .Values.persistence.data.storageClass }}"
 {{- end }}
 {{- end }}
+{{- end }}
 ---
+{{- if and (.Values.persistence.enabled) (not .Values.persistence.video.useExisting) }}
 kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
-  name: "{{- if not (empty .Values.persistence.video.name) }}{{ .Values.persistence.video.name }}{{- else }}{{ template "hub.fullname" . }}{{- end }}-videos"
+  name: {{ template "zalenium.fullname" . }}-videos"
   labels:
-    app: "{{- if not (empty .Values.persistence.video.name) }}{{ .Values.persistence.video.name }}{{- else }}{{ template "fullname" . }}{{- end }}"
+    app: {{ template "zalenium.name" . }}
     role: grid
-    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    chart: {{ template "zalenium.chart" . }}
     release: "{{ .Release.Name }}"
     heritage: "{{ .Release.Service }}"
 spec:

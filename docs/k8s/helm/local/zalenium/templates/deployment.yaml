@@ -1,44 +1,53 @@
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: {{ template "hub.fullname" . }}
+  name: {{ template "zalenium.fullname" . }}
   labels:
-    app: {{ template "hub.fullname" . }}
+    app: {{ template "zalenium.name" . }}
     role: grid
-    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    chart: {{ template "zalenium.chart" . }}
+    release: "{{ .Release.Name }}"
+    heritage: "{{ .Release.Service }}"
 spec:
   replicas: 1
   template:
     metadata:
       labels:
-        app: {{ template "hub.fullname" . }}
+        app: {{ template "zalenium.name" . }}
         role: grid
-        chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+        chart: {{ template "zalenium.chart" . }}
         release: "{{ .Release.Name }}"
         heritage: "{{ .Release.Service }}"
       annotations:
     spec:
+      initContainers:
+        - name: zalenium-prepare
+          image: dosel/zalenium:latest
+          command: ['sh', '-c', 'sudo chown -R seluser:seluser /home/seluser/videos']
+          volumeMounts:
+            - name: {{ template "zalenium.fullname" . }}-videos
+              mountPath: /home/seluser/videos
       volumes:
-        - name: {{ template "hub.fullname" . }}-videos
+        - name: {{ template "zalenium.fullname" . }}-videos
         {{- if .Values.persistence.enabled }}
-          {{- if not (empty .Values.persistence.video.name) }}
+          {{- if and (.Values.persistence.video.useExisting) (not (empty .Values.persistence.video.name))}}
           persistentVolumeClaim:
             claimName: {{ .Values.persistence.video.name }}
           {{- else }}
           persistentVolumeClaim:
-            claimName: {{ template "hub.fullname" . }}-videos
+            claimName: {{ template "zalenium.fullname" . }}-videos
           {{- end }}
         {{- else }}
           emptyDir: {}
         {{- end }}
-        - name: {{ template "hub.fullname" . }}-data
+        - name: {{ template "zalenium.fullname" . }}-data
         {{- if .Values.persistence.enabled }}
-          {{- if not (empty .Values.persistence.data.name) }}
+          {{- if and (.Values.persistence.data.useExisting) (not (empty .Values.persistence.data.name))}}
           persistentVolumeClaim:
             claimName: {{ .Values.persistence.data.name }}
           {{- else }}
           persistentVolumeClaim:
-            claimName: {{ template "hub.fullname" . }}-data
+            claimName: {{ template "zalenium.fullname" . }}-data
           {{- end }}
         {{- else }}
           emptyDir: {}
@@ -119,8 +128,8 @@ spec:
           resources:
 {{ toYaml .Values.hub.resources | indent 12 }}
           volumeMounts:
-            - name: {{ template "hub.fullname" . }}-videos
+            - name: {{ template "zalenium.fullname" . }}-videos
               mountPath: /home/seluser/videos
-            - name: {{ template "hub.fullname" . }}-data
+            - name: {{ template "zalenium.fullname" . }}-data
               mountPath: /tmp/mounted
-      serviceAccountName: {{ template "serviceAccountName" . }}
+      serviceAccountName: {{ template "zalenium.serviceAccount" . }}
