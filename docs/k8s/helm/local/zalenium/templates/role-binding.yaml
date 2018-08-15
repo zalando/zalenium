@@ -11,7 +11,7 @@ metadata:
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: {{ if .Values.rbac.clusterWideAccess }}"ClusterRole"{{ else }}"Role"{{ end }}
-  name: {{ template "fullname" . }}
+  name: {{ template "zalenium.fullname" . }}
 subjects:
 - kind: ServiceAccount
   name: {{ template "zalenium.serviceAccount" . }}
