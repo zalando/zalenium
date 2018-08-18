@@ -7,7 +7,7 @@ import org.openqa.grid.internal.RemoteProxy;
 import org.openqa.grid.internal.utils.configuration.GridHubConfiguration;
 import org.openqa.grid.web.servlet.RegistryBasedServlet;
 import org.openqa.selenium.MutableCapabilities;
-import org.openqa.selenium.internal.BuildInfo;
+import org.openqa.selenium.BuildInfo;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -26,6 +26,7 @@ public class ZaleniumConsoleServlet extends RegistryBasedServlet {
     private static String coreVersion;
     private TemplateRenderer templateRenderer;
 
+    @SuppressWarnings("unused")
     public ZaleniumConsoleServlet() {
         this(null);
     }
