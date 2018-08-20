@@ -28,7 +28,7 @@ Create the name of the service account
 */}}
 {{- define "zalenium.serviceAccount" -}}
 {{- if .Values.serviceAccount.create -}}
-    {{ default (include "name" .) .Values.serviceAccount.name }}
+    {{ default (include "zalenium.fullname" .) .Values.serviceAccount.name }}
 {{- else -}}
     {{ default "default" .Values.serviceAccount.name }}
 {{- end -}}

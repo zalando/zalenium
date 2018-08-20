@@ -2,7 +2,7 @@
 kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
-  name: {{ template "zalenium.fullname" . }}-data"
+  name: "{{ template "zalenium.fullname" . }}-data"
   labels:
     app: {{ template "zalenium.name" . }}
     role: grid
@@ -28,7 +28,7 @@ spec:
 kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
-  name: {{ template "zalenium.fullname" . }}-videos"
+  name: "{{ template "zalenium.fullname" . }}-videos"
   labels:
     app: {{ template "zalenium.name" . }}
     role: grid
