@@ -57,6 +57,7 @@ See Zalenium's [usage examples](https://github.com/zalando/zalenium/blob/master/
 | `hub.localVolumesRoot` | The root directory to store HostPath volumes (e.g. if running in minikube) | `/tmp` |
 | `hub.resources` | The resources for the hub container, defaults to minimum half a cpu and maximum 512 mb RAM | `{"limits":{"cpu":".5", "memory":"512Mi"}}` |
 | `hub.serviceType` | The Service type | `NodePort` |
+| `hub.serviceSourceRanges` | The list of IPs allowed to connect to the service. Important - in command line you have to escape commas, e.g.: `{"10.10.0.0/24\,10.20.0.0/16"}` | `{"0.0.0.0/0"}` |
 | `hub.serviceSessionAffinity` | The session affinity for the hub service| `None` |
 | `hub.desiredContainers` | How many pods to launch at start | 2 |
 | `hub.maxDockerSeleniumContainers` | Maximum number of Selenium containers to run simultaneously | 10 |
