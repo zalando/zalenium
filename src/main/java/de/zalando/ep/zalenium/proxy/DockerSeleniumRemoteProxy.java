@@ -1,20 +1,17 @@
 package de.zalando.ep.zalenium.proxy;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import de.zalando.ep.zalenium.container.ContainerClient;
-import de.zalando.ep.zalenium.container.ContainerClientRegistration;
-import de.zalando.ep.zalenium.container.ContainerFactory;
-import de.zalando.ep.zalenium.dashboard.DashboardCollection;
-import de.zalando.ep.zalenium.dashboard.TestInformation;
-import de.zalando.ep.zalenium.matcher.DockerSeleniumCapabilityMatcher;
-import de.zalando.ep.zalenium.matcher.ZaleniumCapabilityType;
-import de.zalando.ep.zalenium.util.CommonProxyUtilities;
-import de.zalando.ep.zalenium.util.Environment;
-import de.zalando.ep.zalenium.util.GoogleAnalyticsApi;
-import io.prometheus.client.Gauge;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
@@ -35,20 +32,24 @@ import org.openqa.grid.web.servlet.handler.WebDriverRequest;
 import org.openqa.selenium.Platform;
 import org.openqa.selenium.remote.CapabilityType;
 import org.openqa.selenium.remote.server.jmx.ManagedService;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.util.Map;
-import java.util.Optional;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicBoolean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.annotations.VisibleForTesting;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+
+import de.zalando.ep.zalenium.container.ContainerClient;
+import de.zalando.ep.zalenium.container.ContainerClientRegistration;
+import de.zalando.ep.zalenium.container.ContainerFactory;
+import de.zalando.ep.zalenium.dashboard.DashboardCollection;
+import de.zalando.ep.zalenium.dashboard.TestInformation;
+import de.zalando.ep.zalenium.matcher.DockerSeleniumCapabilityMatcher;
+import de.zalando.ep.zalenium.matcher.ZaleniumCapabilityType;
+import de.zalando.ep.zalenium.util.CommonProxyUtilities;
+import de.zalando.ep.zalenium.util.Environment;
+import de.zalando.ep.zalenium.util.GoogleAnalyticsApi;
 
 /*
     The implementation of this class was inspired on https://gist.github.com/krmahadevan/4649607
@@ -94,9 +95,6 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     private long timeRegistered = System.currentTimeMillis();
 
     private static final ExecutorService EXECUTOR_SERVICE = Executors.newFixedThreadPool(5);
-
-    static final Gauge seleniumTestSessionsRunning = Gauge.build()
-            .name("selenium_test_sessions_running").help("The number of Selenium test sessions that are running in a container").register();
 
     public DockerSeleniumRemoteProxy(RegistrationRequest request, GridRegistry registry) {
         super(request, registry);
@@ -203,9 +201,6 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
 
         if (!this.isBusy() && increaseCounter()) {
             TestSession testSession = createNewSession(requestedCapability);
-            if (testSession != null) {
-                seleniumTestSessionsRunning.inc();
-            }
             return testSession;
         }
         LOGGER.debug("{} No more sessions allowed", getContainerId());
@@ -371,7 +366,6 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         } catch (Exception e) {
             LOGGER.warn(getContainerId() + " " + e.toString(), e);
         } finally {
-            seleniumTestSessionsRunning.dec();
             super.afterSession(session);
         }
     }
