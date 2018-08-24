@@ -14,6 +14,9 @@ metadata:
 {{- end }}
 spec:
   type: {{ .Values.hub.serviceType | quote }}
+{{- if eq .Values.hub.serviceType "LoadBalancer" }}
+  loadBalancerSourceRanges: {{ .Values.hub.serviceSourceRanges }}
+{{- end }}
   sessionAffinity: {{ .Values.hub.serviceSessionAffinity | quote }}
   ports:
   - name: hub
