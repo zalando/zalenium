@@ -1,9 +1,9 @@
 #== Ubuntu xenial is 16.04, i.e. FROM ubuntu:16.04
 # Find latest images at https://hub.docker.com/r/library/ubuntu/
 # Layer size: big: ~130 MB
-FROM ubuntu:xenial-20180726
+FROM ubuntu:xenial-20180808
 ENV UBUNTU_FLAVOR="xenial" \
-    UBUNTU_DATE="20180726"
+    UBUNTU_DATE="20180808"
 
 ARG UBUNTU_MIRROR=http://archive.ubuntu.com/ubuntu
 
@@ -235,16 +235,16 @@ RUN if [ "${kubernetesSlimVersion}" = "false" ]; then \
 # Var `DOCKER` points to which binary to use at runtime
 ENV DOCKER_HOST="unix:///var/run/docker.sock" \
     DOCKER_BUCKET="download.docker.com" \
-    DOCKER="17.09.1-ce"
+    DOCKER="17.12.1-ce"
 
 #----------------------------
-# Docker 17.09.1-ce -- 15 MB
+# Docker 17.12.0-ce -- 15 MB
 #----------------------------
 # https://github.com/docker-library/docker/blob/master/17.09/Dockerfile
 # Note: Starting with 1.13, newer CLIs can talk to older daemons
 RUN if [ "${kubernetesSlimVersion}" = "false" ]; then \
         set -x \
-        && DOCKER_VERSION="17.09.1-ce" \
+        && DOCKER_VERSION="17.12.1-ce" \
         && curl -fSL "https://${DOCKER_BUCKET}/linux/static/stable/x86_64/docker-${DOCKER_VERSION}.tgz" \
                 -o docker.tgz \
         && tar -xzvf docker.tgz \
@@ -256,13 +256,13 @@ RUN if [ "${kubernetesSlimVersion}" = "false" ]; then \
     fi
 
 #----------------------------
-# Docker 17.12.0-ce -- 15 MB
+# Docker 18.03.1-ce -- 15 MB
 #----------------------------
-# https://github.com/docker-library/docker/blob/master/17.09/Dockerfile
+# https://github.com/docker-library/docker/blob/master/18.03/Dockerfile
 # Note: Starting with 1.13, newer CLIs can talk to older daemons
 RUN if [ "${kubernetesSlimVersion}" = "false" ]; then \
         set -x \
-        && DOCKER_VERSION="17.12.0-ce" \
+        && DOCKER_VERSION="18.03.1-ce" \
         && curl -fSL "https://${DOCKER_BUCKET}/linux/static/stable/x86_64/docker-${DOCKER_VERSION}.tgz" \
                 -o docker.tgz \
         && tar -xzvf docker.tgz \
@@ -279,7 +279,7 @@ RUN if [ "${kubernetesSlimVersion}" = "false" ]; then \
 # ------------------------#
 # https://docs.saucelabs.com/reference/sauce-connect/
 # Layer size: medium: ~13 MB
-ENV SAUCE_CONN_VER="sc-4.5.0-linux" \
+ENV SAUCE_CONN_VER="sc-4.5.1-linux" \
     SAUCE_CONN_DOWN_URL="https://saucelabs.com/downloads"
 RUN cd /tmp \
   && wget -nv "${SAUCE_CONN_DOWN_URL}/${SAUCE_CONN_VER}.tar.gz" \
