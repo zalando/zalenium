@@ -317,10 +317,12 @@ public class DockerContainerClient implements ContainerClient {
         String cpuLimit = getSeleniumContainerCpuLimit();
         String memoryLimit = getSeleniumContainerMemoryLimit();
 
-        if (Strings.isNullOrEmpty(cpuLimit))
+        if (!Strings.isNullOrEmpty(cpuLimit)) {
             hostConfigBuilder.nanoCpus(Long.valueOf(cpuLimit));
-        if(Strings.isNullOrEmpty(memoryLimit))
+        }
+        if(!Strings.isNullOrEmpty(memoryLimit)) {
             hostConfigBuilder.memory(Long.valueOf(memoryLimit));
+        }
 
         if (ZALENIUM_RUNNING_LOCALLY) {
             final Map<String, List<PortBinding>> portBindings = new HashMap<>();
@@ -559,7 +561,8 @@ public class DockerContainerClient implements ContainerClient {
         String zaleniumContainerId = getContainerId(zaleniumContainerName);
 
         if (zaleniumContainerId == null) {
-            logger.warn(String.format("Couldn't find selenium container with name or containing: %s, check that the env variable ZALENIUM_CONTAINER_NAME has an appropiate value", zaleniumContainerName));
+            logger.warn(String.format("Couldn't find selenium container with name or containing: %s, check that the env " +
+                "variable ZALENIUM_CONTAINER_NAME has an appropriate value", zaleniumContainerName));
         }
         try {
             ContainerInfo containerInfo = dockerClient.inspectContainer(zaleniumContainerId);
