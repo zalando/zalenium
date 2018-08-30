@@ -74,6 +74,7 @@ hub:
   maxTestSessions: 1
   debugEnabled: false
   keepOnlyFailedTests: false
+  retentionPeriod: 3
   sendAnonymousUsageInfo: true
 
   # Environment variables passed to Zalenium hub.

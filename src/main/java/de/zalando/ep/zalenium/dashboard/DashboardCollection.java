@@ -64,6 +64,27 @@ public class DashboardCollection {
         }
     }
 
+    public static synchronized void resetDashboard() throws IOException {
+        String errMsg = "Error during cleanup of dashboard: ";
+        if (!remoteDashboardsEnabled) {
+            try {
+                localDashboard.resetDashboard();
+            } catch (Exception e) {
+                LOGGER.log(Level.WARNING, errMsg + e.toString());
+            }
+        } else {
+            for (DashboardInterface dashboard : remoteDashboards) {
+                try {
+                    dashboard.resetDashboard();
+                } catch (UnsupportedOperationException e) {
+                    //ignore
+                } catch (Exception e) {
+                    LOGGER.log(Level.WARNING, errMsg + e.toString());
+                }
+            }
+        }
+    }
+    
     public static synchronized void cleanupDashboard() throws IOException {
         String errMsg = "Error during cleanup of dashboard: ";
         if (!remoteDashboardsEnabled) {

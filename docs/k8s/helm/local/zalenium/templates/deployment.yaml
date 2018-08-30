@@ -125,6 +125,8 @@ spec:
             - '{{ .Values.hub.sendAnonymousUsageInfo }}'
             - '--keepOnlyFailedTests'
             - '{{ .Values.hub.keepOnlyFailedTests }}'
+            - '--retentionPeriod'
+            - '{{ .Values.hub.retentionPeriod }}'
           resources:
 {{ toYaml .Values.hub.resources | indent 12 }}
           volumeMounts:

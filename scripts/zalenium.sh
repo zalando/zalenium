@@ -758,6 +758,7 @@ function usage()
     echo -e "\t --gridPassword -> allows you to specify a password to enable basic auth protection, --gridUser must be provided also."
     echo -e "\t --maxTestSessions -> max amount of tests executed per container, defaults to '1'."
     echo -e "\t --keepOnlyFailedTests -> Keeps only videos of failed tests (you need to send a cookie). Defaults to 'false'"
+ 	echo -e "\t --retentionPeriod -> Number of day's a testentry should be kept in dashboard before cleanup. Defaults to 3"
     echo ""
     echo -e "\t stop"
     echo ""
@@ -852,6 +853,9 @@ case ${SCRIPT_ACTION} in
                     ;;
                 --keepOnlyFailedTests)
                     KEEP_ONLY_FAILED_TESTS=${VALUE}
+                    ;;
+                --retentionPeriod)
+                    RETENTION_PERIOD=${VALUE}
                     ;;
                 *)
                     echo "ERROR: unknown parameter \"$PARAM\""

@@ -5,6 +5,7 @@ import com.google.common.base.Strings;
 import com.google.gson.JsonObject;
 import de.zalando.ep.zalenium.util.CommonProxyUtilities;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -21,6 +22,7 @@ public class TestInformation {
     private static final CommonProxyUtilities commonProxyUtilities = new CommonProxyUtilities();
     private String seleniumSessionId;
     private String testName;
+    private Date timestamp;
     private String proxyName;
     private String browser;
     private String browserVersion;
@@ -36,6 +38,7 @@ public class TestInformation {
     private String screenDimension;
     private String timeZone;
     private String build;
+    private Date retentionDate;
     private TestStatus testStatus;
     private boolean videoRecorded;
     private JsonObject metadata;
@@ -54,6 +57,10 @@ public class TestInformation {
 
     public String getTestName() {
         return Optional.ofNullable(testName).orElse(seleniumSessionId);
+    }
+
+    public Date getTimestamp() {
+        return timestamp;
     }
 
     public String getProxyName() {
@@ -86,6 +93,14 @@ public class TestInformation {
 
     public String getBuild() {
         return build;
+    }
+
+    public Date getRetentionDate() {
+        return retentionDate;
+    }
+
+    public void setRetentionDate(Date retentionDate) {
+        this.retentionDate = retentionDate;
     }
 
     public TestStatus getTestStatus() {
@@ -137,7 +152,7 @@ public class TestInformation {
                 .replace("{testName}", getTestName())
                 .replace("{browser}", this.browser)
                 .replace("{platform}", this.platform)
-                .replace("{timestamp}", commonProxyUtilities.getCurrentDateAndTimeFormatted())
+                .replace("{timestamp}", commonProxyUtilities.getDateAndTimeFormatted(this.timestamp))
                 .replace("{testStatus}", getTestStatus().toString())
                 .replaceAll("[^a-zA-Z0-9]", "_");
         this.testNameNoExtension = buildName.concat(this.testNameNoExtension);
@@ -159,6 +174,15 @@ public class TestInformation {
 
     public JsonObject getMetadata() { return this.metadata;}
     public void setMetadata(JsonObject metadata) { this.metadata = metadata;}
+    
+    public boolean equals(Object obj) {
+        if (obj == null) return false;
+        if (obj == this) return true;
+        
+        if (!(obj instanceof TestInformation)) return false;
+        TestInformation o = (TestInformation) obj;
+        return o.getFileName().equals(this.getFileName());
+    }
 
     public enum TestStatus {
         COMPLETED("Completed", "primary", " 'Zalenium', 'TEST COMPLETED', --icon=/home/seluser/images/completed.png"),
@@ -192,6 +216,7 @@ public class TestInformation {
     private TestInformation(TestInformationBuilder builder) {
         this.seleniumSessionId = builder.seleniumSessionId;
         this.testName = builder.testName;
+        this.timestamp = new Date();
         this.proxyName = builder.proxyName;
         this.browser = builder.browser;
         this.browserVersion = builder.browserVersion;
@@ -203,6 +228,7 @@ public class TestInformation {
         this.screenDimension = Optional.ofNullable(builder.screenDimension).orElse("");
         this.timeZone = Optional.ofNullable(builder.timeZone).orElse("");
         this.build = Optional.ofNullable(builder.build).orElse("");
+        this.retentionDate = Optional.ofNullable(builder.retentionDate).orElse(new Date());
         this.testStatus = builder.testStatus;
         this.videoRecorded = true;
         this.metadata = builder.metadata;
@@ -223,6 +249,7 @@ public class TestInformation {
         private String screenDimension;
         private String timeZone;
         private String build;
+        private Date retentionDate;
         private TestStatus testStatus;
         private JsonObject metadata;
 
@@ -291,6 +318,11 @@ public class TestInformation {
             return this;
         }
 
+        public TestInformationBuilder withretentionDate(Date retentionDate) {
+            this.retentionDate = retentionDate;
+            return this;
+        }
+        
         public TestInformationBuilder withTestStatus(TestStatus testStatus) {
             this.testStatus = testStatus;
             return this;

@@ -19,6 +19,13 @@
 </head>
 
 <body>
+    <div id="ui_blocker" class="ui_blocker" style="display : none;">
+      <div class="ui_blocker_msg">
+        <div>
+          Please wait...
+        </div>
+      </div>
+    </div>
     <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
         <a class="navbar-brand" href="#">Zalenium - Dashboard</a>
         <button class="navbar-toggler d-lg-none" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault" aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
@@ -30,6 +37,7 @@
             </ul>
             <form class="form-inline mt-2 mt-md-0">
                 <button class="btn btn-danger my-2 my-sm-0" type="button" id="cleanupButton">Cleanup</button>
+                <button class="btn btn-danger ml-2 my-2 my-sm-0" type="button" id="resetButton">Reset</button>
             </form>
         </div>
     </nav>
@@ -61,6 +69,10 @@
                             <h6 class="card-header">Date</h6>
                             <div class="card-body">
                                 <p class="card-text" id="date-time"></p>
+                            </div>
+                            <h6 class="card-header">Retention Date</h6>
+                            <div class="card-body">
+                                <p class="card-text" id="retention-date"></p>
                             </div>
                             <h6 class="card-header">Browser/Platform</h6>
                             <div class="card-body">
@@ -157,11 +169,31 @@
                     </button>
                   </div>
                   <div class="modal-body">
-                    Are you sure you want to cleanup all videos?
+                    Are you sure you want to cleanup tests older then {retentionPeriod} days?
                   </div>
                   <div class="modal-footer">
                     <button type="button" class="btn btn-danger" data-dismiss="modal">No</button>
                     <button type="button" class="btn btn-success" id="cleanupModalConfirm">Yes</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="modal fade" id="resetModal" tabindex="-1" role="dialog">
+              <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title" id="resetModalLabel">Confirmation</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                      <span aria-hidden="true">&times;</span>
+                    </button>
+                  </div>
+                  <div class="modal-body">
+                    Are you sure you want to reset the dashboard?
+                  </div>
+                  <div class="modal-footer">
+                    <button type="button" class="btn btn-danger" data-dismiss="modal">No</button>
+                    <button type="button" class="btn btn-success" id="resetModalConfirm">Yes</button>
                   </div>
                 </div>
               </div>
@@ -216,6 +248,7 @@
             var $browserPlatform = $this.data("browser-platform");
             var $proxyName = $this.data("proxy-name");
             var $dateTime = $this.data("date-time");
+            var $retentionDate = $this.data("retention-date");
             var $seleniumLogFile = $this.data("selenium-log");
             var $browserDriverLogFile = $this.data("browser-driver");
             var $screenDimension = $this.data("screen-dimension");
@@ -232,7 +265,7 @@
 
             // Set test info to be displayed
             setTestInformation($testName, $browserPlatform, $proxyName, $dateTime,
-                $screenDimension, $timeZone, $build, $testStatus, $testBadge);
+                $screenDimension, $timeZone, $build, $testStatus, $testBadge, $retentionDate);
 
             // Load logs
             loadLogs($seleniumLogFile, $browserDriverLogFile);
@@ -253,7 +286,7 @@
 
         function setTestInformation($testName, $browserPlatform, $proxyName, $dateTime,
                                     $screenDimension, $timeZone, $build, $testStatus,
-                                    $testBadge) {
+                                    $testBadge, $retentionDate) {
             var badgeHtml = '<span class="badge badge-' + $testBadge +
                 ' float-right">' + $testStatus + '</span>';
             document.getElementById("test-name").innerHTML = $testName + badgeHtml;
@@ -263,6 +296,7 @@
             document.getElementById("screen-dimension").textContent = $screenDimension;
             document.getElementById("time-zone").textContent = $timeZone;
             document.getElementById("build-name").textContent = $build;
+            document.getElementById("retention-date").textContent = $retentionDate;
             $('#main-container').removeClass("invisible");
         }
 
@@ -292,17 +326,81 @@
         $("#cleanupButton").click(function () {
           $('#cleanupModal').modal('show');
         });
+        
+        $("#resetButton").click(function () {
+            $('#resetModal').modal('show');
+          });
 
         $("#cleanupModalConfirm").click(function () {
-          var url = [location.protocol, '//', location.host, location.pathname].join('');
-          $.post(url + 'cleanup?action=doCleanupAll', '');
-          $('#tests').load(document.URL +  ' #tests');
-          playVideo("");
-          loadLogs("", "");
-          setTestInformation("", "", "", "", "", "", "", "", "");
           $('#cleanupModal').modal('hide');
+       	  block_ui();
+       	  
+          var targetUrl = [location.protocol, '//', location.host, location.pathname].join('') + 'cleanup?action=doCleanup';
+          
+          $.ajax({
+              type: "POST",
+              url: targetUrl,
+              statusCode: {
+                  200: function(response){
+                  	unblock_ui();
+                    window.location.reload();
+                  }
+              }
+          });
         });
+        
+        $("#resetModalConfirm").click(function () {
+            $('#resetModal').modal('hide');
+            block_ui();
+         	  
+            var targetUrl = [location.protocol, '//', location.host, location.pathname].join('') + 'cleanup?action=doReset';
+            
+            $.ajax({
+                type: "POST",
+                url: targetUrl,
+                statusCode: {
+                    200: function(response){
+                    	unblock_ui();
+                        window.location.reload();
+                    }
+                }
+            });
+        });
+        
+        function block_ui() 
+        {
+        	if (console != null)
+        	{
+        		console.log("Blocking ui...");
+        	}
+        	var overlay = document.getElementById('ui_blocker');
+        	
+        	if (overlay != null)
+        	{
+        		overlay.style.display = "block";
+        		overlay.style.right = "0px";
+        		overlay.style.bottom = "0px";
+        		overlay.addEventListener("click",
+        		  function(event)
+        		  {
+        		    event.preventDefault();
+        		    return false;
+        		  }, false);
+        	}
+        }
 
+        function unblock_ui() 
+        {
+          if (console != null)
+          {
+            console.log("Unblocking ui...");
+          }
+          var overlay = document.getElementById('ui_blocker');
+          if (overlay != null)
+          {
+        	overlay.style.display = "none";
+          }
+        }
     </script>
 </body>
 </html>

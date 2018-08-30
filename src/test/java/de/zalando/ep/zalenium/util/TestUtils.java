@@ -7,6 +7,7 @@ import de.zalando.ep.zalenium.proxy.DockerSeleniumRemoteProxy;
 import de.zalando.ep.zalenium.proxy.DockeredSeleniumStarter;
 import org.apache.commons.io.FileUtils;
 import org.junit.rules.TemporaryFolder;
+import org.mockito.Mockito;
 import org.openqa.grid.common.RegistrationRequest;
 import org.openqa.grid.internal.GridRegistry;
 import org.openqa.grid.internal.utils.configuration.GridNodeConfiguration;
@@ -29,6 +30,7 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.sql.Date;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -37,6 +39,7 @@ import java.util.Map;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.any;
 
 
 public class TestUtils {
@@ -136,7 +139,9 @@ public class TestUtils {
     public static CommonProxyUtilities mockCommonProxyUtilitiesForDashboardTesting(TemporaryFolder temporaryFolder) {
         CommonProxyUtilities commonProxyUtilities = mock(CommonProxyUtilities.class);
         when(commonProxyUtilities.currentLocalPath()).thenReturn(temporaryFolder.getRoot().getAbsolutePath());
-        when(commonProxyUtilities.getShortDateAndTime()).thenCallRealMethod();
+        when(commonProxyUtilities.getShortDateAndTime(any(Date.class))).thenCallRealMethod();
+        when(commonProxyUtilities.getDateAndTimeFormatted(any(Date.class))).thenCallRealMethod();
+        when(commonProxyUtilities.getDateAndTime(any(Date.class), any(Integer.class))).thenCallRealMethod();
         return commonProxyUtilities;
     }
 

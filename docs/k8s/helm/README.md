@@ -75,6 +75,7 @@ See Zalenium's [usage examples](https://github.com/zalando/zalenium/blob/master/
 | `hub.maxTestSessions` | The number of tests to run on each grid container before killing it and starting a new one | 1 |
 | `hub.debugEnabled` | 	Enables LogLevel.FINE | false |
 | `hub.keepOnlyFailedTests` | Keeps only failed tests on the dashboard (you need to send a cookie with the test result) | false |
+| `hub.retentionPeriod` | Number of day's a testentry should be kept in dashboard before cleanup | 3 |
 | `hub.sendAnonymousUsageInfo` | Allows sending anonymous usage info | true |
 | `hub.sauceUserName` | Username to log into saucelabs | blank |
 | `hub.sauceAccessKey` | Access key to log into saucelabs | blank |

@@ -7,14 +7,22 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
 import de.zalando.ep.zalenium.util.CommonProxyUtilities;
+import de.zalando.ep.zalenium.util.Environment;
+
 import org.apache.commons.io.FileUtils;
+import org.openqa.grid.common.RegistrationRequest;
+import org.openqa.grid.internal.GridRegistry;
 
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,12 +47,22 @@ public class Dashboard implements DashboardInterface {
     private static final String ZALANDO_ICO = "zalando.ico";
     private static final String CSS_FOLDER = "/css";
     private static final String JS_FOLDER = "/js";
+    private static final String ZALENIUM_RETENTION_PERIOD = "ZALENIUM_RETENTION_PERIOD";
+    private static final int DEFAULT_RETENTION_PERIOD = 3;
     private static final Logger LOGGER = LoggerFactory.getLogger(Dashboard.class.getName());
     private static List<TestInformation> executedTestsInformation = new ArrayList<>();
     private static CommonProxyUtilities commonProxyUtilities = new CommonProxyUtilities();
+    private static final Environment defaultEnvironment = new Environment();
+    private static Environment env = defaultEnvironment;
     private static int executedTests = 0;
     private static int executedTestsWithVideo = 0;
+    private static int retentionPeriod = 3;
     private static AtomicBoolean shutdownHookAdded = new AtomicBoolean(false);
+    
+    public Dashboard() {
+        retentionPeriod = env.getIntEnvVariable(ZALENIUM_RETENTION_PERIOD,
+                DEFAULT_RETENTION_PERIOD);
+    }
 
     public static List<TestInformation> getExecutedTestsInformation() {
         return executedTestsInformation;
@@ -77,13 +95,15 @@ public class Dashboard implements DashboardInterface {
 
     public synchronized void updateDashboard(TestInformation testInformation) {
         File testCountFile = new File(getLocalVideosPath(), TEST_COUNT_FILE);
+        testInformation.setRetentionDate(commonProxyUtilities.getDateAndTime(testInformation.getTimestamp(), retentionPeriod));
+        
         try {
             synchronizeExecutedTestsValues(testCountFile);
 
             String testEntry = FileUtils.readFileToString(new File(getCurrentLocalPath(), "list_template.html"), UTF_8);
             testEntry = testEntry.replace("{fileName}", testInformation.getFileName())
                     .replace("{testName}", testInformation.getTestName())
-                    .replace("{dateAndTime}", commonProxyUtilities.getShortDateAndTime())
+                    .replace("{dateAndTime}", commonProxyUtilities.getShortDateAndTime(testInformation.getTimestamp()))
                     .replace("{browserAndPlatform}", testInformation.getBrowserAndPlatform())
                     .replace("{proxyName}", testInformation.getProxyName())
                     .replace("{seleniumLogFileName}", testInformation.getSeleniumLogFileName())
@@ -92,15 +112,17 @@ public class Dashboard implements DashboardInterface {
                     .replace("{testBadge}", testInformation.getTestStatus().getTestBadge())
                     .replace("{screenDimension}", testInformation.getScreenDimension())
                     .replace("{timeZone}", testInformation.getTimeZone())
-                    .replace("{testBuild}", testInformation.getBuild());
-
+                    .replace("{testBuild}", testInformation.getBuild())
+                    .replace("{retentionDate}", commonProxyUtilities.getShortDateAndTime(testInformation.getRetentionDate()));
+            
             File testList = new File(getLocalVideosPath(), TEST_LIST_FILE);
             // Putting the new entry at the top
+            String testListContents = testEntry;
             if (testList.exists()) {
-                String testListContents = FileUtils.readFileToString(testList, UTF_8);
-                testEntry = testEntry.concat("\n").concat(testListContents);
+                testListContents = FileUtils.readFileToString(testList, UTF_8);
+                testListContents = testEntry.concat("\n").concat(testListContents);
             }
-            FileUtils.writeStringToFile(testList, testEntry, UTF_8);
+            FileUtils.writeStringToFile(testList, testListContents, UTF_8);
 
             executedTests++;
             if (testInformation.isVideoRecorded()) {
@@ -116,8 +138,9 @@ public class Dashboard implements DashboardInterface {
 
             File dashboardHtml = new File(getLocalVideosPath(), DASHBOARD_FILE);
             String dashboard = FileUtils.readFileToString(new File(getCurrentLocalPath(), DASHBOARD_TEMPLATE_FILE), UTF_8);
-            dashboard = dashboard.replace("{testList}", testEntry).
-                    replace("{executedTests}", String.valueOf(executedTests));
+            dashboard = dashboard.replace("{testList}", testListContents)
+                    .replace("{executedTests}", String.valueOf(executedTests))
+                    .replace("{retentionPeriod}", String.valueOf(retentionPeriod));
             FileUtils.writeStringToFile(dashboardHtml, dashboard, UTF_8);
 
             File zalandoIco = new File(getLocalVideosPath(), ZALANDO_ICO);
@@ -140,7 +163,43 @@ public class Dashboard implements DashboardInterface {
         }
     }
 
-    public synchronized void cleanupDashboard() throws IOException {
+    public synchronized void cleanupDashboard() throws IOException {        
+        Map<Boolean, List<TestInformation>> partitioned = executedTestsInformation.stream()
+                .collect(Collectors.partitioningBy(testInformation -> testInformation.getRetentionDate().getTime() > new Date().getTime()));
+        
+        List<TestInformation> validTestsInformation = partitioned.get(true);
+        List<TestInformation> invalidTestsInformation = partitioned.get(false);
+        
+        if(invalidTestsInformation.size() > 0) {
+            LOGGER.info("Cleaning up " + invalidTestsInformation.size() + " test from Dashboard");
+            File testCountFile = new File(getLocalVideosPath(), TEST_COUNT_FILE);
+            File dashboardHtml = new File(getLocalVideosPath(), DASHBOARD_FILE);
+            File testList = new File(getLocalVideosPath(), TEST_LIST_FILE);
+            
+            for(TestInformation testInformation : invalidTestsInformation) {
+                deleteIfExists(new File(getLocalVideosPath() + "/" + testInformation.getFileName()));
+                deleteIfExists(new File(testInformation.getLogsFolderPath()));
+                
+                executedTestsInformation.remove(testInformation);
+            }
+            
+            deleteIfExists(dashboardHtml);
+            deleteIfExists(testList);
+            deleteIfExists(testCountFile);
+            
+            String dashboard = FileUtils.readFileToString(new File(getCurrentLocalPath(), DASHBOARD_TEMPLATE_FILE), UTF_8);
+            dashboard = dashboard.replace("{testList}", "").
+                    replace("{executedTests}", "0");
+            FileUtils.writeStringToFile(dashboardHtml, dashboard, UTF_8);
+            
+            for(TestInformation testInformation : validTestsInformation) {
+                updateDashboard(testInformation);
+            }
+        }
+    }
+    
+    public synchronized void resetDashboard() throws IOException {
+        LOGGER.info("Reseting Dashboard");
         File testList = new File(getLocalVideosPath(), TEST_LIST_FILE);
         File testCountFile = new File(getLocalVideosPath(), TEST_COUNT_FILE);
         File dashboardHtml = new File(getLocalVideosPath(), DASHBOARD_FILE);
@@ -158,6 +217,8 @@ public class Dashboard implements DashboardInterface {
         dashboard = dashboard.replace("{testList}", "").
                 replace("{executedTests}", "0");
         FileUtils.writeStringToFile(dashboardHtml, dashboard, UTF_8);
+        
+        executedTestsInformation = new ArrayList<>();
     }
 
     public static void deleteIfExists(File file) {
