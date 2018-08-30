@@ -467,7 +467,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         boolean shutDown = false;
 
         synchronized (this) {
-            if (this.testInformation != null) {
+            if (this.testInformation != null && this.testInformation.getTestStatus() == null) {
                 this.testInformation.setTestStatus(TestInformation.TestStatus.TIMEOUT);
             }
 
