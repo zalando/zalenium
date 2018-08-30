@@ -56,7 +56,7 @@ public class Dashboard implements DashboardInterface {
     private static Environment env = defaultEnvironment;
     private static int executedTests = 0;
     private static int executedTestsWithVideo = 0;
-    private static int retentionPeriod = 3;
+    private static int retentionPeriod;
     private static AtomicBoolean shutdownHookAdded = new AtomicBoolean(false);
     
     public Dashboard() {
