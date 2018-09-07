@@ -79,6 +79,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     private final ContainerClientRegistration registration;
     private boolean videoRecordingEnabledSession;
     private boolean videoRecordingEnabledConfigured = false;
+    private boolean cleaningUp;
     private boolean cleaningUpBeforeNextSession;
     private ContainerClient containerClient = ContainerFactory.getContainerClient();
     private int amountOfExecutedTests;
@@ -89,6 +90,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     private GoogleAnalyticsApi ga = new GoogleAnalyticsApi();
     private CapabilityMatcher capabilityHelper;
     private long lastCommandTime = 0;
+    private long cleanupStartedTime = 0;
     
     private AtomicBoolean timedOut = new AtomicBoolean(false);
     
@@ -421,7 +423,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     }
 
     public boolean shutdownIfStale() {
-        if (isBusy() && isTestIdle()) {
+        if (isBusy() && isTestIdle() && !isCleaningUp()) {
             LOGGER.info(String.format("[%s] is stale.", getContainerId()));
             timeout("proxy being stuck | stale during a test.", ShutdownType.STALE);
             return true;
@@ -651,6 +653,25 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
             ga.trackException(e);
         }
     }
+    
+    private boolean isCleaningUp() {
+        // A node should not be marked as stale while doing cleanup jobs. SANITY: The upper limit of cleanup jobs is 3 minutes.
+        long timeSinceCleanupStarted = System.currentTimeMillis() - cleanupStartedTime;
+        
+        if(this.cleaningUp && timeSinceCleanupStarted > (180L * 1000L)) {
+            LOGGER.error(String.format("[%s] has been cleaning up [%d] which is more than [%d]. The grid seems to be overloaded.", this.getContainerId(),
+                    timeSinceCleanupStarted, (180L * 1000L)));
+                
+            //Cleanup is taking more then 3 minutes, return false so that the node can get marked as stale.
+            return false;
+        } else {
+            return this.cleaningUp;
+        }
+    }
+    
+    private void setCleaningUp(boolean cleaningUp) {
+        this.cleaningUp = cleaningUp;
+    }
 
     public boolean isCleaningUpBeforeNextSession() {
         return cleaningUpBeforeNextSession;
@@ -659,11 +680,23 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     private void setCleaningUpBeforeNextSession(boolean cleaningUpBeforeNextSession) {
         this.cleaningUpBeforeNextSession = cleaningUpBeforeNextSession;
     }
+    
+    private void setCleaningMarker(boolean willShutdown) {
+        this.cleanupStartedTime = System.currentTimeMillis();
+        this.setCleaningUp(true);
+        this.setCleaningUpBeforeNextSession(willShutdown);
+    }
+    
+    private void unsetCleaningMarker() {
+        this.setCleaningUp(false);
+        this.setCleaningUpBeforeNextSession(false);
+    }
 
     private void cleanupNode(boolean willShutdown) {
         // This basically means that the node is cleaning up and will receive a new request soon
         // willShutdown == true => there won't be a next session
-        this.setCleaningUpBeforeNextSession(!willShutdown);
+        this.setCleaningMarker(!willShutdown);
+
         try {
             if (testInformation != null) {
                 processContainerAction(DockerSeleniumContainerAction.SEND_NOTIFICATION,
@@ -677,7 +710,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                 DashboardCollection.updateDashboard(testInformation);
             }
         } finally {
-            this.setCleaningUpBeforeNextSession(false);
+            this.unsetCleaningMarker();
         }
     }
 
