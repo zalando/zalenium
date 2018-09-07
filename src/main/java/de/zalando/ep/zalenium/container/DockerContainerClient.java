@@ -14,6 +14,7 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
+import com.google.common.base.Strings;
 import com.spotify.docker.client.messages.PortBinding;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -60,6 +61,8 @@ public class DockerContainerClient implements ContainerClient {
             "/home/seluser/videos",
             "/dev/shm"
     };
+    private static final String ZALENIUM_SELENIUM_CONTAINER_CPU_LIMIT = "ZALENIUM_SELENIUM_CONTAINER_CPU_LIMIT";
+    private static final String ZALENIUM_SELENIUM_CONTAINER_MEMORY_LIMIT = "ZALENIUM_SELENIUM_CONTAINER_MEMORY_LIMIT";
 
     private static final Environment defaultEnvironment = new Environment();
     private static Environment env = defaultEnvironment;
@@ -75,12 +78,24 @@ public class DockerContainerClient implements ContainerClient {
     private Map<String, String> seleniumContainerLabels = new HashMap<>();
     private boolean pullSeleniumImage = false;
     private boolean isZaleniumPrivileged = true;
+    private static String seleniumContainerCpuLimit;
+    private static String seleniumContainerMemoryLimit;
     private ImmutableMap<String, String> storageOpt;
     private AtomicBoolean pullSeleniumImageChecked = new AtomicBoolean(false);
     private AtomicBoolean isZaleniumPrivilegedChecked = new AtomicBoolean(false);
     private AtomicBoolean storageOptsLoaded = new AtomicBoolean(false);
     private AtomicBoolean mntFoldersAndHttpEnvVarsChecked = new AtomicBoolean(false);
     private AtomicBoolean seleniumContainerLabelsChecked = new AtomicBoolean(false);
+
+    public static void readConfigurationFromEnvVariables() {
+
+        String cpuLimit = env.getEnvVariable(ZALENIUM_SELENIUM_CONTAINER_CPU_LIMIT);
+        setSeleniumContainerCpuLimit(cpuLimit);
+
+        String memoryLimit = env.getEnvVariable(ZALENIUM_SELENIUM_CONTAINER_MEMORY_LIMIT);
+        setSeleniumContainerMemoryLimit(memoryLimit);
+
+    }
 
     @VisibleForTesting
     protected static void setEnv(final Environment env) {
@@ -96,6 +111,10 @@ public class DockerContainerClient implements ContainerClient {
         this.nodeId = nodeId;
     }
 
+    static {
+        readConfigurationFromEnvVariables();
+    }
+
     private String getContainerId(URL remoteUrl) {
         List<Container> containerList = null;
         try {
@@ -106,7 +125,7 @@ public class DockerContainerClient implements ContainerClient {
         }
 
         if (containerList != null) {
-	        return containerList.stream()
+            return containerList.stream()
                     .filter(container -> {
                         if (ZALENIUM_RUNNING_LOCALLY) {
                             return container.ports().stream().anyMatch(port -> port.publicPort() == remoteUrl.getPort());
@@ -115,10 +134,10 @@ public class DockerContainerClient implements ContainerClient {
                         return networkSettings.networks().values().stream()
                                 .anyMatch(network ->  Objects.equals(network.ipAddress(), remoteUrl.getHost()));
                     })
-	                .findFirst().map(Container::id).orElse(null);
+                    .findFirst().map(Container::id).orElse(null);
         } else {
             logger.warn("No container list when looking for {}", remoteUrl.getHost());
-        	return null;
+            return null;
         }
     }
 
@@ -139,10 +158,10 @@ public class DockerContainerClient implements ContainerClient {
                     .filter(container -> containerNameSearch.equalsIgnoreCase(container.names().get(0)))
                     .findFirst().map(Container::id).orElse(null);
             return containerByName != null ? containerByName : containerList.stream()
-	                .filter(container -> container.names().get(0).contains(containerName))
-	                .findFirst().map(Container::id).orElse(null);
+                    .filter(container -> container.names().get(0).contains(containerName))
+                    .findFirst().map(Container::id).orElse(null);
         } else {
-        	return null;
+            return null;
         }
     }
 
@@ -212,6 +231,22 @@ public class DockerContainerClient implements ContainerClient {
         return imageName;
     }
 
+    public static void setSeleniumContainerCpuLimit(String seleniumContainerCpuLimit) {
+        DockerContainerClient.seleniumContainerCpuLimit = seleniumContainerCpuLimit;
+    }
+
+    public static void setSeleniumContainerMemoryLimit(String seleniumContainerMemoryLimit) {
+        DockerContainerClient.seleniumContainerMemoryLimit = seleniumContainerMemoryLimit;
+    }
+
+    public static String getSeleniumContainerCpuLimit() {
+        return seleniumContainerCpuLimit;
+    }
+
+    public static String getSeleniumContainerMemoryLimit() {
+        return seleniumContainerMemoryLimit;
+    }
+
     public int getRunningContainers(String image) {
         try {
             List<Container> containerList = dockerClient.listContainers(withStatusRunning(), withStatusCreated());
@@ -272,12 +307,22 @@ public class DockerContainerClient implements ContainerClient {
         extraHosts.addAll(hubExtraHosts);
 
         HostConfig.Builder hostConfigBuilder = HostConfig.builder()
-            .appendBinds(binds)
-            .networkMode(networkMode)
-            .extraHosts(extraHosts)
-            .autoRemove(true)
-            .storageOpt(storageOpt)
-            .privileged(isZaleniumPrivileged);
+                .appendBinds(binds)
+                .networkMode(networkMode)
+                .extraHosts(extraHosts)
+                .autoRemove(true)
+                .storageOpt(storageOpt)
+                .privileged(isZaleniumPrivileged);
+
+        String cpuLimit = getSeleniumContainerCpuLimit();
+        String memoryLimit = getSeleniumContainerMemoryLimit();
+
+        if (!Strings.isNullOrEmpty(cpuLimit)) {
+            hostConfigBuilder.nanoCpus(Long.valueOf(cpuLimit));
+        }
+        if(!Strings.isNullOrEmpty(memoryLimit)) {
+            hostConfigBuilder.memory(Long.valueOf(memoryLimit));
+        }
 
         if (ZALENIUM_RUNNING_LOCALLY) {
             final Map<String, List<PortBinding>> portBindings = new HashMap<>();
@@ -516,7 +561,8 @@ public class DockerContainerClient implements ContainerClient {
         String zaleniumContainerId = getContainerId(zaleniumContainerName);
 
         if (zaleniumContainerId == null) {
-            logger.warn(String.format("Couldn't find selenium container with name or containing: %s, check that the env variable ZALENIUM_CONTAINER_NAME has an appropiate value", zaleniumContainerName));
+            logger.warn(String.format("Couldn't find selenium container with name or containing: %s, check that the env " +
+                "variable ZALENIUM_CONTAINER_NAME has an appropriate value", zaleniumContainerName));
         }
         try {
             ContainerInfo containerInfo = dockerClient.inspectContainer(zaleniumContainerId);
@@ -562,16 +608,16 @@ public class DockerContainerClient implements ContainerClient {
             containerIp = "localhost";
         }
         if (containerIp != null) {
-	        try {
-	            URL statusUrl = new URL(String.format("http://%s:%s/wd/hub/status", containerIp, container.getNodePort()));
-	            String status = IOUtils.toString(statusUrl, StandardCharsets.UTF_8);
-	            String successMessage = "\"Node is running\"";
-	            if (status.contains(successMessage)) {
-	                return true;
-	            }
-	        } catch (IOException e) {
-	            logger.debug("Error while getting node status, probably the node is still starting up...", e);
-	        }
+            try {
+                URL statusUrl = new URL(String.format("http://%s:%s/wd/hub/status", containerIp, container.getNodePort()));
+                String status = IOUtils.toString(statusUrl, StandardCharsets.UTF_8);
+                String successMessage = "\"Node is running\"";
+                if (status.contains(successMessage)) {
+                    return true;
+                }
+            } catch (IOException e) {
+                logger.debug("Error while getting node status, probably the node is still starting up...", e);
+            }
         }
         return false;
     }
