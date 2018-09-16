@@ -115,7 +115,7 @@ public class DockerContainerClient implements ContainerClient {
         readConfigurationFromEnvVariables();
     }
 
-    private String getContainerId(URL remoteUrl) {
+    private String getContainerId(String zaleniumContainerName, URL remoteUrl) {
         List<Container> containerList = null;
         try {
             containerList = dockerClient.listContainers(withStatusRunning(), withStatusCreated());
@@ -125,10 +125,23 @@ public class DockerContainerClient implements ContainerClient {
         }
 
         if (containerList != null) {
+            String networkMode = getZaleniumNetwork(zaleniumContainerName);
             return containerList.stream()
                     .filter(container -> {
                         if (ZALENIUM_RUNNING_LOCALLY) {
                             return container.ports().stream().anyMatch(port -> port.publicPort() == remoteUrl.getPort());
+                        }
+                        if (DOCKER_NETWORK_HOST_MODE_NAME.equalsIgnoreCase(networkMode)) {
+                            try {
+                                return dockerClient.inspectContainer(container.id())
+                                    .config()
+                                    .exposedPorts()
+                                    .stream()
+                                    .anyMatch(port -> port.equalsIgnoreCase(String.valueOf(remoteUrl.getPort())));
+                            } catch (DockerException | InterruptedException e) {
+                                logger.debug(nodeId + " Error while getting containerId", e);
+                                ga.trackException(e);
+                            }
                         }
                         NetworkSettings networkSettings = container.networkSettings();
                         return networkSettings.networks().values().stream()
@@ -542,10 +555,10 @@ public class DockerContainerClient implements ContainerClient {
 
         Integer noVncPort = remoteHost.getPort() + DockeredSeleniumStarter.NO_VNC_PORT_GAP;
 
-        String containerId = this.getContainerId(remoteHost);
+        String containerId = this.getContainerId(zaleniumContainerName, remoteHost);
 
         if (containerId == null) {
-            logger.warn("No container id for {} - {}, can't register.", zaleniumContainerName, remoteHost.getHost());
+            logger.warn("No container id for {} - {}, can't register.", zaleniumContainerName, remoteHost.toExternalForm());
         }
 
         registration.setNoVncPort(noVncPort);

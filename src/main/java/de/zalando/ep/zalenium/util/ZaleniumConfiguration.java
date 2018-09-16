@@ -20,7 +20,7 @@ public class ZaleniumConfiguration {
 
     // Intended to start Zalenium locally for debugging or development. See ZaleniumRegistryTest#runLocally
     @VisibleForTesting
-    public static final String ZALENIUM_RUNNING_LOCALLY_ENV_VAR = "runningLocally";
+    private static final String ZALENIUM_RUNNING_LOCALLY_ENV_VAR = "runningLocally";
     public static boolean ZALENIUM_RUNNING_LOCALLY = false;
 
     private static final Environment defaultEnvironment = new Environment();
