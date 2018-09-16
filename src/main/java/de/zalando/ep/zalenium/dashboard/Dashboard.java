@@ -10,8 +10,6 @@ import de.zalando.ep.zalenium.util.CommonProxyUtilities;
 import de.zalando.ep.zalenium.util.Environment;
 
 import org.apache.commons.io.FileUtils;
-import org.openqa.grid.common.RegistrationRequest;
-import org.openqa.grid.internal.GridRegistry;
 
 import java.io.File;
 import java.io.IOException;
