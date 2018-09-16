@@ -45,6 +45,7 @@ public abstract class RemoteDashboard implements DashboardInterface {
         }
     }
 
+    public void resetDashboard() throws Exception {throw new UnsupportedOperationException();}
     public void cleanupDashboard() throws Exception {throw new UnsupportedOperationException();}
     public abstract void updateDashboard(TestInformation testInformation) throws Exception;
 }

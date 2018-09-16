@@ -59,3 +59,30 @@ h6 {
     margin-top: 2px;
     margin-bottom: 2px;
 }
+
+.ui_blocker
+{
+    background: rgba(204,204,204,0.5);
+    position : absolute;
+    z-index : 29001;
+    top : 0px;
+    left : 0px;
+    right : 0px;
+    bottom : 0px;
+    overflow-x: hidden;
+    overflow-y: hidden;
+}
+
+.ui_blocker_msg
+{
+    position: absolute;
+    top: 200px;
+    left: 50px;
+    right: 50px;
+    background: rgba(0,0,0,0.8);
+    color: white;
+    padding: 30px 10px;
+    text-align: center;
+    border-radius: 5px;
+    font-size: 24pt;
+}

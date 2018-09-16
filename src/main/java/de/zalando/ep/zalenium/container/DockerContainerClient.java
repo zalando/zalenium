@@ -87,7 +87,7 @@ public class DockerContainerClient implements ContainerClient {
     private AtomicBoolean mntFoldersAndHttpEnvVarsChecked = new AtomicBoolean(false);
     private AtomicBoolean seleniumContainerLabelsChecked = new AtomicBoolean(false);
 
-    public static void readConfigurationFromEnvVariables() {
+    private static void readConfigurationFromEnvVariables() {
 
         String cpuLimit = env.getEnvVariable(ZALENIUM_SELENIUM_CONTAINER_CPU_LIMIT);
         setSeleniumContainerCpuLimit(cpuLimit);
@@ -231,19 +231,19 @@ public class DockerContainerClient implements ContainerClient {
         return imageName;
     }
 
-    public static void setSeleniumContainerCpuLimit(String seleniumContainerCpuLimit) {
+    private static void setSeleniumContainerCpuLimit(String seleniumContainerCpuLimit) {
         DockerContainerClient.seleniumContainerCpuLimit = seleniumContainerCpuLimit;
     }
 
-    public static void setSeleniumContainerMemoryLimit(String seleniumContainerMemoryLimit) {
+    private static void setSeleniumContainerMemoryLimit(String seleniumContainerMemoryLimit) {
         DockerContainerClient.seleniumContainerMemoryLimit = seleniumContainerMemoryLimit;
     }
 
-    public static String getSeleniumContainerCpuLimit() {
+    private static String getSeleniumContainerCpuLimit() {
         return seleniumContainerCpuLimit;
     }
 
-    public static String getSeleniumContainerMemoryLimit() {
+    private static String getSeleniumContainerMemoryLimit() {
         return seleniumContainerMemoryLimit;
     }
 
@@ -269,8 +269,8 @@ public class DockerContainerClient implements ContainerClient {
         return createContainer(zaleniumContainerName, image, envVars, nodePort, NAME_COLLISION_RETRIES);
     }
 
-    public ContainerCreationStatus createContainer(String zaleniumContainerName, String image, Map<String, String> envVars,
-                                                   String nodePort, int collisionAttempts) {
+    private ContainerCreationStatus createContainer(String zaleniumContainerName, String image, Map<String, String> envVars,
+                                                    String nodePort, int collisionAttempts) {
         String containerName = generateContainerName(zaleniumContainerName);
 
         loadMountedFolders(zaleniumContainerName);

@@ -140,15 +140,20 @@ public class CommonProxyUtilities {
     }
 
     @SuppressWarnings("WeakerAccess")
-    public String getCurrentDateAndTimeFormatted() {
+    public String getDateAndTimeFormatted(Date d) {
         DateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmssSSS");
-        return dateFormat.format(new Date());
+        return dateFormat.format(d);
     }
 
     @SuppressWarnings("WeakerAccess")
-    public String getShortDateAndTime() {
+    public String getShortDateAndTime(Date d) {
         DateFormat dateFormat = new SimpleDateFormat("dd-MMM HH:mm:ss");
-        return dateFormat.format(new Date());
+        return dateFormat.format(d);
+    }
+    
+    @SuppressWarnings("WeakerAccess")
+    public Date getDateAndTime(Date d, int addtionalDays) {
+        return new Date(d.getTime() + addtionalDays * 86400000);
     }
 
     private static String readAll(Reader reader) throws IOException {

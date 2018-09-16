@@ -60,11 +60,11 @@ public class DashboardCleanupServletTest {
     }
 
     @Test
-    public void getDoCleanupAll() throws IOException {
+    public void getDoCleanup() throws IOException {
         try {
             CommonProxyUtilities proxyUtilities = TestUtils.mockCommonProxyUtilitiesForDashboardTesting(temporaryFolder);
             Dashboard.setCommonProxyUtilities(proxyUtilities);
-            when(request.getParameter("action")).thenReturn("doCleanupAll");
+            when(request.getParameter("action")).thenReturn("doCleanup");
             dashboardCleanupServlet.doGet(request, response);
             Assert.assertEquals("SUCCESS", response.getOutputStream().toString());
 
@@ -74,11 +74,38 @@ public class DashboardCleanupServletTest {
     }
 
     @Test
-    public void postDoCleanupAll() throws IOException {
+    public void postDoCleanup() throws IOException {
         try {
             CommonProxyUtilities proxyUtilities = TestUtils.mockCommonProxyUtilitiesForDashboardTesting(temporaryFolder);
             Dashboard.setCommonProxyUtilities(proxyUtilities);
-            when(request.getParameter("action")).thenReturn("doCleanupAll");
+            when(request.getParameter("action")).thenReturn("doCleanup");
+            dashboardCleanupServlet.doPost(request, response);
+            Assert.assertEquals("SUCCESS", response.getOutputStream().toString());
+        } finally {
+            Dashboard.restoreCommonProxyUtilities();
+        }
+    }
+    
+    @Test
+    public void getDoReset() throws IOException {
+        try {
+            CommonProxyUtilities proxyUtilities = TestUtils.mockCommonProxyUtilitiesForDashboardTesting(temporaryFolder);
+            Dashboard.setCommonProxyUtilities(proxyUtilities);
+            when(request.getParameter("action")).thenReturn("doReset");
+            dashboardCleanupServlet.doGet(request, response);
+            Assert.assertEquals("SUCCESS", response.getOutputStream().toString());
+
+        } finally {
+            Dashboard.restoreCommonProxyUtilities();
+        }
+    }
+    
+    @Test
+    public void postDoReset() throws IOException {
+        try {
+            CommonProxyUtilities proxyUtilities = TestUtils.mockCommonProxyUtilitiesForDashboardTesting(temporaryFolder);
+            Dashboard.setCommonProxyUtilities(proxyUtilities);
+            when(request.getParameter("action")).thenReturn("doReset");
             dashboardCleanupServlet.doPost(request, response);
             Assert.assertEquals("SUCCESS", response.getOutputStream().toString());
         } finally {

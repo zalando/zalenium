@@ -16,7 +16,8 @@ import com.google.common.io.ByteStreams;
 @SuppressWarnings("WeakerAccess")
 public class DashboardCleanupServlet extends RegistryBasedServlet {
 
-    private static final String DO_CLEANUP_ALL = "doCleanupAll";
+    private static final String DO_RESET = "doReset";
+    private static final String DO_CLEANUP = "doCleanup";
 
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = LoggerFactory.getLogger(DashboardCleanupServlet.class.getName());
@@ -50,11 +51,16 @@ public class DashboardCleanupServlet extends RegistryBasedServlet {
 
         String resultMsg;
         int responseStatus;
-        if (DO_CLEANUP_ALL.equals(action)) {
+        if (DO_RESET.equals(action)) {
+            DashboardCollection.resetDashboard();
+            resultMsg = "SUCCESS";
+            responseStatus = 200;
+        } else if(DO_CLEANUP.equals(action)) {
             DashboardCollection.cleanupDashboard();
             resultMsg = "SUCCESS";
             responseStatus = 200;
-        } else {
+        }
+        else {
             resultMsg = "ERROR action not implemented. Given action=" + action;
             responseStatus = 400;
         }

@@ -20,6 +20,7 @@ SEND_ANONYMOUS_USAGE_INFO=${SEND_ANONYMOUS_USAGE_INFO:-true}
 START_TUNNEL=${START_TUNNEL:-false}
 DEBUG_ENABLED=${DEBUG_ENABLED:-false}
 KEEP_ONLY_FAILED_TESTS=${KEEP_ONLY_FAILED_TESTS:-false}
+RETENTION_PERIOD=${RETENTION_PERIOD:-3}
 LOG_JSON=${LOG_JSON:-false}
 LOGBACK_PATH=${LOGBACK_PATH:-logback.xml}
 NEW_SESSION_WAIT_TIMEOUT=${NEW_SESSION_WAIT_TIMEOUT:-600000}
@@ -362,6 +363,7 @@ StartUp()
     export ZALENIUM_SELENIUM_IMAGE_NAME=${SELENIUM_IMAGE_NAME}
     export ZALENIUM_MAX_TEST_SESSIONS=${MAX_TEST_SESSIONS}
     export ZALENIUM_KEEP_ONLY_FAILED_TESTS=${KEEP_ONLY_FAILED_TESTS}
+    export ZALENIUM_RETENTION_PERIOD=${RETENTION_PERIOD}
     export ZALENIUM_NODE_PARAMS=${SELENIUM_NODE_PARAMS}
 
     # Random ID used for Google Analytics
@@ -758,6 +760,7 @@ function usage()
     echo -e "\t --gridPassword -> allows you to specify a password to enable basic auth protection, --gridUser must be provided also."
     echo -e "\t --maxTestSessions -> max amount of tests executed per container, defaults to '1'."
     echo -e "\t --keepOnlyFailedTests -> Keeps only videos of failed tests (you need to send a cookie). Defaults to 'false'"
+ 	echo -e "\t --retentionPeriod -> Number of day's a testentry should be kept in dashboard before cleanup. Defaults to 3"
     echo ""
     echo -e "\t stop"
     echo ""
@@ -852,6 +855,9 @@ case ${SCRIPT_ACTION} in
                     ;;
                 --keepOnlyFailedTests)
                     KEEP_ONLY_FAILED_TESTS=${VALUE}
+                    ;;
+                --retentionPeriod)
+                    RETENTION_PERIOD=${VALUE}
                     ;;
                 *)
                     echo "ERROR: unknown parameter \"$PARAM\""
