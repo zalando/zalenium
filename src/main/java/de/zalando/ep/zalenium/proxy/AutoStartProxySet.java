@@ -18,6 +18,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.openqa.grid.internal.BaseRemoteProxy;
 import org.openqa.grid.internal.ProxySet;
 import org.openqa.grid.internal.RemoteProxy;
 import org.openqa.grid.internal.TestSession;
@@ -78,8 +79,8 @@ public class AutoStartProxySet extends ProxySet implements Iterable<RemoteProxy>
 
     private final SessionRequestFilter filter = new SessionRequestFilter();
 
-    private final long minContainers;
-    private final long maxContainers;
+    private long minContainers;
+    private long maxContainers;
     private final long timeToWaitToStart;
     private final boolean waitForAvailableNodes;
 
@@ -224,7 +225,7 @@ public class AutoStartProxySet extends ProxySet implements Iterable<RemoteProxy>
     public synchronized void start(Map<String, Object> desiredCapabilities) {
 
         if (startedContainers.size() >= this.maxContainers) {
-            LOGGER.info("Not starting new container, there are [{}] of max [{}] created.", startedContainers.size(),
+            LOGGER.debug("Not starting new container, there are [{}] of max [{}] created.", startedContainers.size(),
                     this.maxContainers);
             return;
         }
@@ -289,7 +290,12 @@ public class AutoStartProxySet extends ProxySet implements Iterable<RemoteProxy>
         LOGGER.debug("Checking {} containers.", startedContainers.size());
         synchronized (this) {
             if (startedContainers.size() < this.minContainers) {
-                LOGGER.info("Autostarting container, because {} is less than min {}", startedContainers.size(),
+                if (this.minContainers > this.maxContainers) {
+                    LOGGER.info("Only up to {} containers will be started, since it is what is configured by " +
+                        "--maxDockerSeleniumContainers", this.maxContainers);
+                    this.minContainers = this.maxContainers;
+                }
+                LOGGER.info("AutoStarting container, because {} is less than min {}", startedContainers.size(),
                         this.minContainers);
                 long outstanding = this.minContainers - startedContainers.size();
                 for (int i = 0; i < outstanding; i++) {
@@ -379,7 +385,7 @@ public class AutoStartProxySet extends ProxySet implements Iterable<RemoteProxy>
         // can be called
         ContainerCreationStatus startedContainer = starter.startDockerSeleniumContainer(desiredCapabilities);
         if (startedContainer == null) {
-            LOGGER.info(String.format("Failed to start container."));
+            LOGGER.info("Failed to start container.");
         } else {
             filter.requestHasBeenProcesssed(desiredCapabilities);
             startedContainers.put(startedContainer,
@@ -391,7 +397,7 @@ public class AutoStartProxySet extends ProxySet implements Iterable<RemoteProxy>
 
     private boolean nodesAvailable(Map<String, Object> requestedCapability) {
         if (!waitForAvailableNodes) {
-            LOGGER.debug(String.format("Not waiting for available slots, creating nodes when possible."));
+            LOGGER.debug("Not waiting for available slots, creating nodes when possible.");
             return false;
         }
 
@@ -404,7 +410,7 @@ public class AutoStartProxySet extends ProxySet implements Iterable<RemoteProxy>
         });
 
         if (available) {
-            LOGGER.debug(String.format("A node is coming up to handle this request."));
+            LOGGER.debug("A node is coming up to handle this request.");
             return true;
         }
 
@@ -428,7 +434,7 @@ public class AutoStartProxySet extends ProxySet implements Iterable<RemoteProxy>
             at.addRule();
 
             this.startedContainers.forEach((creationStatus, containerStatus) -> {
-                final String proxyId = containerStatus.getProxy().map(p -> p.getId()).orElse("-");
+                final String proxyId = containerStatus.getProxy().map(BaseRemoteProxy::getId).orElse("-");
                 final String containerId = creationStatus.getContainerName();
                 final String timeCreated = dateTime(containerStatus.getTimeCreated());
                 final String timeStarted = containerStatus.getTimeStarted().map(AutoStartProxySet::dateTime)
