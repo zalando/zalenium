@@ -71,6 +71,7 @@ h6 {
     bottom : 0px;
     overflow-x: hidden;
     overflow-y: hidden;
+    display: none;
 }
 
 .ui_blocker_msg
