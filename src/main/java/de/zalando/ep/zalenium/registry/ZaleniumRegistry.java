@@ -1,6 +1,7 @@
 package de.zalando.ep.zalenium.registry;
 
 import de.zalando.ep.zalenium.dashboard.Dashboard;
+import de.zalando.ep.zalenium.prometheus.ContainerStatusCollectorExports;
 import de.zalando.ep.zalenium.prometheus.TestSessionCollectorExports;
 import net.jcip.annotations.ThreadSafe;
 
@@ -98,10 +99,12 @@ public class ZaleniumRegistry extends BaseGridRegistry implements GridRegistry {
         Dashboard.loadTestInformationFromFile();
         Dashboard.setShutDownHook();
 
-        proxies = new AutoStartProxySet(false, minContainers, maxContainers, timeToWaitToStart, waitForAvailableNodes, starter, Clock.systemDefaultZone());
+        AutoStartProxySet autoStart = new AutoStartProxySet(false, minContainers, maxContainers, timeToWaitToStart, waitForAvailableNodes, starter, Clock.systemDefaultZone());
+        proxies = autoStart;
         this.matcherThread.setUncaughtExceptionHandler(new UncaughtExceptionHandler());
         
         new TestSessionCollectorExports(proxies).register();
+        new ContainerStatusCollectorExports(autoStart.getStartedContainers()).register();
     }
 
     /**
