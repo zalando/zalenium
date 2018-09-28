@@ -257,16 +257,6 @@ objects:
     - ""
     attributeRestrictions: null
     resources:
-    - services
-    verbs:
-    - create
-    - delete
-    - get
-    - list
-  - apiGroups:
-    - ""
-    attributeRestrictions: null
-    resources:
     - pods/exec
     verbs:
     - create
