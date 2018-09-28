@@ -90,6 +90,19 @@ parameters:
     description: "Set to false if you do not want to send statistics back to Zalando."
     value: "true"
     required: false
+  - name: "VIDEO_RECORDING_ENABLED"
+    displayName: "Enable video recording during test runs"
+    description: "Set to false if you do not want video recording during test runs."
+    value: "true"
+    required: false
+  - name: "ZALENIUM_IMAGE_NAME"
+    displayName: "The name of the image used for zalenium hub"
+    value: "dosel/zalenium:latest"
+    required: false
+  - name: "SELENIUM_IMAGE_NAME"
+    displayName: "The name of image for the selenium nodes"
+    value: "elgalu/selenium:latest"
+    required: false
 labels:
   app: zalenium
 objects:
@@ -145,8 +158,10 @@ objects:
           - name: SEND_ANONYMOUS_USAGE_INFO
             value: ${SEND_ANONYMOUS_USAGE_INFO}
           - name: SELENIUM_IMAGE_NAME
-            value: "elgalu/selenium:latest"
-          image: dosel/zalenium:latest
+            value: ${SELENIUM_IMAGE_NAME}
+          - name: VIDEO_RECORDING_ENABLED
+            value: ${VIDEO_RECORDING_ENABLED}
+          image: ${ZALENIUM_IMAGE_NAME}
           imagePullPolicy: IfNotPresent
           name: zalenium
           ports:
