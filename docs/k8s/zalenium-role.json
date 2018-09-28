@@ -23,21 +23,6 @@
         },
         {
             "verbs": [
-                "list",
-                "create",
-                "delete",
-                "get"
-            ],
-            "attributeRestrictions": null,
-            "apiGroups": [
-                ""
-            ],
-            "resources": [
-                "services"
-            ]
-        },
-        {
-            "verbs": [
                 "create",
                 "get"
             ],
