@@ -38,6 +38,7 @@ public class TestInformation {
     private String screenDimension;
     private String timeZone;
     private String build;
+    private String testFileNameTemplate;
     private Date retentionDate;
     private TestStatus testStatus;
     private boolean videoRecorded;
@@ -147,7 +148,11 @@ public class TestInformation {
             buildName = this.build.replaceAll("[^a-zA-Z0-9]", "_") + "/";
         }
 
-        this.testNameNoExtension = TEST_FILE_NAME_TEMPLATE
+        if(Strings.isNullOrEmpty(this.testFileNameTemplate)) {
+            this.testFileNameTemplate = TEST_FILE_NAME_TEMPLATE;
+        }
+
+        this.testNameNoExtension = this.testFileNameTemplate
                 .replace("{proxyName}", this.proxyName.toLowerCase())
                 .replace("{testName}", getTestName())
                 .replace("{browser}", this.browser)
@@ -228,6 +233,7 @@ public class TestInformation {
         this.screenDimension = Optional.ofNullable(builder.screenDimension).orElse("");
         this.timeZone = Optional.ofNullable(builder.timeZone).orElse("");
         this.build = Optional.ofNullable(builder.build).orElse("");
+        this.testFileNameTemplate = Optional.ofNullable(builder.testFileNameTemplate).orElse("");
         this.retentionDate = Optional.ofNullable(builder.retentionDate).orElse(new Date());
         this.testStatus = builder.testStatus;
         this.videoRecorded = true;
@@ -249,6 +255,7 @@ public class TestInformation {
         private String screenDimension;
         private String timeZone;
         private String build;
+        private String testFileNameTemplate;
         private Date retentionDate;
         private TestStatus testStatus;
         private JsonObject metadata;
@@ -315,6 +322,11 @@ public class TestInformation {
 
         public TestInformationBuilder withBuild(String build) {
             this.build = build;
+            return this;
+        }
+
+        public TestInformationBuilder withTestFileNameTemplate(String testFileNameTemplate) {
+            this.testFileNameTemplate = testFileNameTemplate;
             return this;
         }
 

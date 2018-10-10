@@ -15,6 +15,7 @@ public class DockerSeleniumCapabilityMatcher extends DefaultCapabilityMatcher {
     private static final List<String> ZALENIUM_CUSTOM_CAPABILITIES_NO_PREFIX = Arrays.asList(
             ZaleniumCapabilityType.TEST_NAME_NO_PREFIX,
             ZaleniumCapabilityType.BUILD_NAME_NO_PREFIX,
+            ZaleniumCapabilityType.TEST_FILE_NAME_TEMPLATE_NO_PREFIX,
             ZaleniumCapabilityType.IDLE_TIMEOUT_NO_PREFIX,
             ZaleniumCapabilityType.SCREEN_RESOLUTION_NO_PREFIX,
             ZaleniumCapabilityType.RESOLUTION_NO_PREFIX,
