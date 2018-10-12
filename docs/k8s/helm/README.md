@@ -81,8 +81,11 @@ See Zalenium's [usage examples](https://github.com/zalando/zalenium/blob/master/
 | `hub.sauceAccessKey` | Access key to log into saucelabs | blank |
 | `hub.browserStackUser` | Credentials for browserstack | blank |
 | `hub.browserStackKey` | Credentials for browserstack | blank |
-| `hub.testingBotKey` | Credentials for testingbot | blank | 
-| `hub.testingBotSecret` | Credentials for testingbot | blank | 
+| `hub.testingBotKey` | Credentials for testingbot | blank |
+| `hub.testingBotSecret` | Credentials for testingbot | blank |
+| `hub.basicAuth.enabled` | Enables basic authentication | false |
+| `hub.basicAuth.username` | Username for basic authentication | zalenium |
+| `hub.basicAuth.password` | Credentials for testingbot | password |
 
 Specify each parameter using the `--set key=value[,key=value]` argument to `helm install`. For example,
 
