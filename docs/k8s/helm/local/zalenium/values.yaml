@@ -76,6 +76,10 @@ hub:
   keepOnlyFailedTests: false
   retentionPeriod: 3
   sendAnonymousUsageInfo: true
+  basicAuth:
+    enabled: false
+    username: "zalenium"
+    password: "password"
 
   # Environment variables passed to Zalenium hub.
   sauceUserName: blank

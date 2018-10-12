@@ -33,3 +33,10 @@ Create the name of the service account
     {{ default "default" .Values.serviceAccount.name }}
 {{- end -}}
 {{- end -}}
+
+{{/*
+Create base64 encoded basic authentication for readiness/liveness probe
+*/}}
+{{- define "basicAuth.b64" -}}
+{{- printf "%s:%s" .Values.hub.basicAuth.username .Values.hub.basicAuth.password | b64enc -}}
+{{- end -}}
