@@ -37,6 +37,7 @@ import io.fabric8.kubernetes.api.model.PodList;
 import io.fabric8.kubernetes.api.model.Quantity;
 import io.fabric8.kubernetes.api.model.Volume;
 import io.fabric8.kubernetes.api.model.VolumeMount;
+import io.fabric8.kubernetes.api.model.Toleration;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.ExecListener;
 import io.fabric8.kubernetes.client.dsl.ExecWatch;
@@ -63,6 +64,7 @@ public class KubernetesContainerClient implements ContainerClient {
     private Map<VolumeMount, Volume> mountedSharedFoldersMap = new HashMap<>();
     private List<HostAlias> hostAliases = new ArrayList<>();
     private Map<String, String> nodeSelector = new HashMap<>();
+    private List<Toleration> tolerations = new ArrayList<>();
 
     private final Map<String, Quantity> seleniumPodLimits = new HashMap<>();
     private final Map<String, Quantity> seleniumPodRequests = new HashMap<>();
@@ -98,6 +100,7 @@ public class KubernetesContainerClient implements ContainerClient {
             discoverFolderMounts();
             discoverHostAliases();
             discoverNodeSelector();
+            discoverTolerations();
 
             buildResourceMaps();
 
@@ -149,6 +152,13 @@ public class KubernetesContainerClient implements ContainerClient {
         final Map<String, String> configuredNodeSelector = zaleniumPod.getSpec().getNodeSelector();
         if (configuredNodeSelector != null && !configuredNodeSelector.isEmpty()) {
             nodeSelector = configuredNodeSelector;
+        }
+    }
+
+    private void discoverTolerations() {
+        final List<Toleration> configuredTolerations = zaleniumPod.getSpec().getTolerations();
+        if (configuredTolerations != null && !configuredTolerations.isEmpty()) {
+            tolerations = configuredTolerations;
         }
     }
 
@@ -322,6 +332,7 @@ public class KubernetesContainerClient implements ContainerClient {
         config.setMountedSharedFoldersMap(mountedSharedFoldersMap);
         config.setHostAliases(hostAliases);
         config.setNodeSelector(nodeSelector);
+        config.setTolerations(tolerations);
         config.setPodLimits(seleniumPodLimits);
         config.setPodRequests(seleniumPodRequests);
 
@@ -535,6 +546,7 @@ public class KubernetesContainerClient implements ContainerClient {
                 .endMetadata()
                 .withNewSpec()
                     .withNodeSelector(config.getNodeSelector())
+                    .withTolerations(config.getTolerations())
                     // Add a memory volume that we can use for /dev/shm
                     .addNewVolume()
                         .withName("dshm")

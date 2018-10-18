@@ -5,6 +5,7 @@ import io.fabric8.kubernetes.api.model.HostAlias;
 import io.fabric8.kubernetes.api.model.Quantity;
 import io.fabric8.kubernetes.api.model.Volume;
 import io.fabric8.kubernetes.api.model.VolumeMount;
+import io.fabric8.kubernetes.api.model.Toleration;
 import io.fabric8.kubernetes.client.KubernetesClient;
 
 import java.util.List;
@@ -23,6 +24,7 @@ public class PodConfiguration {
     private Map<String, Quantity> podLimits;
     private Map<String, Quantity> podRequests;
     private Map<String, String> nodeSelector;
+    private List<Toleration> tolerations;
     
     private String nodePort;
 
@@ -91,5 +93,11 @@ public class PodConfiguration {
     }
     public void setNodeSelector(final Map<String, String> nodeSelector) {
         this.nodeSelector = nodeSelector;
+    }
+    public List<Toleration> getTolerations() {
+        return tolerations;
+    }
+    public void setTolerations(final List<Toleration> tolerations) {
+        this.tolerations = tolerations;
     }
 }
