@@ -231,6 +231,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
             boolean videoRecording = Boolean.parseBoolean(getCapability(requestedCapability, ZaleniumCapabilityType.RECORD_VIDEO, "true"));
             setVideoRecordingEnabledSession(videoRecording);
         }
+        String testFileNameTemplate = getCapability(requestedCapability, ZaleniumCapabilityType.TEST_FILE_NAME_TEMPLATE, "");
         String screenResolution = getCapability(newSession.getSlot().getCapabilities(), ZaleniumCapabilityType.SCREEN_RESOLUTION, "N/A");
         String browserVersion = getCapability(newSession.getSlot().getCapabilities(), CapabilityType.VERSION, "");
         String timeZone = getCapability(newSession.getSlot().getCapabilities(), ZaleniumCapabilityType.TIME_ZONE, "N/A");
@@ -243,6 +244,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                 .withPlatform(Platform.LINUX.name())
                 .withScreenDimension(screenResolution)
                 .withTimeZone(timeZone)
+                .withTestFileNameTemplate(testFileNameTemplate)
                 .withBuild(testBuild)
                 .withTestStatus(TestInformation.TestStatus.COMPLETED)
                 .build();

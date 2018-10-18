@@ -63,12 +63,22 @@ spec:
             httpGet:
               path: /grid/console
               port: {{ .Values.hub.port }}
+              {{- if eq true .Values.hub.basicAuth.enabled }}
+              httpHeaders:
+              - name: Authorization
+                value: Basic {{ template "basicAuth.b64" . }}
+              {{- end}}
             initialDelaySeconds: 90
             periodSeconds: 5
           readinessProbe:
             httpGet:
               path: /grid/console
               port: {{ .Values.hub.port }}
+              {{- if eq true .Values.hub.basicAuth.enabled }}
+              httpHeaders:
+              - name: Authorization
+                value: Basic {{ template "basicAuth.b64" . }}
+              {{- end}}
             timeoutSeconds: {{ .Values.hub.readinessTimeout }}
           env:
             - name: ZALENIUM_KUBERNETES_CPU_REQUEST
@@ -127,6 +137,12 @@ spec:
             - '{{ .Values.hub.keepOnlyFailedTests }}'
             - '--retentionPeriod'
             - '{{ .Values.hub.retentionPeriod }}'
+            {{- if eq true .Values.hub.basicAuth.enabled }}
+            - '--gridUser'
+            - '{{ .Values.hub.basicAuth.username }}'
+            - '--gridPassword'
+            - '{{ .Values.hub.basicAuth.password }}'
+            {{- end }}
           resources:
 {{ toYaml .Values.hub.resources | indent 12 }}
           volumeMounts:
