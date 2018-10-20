@@ -151,3 +151,14 @@ spec:
             - name: {{ template "zalenium.fullname" . }}-data
               mountPath: /tmp/mounted
       serviceAccountName: {{ template "zalenium.serviceAccount" . }}
+      {{- if .Values.nodeSelector.enabled }}
+      nodeSelector:
+        {{ .Values.nodeSelector.key }}: {{ .Values.nodeSelector.value | quote }}
+      {{- end }}
+      {{- if .Values.tolerations.enabled }}
+      tolerations:
+        - key: {{ .Values.tolerations.key }}
+          operator: {{ .Values.tolerations.operator }}
+          value: {{ .Values.tolerations.value | quote }}
+          effect: {{ .Values.tolerations.effect }}
+      {{- end }}

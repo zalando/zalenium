@@ -143,3 +143,17 @@ rbac:
   ## Run the zalenium hub container with the ability to deploy/manage containers of jobs
   ## cluster-wide or only within namespace
   clusterWideAccess: false
+
+nodeSelector:
+  enabled: false
+  ## Run zalenium hub on specified nodes
+  ## key: test
+  ## value: test
+
+tolerations:
+  enabled: false
+  ## Set tolerations to run zalenium hub on nodes with taints
+  ## key: test
+  ## operator: Equal
+  ## value: test
+  ## effect: NoSchedule
