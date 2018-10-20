@@ -48,6 +48,8 @@ See Zalenium's [usage examples](https://github.com/zalando/zalenium/blob/master/
 | `rbac` | If your cluster has RBAC enabled, you can choose to either have the chart create its own service account or provide one.To have the chart create the service account for you, set rbac.create to true | false |
 | `serviceAccount` | Set serviceAccount.create to true if you want to create an service account for zalenium | false |
 | `ingress` | Set ingress.enabled to true if you want to create an ingress entry for zalenium | false |
+| `nodeSelector` | Configure node selector if you want to run zalenium on specified nodes | false |
+| `tolerations` | Configure tolerations if you want to run zalenium on nodes with taints | false |
 | `hub.image` | The zalenium hub image | `dosel/zalenium` |
 | `hub.tag` | The zalenium hub image tag | `3` |
 | `hub.pullPolicy` | The pull policy for the hub image | `IfNotPresent` |
