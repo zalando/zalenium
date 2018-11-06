@@ -490,7 +490,7 @@ public class ZaleniumRegistry extends BaseGridRegistry implements GridRegistry {
     }
 
     @Override
-    public HttpClient getHttpClient(URL url) {
+    public HttpClient getHttpClient(URL url, int connectionTimeout, int readTimeout) {
         // https://github.com/zalando/zalenium/issues/491
         int maxTries = 3;
         for (int i = 1; i <= maxTries; i++) {
