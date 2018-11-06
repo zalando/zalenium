@@ -1,6 +1,7 @@
 package de.zalando.ep.zalenium.util;
 
 import java.net.URL;
+import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -117,6 +118,14 @@ public final class SimpleRegistry implements GridRegistry {
     @Override
     public void stop() {
         // Not needed for current testing.
+    }
+
+    @Override
+    public HttpClient getHttpClient(URL url, int connectionTimeout, int readTimeout) {
+        return HttpClient.Factory.createDefault().builder()
+            .connectionTimeout(Duration.ofSeconds(connectionTimeout))
+            .readTimeout(Duration.ofSeconds(readTimeout))
+            .createClient(url);
     }
 
     @Override
