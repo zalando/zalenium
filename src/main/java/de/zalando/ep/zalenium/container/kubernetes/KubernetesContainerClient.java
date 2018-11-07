@@ -536,6 +536,20 @@ public class KubernetesContainerClient implements ContainerClient {
     private enum ResourceType {
         REQUEST, LIMIT
     }
+    
+    private enum ImagePullPolicy {
+        Always("Always"),
+        IfNotPresent("IfNotPresent");
+
+        private final String policy;
+
+        ImagePullPolicy(String policy){
+            this.policy = policy;
+        }
+        public String getPolicy() {
+            return this.policy;
+        }
+    }
 
     public static DoneablePod createDoneablePodDefaultImpl(PodConfiguration config) {
         DoneablePod doneablePod = config.getClient().pods()
@@ -557,7 +571,7 @@ public class KubernetesContainerClient implements ContainerClient {
                     .addNewContainer()
                         .withName("selenium-node")
                         .withImage(config.getImage())
-                        .withImagePullPolicy("IfNotPresent")
+                        .withImagePullPolicy(ImagePullPolicy.IfNotPresent.getPolicy())
                         .addAllToEnv(config.getEnvVars())
                         .addNewVolumeMount()
                             .withName("dshm")
