@@ -60,7 +60,7 @@
         <!-- This needs to match what is in the Selenium Server pom file -->
         <jetty.version>9.4.12.v20180830</jetty.version>
         <docker-client.version>8.11.7</docker-client.version>
-        <kubernetes-client.version>4.0.0</kubernetes-client.version>
+        <kubernetes-client.version>4.1.0</kubernetes-client.version>
         <junit.version>4.12</junit.version>
         <mockito.version>2.19.0</mockito.version>
         <awaitility.version>3.1.1</awaitility.version>
@@ -201,12 +201,7 @@
             <artifactId>jetty-server</artifactId>
             <scope>provided</scope>
             <version>${jetty.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>*</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-            </exclusions>
+
         </dependency>
         <dependency>
             <groupId>io.fabric8</groupId>
