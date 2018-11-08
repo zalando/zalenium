@@ -574,10 +574,10 @@ public class KubernetesContainerClient implements ContainerClient {
                 .addToCommand(new String[]{"/bin/sh", "-c", "http_proxy=\"\" curl -s http://`getent hosts ${HOSTNAME} | awk '{ print $1 }'`:"
                         + config.getNodePort() + "/wd/hub/status | jq .value.ready | grep true"})
                 .endExec()
-                .withInitialDelaySeconds(10)
+                .withInitialDelaySeconds(5)
                 .withFailureThreshold(60)
                 .withPeriodSeconds(1)
-                .withTimeoutSeconds(10)
+                .withTimeoutSeconds(5)
                 .withSuccessThreshold(1)
                 .endReadinessProbe()
                 .endContainer()
