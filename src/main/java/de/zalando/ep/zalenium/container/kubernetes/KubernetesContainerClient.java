@@ -141,7 +141,7 @@ public class KubernetesContainerClient implements ContainerClient {
             }
         }
 
-        String imagePullPolicyEnvValue = environment.getStringEnvVariable("ZALENIUM_KUBERNETES_IMAGE_PULL_POLICY ", null);
+        String imagePullPolicyEnvValue = environment.getStringEnvVariable("ZALENIUM_KUBERNETES_IMAGE_PULL_POLICY", null);
         if (StringUtils.isNotBlank(imagePullPolicyEnvValue)) {
             imagePullPolicy = imagePullPolicyEnvValue;
         } // Default to imagePullPolicy: Always if ENV variable "ZALENIUM_KUBERNETES_IMAGE_PULL_POLICY" is not provided
