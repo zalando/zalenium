@@ -592,12 +592,12 @@ public class KubernetesContainerClient implements ContainerClient {
         for (Map.Entry<VolumeMount, Volume> entry : config.getMountedSharedFoldersMap().entrySet()) {
             doneablePod = doneablePod
                     .editSpec()
-                    .addNewVolumeLike(entry.getValue())
+                        .addNewVolumeLike(entry.getValue())
                     .and()
-                    .editFirstContainer()
-                    .addNewVolumeMountLike(entry.getKey())
-                    .endVolumeMount()
-                    .endContainer()
+                        .editFirstContainer()
+                            .addNewVolumeMountLike(entry.getKey())
+                            .endVolumeMount()
+                        .endContainer()
                     .endSpec();
         }
 
@@ -605,8 +605,8 @@ public class KubernetesContainerClient implements ContainerClient {
         for (HostAlias hostAlias : config.getHostAliases()) {
             doneablePod = doneablePod
                     .editSpec()
-                    .addNewHostAliasLike(hostAlias)
-                    .endHostAlias()
+                        .addNewHostAliasLike(hostAlias)
+                        .endHostAlias()
                     .endSpec();
         }
 
