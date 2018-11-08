@@ -1,6 +1,5 @@
 package de.zalando.ep.zalenium.container.kubernetes;
 
-import java.awt.*;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.net.InetAddress;
@@ -114,7 +113,7 @@ public class KubernetesContainerClient implements ContainerClient {
                             + "\tSelenium Pod Resource Limits: %s\n"
                             + "\tSelenium Pod Resource Requests: %s",
                     hostname, appName, zaleniumAppName,
-                    seleniumPodLimits.toString(), seleniumPodRequests.toString()));
+                        seleniumPodLimits.toString(), seleniumPodRequests.toString()));
         } catch (Exception e) {
             logger.warn("Error initialising Kubernetes support.", e);
         }
@@ -212,7 +211,7 @@ public class KubernetesContainerClient implements ContainerClient {
     public InputStream copyFiles(String containerId, String folderName) {
 
         ByteArrayOutputStream stderr = new ByteArrayOutputStream();
-        String[] command = new String[]{"tar", "-C", folderName, "-c", "."};
+        String[] command = new String[] {"tar", "-C", folderName, "-c", "."};
         CopyFilesExecListener listener = new CopyFilesExecListener(stderr, command, containerId);
         ExecWatch exec = client.pods().withName(containerId).redirectingOutput().writingError(stderr).usingListener(listener).exec(command);
 
@@ -277,7 +276,8 @@ public class KubernetesContainerClient implements ContainerClient {
         if (waitForExecution) {
             // If we're going to wait, let's use the same thread
             waitForResultsAndCleanup.get();
-        } else {
+        } 
+        else {
             // Let the common ForkJoinPool handle waiting for the results, since we don't care when it finishes.
             CompletableFuture.supplyAsync(waitForResultsAndCleanup);
         }
@@ -295,7 +295,7 @@ public class KubernetesContainerClient implements ContainerClient {
         PodList list = client.pods().withLabels(createdByZaleniumMap).list();
         logger.debug("Pods in the list " + list.getItems().size());
 
-        int count = 0;
+        int count=0;
         for (Pod pod : list.getItems()) {
             String phase = pod.getStatus().getPhase();
             if ("Running".equalsIgnoreCase(phase) || "Pending".equalsIgnoreCase(phase)) {
@@ -361,7 +361,8 @@ public class KubernetesContainerClient implements ContainerClient {
             String podIP = pod.getStatus().getPodIP();
             logger.debug(String.format("Pod %s, IP -> %s", containerName, podIP));
             return podIP;
-        } else {
+        } 
+        else {
             return null;
         }
     }
@@ -370,7 +371,8 @@ public class KubernetesContainerClient implements ContainerClient {
         Pod pod = client.pods().withName(container.getContainerName()).get();
         if (pod == null) {
             return false;
-        } else {
+        } 
+        else {
             return pod.getStatus().getConditions().stream()
                     .filter(condition -> condition.getType().equals("Ready"))
                     .map(condition -> condition.getStatus().equals("True"))
@@ -432,7 +434,8 @@ public class KubernetesContainerClient implements ContainerClient {
             Integer noVncPortInt = Integer.decode(noVncPort.get().getValue());
 
             registration.setNoVncPort(noVncPortInt);
-        } else {
+        } 
+        else {
             logger.warn(String.format("%s Couldn't find NOVNC_PORT, live preview will not work.", containerId));
         }
 
@@ -493,7 +496,8 @@ public class KubernetesContainerClient implements ContainerClient {
         public void waitForInputStreamToConnect() {
             try {
                 this.openLatch.await();
-            } catch (InterruptedException e) {
+            } 
+            catch (InterruptedException e) {
                 logger.error(String.format("%s Failed to execute command %s", containerId, Arrays.toString(command)), e);
             }
         }
@@ -541,47 +545,47 @@ public class KubernetesContainerClient implements ContainerClient {
         DoneablePod doneablePod = config.getClient().pods()
                 .createNew()
                 .withNewMetadata()
-                .withGenerateName(config.getContainerIdPrefix())
-                .addToLabels(config.getLabels())
+                    .withGenerateName(config.getContainerIdPrefix())
+                    .addToLabels(config.getLabels())
                 .endMetadata()
                 .withNewSpec()
-                .withNodeSelector(config.getNodeSelector())
-                .withTolerations(config.getTolerations())
-                // Add a memory volume that we can use for /dev/shm
-                .addNewVolume()
-                .withName("dshm")
-                .withNewEmptyDir()
-                .withMedium("Memory")
-                .endEmptyDir()
-                .endVolume()
-                .addNewContainer()
-                .withName("selenium-node")
-                .withImage(config.getImage())
-                .withImagePullPolicy(config.getImagePullPolicy())
-                .addAllToEnv(config.getEnvVars())
-                .addNewVolumeMount()
-                .withName("dshm")
-                .withMountPath("/dev/shm")
-                .endVolumeMount()
-                .withNewResources()
-                .addToLimits(config.getPodLimits())
-                .addToRequests(config.getPodRequests())
-                .endResources()
-                // Add a readiness health check so that we can know when the selenium pod is ready to accept requests
-                // so then we can initiate a registration.
-                .withNewReadinessProbe()
-                .withNewExec()
-                .addToCommand(new String[]{"/bin/sh", "-c", "http_proxy=\"\" curl -s http://`getent hosts ${HOSTNAME} | awk '{ print $1 }'`:"
-                        + config.getNodePort() + "/wd/hub/status | jq .value.ready | grep true"})
-                .endExec()
-                .withInitialDelaySeconds(5)
-                .withFailureThreshold(60)
-                .withPeriodSeconds(1)
-                .withTimeoutSeconds(5)
-                .withSuccessThreshold(1)
-                .endReadinessProbe()
-                .endContainer()
-                .withRestartPolicy("Never")
+                    .withNodeSelector(config.getNodeSelector())
+                    .withTolerations(config.getTolerations())
+                    // Add a memory volume that we can use for /dev/shm
+                    .addNewVolume()
+                        .withName("dshm")
+                        .withNewEmptyDir()
+                            .withMedium("Memory")
+                        .endEmptyDir()
+                    .endVolume()
+                    .addNewContainer()
+                        .withName("selenium-node")
+                        .withImage(config.getImage())
+                        .withImagePullPolicy(config.getImagePullPolicy())
+                        .addAllToEnv(config.getEnvVars())
+                        .addNewVolumeMount()
+                            .withName("dshm")
+                            .withMountPath("/dev/shm")
+                        .endVolumeMount()
+                        .withNewResources()
+                            .addToLimits(config.getPodLimits())
+                            .addToRequests(config.getPodRequests())
+                        .endResources()
+                        // Add a readiness health check so that we can know when the selenium pod is ready to accept requests
+                        // so then we can initiate a registration.
+                        .withNewReadinessProbe()
+                            .withNewExec()
+                                .addToCommand(new String[] {"/bin/sh", "-c", "http_proxy=\"\" curl -s http://`getent hosts ${HOSTNAME} | awk '{ print $1 }'`:" 
+                                        + config.getNodePort() + "/wd/hub/status | jq .value.ready | grep true"})
+                            .endExec()
+                            .withInitialDelaySeconds(5)
+                            .withFailureThreshold(60)
+                            .withPeriodSeconds(1)
+                            .withTimeoutSeconds(5)
+                            .withSuccessThreshold(1)
+                        .endReadinessProbe()
+                    .endContainer()
+                    .withRestartPolicy("Never")
                 .endSpec();
 
         // Add the shared folders if available
