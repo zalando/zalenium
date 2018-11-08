@@ -65,7 +65,7 @@ public class KubernetesContainerClient implements ContainerClient {
     private List<HostAlias> hostAliases = new ArrayList<>();
     private Map<String, String> nodeSelector = new HashMap<>();
     private List<Toleration> tolerations = new ArrayList<>();
-    private String imagePullPolicy = ImagePullPolicyType.Always.name();
+    private String imagePullPolicy;
 
     private final Map<String, Quantity> seleniumPodLimits = new HashMap<>();
     private final Map<String, Quantity> seleniumPodRequests = new HashMap<>();
@@ -139,6 +139,14 @@ public class KubernetesContainerClient implements ContainerClient {
                     resourceMap.put(resource.getRequestType(), quantity);
                 }
             }
+        }
+
+        String imagePullPolicyEnvValue = environment.getStringEnvVariable("ZALENIUM_KUBERNETES_IMAGE_PULL_POLICY ", null);
+        if (StringUtils.isNotBlank(imagePullPolicyEnvValue)) {
+            imagePullPolicy = imagePullPolicyEnvValue;
+        } // Default to imagePullPolicy: Always if ENV variable "ZALENIUM_KUBERNETES_IMAGE_PULL_POLICY" is not provided
+        else {
+            imagePullPolicy = ImagePullPolicyType.Always.name();
         }
     }
 
