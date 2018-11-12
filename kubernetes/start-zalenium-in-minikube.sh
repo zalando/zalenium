@@ -1,11 +1,17 @@
 #!/usr/bin/env bash
 
-kubectl create --validate=false -f kubernetes
-kubectl get serviceAccounts
-kubectl get pv
-kubectl get pvc
-kubectl get deployments
-kubectl get services
+kubectl create namespace zalenium
+
+helm template --name zalenium \
+    --set hub.serviceType=NodePort \
+    --set rbac.create=true \
+    --set serviceAccount.create=true \
+    --set persistence.enabled=true \
+    --set persistence.data.size=1Gi \
+    --set persistence.video.size=1Gi \
+    charts/zalenium | kubectl apply --namespace zalenium -f -
+
+kubectl get all,sa,roles,rolebindings,pvc,pv --namespace zalenium
 
 MINIKUBE_IP=$(minikube ip)
 ZALENIUM_GRID_PORT=$(kubectl get svc zalenium --namespace zalenium -o go-template='{{ index (index .spec.ports 0) "nodePort" }}{{ "\n" }}')

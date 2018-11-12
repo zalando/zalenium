@@ -3,11 +3,7 @@ kind: Service
 metadata:
   name: {{ template "zalenium.fullname" . }}
   labels:
-    app: {{ template "zalenium.name" . }}
-    role: grid
-    chart: {{ template "zalenium.chart" . }}
-    release: "{{ .Release.Name }}"
-    heritage: "{{ .Release.Service }}"
+{{ include "zalenium.labels" . | indent 4 }}
 {{- if .Values.hub.serviceAnnotations }}
   annotations:
 {{ toYaml .Values.hub.serviceAnnotations | indent 4 }}
@@ -23,5 +19,5 @@ spec:
     port: {{ .Values.hub.port }}
     targetPort: {{ .Values.hub.port }}
   selector:
-    app: {{ template "zalenium.name" . }}
-    release: "{{ .Release.Name }}"
+    app.kubernetes.io/name: {{ include "zalenium.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}

@@ -9,3 +9,5 @@ docs/_site
 node_modules
 errorShots
 .DS_Store
+.project
+bin/

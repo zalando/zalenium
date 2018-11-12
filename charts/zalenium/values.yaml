@@ -34,12 +34,24 @@ hub:
   ## ref: http://openjdk.java.net/groups/jmx/
   # jmxPort: 4000
 
+  ## Pod Security Context
+  ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
+  ## in case it is running outside openshift, this should fix this https://github.com/zalando/zalenium/issues/631
+  securityContext:
+    enabled: false
+    fsGroup: 0
+    runAsUser: 1001
+  
   ## Configure resource requests and limits
   ## ref: http://kubernetes.io/docs/user-guide/compute-resources/
   resources:
-    limits:
-      cpu: ".5"
-      memory: "512Mi"
+    requests:
+      cpu: "500m"
+      memory: "500Mi"
+# For Java application, it's better to not currently put limit on CPU.
+#    limits:
+#      cpu: "1000m"
+#      memory: "2Gi"
 
   ## The type of service to create
   ##   Values: ClusterIP, NodePort, LoadBalancer, or ExternalName
@@ -56,17 +68,15 @@ hub:
   ## ref: https://kubernetes.io/docs/user-guide/services/
   serviceSessionAffinity: "None"
 
-  ## Start arguments for Zalenium hub itself
+  ## Environment variables passed to Zalenium hub.
   ## https://github.com/zalando/zalenium/blob/master/docs/usage_examples.md
   desiredContainers: 2
   maxDockerSeleniumContainers: 10
-  sauceLabsEnabled: false
-  browserStackEnabled: false
-  testingBotEnabled: false
   videoRecordingEnabled: true
-  cpuRequest: 500m
+  cpuRequest: 250m
   cpuLimit: 1000m
   memRequest: 500Mi
+  memLimit: 2Gi
   screenWidth: 1440
   screenHeight: 900
   timeZone: "UTC"
@@ -80,19 +90,23 @@ hub:
     enabled: false
     username: "zalenium"
     password: "password"
-
-  # Environment variables passed to Zalenium hub.
+  sauceLabsEnabled: false
   sauceUserName: blank
   sauceAccessKey: blank
+  browserStackEnabled: false
   browserStackUser: blank
   browserStackKey: blank
+  testingBotEnabled: false
   testingBotKey: blank
   testingBotSecret: blank
 
-serviceAccount:
-  create: false
-  ## Use the following Kubernetes Service Account name if not created
-  name: 
+  ## Use Openshift DeploymentConfig instead of Kubernetes Deployment
+  ## https://docs.okd.io/latest/architecture/core_concepts/deployments.html#deployments-and-deployment-configurations
+  openshift:
+    deploymentConfig:
+      enabled: false
+      triggers:
+        - type: ConfigChange
 
 ## Enable persistence using Persistent Volume Claims
 ## ref: http://kubernetes.io/docs/user-guide/persistent-volumes/
@@ -139,10 +153,15 @@ ingress:
   ## For RBAC support:
   
 rbac:
-  create: false
+  create: true
   ## Run the zalenium hub container with the ability to deploy/manage containers of jobs
   ## cluster-wide or only within namespace
   clusterWideAccess: false
+
+serviceAccount:
+  create: true
+  ## Use the following Kubernetes Service Account name if not created
+  name: 
 
 nodeSelector:
   enabled: false

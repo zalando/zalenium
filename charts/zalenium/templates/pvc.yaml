@@ -4,11 +4,7 @@ apiVersion: v1
 metadata:
   name: "{{ template "zalenium.fullname" . }}-data"
   labels:
-    app: {{ template "zalenium.name" . }}
-    role: grid
-    chart: {{ template "zalenium.chart" . }}
-    release: "{{ .Release.Name }}"
-    heritage: "{{ .Release.Service }}"
+{{ include "zalenium.labels" . | indent 4 }}
 spec:
   accessModes:
     - {{ .Values.persistence.data.accessMode | quote }}
@@ -30,11 +26,7 @@ apiVersion: v1
 metadata:
   name: "{{ template "zalenium.fullname" . }}-videos"
   labels:
-    app: {{ template "zalenium.name" . }}
-    role: grid
-    chart: {{ template "zalenium.chart" . }}
-    release: "{{ .Release.Name }}"
-    heritage: "{{ .Release.Service }}"
+{{ include "zalenium.labels" . | indent 4 }}
 spec:
   accessModes:
     - {{ .Values.persistence.video.accessMode | quote }}
