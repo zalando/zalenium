@@ -214,7 +214,21 @@
     <!-- Taken from https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/js/bootstrap.min.js -->
     <script src="js/bootstrap.min.js"></script>
     <script>
+        $(function() {
+            var url = new URL(window.location);
+            var params = url.searchParams;
+            var q = params.get('q');
+            if (q !== null && q !== '') {
+                $('#search').val(decodeURIComponent(q));
+                searchTestsList();
+            }
+        });
+
         $(document).on('keyup', '#search', function () {
+            searchTestsList();
+        });
+
+        function searchTestsList() {
             var current_query = $('#search').val().toUpperCase();
             if (current_query !== "") {
                 var tokens_crt_query = current_query.split(" ");
@@ -239,7 +253,7 @@
             } else {
                 $(".list-group li").show();
             }
-        });
+        }
 
         $("#tests").on("click", ".list-group-item", function() {
             var $this = $(this);
