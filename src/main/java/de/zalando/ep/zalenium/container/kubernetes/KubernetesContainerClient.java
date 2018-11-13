@@ -113,7 +113,7 @@ public class KubernetesContainerClient implements ContainerClient {
                             + "\tSelenium Pod Resource Limits: %s\n"
                             + "\tSelenium Pod Resource Requests: %s",
                     hostname, appName, zaleniumAppName,
-                                seleniumPodLimits.toString(), seleniumPodRequests.toString()));
+                            seleniumPodLimits.toString(), seleniumPodRequests.toString()));
         } catch (Exception e) {
             logger.warn("Error initialising Kubernetes support.", e);
         }
@@ -140,14 +140,8 @@ public class KubernetesContainerClient implements ContainerClient {
                 }
             }
         }
-
-        String imagePullPolicyEnvValue = environment.getStringEnvVariable("ZALENIUM_KUBERNETES_IMAGE_PULL_POLICY", null);
-        if (StringUtils.isNotBlank(imagePullPolicyEnvValue)) {
-            imagePullPolicy = imagePullPolicyEnvValue;
-        } // Default to imagePullPolicy: Always if ENV variable "ZALENIUM_KUBERNETES_IMAGE_PULL_POLICY" is not provided
-        else {
-            imagePullPolicy = ImagePullPolicyType.Always.name();
-        }
+        // Default to imagePullPolicy: Always if ENV variable "ZALENIUM_KUBERNETES_IMAGE_PULL_POLICY" is not provided
+        imagePullPolicy = environment.getStringEnvVariable("ZALENIUM_KUBERNETES_IMAGE_PULL_POLICY", ImagePullPolicyType.Always.name());
     }
 
     private void discoverHostAliases() {
@@ -220,7 +214,7 @@ public class KubernetesContainerClient implements ContainerClient {
     public InputStream copyFiles(String containerId, String folderName) {
 
         ByteArrayOutputStream stderr = new ByteArrayOutputStream();
-        String[] command = new String[] {"tar", "-C", folderName, "-c", "." };
+        String[] command = new String[] { "tar", "-C", folderName, "-c", "." };
         CopyFilesExecListener listener = new CopyFilesExecListener(stderr, command, containerId);
         ExecWatch exec = client.pods().withName(containerId).redirectingOutput().writingError(stderr).usingListener(listener).exec(command);
 
@@ -317,7 +311,7 @@ public class KubernetesContainerClient implements ContainerClient {
 
     @Override
     public ContainerCreationStatus createContainer(String zaleniumContainerName, String image, Map<String, String> envVars,
-                                   String nodePort) {
+                               String nodePort) {
         String containerIdPrefix = String.format("%s-%s-", zaleniumAppName, nodePort);
 
         // Convert the environment variables into the Kubernetes format.
@@ -380,7 +374,7 @@ public class KubernetesContainerClient implements ContainerClient {
         Pod pod = client.pods().withName(container.getContainerName()).get();
         if (pod == null) {
             return false;
-        } 
+        }
         else {
             return pod.getStatus().getConditions().stream()
                     .filter(condition -> condition.getType().equals("Ready"))
@@ -397,15 +391,15 @@ public class KubernetesContainerClient implements ContainerClient {
             return true;
         }
         else {
-            List<ContainerStatus> containerStatuses = pod.getStatus().getContainerStatuses();
-            Optional<ContainerStateTerminated> terminated = containerStatuses.stream()
-                    .flatMap(status -> Optional.ofNullable(status.getState()).map(Stream::of).orElse(Stream.empty()))
-                    .flatMap(state -> Optional.ofNullable(state.getTerminated()).map(Stream::of).orElse(Stream.empty()))
-                    .findFirst();
+              List<ContainerStatus> containerStatuses = pod.getStatus().getContainerStatuses();
+              Optional<ContainerStateTerminated> terminated = containerStatuses.stream()
+                      .flatMap(status -> Optional.ofNullable(status.getState()).map(Stream::of).orElse(Stream.empty()))
+                      .flatMap(state -> Optional.ofNullable(state.getTerminated()).map(Stream::of).orElse(Stream.empty()))
+                      .findFirst();
 
-            terminated.ifPresent(state -> logger.info("Container {} is {} - terminal.", container, state));
+              terminated.ifPresent(state -> logger.info("Container {} is {} - terminal.", container, state));
 
-            return terminated.isPresent();
+              return terminated.isPresent();
         }
     }
 
@@ -585,7 +579,7 @@ public class KubernetesContainerClient implements ContainerClient {
                         // so then we can initiate a registration.
                         .withNewReadinessProbe()
                             .withNewExec()
-                                .addToCommand(new String[] {"/bin/sh", "-c", "http_proxy=\"\" curl -s http://`getent hosts ${HOSTNAME} | awk '{ print $1 }'`:" 
+                                .addToCommand(new String[] {"/bin/sh", "-c", "http_proxy=\"\" curl -s http://`getent hosts ${HOSTNAME} | awk '{ print $1 }'`:"
                                         + config.getNodePort() + "/wd/hub/status | jq .value.ready | grep true"})
                             .endExec()
                             .withInitialDelaySeconds(5)

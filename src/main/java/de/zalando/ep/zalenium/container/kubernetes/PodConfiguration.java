@@ -89,7 +89,6 @@ public class PodConfiguration {
     public void setMountedSharedFoldersMap(Map<VolumeMount, Volume> mountedSharedFoldersMap) {
         this.mountedSharedFoldersMap = mountedSharedFoldersMap;
     }
-
     public List<HostAlias> getHostAliases() {
         return hostAliases;
     }
