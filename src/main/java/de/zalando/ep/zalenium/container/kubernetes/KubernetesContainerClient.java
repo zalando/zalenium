@@ -113,7 +113,7 @@ public class KubernetesContainerClient implements ContainerClient {
                             + "\tSelenium Pod Resource Limits: %s\n"
                             + "\tSelenium Pod Resource Requests: %s",
                     hostname, appName, zaleniumAppName,
-                        seleniumPodLimits.toString(), seleniumPodRequests.toString()));
+                                seleniumPodLimits.toString(), seleniumPodRequests.toString()));
         } catch (Exception e) {
             logger.warn("Error initialising Kubernetes support.", e);
         }
@@ -195,7 +195,8 @@ public class KubernetesContainerClient implements ContainerClient {
         String hostname;
         try {
             hostname = InetAddress.getLocalHost().getHostName();
-        } catch (UnknownHostException e) {
+        }
+        catch (UnknownHostException e) {
             hostname = null;
         }
 
@@ -219,7 +220,7 @@ public class KubernetesContainerClient implements ContainerClient {
     public InputStream copyFiles(String containerId, String folderName) {
 
         ByteArrayOutputStream stderr = new ByteArrayOutputStream();
-        String[] command = new String[] {"tar", "-C", folderName, "-c", "."};
+        String[] command = new String[] {"tar", "-C", folderName, "-c", "." };
         CopyFilesExecListener listener = new CopyFilesExecListener(stderr, command, containerId);
         ExecWatch exec = client.pods().withName(containerId).redirectingOutput().writingError(stderr).usingListener(listener).exec(command);
 
@@ -284,7 +285,7 @@ public class KubernetesContainerClient implements ContainerClient {
         if (waitForExecution) {
             // If we're going to wait, let's use the same thread
             waitForResultsAndCleanup.get();
-        } 
+        }
         else {
             // Let the common ForkJoinPool handle waiting for the results, since we don't care when it finishes.
             CompletableFuture.supplyAsync(waitForResultsAndCleanup);
@@ -316,13 +317,13 @@ public class KubernetesContainerClient implements ContainerClient {
 
     @Override
     public ContainerCreationStatus createContainer(String zaleniumContainerName, String image, Map<String, String> envVars,
-                                                   String nodePort) {
+                                   String nodePort) {
         String containerIdPrefix = String.format("%s-%s-", zaleniumAppName, nodePort);
 
         // Convert the environment variables into the Kubernetes format.
         List<EnvVar> flattenedEnvVars = envVars.entrySet().stream()
-                .map(e -> new EnvVar(e.getKey(), e.getValue(), null))
-                .collect(Collectors.toList());
+                                            .map(e -> new EnvVar(e.getKey(), e.getValue(), null))
+                                            .collect(Collectors.toList());
 
         Map<String, String> podSelector = new HashMap<>();
 
@@ -369,7 +370,7 @@ public class KubernetesContainerClient implements ContainerClient {
             String podIP = pod.getStatus().getPodIP();
             logger.debug(String.format("Pod %s, IP -> %s", containerName, podIP));
             return podIP;
-        } 
+        }
         else {
             return null;
         }
@@ -394,7 +395,8 @@ public class KubernetesContainerClient implements ContainerClient {
         if (pod == null) {
             logger.info("Container {} has no pod - terminal.", container);
             return true;
-        } else {
+        }
+        else {
             List<ContainerStatus> containerStatuses = pod.getStatus().getContainerStatuses();
             Optional<ContainerStateTerminated> terminated = containerStatuses.stream()
                     .flatMap(status -> Optional.ofNullable(status.getState()).map(Stream::of).orElse(Stream.empty()))
@@ -442,7 +444,7 @@ public class KubernetesContainerClient implements ContainerClient {
             Integer noVncPortInt = Integer.decode(noVncPort.get().getValue());
 
             registration.setNoVncPort(noVncPortInt);
-        } 
+        }
         else {
             logger.warn(String.format("%s Couldn't find NOVNC_PORT, live preview will not work.", containerId));
         }
@@ -494,9 +496,9 @@ public class KubernetesContainerClient implements ContainerClient {
             boolean hasErrors = stderr.size() > 0;
             if (!isClosed && hasErrors) {
                 logger.error(String.format("%s Copy files command failed with:\n\tcommand: %s\n\t stderr:\n%s",
-                        containerId,
-                        Arrays.toString(command),
-                        stderr.toString()));
+                                        containerId,
+                                        Arrays.toString(command),
+                                        stderr.toString()));
                 this.execWatch.close();
             }
         }
@@ -504,9 +506,9 @@ public class KubernetesContainerClient implements ContainerClient {
         public void waitForInputStreamToConnect() {
             try {
                 this.openLatch.await();
-            } 
+            }
             catch (InterruptedException e) {
-                logger.error(String.format("%s Failed to execute command %s", containerId, Arrays.toString(command)), e);
+                logger.error( String.format("%s Failed to execute command %s", containerId, Arrays.toString(command)), e);
             }
         }
     }
