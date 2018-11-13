@@ -65,6 +65,7 @@ public class KubernetesContainerClient implements ContainerClient {
     private List<HostAlias> hostAliases = new ArrayList<>();
     private Map<String, String> nodeSelector = new HashMap<>();
     private List<Toleration> tolerations = new ArrayList<>();
+    private String imagePullPolicy;
 
     private final Map<String, Quantity> seleniumPodLimits = new HashMap<>();
     private final Map<String, Quantity> seleniumPodRequests = new HashMap<>();
@@ -139,6 +140,8 @@ public class KubernetesContainerClient implements ContainerClient {
                 }
             }
         }
+        // Default to imagePullPolicy: Always if ENV variable "ZALENIUM_KUBERNETES_IMAGE_PULL_POLICY" is not provided
+        imagePullPolicy = environment.getStringEnvVariable("ZALENIUM_KUBERNETES_IMAGE_PULL_POLICY", ImagePullPolicyType.Always.name());
     }
 
     private void discoverHostAliases() {
@@ -308,7 +311,7 @@ public class KubernetesContainerClient implements ContainerClient {
 
     @Override
     public ContainerCreationStatus createContainer(String zaleniumContainerName, String image, Map<String, String> envVars,
-                                String nodePort) {
+                               String nodePort) {
         String containerIdPrefix = String.format("%s-%s-", zaleniumAppName, nodePort);
 
         // Convert the environment variables into the Kubernetes format.
@@ -329,6 +332,7 @@ public class KubernetesContainerClient implements ContainerClient {
         labels.putAll(appLabelMap);
         labels.putAll(podSelector);
         config.setLabels(labels);
+        config.setImagePullPolicy(imagePullPolicy);
         config.setMountedSharedFoldersMap(mountedSharedFoldersMap);
         config.setHostAliases(hostAliases);
         config.setNodeSelector(nodeSelector);
@@ -365,7 +369,7 @@ public class KubernetesContainerClient implements ContainerClient {
             return null;
         }
     }
-    
+
     public boolean isReady(ContainerCreationStatus container) {
         Pod pod = client.pods().withName(container.getContainerName()).get();
         if (pod == null) {
@@ -383,19 +387,19 @@ public class KubernetesContainerClient implements ContainerClient {
     public boolean isTerminated(ContainerCreationStatus container) {
         Pod pod = client.pods().withName(container.getContainerName()).get();
         if (pod == null) {
-        	logger.info("Container {} has no pod - terminal.", container);
+            logger.info("Container {} has no pod - terminal.", container);
             return true;
         }
         else {
-        	List<ContainerStatus> containerStatuses = pod.getStatus().getContainerStatuses();
-        	Optional<ContainerStateTerminated> terminated = containerStatuses.stream()
-        		.flatMap(status -> Optional.ofNullable(status.getState()).map(Stream::of).orElse(Stream.empty()))
-        		.flatMap(state -> Optional.ofNullable(state.getTerminated()).map(Stream::of).orElse(Stream.empty()))
-        		.findFirst();
-        	
-        	terminated.ifPresent(state -> logger.info("Container {} is {} - terminal.", container, state));
-        	
-        	return terminated.isPresent();
+              List<ContainerStatus> containerStatuses = pod.getStatus().getContainerStatuses();
+              Optional<ContainerStateTerminated> terminated = containerStatuses.stream()
+                      .flatMap(status -> Optional.ofNullable(status.getState()).map(Stream::of).orElse(Stream.empty()))
+                      .flatMap(state -> Optional.ofNullable(state.getTerminated()).map(Stream::of).orElse(Stream.empty()))
+                      .findFirst();
+
+              terminated.ifPresent(state -> logger.info("Container {} is {} - terminal.", container, state));
+
+              return terminated.isPresent();
         }
     }
 
@@ -537,6 +541,10 @@ public class KubernetesContainerClient implements ContainerClient {
         REQUEST, LIMIT
     }
 
+    private enum ImagePullPolicyType {
+        Always, IfNotPresent
+    }
+
     public static DoneablePod createDoneablePodDefaultImpl(PodConfiguration config) {
         DoneablePod doneablePod = config.getClient().pods()
                 .createNew()
@@ -557,7 +565,7 @@ public class KubernetesContainerClient implements ContainerClient {
                     .addNewContainer()
                         .withName("selenium-node")
                         .withImage(config.getImage())
-                        .withImagePullPolicy("Always")
+                        .withImagePullPolicy(config.getImagePullPolicy())
                         .addAllToEnv(config.getEnvVars())
                         .addNewVolumeMount()
                             .withName("dshm")
@@ -571,13 +579,13 @@ public class KubernetesContainerClient implements ContainerClient {
                         // so then we can initiate a registration.
                         .withNewReadinessProbe()
                             .withNewExec()
-                                .addToCommand(new String[] {"/bin/sh", "-c", "http_proxy=\"\" curl -s http://`getent hosts ${HOSTNAME} | awk '{ print $1 }'`:" 
+                                .addToCommand(new String[] {"/bin/sh", "-c", "http_proxy=\"\" curl -s http://`getent hosts ${HOSTNAME} | awk '{ print $1 }'`:"
                                         + config.getNodePort() + "/wd/hub/status | jq .value.ready | grep true"})
                             .endExec()
                             .withInitialDelaySeconds(5)
                             .withFailureThreshold(60)
                             .withPeriodSeconds(1)
-                            .withTimeoutSeconds(1)
+                            .withTimeoutSeconds(5)
                             .withSuccessThreshold(1)
                         .endReadinessProbe()
                     .endContainer()

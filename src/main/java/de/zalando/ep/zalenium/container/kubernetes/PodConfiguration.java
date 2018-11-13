@@ -17,6 +17,7 @@ public class PodConfiguration {
     private KubernetesClient client;
     private String containerIdPrefix;
     private String image;
+    private String imagePullPolicy;
     private List<EnvVar> envVars;
     private List<HostAlias> hostAliases;
     private Map<String, String> labels;
@@ -25,7 +26,7 @@ public class PodConfiguration {
     private Map<String, Quantity> podRequests;
     private Map<String, String> nodeSelector;
     private List<Toleration> tolerations;
-    
+
     private String nodePort;
 
     public String getNodePort() {
@@ -51,6 +52,12 @@ public class PodConfiguration {
     }
     public void setImage(String image) {
         this.image = image;
+    }
+    public String getImagePullPolicy() {
+        return imagePullPolicy;
+    }
+    public void setImagePullPolicy(String imagePullPolicy) {
+        this.imagePullPolicy = imagePullPolicy;
     }
     public List<EnvVar> getEnvVars() {
         return envVars;
