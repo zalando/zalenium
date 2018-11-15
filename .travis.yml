@@ -57,9 +57,3 @@ jobs:
       script:
       - ./gen-scm-source.sh
       - ./push_image.sh
-
-branches:
-  only:
-    - master
-    # Regular expression for release branches. E.g. -> 2.53.1a, 3.0.1a
-    - /^([0-9]|[0-9][0-9])[.]([0-9]|[0-9][0-9])[.]([0-9]|[0-9][0-9])[a-z]$/
