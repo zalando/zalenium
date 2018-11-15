@@ -56,7 +56,7 @@
 
     <properties>
         <selenium-server.major-minor.version>3.141</selenium-server.major-minor.version>
-        <selenium-server.patch-level.version>5</selenium-server.patch-level.version>
+        <selenium-server.patch-level.version>59</selenium-server.patch-level.version>
         <!-- This needs to match what is in the Selenium Server pom file -->
         <jetty.version>9.4.12.v20180830</jetty.version>
         <docker-client.version>8.14.3</docker-client.version>
