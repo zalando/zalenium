@@ -17,6 +17,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import de.zalando.ep.zalenium.matcher.ZaleniumCapabilityMatcher;
 import org.apache.commons.lang3.tuple.Pair;
 import org.openqa.grid.internal.BaseRemoteProxy;
 import org.openqa.grid.internal.ProxySet;
@@ -102,7 +103,6 @@ public class AutoStartProxySet extends ProxySet implements Iterable<RemoteProxy>
         poller = new Thread(() -> {
             LOGGER.info("Starting poller.");
             while (true) {
-
                 long now = clock.millis();
                 if (now - timeOfLastReport > 30000) {
                     dumpStatus();
@@ -148,7 +148,7 @@ public class AutoStartProxySet extends ProxySet implements Iterable<RemoteProxy>
         int total = super.size();
 
         List<RemoteProxy> proxies = super.getSorted();
-        proxies.stream().forEach(proxy -> {
+        proxies.forEach(proxy -> {
             String id = proxy.getId();
             boolean hasCapability = proxy.hasCapability(desiredCapabilities);
             LOGGER.debug(String.format("[%s] [%s] has capability ? [%s].", id, proxy.getClass(), hasCapability));
@@ -179,6 +179,16 @@ public class AutoStartProxySet extends ProxySet implements Iterable<RemoteProxy>
         else {
             // Won't be tracking the proxy, so it won't be removed and shutdown later - tear down.
             proxy.teardown();
+        }
+    }
+
+    @Override
+    public void verifyAbilityToHandleDesiredCapabilities(Map<String, Object> desiredCapabilities) {
+        // Using the matcher to see if docker-selenium can handle the desired capabilities. If matches is because the
+        // capability should be fulfilled by a cloud provider or a external node.
+        ZaleniumCapabilityMatcher matcher = new ZaleniumCapabilityMatcher();
+        if (matcher.matches(null, desiredCapabilities)) {
+            super.verifyAbilityToHandleDesiredCapabilities(desiredCapabilities);
         }
     }
 
