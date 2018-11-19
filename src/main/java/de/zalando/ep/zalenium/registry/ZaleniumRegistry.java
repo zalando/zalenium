@@ -99,7 +99,8 @@ public class ZaleniumRegistry extends BaseGridRegistry implements GridRegistry {
         Dashboard.loadTestInformationFromFile();
         Dashboard.setShutDownHook();
 
-        AutoStartProxySet autoStart = new AutoStartProxySet(false, minContainers, maxContainers, timeToWaitToStart, waitForAvailableNodes, starter, Clock.systemDefaultZone());
+        AutoStartProxySet autoStart = new AutoStartProxySet(false, minContainers, maxContainers, timeToWaitToStart,
+            waitForAvailableNodes, starter, Clock.systemDefaultZone());
         proxies = autoStart;
         this.matcherThread.setUncaughtExceptionHandler(new UncaughtExceptionHandler());
         
@@ -263,7 +264,6 @@ public class ZaleniumRegistry extends BaseGridRegistry implements GridRegistry {
             MDC.clear();
             lock.unlock();
         }
-
     }
 
     /**
