@@ -25,8 +25,15 @@ public class ZaleniumRunningLocallyTest {
         gridHubConfiguration.registry = ZaleniumRegistry.class.getCanonicalName();
         gridHubConfiguration.port = 4445;
         Hub hub = new Hub(gridHubConfiguration);
-        // hub.start();
-        // Thread.sleep(1000 * 60 * 60);
+        /*
+        hub.start();
+        try {
+            Thread.sleep(1000 * 60 * 60);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        */
+
     }
 
     @After

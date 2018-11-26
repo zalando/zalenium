@@ -96,7 +96,6 @@ public class ZaleniumRegistry extends BaseGridRegistry implements GridRegistry {
         boolean waitForAvailableNodes = true;
 
         DockeredSeleniumStarter starter = new DockeredSeleniumStarter();
-        Dashboard.setShutDownHook();
 
         AutoStartProxySet autoStart = new AutoStartProxySet(false, minContainers, maxContainers, timeToWaitToStart,
             waitForAvailableNodes, starter, Clock.systemDefaultZone());
