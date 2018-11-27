@@ -39,7 +39,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
@@ -62,7 +62,7 @@ public class ZaleniumRegistry extends BaseGridRegistry implements GridRegistry {
     private final ActiveTestSessions activeTestSessions = new ActiveTestSessions();
     private final NewSessionRequestQueue newSessionQueue;
     private final Matcher matcherThread = new Matcher();
-    private final List<RemoteProxy> registeringProxies = new CopyOnWriteArrayList<>();
+    private final Set<RemoteProxy> registeringProxies = ConcurrentHashMap.newKeySet();
     private volatile boolean stop = false;
     
     private static final Environment defaultEnvironment = new Environment();
@@ -96,8 +96,6 @@ public class ZaleniumRegistry extends BaseGridRegistry implements GridRegistry {
         boolean waitForAvailableNodes = true;
 
         DockeredSeleniumStarter starter = new DockeredSeleniumStarter();
-        Dashboard.loadTestInformationFromFile();
-        Dashboard.setShutDownHook();
 
         AutoStartProxySet autoStart = new AutoStartProxySet(false, minContainers, maxContainers, timeToWaitToStart,
             waitForAvailableNodes, starter, Clock.systemDefaultZone());

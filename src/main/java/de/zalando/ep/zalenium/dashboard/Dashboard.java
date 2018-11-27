@@ -5,7 +5,6 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.google.gson.reflect.TypeToken;
 import de.zalando.ep.zalenium.util.CommonProxyUtilities;
 import de.zalando.ep.zalenium.util.Environment;
 
@@ -13,12 +12,10 @@ import org.apache.commons.io.FileUtils;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -48,22 +45,16 @@ public class Dashboard implements DashboardInterface {
     private static final String ZALENIUM_RETENTION_PERIOD = "ZALENIUM_RETENTION_PERIOD";
     private static final int DEFAULT_RETENTION_PERIOD = 3;
     private static final Logger LOGGER = LoggerFactory.getLogger(Dashboard.class.getName());
-    private static List<TestInformation> executedTestsInformation = new ArrayList<>();
     private static CommonProxyUtilities commonProxyUtilities = new CommonProxyUtilities();
     private static final Environment defaultEnvironment = new Environment();
     private static Environment env = defaultEnvironment;
     private static int executedTests = 0;
     private static int executedTestsWithVideo = 0;
     private static int retentionPeriod;
-    private static AtomicBoolean shutdownHookAdded = new AtomicBoolean(false);
-    
+
     public Dashboard() {
         retentionPeriod = env.getIntEnvVariable(ZALENIUM_RETENTION_PERIOD,
                 DEFAULT_RETENTION_PERIOD);
-    }
-
-    public static List<TestInformation> getExecutedTestsInformation() {
-        return executedTestsInformation;
     }
 
     public static String getCurrentLocalPath() {
@@ -155,21 +146,22 @@ public class Dashboard implements DashboardInterface {
             if (!jsFolder.exists()) {
                 FileUtils.copyDirectory(new File(getCurrentLocalPath() + JS_FOLDER), jsFolder);
             }
-            executedTestsInformation.add(testInformation);
+            saveTestInformation(testInformation);
         } catch (IOException e) {
             LOGGER.warn("Error while updating the dashboard.", e);
         }
     }
 
-    public synchronized void cleanupDashboard() throws IOException {        
-        Map<Boolean, List<TestInformation>> partitioned = executedTestsInformation.stream()
+    public synchronized void cleanupDashboard() throws IOException {
+        List<TestInformation> informationList = loadTestInformationFromFile();
+        Map<Boolean, List<TestInformation>> partitioned = informationList.stream()
                 .collect(Collectors.partitioningBy(testInformation -> testInformation.getRetentionDate().getTime() > new Date().getTime()));
         
         List<TestInformation> validTestsInformation = partitioned.get(true);
         List<TestInformation> invalidTestsInformation = partitioned.get(false);
         
         if(invalidTestsInformation.size() > 0) {
-            LOGGER.info("Cleaning up " + invalidTestsInformation.size() + " test from Dashboard");
+            LOGGER.info("Cleaning up " + invalidTestsInformation.size() + " test(s) from Dashboard");
             File testCountFile = new File(getLocalVideosPath(), TEST_COUNT_FILE);
             File dashboardHtml = new File(getLocalVideosPath(), DASHBOARD_FILE);
             File testList = new File(getLocalVideosPath(), TEST_LIST_FILE);
@@ -177,10 +169,8 @@ public class Dashboard implements DashboardInterface {
             for(TestInformation testInformation : invalidTestsInformation) {
                 deleteIfExists(new File(getLocalVideosPath() + "/" + testInformation.getFileName()));
                 deleteIfExists(new File(testInformation.getLogsFolderPath()));
-                
-                executedTestsInformation.remove(testInformation);
             }
-            
+
             deleteIfExists(dashboardHtml);
             deleteIfExists(testList);
             deleteIfExists(testCountFile);
@@ -193,15 +183,17 @@ public class Dashboard implements DashboardInterface {
             for(TestInformation testInformation : validTestsInformation) {
                 updateDashboard(testInformation);
             }
+            dumpTestInformationToFile(validTestsInformation);
         }
     }
     
     public synchronized void resetDashboard() throws IOException {
-        LOGGER.info("Reseting Dashboard");
+        LOGGER.info("Resetting Dashboard");
         File testList = new File(getLocalVideosPath(), TEST_LIST_FILE);
         File testCountFile = new File(getLocalVideosPath(), TEST_COUNT_FILE);
         File dashboardHtml = new File(getLocalVideosPath(), DASHBOARD_FILE);
         File logsFolder = new File(getLocalVideosPath(), LOGS_FOLDER_NAME);
+        File testInformationFile = new File(getLocalVideosPath(), TEST_INFORMATION_FILE);
         File videosFolder = new File(getLocalVideosPath());
         String[] extensions = new String[] { "mp4", "mkv" };
         for (File file : FileUtils.listFiles(videosFolder, extensions, true)) {
@@ -211,12 +203,10 @@ public class Dashboard implements DashboardInterface {
         deleteIfExists(testList);
         deleteIfExists(testCountFile);
         deleteIfExists(dashboardHtml);
+        deleteIfExists(testInformationFile);
         String dashboard = FileUtils.readFileToString(new File(getCurrentLocalPath(), DASHBOARD_TEMPLATE_FILE), UTF_8);
-        dashboard = dashboard.replace("{testList}", "").
-                replace("{executedTests}", "0");
+        dashboard = dashboard.replace("{testList}", "").replace("{executedTests}", "0");
         FileUtils.writeStringToFile(dashboardHtml, dashboard, UTF_8);
-        
-        executedTestsInformation = new ArrayList<>();
     }
 
     public static void deleteIfExists(File file) {
@@ -250,42 +240,49 @@ public class Dashboard implements DashboardInterface {
     }
 
     @VisibleForTesting
-    public static void loadTestInformationFromFile() {
+    public static List<TestInformation> loadTestInformationFromFile() {
         try {
-            if (executedTestsInformation.size() == 0) {
-                File testInformationFile = new File(getLocalVideosPath(), TEST_INFORMATION_FILE);
-                if (testInformationFile.exists()) {
-                    String testInformationContents = FileUtils.readFileToString(testInformationFile, UTF_8);
-                    Type collectionType = new TypeToken<ArrayList<TestInformation>>(){}.getType();
-                    executedTestsInformation = new Gson().fromJson(testInformationContents, collectionType);
+            List<TestInformation> testInformation = new ArrayList<>();
+            File testInformationFile = new File(getLocalVideosPath(), TEST_INFORMATION_FILE);
+            if (testInformationFile.exists()) {
+                List<String> lines = FileUtils.readLines(testInformationFile, UTF_8);
+                Gson gson = new Gson();
+                for (String line : lines) {
+                    testInformation.add(gson.fromJson(line, TestInformation.class));
                 }
             }
+            return testInformation;
         } catch (Exception e) {
             LOGGER.warn(e.toString(), e);
         }
+        return new ArrayList<>();
     }
 
-    @VisibleForTesting
-    public static void dumpTestInformationToFile() {
+    public static void dumpTestInformationToFile(List<TestInformation> testInformationList) {
         try {
-            if (executedTestsInformation.size() > 0) {
-                File testInformationFile = new File(getLocalVideosPath(), TEST_INFORMATION_FILE);
-                Gson gson = new GsonBuilder().setPrettyPrinting().create();
-                FileUtils.writeStringToFile(testInformationFile, gson.toJson(executedTestsInformation), UTF_8);
+            File testInformationFile = new File(getLocalVideosPath(), TEST_INFORMATION_FILE);
+            // Emptying the file first and then replacing it with what comes from testInformationList
+            FileUtils.writeStringToFile(testInformationFile, "", UTF_8);
+            Gson gson = new GsonBuilder().create();
+            for (TestInformation information : testInformationList) {
+                FileUtils.writeStringToFile(testInformationFile, gson.toJson(information) + System.lineSeparator(),
+                    UTF_8, true);
             }
         } catch (Exception e) {
             LOGGER.warn(e.toString(), e);
         }
     }
 
-    public static void setShutDownHook() {
-        if (!shutdownHookAdded.getAndSet(true)) {
-            try {
-                Runtime.getRuntime().addShutdownHook(new Thread(Dashboard::dumpTestInformationToFile, "Dashboard dumpTestInformationToFile shutdown hook"));
-            } catch (Exception e) {
-                LOGGER.warn(e.toString(), e);
-            }
+    private void saveTestInformation(TestInformation testInformation) {
+        try {
+            File testInformationFile = new File(getLocalVideosPath(), TEST_INFORMATION_FILE);
+            Gson gson = new GsonBuilder().create();
+            FileUtils.writeStringToFile(testInformationFile, gson.toJson(testInformation) + System.lineSeparator(),
+                UTF_8, true);
+        } catch (Exception e) {
+            LOGGER.warn(e.toString(), e);
         }
+
     }
 
     @VisibleForTesting

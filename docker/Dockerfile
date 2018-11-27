@@ -1,10 +1,10 @@
 #== Ubuntu xenial is 16.04, i.e. FROM ubuntu:16.04
 # Find latest images at https://hub.docker.com/r/library/ubuntu/
 # Layer size: big: ~130 MB
-FROM ubuntu:xenial-20181005
-ENV UBUNTU_FLAVOR="xenial" \
-    UBUNTU_DATE="20181005"
 
+FROM ubuntu:xenial-20181113
+ENV UBUNTU_FLAVOR="xenial" \
+    UBUNTU_DATE="20181113"
 ARG UBUNTU_MIRROR=http://archive.ubuntu.com/ubuntu
 
 #== Ubuntu flavors - common
