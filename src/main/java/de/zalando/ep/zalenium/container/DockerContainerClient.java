@@ -206,7 +206,7 @@ public class DockerContainerClient implements ContainerClient {
                     DockerClient.ExecCreateParam.attachStdout(), DockerClient.ExecCreateParam.attachStderr(),
                     DockerClient.ExecCreateParam.attachStdin());
             final LogStream output = dockerClient.execStart(execCreation.id());
-            logger.info(String.format("%s %s", nodeId, Arrays.toString(command)));
+            logger.debug(String.format("%s %s", nodeId, Arrays.toString(command)));
             if (waitForExecution) {
                 try {
                     String commandOutput = output.readFully();

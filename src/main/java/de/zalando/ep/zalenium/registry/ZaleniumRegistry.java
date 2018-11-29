@@ -289,10 +289,7 @@ public class ZaleniumRegistry extends BaseGridRegistry implements GridRegistry {
         final TestSession session = proxies.getNewSession(handler.getRequest().getDesiredCapabilities());
         final boolean sessionCreated = session != null;
         if (sessionCreated) {
-            String remoteName = "";
-            if (session.getSlot().getProxy() instanceof DockerSeleniumRemoteProxy) {
-                remoteName = ((DockerSeleniumRemoteProxy)session.getSlot().getProxy()).getRegistration().getContainerId();
-            }
+            String remoteName = session.getSlot().getProxy().getId();
             long timeToAssignProxy = System.currentTimeMillis() - handler.getRequest().getCreationTime();
             LOG.info(String.format("Test session with internal key %s assigned to remote (%s) after %s seconds (%s ms).",
                                   session.getInternalKey(),
@@ -330,9 +327,9 @@ public class ZaleniumRegistry extends BaseGridRegistry implements GridRegistry {
         if (internalKey == null) {
             return;
         }
-        final TestSession session1 = activeTestSessions.findSessionByInternalKey(internalKey);
-        if (session1 != null) {
-            release(session1, reason);
+        final TestSession session = activeTestSessions.findSessionByInternalKey(internalKey);
+        if (session != null) {
+            release(session, reason);
             return;
         }
         LOG.warn("Tried to release session with internal key " + internalKey +

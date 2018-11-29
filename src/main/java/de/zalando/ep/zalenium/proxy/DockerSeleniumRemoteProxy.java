@@ -202,8 +202,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         }
 
         if (!this.isBusy() && increaseCounter()) {
-            TestSession testSession = createNewSession(requestedCapability);
-            return testSession;
+            return createNewSession(requestedCapability);
         }
         LOGGER.debug("{} No more sessions allowed", getContainerId());
         return null;
@@ -282,6 +281,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
 
     @Override
     public void beforeCommand(TestSession session, HttpServletRequest request, HttpServletResponse response) {
+        Thread.currentThread().setName(getId());
         super.beforeCommand(session, request, response);
         LOGGER.debug(getContainerId() + " lastCommand: " +  request.getMethod() + " - " + request.getPathInfo() + " executing...");
         if (request instanceof WebDriverRequest && "POST".equalsIgnoreCase(request.getMethod())) {
@@ -320,21 +320,19 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
 
     @Override
     public void afterCommand(TestSession session, HttpServletRequest request, HttpServletResponse response) {
+        Thread.currentThread().setName(getId());
         super.afterCommand(session, request, response);
         LOGGER.debug(getContainerId() + " lastCommand: " +  request.getMethod() + " - " + request.getPathInfo() + " executed.");
         if (request instanceof WebDriverRequest && "POST".equalsIgnoreCase(request.getMethod())) {
             WebDriverRequest seleniumRequest = (WebDriverRequest) request;
             if (RequestType.START_SESSION.equals(seleniumRequest.getRequestType())) {
                 
-                String remoteName = "";
-                if (session.getSlot().getProxy() instanceof DockerSeleniumRemoteProxy) {
-                    remoteName = ((DockerSeleniumRemoteProxy)session.getSlot().getProxy()).getRegistration().getContainerId();
-                }
-                ExternalSessionKey externalKey = Optional.ofNullable(session.getExternalKey()).orElse(new ExternalSessionKey("[No external key present]"));
-                LOGGER.info(String.format("Test session started with internal key %s and external key %s assigned to remote %s.",
+                ExternalSessionKey externalKey = Optional.ofNullable(session.getExternalKey())
+                    .orElse(new ExternalSessionKey("[No external key present]"));
+                LOGGER.debug(String.format("Test session started with internal key %s and external key %s assigned to remote %s.",
                               session.getInternalKey(),
                               externalKey,
-                              remoteName));
+                              getId()));
                 videoRecording(DockerSeleniumContainerAction.START_RECORDING);
             }
         }
@@ -345,6 +343,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     @Override
     public void afterSession(TestSession session) {
         try {
+            Thread.currentThread().setName(getId());
             // This means that the shutdown command was triggered before receiving this afterSession command
             if (!TestInformation.TestStatus.TIMEOUT.equals(testInformation.getTestStatus())) {
                 long executionTime = (System.currentTimeMillis() - session.getSlot().getLastSessionStart()) / 1000;
@@ -353,14 +352,13 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                 // This avoids shutting down the node by timeout in case the file copying takes too long.
                 stopPolling();
                 if (isTestSessionLimitReached()) {
-                    String message = String.format("%s AFTER_SESSION command received. Node should shutdown soon...", getContainerId());
-                    LOGGER.info(message);
+                    LOGGER.info(String.format("Session %s completed. Node should shutdown soon...", session.getInternalKey()));
                     cleanupNode(true);
                 }
                 else {
                     String message = String.format(
-                            "%s AFTER_SESSION command received. Cleaning up node for reuse, used %s of max %s", getContainerId(),
-                            getAmountOfExecutedTests(), maxTestSessions);
+                            "Session %s completed. Cleaning up node for reuse, used %s of max %s sessions",
+                            session.getInternalKey(), getAmountOfExecutedTests(), maxTestSessions);
                     LOGGER.info(message);
                     cleanupNode(false);
                     // Enabling polling again since the node is still alive.
@@ -522,7 +520,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
             }
         } else {
             String message = String.format("%s %s: Video recording is disabled", getContainerId(), action.getContainerAction());
-            LOGGER.info(message);
+            LOGGER.debug(message);
         }
     }
 
@@ -597,14 +595,14 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                 IOUtils.copy(tarStream, outputStream);
                 outputStream.close();
                 videoWasCopied = true;
-                LOGGER.info("{} Video file copied to: {}/{}", getContainerId(),
+                LOGGER.debug("{} Video file copied to: {}/{}", getContainerId(),
                     testInformation.getVideoFolderPath(), testInformation.getFileName());
             }
         } catch (IOException e) {
             // This error happens in k8s, but the file is ok, nevertheless the size is not accurate
             boolean isPipeClosed = e.getMessage().toLowerCase().contains("pipe closed");
             if (ContainerFactory.getIsKubernetes().get() && isPipeClosed) {
-                LOGGER.info("{} Video file copied to: {}/{}", getContainerId(),
+                LOGGER.debug("{} Video file copied to: {}/{}", getContainerId(),
                     testInformation.getVideoFolderPath(), testInformation.getFileName());
             } else {
                 LOGGER.warn(getContainerId() + " Error while copying the video", e);
@@ -642,13 +640,13 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                 IOUtils.copy(tarStream, outputStream);
                 outputStream.close();
             }
-            LOGGER.info("{} Logs copied to: {}", new Object[]{getContainerId(), testInformation.getLogsFolderPath()});
+            LOGGER.debug("{} Logs copied to: {}", new Object[]{getContainerId(), testInformation.getLogsFolderPath()});
         } catch (IOException | NullPointerException e) {
             // This error happens in k8s, but the file is ok, nevertheless the size is not accurate
             String exceptionMessage = Optional.ofNullable(e.getMessage()).orElse("");
             boolean isPipeClosed = exceptionMessage.toLowerCase().contains("pipe closed");
             if (ContainerFactory.getIsKubernetes().get() && isPipeClosed) {
-                LOGGER.info("{} Logs copied to: {}", new Object[]{getContainerId(), testInformation.getLogsFolderPath()});
+                LOGGER.debug("{} Logs copied to: {}", new Object[]{getContainerId(), testInformation.getLogsFolderPath()});
             } else {
                 LOGGER.debug(getContainerId() + " Error while copying the logs", e);
             }

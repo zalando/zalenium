@@ -243,7 +243,7 @@ public class AutoStartProxySet extends ProxySet implements Iterable<RemoteProxy>
             return;
         }
 
-        LOGGER.info("No proxy available for new session, starting new.");
+        LOGGER.debug("No proxy available for new session, starting new.");
 
         this.startContainer(desiredCapabilities);
 
@@ -278,7 +278,7 @@ public class AutoStartProxySet extends ProxySet implements Iterable<RemoteProxy>
             proxy.markDown();
             return false;
         } else {
-            LOGGER.info("Registered a container {} {}.", containerId, proxy);
+            LOGGER.debug("Registered a container {} {}.", containerId, proxy);
             return true;
         }
     }
@@ -329,7 +329,7 @@ public class AutoStartProxySet extends ProxySet implements Iterable<RemoteProxy>
                 if (starter.containerHasStarted(creationStatus)) {
                     long started = clock.millis();
                     containerStatus.setTimeStarted(Optional.of(started));
-                    LOGGER.info("Container {} started after {}.", creationStatus.getContainerName(),
+                    LOGGER.debug("Container {} started after {}.", creationStatus.getContainerName(),
                             (started - containerStatus.getTimeCreated()));
                 } else {
                     long timeWaitingToStart = clock.millis() - containerStatus.getTimeCreated();
@@ -385,12 +385,12 @@ public class AutoStartProxySet extends ProxySet implements Iterable<RemoteProxy>
         // can be called
         ContainerCreationStatus startedContainer = starter.startDockerSeleniumContainer(desiredCapabilities);
         if (startedContainer == null) {
-            LOGGER.info("Failed to start container.");
+            LOGGER.error("Failed to start container.");
         } else {
             filter.requestHasBeenProcesssed(desiredCapabilities);
             startedContainers.put(startedContainer,
                     new ContainerStatus(startedContainer.getContainerName(), clock.millis()));
-            LOGGER.info("Created {}.", startedContainer);
+            LOGGER.debug("Created {}.", startedContainer);
         }
     }
 
@@ -402,7 +402,6 @@ public class AutoStartProxySet extends ProxySet implements Iterable<RemoteProxy>
 
         // If a node is cleaning up it will be available soon
         // It is faster and more resource wise to wait for the node to be ready
-
         boolean available = this.startedContainers.values().stream().anyMatch(status -> {
             return status.getProxy()
                     .filter(p -> p.isCleaningUpBeforeNextSession() && p.hasCapability(requestedCapability)).isPresent();

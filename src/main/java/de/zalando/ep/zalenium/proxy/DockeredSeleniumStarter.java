@@ -8,8 +8,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.TimeZone;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import de.zalando.ep.zalenium.container.DockerContainerClient;
 import org.apache.commons.lang3.ObjectUtils;
@@ -29,6 +27,8 @@ import de.zalando.ep.zalenium.container.ContainerCreationStatus;
 import de.zalando.ep.zalenium.container.ContainerFactory;
 import de.zalando.ep.zalenium.matcher.ZaleniumCapabilityType;
 import de.zalando.ep.zalenium.util.Environment;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static de.zalando.ep.zalenium.util.ZaleniumConfiguration.ZALENIUM_RUNNING_LOCALLY;
 
@@ -53,7 +53,7 @@ public class DockeredSeleniumStarter {
     static final String DEFAULT_SELENIUM_NODE_PARAMS = "";
     private static final String DEFAULT_ZALENIUM_CONTAINER_NAME = "zalenium";
     private static final String ZALENIUM_CONTAINER_NAME = "ZALENIUM_CONTAINER_NAME";
-    private static final Logger LOGGER = Logger.getLogger(DockeredSeleniumStarter.class.getName());
+    private static final Logger LOGGER = LoggerFactory.getLogger(DockeredSeleniumStarter.class.getName());
     private static final String DEFAULT_DOCKER_SELENIUM_IMAGE = "elgalu/selenium";
     private static final String ZALENIUM_SELENIUM_IMAGE_NAME = "ZALENIUM_SELENIUM_IMAGE_NAME";
     private static final int LOWER_PORT_BOUNDARY = 40000;
@@ -209,7 +209,7 @@ public class DockeredSeleniumStarter {
 
     public static void setConfiguredTimeZone(String configuredTimeZone) {
         if (!Arrays.asList(TimeZone.getAvailableIDs()).contains(configuredTimeZone)) {
-            LOGGER.log(Level.WARNING, () -> String.format("%s is not a real time zone.", configuredTimeZone));
+            LOGGER.warn(String.format("%s is not a real time zone.", configuredTimeZone));
             DockeredSeleniumStarter.configuredTimeZone = DEFAULT_TZ;
         } else {
             DockeredSeleniumStarter.configuredTimeZone = TimeZone.getTimeZone(configuredTimeZone);
@@ -236,11 +236,12 @@ public class DockeredSeleniumStarter {
         
         ContainerCreationStatus containerCreationStatus = startDockerSeleniumContainer(timeZone, screenSize);
         if (containerCreationStatus.isCreated()) {
-            LOGGER.info(String.format("Created container [%s] with dimensions [%s] and tz [%s].", containerCreationStatus.getContainerName(), screenSize, timeZone));
+            LOGGER.debug(String.format("Created container [%s] with dimensions [%s] and tz [%s].",
+                containerCreationStatus.getContainerName(), screenSize, timeZone));
             return containerCreationStatus;        	
         }
         else {
-        	LOGGER.info("No container was created, will wait until request is processed again...");
+        	LOGGER.warn("No container was created, will wait until request is processed again...");
         	return null;
         }
     }
@@ -338,11 +339,11 @@ public class DockeredSeleniumStarter {
                     if (screenWidth > 0 && screenHeight > 0) {
                         screenSize = new Dimension(screenWidth, screenHeight);
                     } else {
-                        LOGGER.log(Level.FINE, "One of the values provided for screenResolution is negative, " +
+                        LOGGER.debug("One of the values provided for screenResolution is negative, " +
                                 "defaults will be used. Passed value -> " + screenResolution);
                     }
                 } catch (Exception e) {
-                    LOGGER.log(Level.FINE, "Values provided for screenResolution are not valid integers or " +
+                    LOGGER.debug("Values provided for screenResolution are not valid integers or " +
                             "either the width or the height is missing, defaults will be used. Passed value -> "
                             + screenResolution);
                 }
