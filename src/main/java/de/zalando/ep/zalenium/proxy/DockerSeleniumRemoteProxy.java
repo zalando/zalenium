@@ -286,34 +286,38 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         LOGGER.debug(getContainerId() + " lastCommand: " +  request.getMethod() + " - " + request.getPathInfo() + " executing...");
         if (request instanceof WebDriverRequest && "POST".equalsIgnoreCase(request.getMethod())) {
             WebDriverRequest seleniumRequest = (WebDriverRequest) request;
-            if (seleniumRequest.getPathInfo().endsWith("cookie")) {
-                LOGGER.debug(getContainerId() + " Checking for cookies..." + seleniumRequest.getBody());
-                JsonElement bodyRequest = new JsonParser().parse(seleniumRequest.getBody());
-                JsonObject cookie = bodyRequest.getAsJsonObject().getAsJsonObject("cookie");
-                JsonObject emptyName = new JsonObject();
-                emptyName.addProperty("name", "");
-                String cookieName = Optional.ofNullable(cookie.get("name")).orElse(emptyName.get("name")).getAsString();
-                if ("zaleniumTestPassed".equalsIgnoreCase(cookieName)) {
-                    boolean testPassed = Boolean.parseBoolean(cookie.get("value").getAsString());
-                    if (testPassed) {
-                        testInformation.setTestStatus(TestInformation.TestStatus.SUCCESS);
-                    } else {
-                        testInformation.setTestStatus(TestInformation.TestStatus.FAILED);
+            try {
+                if (seleniumRequest.getPathInfo().endsWith("cookie")) {
+                    LOGGER.debug(getContainerId() + " Checking for cookies... " + seleniumRequest.getBody());
+                    JsonElement bodyRequest = new JsonParser().parse(seleniumRequest.getBody());
+                    JsonObject cookie = bodyRequest.getAsJsonObject().getAsJsonObject("cookie");
+                    JsonObject emptyName = new JsonObject();
+                    emptyName.addProperty("name", "");
+                    String cookieName = Optional.ofNullable(cookie.get("name")).orElse(emptyName.get("name")).getAsString();
+                    if ("zaleniumTestPassed".equalsIgnoreCase(cookieName)) {
+                        boolean testPassed = Boolean.parseBoolean(cookie.get("value").getAsString());
+                        if (testPassed) {
+                            testInformation.setTestStatus(TestInformation.TestStatus.SUCCESS);
+                        } else {
+                            testInformation.setTestStatus(TestInformation.TestStatus.FAILED);
+                        }
+                    }
+                    if ("zaleniumMessage".equalsIgnoreCase(cookieName)) {
+                        String message = cookie.get("value").getAsString();
+                        String messageCommand = String.format(" 'Zalenium', '%s', --icon=/home/seluser/images/message.png",
+                            message);
+                        processContainerAction(DockerSeleniumContainerAction.CLEAN_NOTIFICATION, getContainerId());
+                        processContainerAction(DockerSeleniumContainerAction.SEND_NOTIFICATION, messageCommand,
+                            getContainerId());
+                    }
+                    else if(CommonProxyUtilities.metadataCookieName.equalsIgnoreCase(cookieName)) {
+                        JsonParser jsonParser = new JsonParser();
+                        JsonObject metadata = jsonParser.parse(cookie.get("value").getAsString()).getAsJsonObject();
+                        testInformation.setMetadata(metadata);
                     }
                 }
-                if ("zaleniumMessage".equalsIgnoreCase(cookieName)) {
-                    String message = cookie.get("value").getAsString();
-                    String messageCommand = String.format(" 'Zalenium', '%s', --icon=/home/seluser/images/message.png",
-                            message);
-                    processContainerAction(DockerSeleniumContainerAction.CLEAN_NOTIFICATION, getContainerId());
-                    processContainerAction(DockerSeleniumContainerAction.SEND_NOTIFICATION, messageCommand,
-                            getContainerId());
-                }
-                else if(CommonProxyUtilities.metadataCookieName.equalsIgnoreCase(cookieName)) {
-                    JsonParser jsonParser = new JsonParser();
-                    JsonObject metadata = jsonParser.parse(cookie.get("value").getAsString()).getAsJsonObject();
-                    testInformation.setMetadata(metadata);
-                }
+            } catch (Exception e) {
+                LOGGER.warn("There was an error while checking for cookies.", e);
             }
         }
     }
