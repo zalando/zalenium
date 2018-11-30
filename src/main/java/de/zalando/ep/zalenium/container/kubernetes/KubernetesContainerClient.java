@@ -240,7 +240,7 @@ public class KubernetesContainerClient implements ContainerClient {
         final CountDownLatch latch = new CountDownLatch(1);
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
-        logger.info(String.format("%s %s", containerId, Arrays.toString(command)));
+        logger.debug(String.format("%s %s", containerId, Arrays.toString(command)));
         ExecWatch exec = client.pods().withName(containerId).writingOutput(baos).writingError(baos).usingListener(new ExecListener() {
 
             @Override

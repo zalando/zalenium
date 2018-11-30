@@ -149,6 +149,7 @@ public class ParallelIT  {
         assertThat(getWebDriver().getTitle(), containsString("Google"));
     }
 
+    @SuppressWarnings("groupsTestNG")
     @Test(dataProvider = "browsersAndPlatformsForLivePreview", groups = {"minikube"})
     public void loadTheInternetPageAndCheckTitle(String browserType, Platform platform) {
 
