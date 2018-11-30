@@ -1,6 +1,5 @@
 package de.zalando.ep.zalenium.it;
 
-import org.openqa.selenium.Cookie;
 import org.openqa.selenium.Platform;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.net.NetworkUtils;
@@ -156,9 +155,6 @@ public class ParallelIT  {
 
         // Go to the homepage
         getWebDriver().get("https://the-internet.herokuapp.com/");
-
-        Cookie messageCookie = new Cookie("zaleniumMessage", "Hi there! #sayingHi");
-        getWebDriver().manage().addCookie(messageCookie);
 
         // Assert that the title is the expected one
         assertThat(getWebDriver().getTitle(), containsString("Internet"));
