@@ -157,9 +157,6 @@ public class ParallelIT  {
         // Go to the homepage
         getWebDriver().get("https://the-internet.herokuapp.com/");
 
-        Cookie messageCookie = new Cookie("zaleniumMessage", "Hi there! #sayingHi");
-        getWebDriver().manage().addCookie(messageCookie);
-
         // Assert that the title is the expected one
         assertThat(getWebDriver().getTitle(), containsString("Internet"));
     }
