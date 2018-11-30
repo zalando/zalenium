@@ -304,6 +304,10 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                     }
                     if ("zaleniumMessage".equalsIgnoreCase(cookieName)) {
                         String message = cookie.get("value").getAsString();
+                        if (ContainerFactory.getIsKubernetes().get()) {
+                          // https://github.com/zalando/zalenium/issues/763
+                          message = message.replace("#","");
+                        }
                         String messageCommand = String.format(" 'Zalenium', '%s', --icon=/home/seluser/images/message.png",
                             message);
                         processContainerAction(DockerSeleniumContainerAction.CLEAN_NOTIFICATION, getContainerId());
