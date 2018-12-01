@@ -77,7 +77,7 @@ public class AutoStartProxySet extends ProxySet implements Iterable<RemoteProxy>
 
     private final DockeredSeleniumStarter starter;
 
-    private final SessionRequestFilter filter = new SessionRequestFilter();
+    private final SessionRequestFilter filter;
 
     private long minContainers;
     private long maxContainers;
@@ -91,7 +91,8 @@ public class AutoStartProxySet extends ProxySet implements Iterable<RemoteProxy>
     private Clock clock;
 
     public AutoStartProxySet(boolean throwOnCapabilityNotPresent, long minContainers, long maxContainers,
-            long timeToWaitToStart, boolean waitForAvailableNodes, DockeredSeleniumStarter starter, Clock clock) {
+            long timeToWaitToStart, boolean waitForAvailableNodes, DockeredSeleniumStarter starter, Clock clock,
+            int maxTimesToProcessRequest) {
         super(throwOnCapabilityNotPresent);
         this.minContainers = minContainers;
         this.maxContainers = maxContainers;
@@ -99,6 +100,7 @@ public class AutoStartProxySet extends ProxySet implements Iterable<RemoteProxy>
         this.waitForAvailableNodes = waitForAvailableNodes;
         this.starter = starter;
         this.clock = clock;
+        this.filter = new SessionRequestFilter(maxTimesToProcessRequest);
 
         poller = new Thread(() -> {
             LOGGER.info("Starting poller.");
@@ -387,7 +389,7 @@ public class AutoStartProxySet extends ProxySet implements Iterable<RemoteProxy>
         if (startedContainer == null) {
             LOGGER.error("Failed to start container.");
         } else {
-            filter.requestHasBeenProcesssed(desiredCapabilities);
+            filter.requestHasBeenProcessed(desiredCapabilities);
             startedContainers.put(startedContainer,
                     new ContainerStatus(startedContainer.getContainerName(), clock.millis()));
             LOGGER.debug("Created {}.", startedContainer);

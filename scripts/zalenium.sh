@@ -24,6 +24,11 @@ RETENTION_PERIOD=${RETENTION_PERIOD:-3}
 LOG_JSON=${LOG_JSON:-false}
 LOGBACK_PATH=${LOGBACK_PATH:-logback.xml}
 NEW_SESSION_WAIT_TIMEOUT=${NEW_SESSION_WAIT_TIMEOUT:-600000}
+WAIT_FOR_AVAILABLE_NODES=${WAIT_FOR_AVAILABLE_NODES:-true}
+# Time in ms to wait for a container to start
+TIME_TO_WAIT_TO_START=${TIME_TO_WAIT_TO_START:-180000}
+# Maximum amount of times a test request is processed before starting a new node
+MAX_TIMES_TO_PROCESS_REQUEST=${MAX_TIMES_TO_PROCESS_REQUEST:-30}
 
 GA_TRACKING_ID="UA-88441352-3"
 GA_ENDPOINT=https://www.google-analytics.com/collect

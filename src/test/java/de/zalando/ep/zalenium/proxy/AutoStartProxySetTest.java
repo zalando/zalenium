@@ -24,7 +24,7 @@ public class AutoStartProxySetTest {
         ContainerCreationStatus containerCreationStatus = new ContainerCreationStatus(true, "name", "id", "40000");
         Mockito.when(starter.startDockerSeleniumContainer(Mockito.any())).thenReturn(containerCreationStatus);
 
-        AutoStartProxySet autoStartProxySet = new AutoStartProxySet(false, 0, 5, 1000, false, starter, clock);
+        AutoStartProxySet autoStartProxySet = new AutoStartProxySet(false, 0, 5, 1000, false, starter, clock, 30);
 
         // When a new session is requested.
         TestSession session = autoStartProxySet.getNewSession(Collections.emptyMap());
@@ -45,7 +45,7 @@ public class AutoStartProxySetTest {
         Mockito.when(starter.startDockerSeleniumContainer(Mockito.any())).thenReturn(containerCreationStatus);
 
         // Given a proxy set that contains a busy proxy.
-        AutoStartProxySet autoStartProxySet = new AutoStartProxySet(false, 0, 5, 1000, false, starter, clock);
+        AutoStartProxySet autoStartProxySet = new AutoStartProxySet(false, 0, 5, 1000, false, starter, clock, 30);
         autoStartProxySet.add(proxy("busy_container", true));
 
         // When a new session is requested.
@@ -74,7 +74,7 @@ public class AutoStartProxySetTest {
         Mockito.when(starter.startDockerSeleniumContainer(session2))
                 .thenReturn(new ContainerCreationStatus(true, "name", "id_2", "40000"));
 
-        AutoStartProxySet autoStartProxySet = new AutoStartProxySet(false, 0, 2, 1000, false, starter, clock);
+        AutoStartProxySet autoStartProxySet = new AutoStartProxySet(false, 0, 2, 1000, false, starter, clock, 30);
 
         // When a new session is requested.
         Assert.assertNull(autoStartProxySet.getNewSession(session1));
@@ -97,7 +97,7 @@ public class AutoStartProxySetTest {
         ContainerCreationStatus containerCreationStatus = new ContainerCreationStatus(true, "name", "id", "40000");
         Mockito.when(starter.startDockerSeleniumContainer(Mockito.any())).thenReturn(containerCreationStatus);
 
-        AutoStartProxySet autoStartProxySet = new AutoStartProxySet(false, 0, 5, 1000, false, starter, clock);
+        AutoStartProxySet autoStartProxySet = new AutoStartProxySet(false, 0, 5, 1000, false, starter, clock, 30);
 
         // When a new session is requested.
         TestSession session = autoStartProxySet.getNewSession(Collections.emptyMap());
@@ -125,7 +125,7 @@ public class AutoStartProxySetTest {
                 "40000");
         Mockito.when(starter.startDockerSeleniumContainer(Mockito.any())).thenReturn(containerCreationStatus);
 
-        AutoStartProxySet autoStartProxySet = new AutoStartProxySet(false, 0, 5, 1000, false, starter, clock);
+        AutoStartProxySet autoStartProxySet = new AutoStartProxySet(false, 0, 5, 1000, false, starter, clock, 30);
 
         // When a new session is requested.
         TestSession session = autoStartProxySet.getNewSession(Collections.emptyMap());
@@ -155,7 +155,7 @@ public class AutoStartProxySetTest {
                 "40000");
         Mockito.when(starter.startDockerSeleniumContainer(Mockito.any())).thenReturn(containerCreationStatus);
         
-        AutoStartProxySet autoStartProxySet = new AutoStartProxySet(false, 0, 5, 1000, false, starter, clock);
+        AutoStartProxySet autoStartProxySet = new AutoStartProxySet(false, 0, 5, 1000, false, starter, clock, 30);
 
         autoStartProxySet.getNewSession(Collections.emptyMap());
         autoStartProxySet.add(proxy);
@@ -168,7 +168,7 @@ public class AutoStartProxySetTest {
     public void orphanedContainersAreMarkedDown() {
         Clock clock = Clock.fixed(Instant.ofEpochMilli(10000), ZoneId.systemDefault());
         DockeredSeleniumStarter starter = Mockito.mock(DockeredSeleniumStarter.class);
-        AutoStartProxySet autoStartProxySet = new AutoStartProxySet(false, 0, 5, 1000, false, starter, clock);
+        AutoStartProxySet autoStartProxySet = new AutoStartProxySet(false, 0, 5, 1000, false, starter, clock, 30);
 
         DockerSeleniumRemoteProxy proxy = proxy("container_id", false);
 
