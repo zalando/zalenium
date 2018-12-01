@@ -10,14 +10,13 @@ import org.slf4j.LoggerFactory;
 @SuppressWarnings("WeakerAccess")
 public class SessionRequestFilter {
 
-	private static final Logger log = LoggerFactory.getLogger(SessionRequestFilter.class.getName());
-	private int maxTimesToProcessRequest;
+    private static final Logger log = LoggerFactory.getLogger(SessionRequestFilter.class.getName());
+    private final Map<Integer, ProcessedCapabilities> processedCapabilitiesMap = new ConcurrentHashMap<>();
+    private int maxTimesToProcessRequest;
 
     public SessionRequestFilter(int maxTimesToProcessRequest) {
         this.maxTimesToProcessRequest = maxTimesToProcessRequest;
     }
-
-    private final Map<Integer, ProcessedCapabilities> processedCapabilitiesMap = new ConcurrentHashMap<>();
 
     public boolean hasRequestBeenProcessed(Map<String, Object> requestedCapability) {
         int requestedCapabilityHashCode = System.identityHashCode(requestedCapability);
