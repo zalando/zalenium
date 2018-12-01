@@ -1,6 +1,5 @@
 package de.zalando.ep.zalenium.registry;
 
-import de.zalando.ep.zalenium.dashboard.Dashboard;
 import de.zalando.ep.zalenium.prometheus.ContainerStatusCollectorExports;
 import de.zalando.ep.zalenium.prometheus.TestSessionCollectorExports;
 import net.jcip.annotations.ThreadSafe;
@@ -51,6 +50,7 @@ import org.slf4j.MDC;
  * Kernel of the grid. Keeps track of what's happening, what's free/used and assigns resources to
  * incoming requests.
  */
+@SuppressWarnings("WeakerAccess")
 @ThreadSafe
 public class ZaleniumRegistry extends BaseGridRegistry implements GridRegistry {
     private static final Logger LOG = LoggerFactory.getLogger(ZaleniumRegistry.class.getName());
@@ -82,6 +82,7 @@ public class ZaleniumRegistry extends BaseGridRegistry implements GridRegistry {
             .buckets(defaultEnvironment.getDoubleArrayEnvVariable(ZALENIUM_TEST_SESSION_LATENCY_BUCKETS, DEFAULT_TEST_SESSION_LATENCY_BUCKETS))
             .register();
 
+    @SuppressWarnings("unused")
     public ZaleniumRegistry() {
         this(null);
     }
@@ -92,13 +93,14 @@ public class ZaleniumRegistry extends BaseGridRegistry implements GridRegistry {
         
         long minContainers = ZaleniumConfiguration.getDesiredContainersOnStartup();
         long maxContainers = ZaleniumConfiguration.getMaxDockerSeleniumContainers();
-        long timeToWaitToStart = 180000;
-        boolean waitForAvailableNodes = true;
+        long timeToWaitToStart = ZaleniumConfiguration.getTimeToWaitToStart();
+        boolean waitForAvailableNodes = ZaleniumConfiguration.isWaitForAvailableNodes();
+        int maxTimesToProcessRequest = ZaleniumConfiguration.getMaxTimesToProcessRequest();
 
         DockeredSeleniumStarter starter = new DockeredSeleniumStarter();
 
         AutoStartProxySet autoStart = new AutoStartProxySet(false, minContainers, maxContainers, timeToWaitToStart,
-            waitForAvailableNodes, starter, Clock.systemDefaultZone());
+            waitForAvailableNodes, starter, Clock.systemDefaultZone(), maxTimesToProcessRequest);
         proxies = autoStart;
         this.matcherThread.setUncaughtExceptionHandler(new UncaughtExceptionHandler());
         
@@ -125,6 +127,7 @@ public class ZaleniumRegistry extends BaseGridRegistry implements GridRegistry {
      * @param hub the {@link Hub} to associate this registry with
      * @return the registry
      */
+    @SuppressWarnings("unused")
     public static GridRegistry newInstance(Hub hub) {
         ZaleniumRegistry registry = new ZaleniumRegistry(hub);
         registry.start();

@@ -425,6 +425,9 @@ public class DockeredSeleniumStarterTest {
     public void noNegativeValuesAreAllowedForStartup() {
         ZaleniumConfiguration.setDesiredContainersOnStartup(-1);
         ZaleniumConfiguration.setMaxDockerSeleniumContainers(-1);
+        ZaleniumConfiguration.setTimeToWaitToStart(-10);
+        ZaleniumConfiguration.setWaitForAvailableNodes(true);
+        ZaleniumConfiguration.setMaxTimesToProcessRequest(-10);
         DockeredSeleniumStarter.setConfiguredScreenSize(new Dimension(-1, -1));
         Assert.assertEquals(ZaleniumConfiguration.DEFAULT_AMOUNT_DESIRED_CONTAINERS,
                 ZaleniumConfiguration.getDesiredContainersOnStartup());
@@ -434,6 +437,11 @@ public class DockeredSeleniumStarterTest {
             DockeredSeleniumStarter.getConfiguredScreenSize().getWidth());
         Assert.assertEquals(DockeredSeleniumStarter.DEFAULT_SCREEN_SIZE.getHeight(),
             DockeredSeleniumStarter.getConfiguredScreenSize().getHeight());
+        Assert.assertEquals(ZaleniumConfiguration.DEFAULT_TIME_TO_WAIT_TO_START,
+            ZaleniumConfiguration.getTimeToWaitToStart());
+        Assert.assertEquals(ZaleniumConfiguration.DEFAULT_TIMES_TO_PROCESS_REQUEST,
+            ZaleniumConfiguration.getMaxTimesToProcessRequest());
+        Assert.assertTrue(ZaleniumConfiguration.isWaitForAvailableNodes());
     }
 
 }

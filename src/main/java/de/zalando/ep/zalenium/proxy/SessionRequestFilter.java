@@ -2,16 +2,22 @@ package de.zalando.ep.zalenium.proxy;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import de.zalando.ep.zalenium.util.ProcessedCapabilities;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+@SuppressWarnings("WeakerAccess")
 public class SessionRequestFilter {
 
-	private static final Logger log = Logger.getLogger(SessionRequestFilter.class.getName());
-	
-	private final Map<Integer, ProcessedCapabilities> processedCapabilitiesMap = new ConcurrentHashMap<>();
+	private static final Logger log = LoggerFactory.getLogger(SessionRequestFilter.class.getName());
+	private int maxTimesToProcessRequest;
+
+    public SessionRequestFilter(int maxTimesToProcessRequest) {
+        this.maxTimesToProcessRequest = maxTimesToProcessRequest;
+    }
+
+    private final Map<Integer, ProcessedCapabilities> processedCapabilitiesMap = new ConcurrentHashMap<>();
 
     public boolean hasRequestBeenProcessed(Map<String, Object> requestedCapability) {
         int requestedCapabilityHashCode = System.identityHashCode(requestedCapability);
@@ -22,10 +28,11 @@ public class SessionRequestFilter {
             int processedTimes = processedCapability.getProcessedTimes() + 1;
             processedCapability.setProcessedTimes(processedTimes);
 
-            if (processedTimes >= 30) {
+            if (processedTimes >= maxTimesToProcessRequest) {
                 processedCapability.setProcessedTimes(1);
-                log.log(Level.INFO, "Request has waited 30 attempts for a node, something " +
-                        "went wrong with the previous attempts, creating a new node for {0}.", requestedCapability);
+                log.info(String.format("Request has waited %s attempts for a node, something " +
+                        "went wrong with the previous attempts, creating a new node for %s.",
+                    maxTimesToProcessRequest, requestedCapability));
                 return false;
             }
 
@@ -35,7 +42,7 @@ public class SessionRequestFilter {
         return false;
     }
     
-    public void requestHasBeenProcesssed(Map<String, Object> desiredCapabilities) {
+    public void requestHasBeenProcessed(Map<String, Object> desiredCapabilities) {
         ProcessedCapabilities processedCapabilities = new ProcessedCapabilities(desiredCapabilities,
                 System.identityHashCode(desiredCapabilities));
         processedCapabilitiesMap.put(processedCapabilities.getIdentityHashCode(), processedCapabilities);
@@ -45,14 +52,10 @@ public class SessionRequestFilter {
      * Notify the Session Request Filter that a Test Session has started for the given desiredCapabilities.
      * 
      * @param desiredCapabilities The desiredCapabilities to check
-     * @return true if a desiredCapability had been processed before, false if it was never seen.
      */
-    public boolean testSessionHasStarted(Map<String, Object> desiredCapabilities) {
+    public void testSessionHasStarted(Map<String, Object> desiredCapabilities) {
         int desiredCapabilityHashCode = System.identityHashCode(desiredCapabilities);
-        ProcessedCapabilities processedCapability = processedCapabilitiesMap.remove(desiredCapabilityHashCode);
-        boolean isSeenBefore = processedCapability != null;
-
-        return isSeenBefore;
+        processedCapabilitiesMap.remove(desiredCapabilityHashCode);
     }
     
     public void cleanProcessedCapabilities() {
