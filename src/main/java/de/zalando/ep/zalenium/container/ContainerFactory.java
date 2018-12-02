@@ -11,10 +11,11 @@ import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 
 public class ContainerFactory {
 
-    private static Supplier<ContainerClient> containerClientGenerator = DockerContainerClient::new;
+    private static Supplier<ContainerClient> containerClientGenerator;
     private static Supplier<Boolean> isKubernetes = () -> new File("/var/run/secrets/kubernetes.io/serviceaccount/token").canRead();
 
     private static KubernetesContainerClient kubernetesContainerClient;
+    private static DockerContainerClient dockerContainerClient;
     
     public static ContainerClient getContainerClient() {
 
@@ -22,8 +23,21 @@ public class ContainerFactory {
             return createKubernetesContainerClient();
         }
         else {
-            return containerClientGenerator.get();
+            return createDockerContainerClient();
         }
+    }
+
+    private static DockerContainerClient createDockerContainerClient() {
+        // It should be enough to have a single client for docker as well.
+        if (dockerContainerClient == null) {
+            synchronized (ContainerFactory.class) {
+                if (dockerContainerClient == null) {
+                    dockerContainerClient = new DockerContainerClient();
+                    dockerContainerClient.initialiseContainerEnvironment();
+                }
+            }
+        }
+        return dockerContainerClient;
     }
     
     private static KubernetesContainerClient createKubernetesContainerClient() {

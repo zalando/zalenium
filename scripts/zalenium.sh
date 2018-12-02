@@ -173,28 +173,6 @@ WaitForVideosTransferred() {
 }
 export -f WaitForVideosTransferred
 
-EnsureCleanEnv()
-{
-    log "Ensuring no stale Zalenium related containers are still around..."
-    local __containers=$(docker ps -a -f name=${CONTAINER_NAME}_ -q | wc -l)
-
-    # If there are still containers around; stop gracefully
-    if [ ${__containers} -gt 0 ]; then
-        echo "Removing exited docker-selenium containers..."
-        docker stop $(docker ps -a -f name=${CONTAINER_NAME}_ -q)
-
-        # If there are still containers around; remove them
-        if [ $(docker ps -a -f name=${CONTAINER_NAME}_ -q | wc -l) -gt 0 ]; then
-            docker rm $(docker ps -a -f name=${CONTAINER_NAME}_ -q)
-        fi
-
-        # If there are still containers around; forcibly remove them
-        if [ $(docker ps -a -f name=${CONTAINER_NAME}_ -q | wc -l) -gt 0 ]; then
-            docker rm -f $(docker ps -a -f name=${CONTAINER_NAME}_ -q)
-        fi
-    fi
-}
-
 EnsureDockerWorks()
 {
     log "Ensuring docker works..."
@@ -727,10 +705,6 @@ ShutDown()
         else
             rm ${PID_PATH_DOCKER_SELENIUM_NODE}
         fi
-    fi
-
-    if [ ${KUBERNETES_ENABLED} == "false" ]; then
-        EnsureCleanEnv
     fi
 }
 

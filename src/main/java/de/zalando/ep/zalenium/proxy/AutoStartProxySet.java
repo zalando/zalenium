@@ -87,6 +87,7 @@ public class AutoStartProxySet extends ProxySet implements Iterable<RemoteProxy>
     private final Thread poller;
 
     private long timeOfLastReport = 0;
+    private boolean keepCheckingContainers = true;
 
     private Clock clock;
 
@@ -102,9 +103,11 @@ public class AutoStartProxySet extends ProxySet implements Iterable<RemoteProxy>
         this.clock = clock;
         this.filter = new SessionRequestFilter(maxTimesToProcessRequest);
 
+        Runtime.getRuntime().addShutdownHook(new Thread(this::stopCheckingContainers, "AutoStartProxySet stop checking containers."));
+
         poller = new Thread(() -> {
             LOGGER.info("Starting poller.");
-            while (true) {
+            while (keepCheckingContainers) {
                 long now = clock.millis();
                 if (now - timeOfLastReport > 30000) {
                     dumpStatus();
@@ -131,6 +134,10 @@ public class AutoStartProxySet extends ProxySet implements Iterable<RemoteProxy>
         poller.setName("AutoStartProxyPoolPoller");
 
         poller.start();
+    }
+
+    private void stopCheckingContainers() {
+        this.keepCheckingContainers = false;
     }
 
     @Override

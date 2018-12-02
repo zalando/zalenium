@@ -545,8 +545,23 @@ public class DockerContainerClient implements ContainerClient {
 
     @Override
     public void initialiseContainerEnvironment() {
-        // TODO: Move cleanup code from bash to here
+        // Delete any leftover containers from a previous time
+        deleteSeleniumContainers();
+        // Register a shutdown hook to cleanup pods
+        Runtime.getRuntime().addShutdownHook(new Thread(this::deleteSeleniumContainers, "DockerContainerClient shutdown hook"));
+    }
 
+    private void deleteSeleniumContainers() {
+        logger.info("About to clean up any left over selenium pods created by Zalenium");
+        String image = DockeredSeleniumStarter.getDockerSeleniumImageName();
+        try {
+            List<Container> containerList = dockerClient.listContainers(withStatusRunning(), withStatusCreated());
+            containerList.stream().filter(container -> container.image().contains(image))
+                    .forEach(container -> stopContainer(container.id()));
+        } catch (Exception e) {
+            logger.warn(nodeId + " Error while deleting existing DockerSelenium containers", e);
+            ga.trackException(e);
+        }
     }
 
     @Override
