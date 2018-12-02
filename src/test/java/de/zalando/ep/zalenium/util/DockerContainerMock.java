@@ -22,7 +22,6 @@ import java.util.Arrays;
 import java.util.Collections;
 
 import org.apache.commons.lang3.RandomStringUtils;
-import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
 import com.google.common.collect.ImmutableList;
@@ -50,20 +49,16 @@ public class DockerContainerMock {
     public static DockerContainerClient getRegisterOnlyDockerContainerClient() {
         DockerContainerClient mock = mock(DockerContainerClient.class);
         
-        when(mock.registerNode(anyString(), any(URL.class))).thenAnswer(new Answer<ContainerClientRegistration>() {
+        when(mock.registerNode(anyString(), any(URL.class))).thenAnswer((Answer<ContainerClientRegistration>) invocation -> {
+            String containerName = invocation.getArgument(0);
+            URL remoteUrl = invocation.getArgument(1);
 
-            @Override
-            public ContainerClientRegistration answer(InvocationOnMock invocation) throws Throwable {
-                String containerName = invocation.getArgument(0);
-                URL remoteUrl = invocation.getArgument(1);
+            ContainerClientRegistration registration = new ContainerClientRegistration();
+            registration.setContainerId(containerName);
+            registration.setIpAddress(remoteUrl.getHost());
+            registration.setNoVncPort(40000);
 
-                ContainerClientRegistration registration = new ContainerClientRegistration();
-                registration.setContainerId(containerName);
-                registration.setIpAddress(remoteUrl.getHost());
-                registration.setNoVncPort(40000);
-
-                return registration;
-            }
+            return registration;
         });
         
         return mock;
