@@ -7,7 +7,6 @@ import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
-import java.util.function.Supplier;
 
 import javax.management.InstanceNotFoundException;
 import javax.management.MalformedObjectNameException;
@@ -15,25 +14,26 @@ import javax.management.ObjectName;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import de.zalando.ep.zalenium.container.DockerContainerClient;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.openqa.grid.internal.GridRegistry;
 import org.openqa.selenium.remote.server.jmx.JMXHelper;
 
-import de.zalando.ep.zalenium.container.ContainerClient;
 import de.zalando.ep.zalenium.container.ContainerFactory;
 import de.zalando.ep.zalenium.proxy.DockerSeleniumRemoteProxy;
 import de.zalando.ep.zalenium.util.DockerContainerMock;
 import de.zalando.ep.zalenium.util.SimpleRegistry;
 import de.zalando.ep.zalenium.util.TestUtils;
 
+@SuppressWarnings("Duplicates")
 public class LiveNodeServletTest {
 
     private GridRegistry registry;
     private HttpServletRequest request;
     private HttpServletResponse response;
-    private Supplier<ContainerClient> originalContainerClient;
+    private DockerContainerClient originalContainerClient;
 
     @Before
     public void setUp() throws IOException {
@@ -46,8 +46,8 @@ public class LiveNodeServletTest {
         }
         registry = new SimpleRegistry();
         
-        this.originalContainerClient = ContainerFactory.getContainerClientGenerator();
-        ContainerFactory.setContainerClientGenerator(DockerContainerMock::getRegisterOnlyDockerContainerClient);
+        this.originalContainerClient = ContainerFactory.getDockerContainerClient();
+        ContainerFactory.setDockerContainerClient(DockerContainerMock.getRegisterOnlyDockerContainerClient());
 
         DockerSeleniumRemoteProxy p1 = TestUtils.getNewBasicRemoteProxy("app1", "http://machine1:4444/", registry);
         DockerSeleniumRemoteProxy p2 = TestUtils.getNewBasicRemoteProxy("app1", "http://machine2:4444/", registry);
@@ -110,7 +110,7 @@ public class LiveNodeServletTest {
         new JMXHelper().unregister(objectName);
         objectName = new ObjectName("org.seleniumhq.grid:type=RemoteProxy,node=\"http://localhost:40001\"");
         new JMXHelper().unregister(objectName);
-        ContainerFactory.setContainerClientGenerator(originalContainerClient);
+        ContainerFactory.setDockerContainerClient(originalContainerClient);
     }
     
 }

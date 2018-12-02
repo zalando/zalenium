@@ -26,6 +26,7 @@ import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 import javax.servlet.http.HttpServletResponse;
 
+import de.zalando.ep.zalenium.container.DockerContainerClient;
 import org.awaitility.Duration;
 import org.junit.After;
 import org.junit.Assert;
@@ -60,13 +61,14 @@ import de.zalando.ep.zalenium.util.KubernetesContainerMock;
 import de.zalando.ep.zalenium.util.TestUtils;
 
 
+@SuppressWarnings("Duplicates")
 @RunWith(value = Parameterized.class)
 public class DockerSeleniumRemoteProxyTest {
 
     private DockerSeleniumRemoteProxy proxy;
     private GridRegistry registry;
     private ContainerClient containerClient;
-    private Supplier<ContainerClient> originalDockerContainerClient;
+    private DockerContainerClient originalDockerContainerClient;
     private KubernetesContainerClient originalKubernetesContainerClient;
     private Supplier<Boolean> originalIsKubernetesValue;
     private Supplier<Boolean> currentIsKubernetesValue;
@@ -77,7 +79,7 @@ public class DockerSeleniumRemoteProxyTest {
     public DockerSeleniumRemoteProxyTest(ContainerClient containerClient, Supplier<Boolean> isKubernetes) {
         this.containerClient = containerClient;
         this.currentIsKubernetesValue = isKubernetes;
-        this.originalDockerContainerClient = ContainerFactory.getContainerClientGenerator();
+        this.originalDockerContainerClient = ContainerFactory.getDockerContainerClient();
         this.originalIsKubernetesValue = ContainerFactory.getIsKubernetes();
         this.originalKubernetesContainerClient = ContainerFactory.getKubernetesContainerClient();
     }
@@ -102,7 +104,8 @@ public class DockerSeleniumRemoteProxyTest {
             this.containerClient = KubernetesContainerMock.getMockedKubernetesContainerClient();
             ContainerFactory.setKubernetesContainerClient((KubernetesContainerClient) containerClient);
         } else {
-            ContainerFactory.setContainerClientGenerator(() -> containerClient);
+            this.containerClient = DockerContainerMock.getMockedDockerContainerClient();
+            ContainerFactory.setDockerContainerClient((DockerContainerClient) containerClient);
         }
         ContainerFactory.setIsKubernetes(this.currentIsKubernetesValue);
 
@@ -132,7 +135,7 @@ public class DockerSeleniumRemoteProxyTest {
     public void tearDown() throws MalformedObjectNameException {
         ObjectName objectName = new ObjectName("org.seleniumhq.grid:type=RemoteProxy,node=\"http://localhost:40000\"");
         new JMXHelper().unregister(objectName);
-        ContainerFactory.setContainerClientGenerator(originalDockerContainerClient);
+        ContainerFactory.setDockerContainerClient(originalDockerContainerClient);
         ContainerFactory.setIsKubernetes(originalIsKubernetesValue);
         ContainerFactory.setKubernetesContainerClient(originalKubernetesContainerClient);
         proxy.restoreContainerClient();

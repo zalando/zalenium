@@ -11,7 +11,6 @@ import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 
 public class ContainerFactory {
 
-    private static Supplier<ContainerClient> containerClientGenerator;
     private static Supplier<Boolean> isKubernetes = () -> new File("/var/run/secrets/kubernetes.io/serviceaccount/token").canRead();
 
     private static KubernetesContainerClient kubernetesContainerClient;
@@ -57,13 +56,13 @@ public class ContainerFactory {
     }
 
     @VisibleForTesting
-    public static void setContainerClientGenerator(Supplier<ContainerClient> containerClientGenerator) {
-        ContainerFactory.containerClientGenerator = containerClientGenerator;
+    public static void setDockerContainerClient(DockerContainerClient dockerContainerClient) {
+        ContainerFactory.dockerContainerClient = dockerContainerClient;
     }
 
     @VisibleForTesting
-    public static Supplier<ContainerClient> getContainerClientGenerator() {
-        return containerClientGenerator;
+    public static DockerContainerClient getDockerContainerClient() {
+        return dockerContainerClient;
     }
 
     @VisibleForTesting
