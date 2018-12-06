@@ -8,7 +8,6 @@ import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
-import java.util.function.Supplier;
 
 import javax.management.InstanceNotFoundException;
 import javax.management.MalformedObjectNameException;
@@ -16,6 +15,7 @@ import javax.management.ObjectName;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import de.zalando.ep.zalenium.container.DockerContainerClient;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -23,7 +23,6 @@ import org.openqa.grid.common.RegistrationRequest;
 import org.openqa.grid.internal.GridRegistry;
 import org.openqa.selenium.remote.server.jmx.JMXHelper;
 
-import de.zalando.ep.zalenium.container.ContainerClient;
 import de.zalando.ep.zalenium.container.ContainerFactory;
 import de.zalando.ep.zalenium.proxy.BrowserStackRemoteProxy;
 import de.zalando.ep.zalenium.proxy.DockerSeleniumRemoteProxy;
@@ -38,7 +37,7 @@ public class ZaleniumConsoleServletTest {
     private GridRegistry registry;
     private HttpServletRequest request;
     private HttpServletResponse response;
-    private Supplier<ContainerClient> originalContainerClient;
+    private DockerContainerClient originalContainerClient;
 
     @Before
     public void setUp() throws IOException {
@@ -51,8 +50,8 @@ public class ZaleniumConsoleServletTest {
         }
         registry = new SimpleRegistry();
 
-        this.originalContainerClient = ContainerFactory.getContainerClientGenerator();
-        ContainerFactory.setContainerClientGenerator(DockerContainerMock::getRegisterOnlyDockerContainerClient);
+        this.originalContainerClient = ContainerFactory.getDockerContainerClient();
+        ContainerFactory.setDockerContainerClient(DockerContainerMock.getRegisterOnlyDockerContainerClient());
 
         RegistrationRequest registrationRequest = TestUtils.getRegistrationRequestForTesting(30001, SauceLabsRemoteProxy.class.getCanonicalName());
         CommonProxyUtilities commonProxyUtilities = mock(CommonProxyUtilities.class);
@@ -146,6 +145,6 @@ public class ZaleniumConsoleServletTest {
         new JMXHelper().unregister(objectName);
         objectName = new ObjectName("org.seleniumhq.grid:type=RemoteProxy,node=\"http://localhost:40001\"");
         new JMXHelper().unregister(objectName);
-        ContainerFactory.setContainerClientGenerator(originalContainerClient);
+        ContainerFactory.setDockerContainerClient(originalContainerClient);
     }
 }

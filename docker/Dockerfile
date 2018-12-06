@@ -235,16 +235,16 @@ RUN if [ "${kubernetesSlimVersion}" = "false" ]; then \
 # Var `DOCKER` points to which binary to use at runtime
 ENV DOCKER_HOST="unix:///var/run/docker.sock" \
     DOCKER_BUCKET="download.docker.com" \
-    DOCKER="17.12.1-ce"
+    DOCKER="18.06.1-ce"
 
 #----------------------------
-# Docker 17.12.0-ce -- 15 MB
+# Docker 18.06.1-ce -- 15 MB
 #----------------------------
 # https://github.com/docker-library/docker/blob/master/17.09/Dockerfile
 # Note: Starting with 1.13, newer CLIs can talk to older daemons
 RUN if [ "${kubernetesSlimVersion}" = "false" ]; then \
         set -x \
-        && DOCKER_VERSION="17.12.1-ce" \
+        && DOCKER_VERSION="18.06.1-ce" \
         && curl -fSL "https://${DOCKER_BUCKET}/linux/static/stable/x86_64/docker-${DOCKER_VERSION}.tgz" \
                 -o docker.tgz \
         && tar -xzvf docker.tgz \
@@ -256,13 +256,13 @@ RUN if [ "${kubernetesSlimVersion}" = "false" ]; then \
     fi
 
 #----------------------------
-# Docker 18.03.1-ce -- 15 MB
+# Docker 18.09 -- 15 MB
 #----------------------------
 # https://github.com/docker-library/docker/blob/master/18.03/Dockerfile
 # Note: Starting with 1.13, newer CLIs can talk to older daemons
 RUN if [ "${kubernetesSlimVersion}" = "false" ]; then \
         set -x \
-        && DOCKER_VERSION="18.03.1-ce" \
+        && DOCKER_VERSION="18.09.0" \
         && curl -fSL "https://${DOCKER_BUCKET}/linux/static/stable/x86_64/docker-${DOCKER_VERSION}.tgz" \
                 -o docker.tgz \
         && tar -xzvf docker.tgz \

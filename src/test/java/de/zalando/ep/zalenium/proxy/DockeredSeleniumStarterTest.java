@@ -7,6 +7,7 @@ import static org.mockito.Mockito.withSettings;
 
 import de.zalando.ep.zalenium.container.ContainerClient;
 import de.zalando.ep.zalenium.container.ContainerFactory;
+import de.zalando.ep.zalenium.container.DockerContainerClient;
 import de.zalando.ep.zalenium.container.kubernetes.KubernetesContainerClient;
 import de.zalando.ep.zalenium.util.DockerContainerMock;
 import de.zalando.ep.zalenium.util.Environment;
@@ -31,11 +32,12 @@ import java.util.Collection;
 import java.util.TimeZone;
 import java.util.function.Supplier;
 
+@SuppressWarnings("Duplicates")
 @RunWith(value = Parameterized.class)
 public class DockeredSeleniumStarterTest {
 
     private ContainerClient containerClient;
-    private Supplier<ContainerClient> originalDockerContainerClient;
+    private DockerContainerClient originalDockerContainerClient;
     private KubernetesContainerClient originalKubernetesContainerClient;
     private Supplier<Boolean> originalIsKubernetesValue;
     private Supplier<Boolean> currentIsKubernetesValue;
@@ -43,7 +45,7 @@ public class DockeredSeleniumStarterTest {
     public DockeredSeleniumStarterTest(ContainerClient containerClient, Supplier<Boolean> isKubernetes) {
         this.containerClient = containerClient;
         this.currentIsKubernetesValue = isKubernetes;
-        this.originalDockerContainerClient = ContainerFactory.getContainerClientGenerator();
+        this.originalDockerContainerClient = ContainerFactory.getDockerContainerClient();
         this.originalIsKubernetesValue = ContainerFactory.getIsKubernetes();
         this.originalKubernetesContainerClient = ContainerFactory.getKubernetesContainerClient();
     }
@@ -69,7 +71,8 @@ public class DockeredSeleniumStarterTest {
             this.containerClient = KubernetesContainerMock.getMockedKubernetesContainerClient();
             ContainerFactory.setKubernetesContainerClient((KubernetesContainerClient) containerClient);
         } else {
-            ContainerFactory.setContainerClientGenerator(() -> containerClient);
+            this.containerClient = DockerContainerMock.getMockedDockerContainerClient();
+            ContainerFactory.setDockerContainerClient((DockerContainerClient) containerClient);
         }
         ContainerFactory.setIsKubernetes(this.currentIsKubernetesValue);
 
@@ -90,7 +93,7 @@ public class DockeredSeleniumStarterTest {
         new JMXHelper().unregister(objectName);
         DockeredSeleniumStarter.restoreEnvironment();
         ZaleniumConfiguration.restoreEnvironment();
-        ContainerFactory.setContainerClientGenerator(originalDockerContainerClient);
+        ContainerFactory.setDockerContainerClient(originalDockerContainerClient);
         ContainerFactory.setIsKubernetes(originalIsKubernetesValue);
         ContainerFactory.setKubernetesContainerClient(originalKubernetesContainerClient);
     }

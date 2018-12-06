@@ -129,7 +129,7 @@ else
     if [ "${USE_KUBERNETES}" == "false" ]; then
         # Make sure Docker works (with sudo) before continuing
         docker --version
-        sudo docker images elgalu/selenium >/dev/null
+        sudo docker -H ${DOCKER_HOST} images elgalu/selenium >/dev/null
         # Replace the current process with zalenium.sh
         exec sudo --preserve-env ./zalenium.sh "$@"
     else

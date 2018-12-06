@@ -271,7 +271,7 @@ public class KubernetesContainerClient implements ContainerClient {
                 exec.close();
             }
 
-            logger.info(String.format("%s completed %s", containerId, Arrays.toString(command)));
+            logger.debug(String.format("%s completed %s", containerId, Arrays.toString(command)));
             logger.debug(String.format("%s %s", containerId, baos.toString()));
 
             return null;
@@ -291,22 +291,6 @@ public class KubernetesContainerClient implements ContainerClient {
         // Nothing to do here, this is managed by the ImagePullPolicy when creating a container.
         // Currently the kubernetes API can't manage images, the OpenShift API has some extra hooks though, which we could potential use.
         return imageName;
-    }
-
-    @Override
-    public int getRunningContainers(String image) {
-        PodList list = client.pods().withLabels(createdByZaleniumMap).list();
-        logger.debug("Pods in the list " + list.getItems().size());
-
-        int count=0;
-        for (Pod pod : list.getItems()) {
-            String phase = pod.getStatus().getPhase();
-            if ("Running".equalsIgnoreCase(phase) || "Pending".equalsIgnoreCase(phase)) {
-                count++;
-            }
-        }
-
-        return count;
     }
 
     @Override
@@ -354,7 +338,7 @@ public class KubernetesContainerClient implements ContainerClient {
         deleteSeleniumPods();
 
         // Register a shutdown hook to cleanup pods
-        Runtime.getRuntime().addShutdownHook(new Thread(this::deleteSeleniumPods, "KubernetsContainerClient shutdown hook"));
+        Runtime.getRuntime().addShutdownHook(new Thread(this::deleteSeleniumPods, "KubernetesContainerClient shutdown hook"));
     }
 
     @Override
