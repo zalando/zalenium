@@ -1,0 +1,155 @@
+{{- define "zalenium.podTemplate" -}}
+metadata:
+  labels:
+{{ include "zalenium.labels" . | indent 4 }}
+  annotations:
+spec:
+  {{- if .Values.hub.securityContext.enabled }}
+  securityContext:
+    fsGroup: {{ .Values.hub.securityContext.fsGroup }}
+    runAsUser: {{ .Values.hub.securityContext.runAsUser }}
+  {{- end }}
+  volumes:
+    - name: {{ template "zalenium.fullname" . }}-videos
+    {{- if .Values.persistence.enabled }}
+      {{- if and (.Values.persistence.video.useExisting) (not (empty .Values.persistence.video.name))}}
+      persistentVolumeClaim:
+        claimName: {{ .Values.persistence.video.name }}
+      {{- else }}
+      persistentVolumeClaim:
+        claimName: {{ template "zalenium.fullname" . }}-videos
+      {{- end }}
+    {{- else }}
+      emptyDir: {}
+    {{- end }}
+    - name: {{ template "zalenium.fullname" . }}-data
+    {{- if .Values.persistence.enabled }}
+      {{- if and (.Values.persistence.data.useExisting) (not (empty .Values.persistence.data.name))}}
+      persistentVolumeClaim:
+        claimName: {{ .Values.persistence.data.name }}
+      {{- else }}
+      persistentVolumeClaim:
+        claimName: {{ template "zalenium.fullname" . }}-data
+      {{- end }}
+    {{- else }}
+      emptyDir: {}
+    {{- end }}
+  containers:
+    - name: {{ .Chart.Name }}
+      image: "{{ .Values.hub.image }}:{{ .Values.hub.tag }}"
+      imagePullPolicy: {{ .Values.hub.pullPolicy }}
+      ports:
+        - containerPort: {{ .Values.hub.port }}
+          protocol: TCP
+      livenessProbe:
+        httpGet:
+          path: /grid/console
+          port: {{ .Values.hub.port }}
+          {{- if eq true .Values.hub.basicAuth.enabled }}
+          httpHeaders:
+          - name: Authorization
+            value: Basic {{ template "basicAuth.b64" . }}
+          {{- end}}
+        initialDelaySeconds: 90
+        periodSeconds: 5
+      readinessProbe:
+        httpGet:
+          path: /grid/console
+          port: {{ .Values.hub.port }}
+          {{- if eq true .Values.hub.basicAuth.enabled }}
+          httpHeaders:
+          - name: Authorization
+            value: Basic {{ template "basicAuth.b64" . }}
+          {{- end}}
+        timeoutSeconds: {{ .Values.hub.readinessTimeout }}
+      env:
+        - name: ZALENIUM_KUBERNETES_CPU_REQUEST
+          value: {{ .Values.hub.cpuRequest | quote }}
+        - name: ZALENIUM_KUBERNETES_CPU_LIMIT
+          value: {{ .Values.hub.cpuLimit | quote }}
+        - name: ZALENIUM_KUBERNETES_MEMORY_REQUEST
+          value: {{ .Values.hub.memRequest | quote }}
+        - name: ZALENIUM_KUBERNETES_MEMORY_LIMIT
+          value: {{ .Values.hub.memLimit | quote }}
+        {{- if .Values.hub.basicAuth.enabled }}
+        - name: GRID_USER
+          valueFrom:
+            secretKeyRef:
+              key: zalenium-user
+              name: {{ template "zalenium.fullname" . }}
+        - name: GRID_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              key: zalenium-password
+              name: {{ template "zalenium.fullname" . }}
+        {{- end }}
+        - name: DESIRED_CONTAINERS
+          value: {{ .Values.hub.desiredContainers | quote }}
+        - name: MAX_DOCKER_SELENIUM_CONTAINERS
+          value: {{ .Values.hub.maxDockerSeleniumContainers | quote }}
+        - name: SELENIUM_IMAGE_NAME
+          value: {{ .Values.hub.seleniumImageName | quote }}
+        - name: VIDEO_RECORDING_ENABLED
+          value: {{ .Values.hub.videoRecordingEnabled | quote }}
+        - name: SCREEN_WIDTH
+          value: {{ .Values.hub.screenWidth | quote }}
+        - name: SCREEN_HEIGHT
+          value: {{ .Values.hub.screenHeight | quote }}
+        - name: MAX_TEST_SESSIONS
+          value: {{ .Values.hub.maxTestSessions | quote }}
+        - name: DEBUG_ENABLED
+          value: {{ .Values.hub.debugEnabled | quote }}
+        - name: SEND_ANONYMOUS_USAGE_INFO
+          value: {{ .Values.hub.sendAnonymousUsageInfo | quote }}
+        - name: TZ
+          value: {{ .Values.hub.timeZone | quote }}
+        - name: KEEP_ONLY_FAILED_TESTS
+          value: {{ .Values.hub.keepOnlyFailedTests | quote }}
+        - name: RETENTION_PERIOD
+          value: {{ .Values.hub.retentionPeriod | quote }}
+        {{- if .Values.hub.sauceLabsEnabled }}
+        - name: SAUCE_LABS_ENABLED
+          value: {{ .Values.hub.sauceLabsEnabled | quote }}
+        - name: SAUCE_USERNAME
+          value: {{ .Values.hub.sauceUserName | quote }}
+        - name: SAUCE_ACCESS_KEY
+          value: {{ .Values.hub.sauceAccessKey | quote }}
+        {{- end }}
+        {{- if .Values.hub.browserStackEnabled }}
+        - name: BROWSER_STACK_ENABLED
+          value: {{ .Values.hub.browserStackEnabled | quote }}
+        - name: BROWSER_STACK_USER
+          value: {{ .Values.hub.browserStackUser | quote }}
+        - name: BROWSER_STACK_KEY
+          value: {{ .Values.hub.browserStackKey | quote }}
+        {{- end }}
+        {{- if .Values.hub.testingBotEnabled }}
+        - name: TESTINGBOT_ENABLED
+          value: {{ .Values.hub.testingBotEnabled | quote }}
+        - name: TESTINGBOT_KEY
+          value: {{ .Values.hub.testingBotKey | quote }}
+        - name: TESTINGBOT_SECRET
+          value: {{ .Values.hub.testingBotSecret | quote }}
+        {{- end }}
+      args:
+        - start
+      resources:
+{{ toYaml .Values.hub.resources | indent 8 }}
+      volumeMounts:
+        - name: {{ template "zalenium.fullname" . }}-videos
+          mountPath: /home/seluser/videos
+        - name: {{ template "zalenium.fullname" . }}-data
+          mountPath: /tmp/mounted
+  serviceAccountName: {{ template "zalenium.serviceAccountName" . }}
+  {{- if .Values.nodeSelector.enabled }}
+  nodeSelector:
+    {{ .Values.nodeSelector.key }}: {{ .Values.nodeSelector.value | quote }}
+  {{- end }}
+  {{- if .Values.tolerations.enabled }}
+  tolerations:
+    - key: {{ .Values.tolerations.key }}
+      operator: {{ .Values.tolerations.operator }}
+      value: {{ .Values.tolerations.value | quote }}
+      effect: {{ .Values.tolerations.effect }}
+  {{- end }}
+{{- end }}
