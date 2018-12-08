@@ -545,7 +545,7 @@ public class DockerContainerClient implements ContainerClient {
     }
 
     private void deleteSeleniumContainers() {
-        logger.info("About to clean up any left over selenium pods created by Zalenium");
+        logger.info("About to clean up any left over DockerSelenium containers created by Zalenium");
         String image = DockeredSeleniumStarter.getDockerSeleniumImageName();
         try {
             List<Container> containerList = dockerClient.listContainers(withStatusRunning(), withStatusCreated());
@@ -648,12 +648,12 @@ public class DockerContainerClient implements ContainerClient {
         try {
             final ContainerInfo info = dockerClient.inspectContainer(container.getContainerId());
             if (info.state().status().equalsIgnoreCase("exited") || info.state().status().equalsIgnoreCase("dead")) {
-                logger.info("Container {} exited with status {} - it is terminated.", container, info.state().status());
+                logger.debug("Container {} exited with status {} - it is terminated.", container, info.state().status());
                 return true;
             }
             return false;
         } catch (ContainerNotFoundException e) {
-            logger.info("Container {} not found - it is terminated.", container);
+            logger.debug("Container {} not found - it is terminated.", container);
             return true;
         } catch (DockerException | InterruptedException e) {
             logger.warn("Failed to fetch container status [" + container + "].", e);
