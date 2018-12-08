@@ -18,12 +18,15 @@ public class ZaleniumConfiguration {
     @VisibleForTesting
     public static final int DEFAULT_TIMES_TO_PROCESS_REQUEST = 30;
     @VisibleForTesting
+    public static final int DEFAULT_CHECK_CONTAINERS_INTERVAL = 30000;
+    @VisibleForTesting
     public static final String ZALENIUM_DESIRED_CONTAINERS = "ZALENIUM_DESIRED_CONTAINERS";
     @VisibleForTesting
     public static final String ZALENIUM_MAX_DOCKER_SELENIUM_CONTAINERS = "ZALENIUM_MAX_DOCKER_SELENIUM_CONTAINERS";
     private static final String WAIT_FOR_AVAILABLE_NODES = "WAIT_FOR_AVAILABLE_NODES";
     private static final String TIME_TO_WAIT_TO_START = "TIME_TO_WAIT_TO_START";
     private static final String MAX_TIMES_TO_PROCESS_REQUEST = "MAX_TIMES_TO_PROCESS_REQUEST";
+    private static final String CHECK_CONTAINERS_INTERVAL = "CHECK_CONTAINERS_INTERVAL";
 
     // Intended to start Zalenium locally for debugging or development. See ZaleniumRegistryTest#runLocally
     @VisibleForTesting
@@ -37,6 +40,7 @@ public class ZaleniumConfiguration {
     private static boolean waitForAvailableNodes;
     private static int timeToWaitToStart;
     private static int maxTimesToProcessRequest;
+    private static int checkContainersInterval;
 
     static {
     	readConfigurationFromEnvVariables();
@@ -65,6 +69,18 @@ public class ZaleniumConfiguration {
 
         int maxTimes = env.getIntEnvVariable(MAX_TIMES_TO_PROCESS_REQUEST, DEFAULT_TIMES_TO_PROCESS_REQUEST);
         setMaxTimesToProcessRequest(maxTimes);
+
+        int checkContainers = env.getIntEnvVariable(CHECK_CONTAINERS_INTERVAL, DEFAULT_CHECK_CONTAINERS_INTERVAL);
+        setCheckContainersInterval(checkContainers);
+    }
+
+    public static int getCheckContainersInterval() {
+        return checkContainersInterval;
+    }
+
+    public static void setCheckContainersInterval(int checkContainersInterval) {
+        ZaleniumConfiguration.checkContainersInterval = checkContainersInterval < 1000 ?
+                DEFAULT_CHECK_CONTAINERS_INTERVAL : checkContainersInterval;
     }
 
     public static int getMaxTimesToProcessRequest() {

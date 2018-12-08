@@ -32,6 +32,7 @@ import org.slf4j.LoggerFactory;
 
 import static de.zalando.ep.zalenium.util.ZaleniumConfiguration.ZALENIUM_RUNNING_LOCALLY;
 
+@SuppressWarnings("WeakerAccess")
 public class DockeredSeleniumStarter {
 
     public static final int NO_VNC_PORT_GAP = 10000;

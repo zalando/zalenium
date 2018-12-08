@@ -96,11 +96,12 @@ public class ZaleniumRegistry extends BaseGridRegistry implements GridRegistry {
         long timeToWaitToStart = ZaleniumConfiguration.getTimeToWaitToStart();
         boolean waitForAvailableNodes = ZaleniumConfiguration.isWaitForAvailableNodes();
         int maxTimesToProcessRequest = ZaleniumConfiguration.getMaxTimesToProcessRequest();
+        int checkContainersInterval = ZaleniumConfiguration.getCheckContainersInterval();
 
         DockeredSeleniumStarter starter = new DockeredSeleniumStarter();
 
         AutoStartProxySet autoStart = new AutoStartProxySet(false, minContainers, maxContainers, timeToWaitToStart,
-            waitForAvailableNodes, starter, Clock.systemDefaultZone(), maxTimesToProcessRequest);
+            waitForAvailableNodes, starter, Clock.systemDefaultZone(), maxTimesToProcessRequest, checkContainersInterval);
         proxies = autoStart;
         this.matcherThread.setUncaughtExceptionHandler(new UncaughtExceptionHandler());
         
@@ -216,11 +217,10 @@ public class ZaleniumRegistry extends BaseGridRegistry implements GridRegistry {
         // an empty TestSlot list, which doesn't figure into the proxy equivalence check.  Since we want to free up
         // those test sessions, we need to operate on that original object.
         if (proxies.contains(proxy)) {
-            LOG.warn(String.format(
-                    "Cleaning up stale test sessions on the unregistered node %s", proxy));
+            LOG.debug(String.format("Cleaning up stale test sessions on the unregistered node %s", proxy));
 
             final RemoteProxy p = proxies.remove(proxy);
-            p.getTestSlots().forEach(testSlot -> forceRelease(testSlot, SessionTerminationReason.PROXY_REREGISTRATION) );
+            p.getTestSlots().forEach(testSlot -> forceRelease(testSlot, SessionTerminationReason.PROXY_REREGISTRATION));
             p.teardown();
         }
     }

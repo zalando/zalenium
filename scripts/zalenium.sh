@@ -6,7 +6,6 @@ MAX_TEST_SESSIONS=${MAX_TEST_SESSIONS:-1}
 DESIRED_CONTAINERS=${DESIRED_CONTAINERS:-2}
 MAX_DOCKER_SELENIUM_CONTAINERS=${MAX_DOCKER_SELENIUM_CONTAINERS:-10}
 ZALENIUM_ARTIFACT="$(pwd)/${project.build.finalName}.jar"
-DEPRECATED_PARAMETERS=false
 SAUCE_LABS_ENABLED=${SAUCE_LABS_ENABLED:-false}
 BROWSER_STACK_ENABLED=${BROWSER_STACK_ENABLED:-false}
 TESTINGBOT_ENABLED=${TESTINGBOT_ENABLED:-false}
@@ -27,6 +26,8 @@ WAIT_FOR_AVAILABLE_NODES=${WAIT_FOR_AVAILABLE_NODES:-true}
 TIME_TO_WAIT_TO_START=${TIME_TO_WAIT_TO_START:-180000}
 # Maximum amount of times a test request is processed before starting a new node
 MAX_TIMES_TO_PROCESS_REQUEST=${MAX_TIMES_TO_PROCESS_REQUEST:-30}
+# How often should Zalenium check the status of the current containers/pods. See checkContainers() in AutoStartProxySet
+CHECK_CONTAINERS_INTERVAL=${CHECK_CONTAINERS_INTERVAL:-30000}
 
 GA_TRACKING_ID="UA-88441352-3"
 GA_ENDPOINT=https://www.google-analytics.com/collect
@@ -545,12 +546,11 @@ StartUp()
         fi
 
         # Gathering the options used to start Zalenium, in order to learn about the used options
-        ZALENIUM_START_COMMAND="zalenium.sh --deprecatedParameters $DEPRECATED_PARAMETERS
-            --desiredContainers $DESIRED_CONTAINERS --maxDockerSeleniumContainers $MAX_DOCKER_SELENIUM_CONTAINERS
-            --maxTestSessions $MAX_TEST_SESSIONS --sauceLabsEnabled $SAUCE_LABS_ENABLED
-            --browserStackEnabled $BROWSER_STACK_ENABLED --testingBotEnabled $TESTINGBOT_ENABLED
-            --videoRecordingEnabled $VIDEO_RECORDING_ENABLED --screenWidth $SCREEN_WIDTH --screenHeight $SCREEN_HEIGHT
-            --timeZone $TZ"
+        ZALENIUM_START_COMMAND="zalenium.sh --desiredContainers $DESIRED_CONTAINERS
+            --maxDockerSeleniumContainers $MAX_DOCKER_SELENIUM_CONTAINERS --maxTestSessions $MAX_TEST_SESSIONS
+            --sauceLabsEnabled $SAUCE_LABS_ENABLED --browserStackEnabled $BROWSER_STACK_ENABLED
+            --testingBotEnabled $TESTINGBOT_ENABLED --videoRecordingEnabled $VIDEO_RECORDING_ENABLED
+            --screenWidth $SCREEN_WIDTH --screenHeight $SCREEN_HEIGHT --timeZone $TZ"
 
         local args=(
             --max-time 10

@@ -93,7 +93,7 @@ public class AutoStartProxySet extends ProxySet implements Iterable<RemoteProxy>
 
     public AutoStartProxySet(boolean throwOnCapabilityNotPresent, long minContainers, long maxContainers,
             long timeToWaitToStart, boolean waitForAvailableNodes, DockeredSeleniumStarter starter, Clock clock,
-            int maxTimesToProcessRequest) {
+            int maxTimesToProcessRequest, long checkContainersInterval) {
         super(throwOnCapabilityNotPresent);
         this.minContainers = minContainers;
         this.maxContainers = maxContainers;
@@ -123,7 +123,7 @@ public class AutoStartProxySet extends ProxySet implements Iterable<RemoteProxy>
                 LOGGER.debug("Checked containers.");
 
                 try {
-                    Thread.sleep(1000);
+                    Thread.sleep(checkContainersInterval);
                 } catch (InterruptedException e) {
                     LOGGER.info("Stopping polling thread.");
                     LOGGER.debug("Stopping polling thread.", e);
@@ -208,7 +208,7 @@ public class AutoStartProxySet extends ProxySet implements Iterable<RemoteProxy>
             String containerId = dockerSeleniumRemoteProxy.getContainerId();
 
             try {
-                LOGGER.info("Stopping removed container [" + containerId + "].");
+                LOGGER.debug("Stopping removed container [" + containerId + "].");
                 starter.stopContainer(containerId);
             } catch (Exception e) {
                 LOGGER.error("Failed to stop container [" + containerId + "].", e);
@@ -295,7 +295,7 @@ public class AutoStartProxySet extends ProxySet implements Iterable<RemoteProxy>
     /**
      * Checks the status of the containers.
      */
-    public void checkContainers() {
+    private void checkContainers() {
         LOGGER.debug("Checking {} containers.", startedContainers.size());
         synchronized (this) {
             if (startedContainers.size() < this.minContainers) {
@@ -313,8 +313,6 @@ public class AutoStartProxySet extends ProxySet implements Iterable<RemoteProxy>
             }
         }
 
-        Set<ContainerCreationStatus> idleProxies = new HashSet<>();
-
         Set<ContainerCreationStatus> deadProxies = this.startedContainers.keySet().stream()
                 .filter(starter::containerHasFinished).collect(Collectors.toSet());
 
@@ -328,6 +326,8 @@ public class AutoStartProxySet extends ProxySet implements Iterable<RemoteProxy>
                 }
             });
         }
+
+        Set<ContainerCreationStatus> tookTooLongToStartProxies = new HashSet<>();
 
         for (Entry<ContainerCreationStatus, ContainerStatus> container : this.startedContainers.entrySet()) {
             ContainerCreationStatus creationStatus = container.getKey();
@@ -345,10 +345,18 @@ public class AutoStartProxySet extends ProxySet implements Iterable<RemoteProxy>
                     if (timeWaitingToStart > this.timeToWaitToStart) {
                         LOGGER.warn("Waited {} for {} to start, which is longer than {}.", timeWaitingToStart,
                                 containerStatus, this.timeToWaitToStart);
+                        tookTooLongToStartProxies.add(creationStatus);
                     }
                 }
             }
         }
+
+        for (ContainerCreationStatus tookTooLongToStartProxy : tookTooLongToStartProxies) {
+            starter.stopContainer(tookTooLongToStartProxy.getContainerId());
+            this.startedContainers.remove(tookTooLongToStartProxy);
+        }
+
+        Set<ContainerCreationStatus> idleProxies = new HashSet<>();
 
         this.startedContainers.entrySet().stream().filter(entry -> !entry.getValue().isShuttingDown()). // Do not count
                                                                                                         // already
