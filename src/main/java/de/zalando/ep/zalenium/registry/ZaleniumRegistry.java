@@ -347,16 +347,28 @@ public class ZaleniumRegistry extends BaseGridRegistry implements GridRegistry {
             return;
         }
 
-    	LOG.info("Registered a node " + proxy);
+    	LOG.debug("Received a node registration request " + proxy);
 
         try {
             lock.lock();
 
-            removeIfPresent(proxy);
+            /*
+                We don't reuse proxies in a long period, so it is unlikely that a proxy registers twice as an intended
+                behaviour. This creates a race condition when the proxy is trying to register itself several times
+                since it does not get a confirmation from the hub. Nevertheless, this still applies to nodes
+                registered by hand by any user.
+             */
+            if (proxy instanceof DockerSeleniumRemoteProxy) {
+                if (proxies.contains(proxy)) {
+                    LOG.debug(String.format("Proxy '%s' is already registered.", proxy));
+                    return;
+                }
+            } else {
+                removeIfPresent(proxy);
+            }
 
             if (registeringProxies.contains(proxy)) {
-                LOG.warn(String.format("Proxy '%s' is already queued for registration.", proxy));
-
+                LOG.debug(String.format("Proxy '%s' is already queued for registration.", proxy));
                 return;
             }
 
@@ -385,6 +397,7 @@ public class ZaleniumRegistry extends BaseGridRegistry implements GridRegistry {
                     ((SelfHealingProxy) proxy).startPolling();
                 }
                 proxies.add(proxy);
+                LOG.info("Registered a node " + proxy);
                 fireMatcherStateChanged();
             }
         } finally {
