@@ -49,7 +49,7 @@ StartUp()
     export COMPOSE_HTTP_TIMEOUT=360
 
     # Ensure we have a clean environment
-    docker-compose -f ${COMPOSE_FILE} -p zalenium down || true
+    docker-compose -f ${COMPOSE_FILE} -p zalenium down --timeout 60 || true
     docker stop zalenium || true
     docker rm zalenium || true
     rm -rf /tmp/videos
@@ -73,7 +73,7 @@ StartUp()
 ShutDown()
 {
     # Leave a clean environment
-    docker-compose -f ${COMPOSE_FILE} -p zalenium down
+    docker-compose -f ${COMPOSE_FILE} -p zalenium down --timeout 60
 }
 
 case ${SCRIPT_ACTION} in

@@ -33,6 +33,7 @@ import io.prometheus.client.Histogram;
 
 import java.net.URL;
 import java.time.Clock;
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -96,11 +97,12 @@ public class ZaleniumRegistry extends BaseGridRegistry implements GridRegistry {
         long timeToWaitToStart = ZaleniumConfiguration.getTimeToWaitToStart();
         boolean waitForAvailableNodes = ZaleniumConfiguration.isWaitForAvailableNodes();
         int maxTimesToProcessRequest = ZaleniumConfiguration.getMaxTimesToProcessRequest();
+        int checkContainersInterval = ZaleniumConfiguration.getCheckContainersInterval();
 
         DockeredSeleniumStarter starter = new DockeredSeleniumStarter();
 
         AutoStartProxySet autoStart = new AutoStartProxySet(false, minContainers, maxContainers, timeToWaitToStart,
-            waitForAvailableNodes, starter, Clock.systemDefaultZone(), maxTimesToProcessRequest);
+            waitForAvailableNodes, starter, Clock.systemDefaultZone(), maxTimesToProcessRequest, checkContainersInterval);
         proxies = autoStart;
         this.matcherThread.setUncaughtExceptionHandler(new UncaughtExceptionHandler());
         
@@ -216,11 +218,10 @@ public class ZaleniumRegistry extends BaseGridRegistry implements GridRegistry {
         // an empty TestSlot list, which doesn't figure into the proxy equivalence check.  Since we want to free up
         // those test sessions, we need to operate on that original object.
         if (proxies.contains(proxy)) {
-            LOG.warn(String.format(
-                    "Cleaning up stale test sessions on the unregistered node %s", proxy));
+            LOG.debug(String.format("Cleaning up stale test sessions on the unregistered node %s", proxy));
 
             final RemoteProxy p = proxies.remove(proxy);
-            p.getTestSlots().forEach(testSlot -> forceRelease(testSlot, SessionTerminationReason.PROXY_REREGISTRATION) );
+            p.getTestSlots().forEach(testSlot -> forceRelease(testSlot, SessionTerminationReason.PROXY_REREGISTRATION));
             p.teardown();
         }
     }
@@ -294,11 +295,11 @@ public class ZaleniumRegistry extends BaseGridRegistry implements GridRegistry {
         if (sessionCreated) {
             String remoteName = session.getSlot().getProxy().getId();
             long timeToAssignProxy = System.currentTimeMillis() - handler.getRequest().getCreationTime();
-            LOG.info(String.format("Test session with internal key %s assigned to remote (%s) after %s seconds (%s ms).",
+            LOG.info("Test session with internal key {} assigned to remote ({}) after {} seconds ({} ms).",
                                   session.getInternalKey(),
                                   remoteName,
                                   timeToAssignProxy / 1000,
-                                  timeToAssignProxy));
+                                  timeToAssignProxy);
             seleniumTestSessionStartLatency.observe(timeToAssignProxy / Collector.MILLISECONDS_PER_SECOND);
             seleniumTestSessionsWaiting.dec();
             activeTestSessions.add(session);
@@ -335,8 +336,7 @@ public class ZaleniumRegistry extends BaseGridRegistry implements GridRegistry {
             release(session, reason);
             return;
         }
-        LOG.warn("Tried to release session with internal key " + internalKey +
-                " but couldn't find it.");
+        LOG.warn("Tried to release session with internal key {} but couldn't find it.", internalKey);
     }
 
     /**
@@ -347,16 +347,28 @@ public class ZaleniumRegistry extends BaseGridRegistry implements GridRegistry {
             return;
         }
 
-    	LOG.info("Registered a node " + proxy);
+    	LOG.debug("Received a node registration request {}", proxy);
 
         try {
             lock.lock();
 
-            removeIfPresent(proxy);
+            /*
+                We don't reuse proxies in a long period, so it is unlikely that a proxy registers twice as an intended
+                behaviour. This creates a race condition when the proxy is trying to register itself several times
+                since it does not get a confirmation from the hub. Nevertheless, this still applies to nodes
+                registered by hand by any user.
+             */
+            if (proxy instanceof DockerSeleniumRemoteProxy) {
+                if (proxies.contains(proxy)) {
+                    LOG.debug("Proxy '{}' is already registered.", proxy);
+                    return;
+                }
+            } else {
+                removeIfPresent(proxy);
+            }
 
             if (registeringProxies.contains(proxy)) {
-                LOG.warn(String.format("Proxy '%s' is already queued for registration.", proxy));
-
+                LOG.debug("Proxy '{}' is already queued for registration.", proxy);
                 return;
             }
 
@@ -372,7 +384,7 @@ public class ZaleniumRegistry extends BaseGridRegistry implements GridRegistry {
                 ((RegistrationListener) proxy).beforeRegistration();
             }
         } catch (Throwable t) {
-            LOG.error("Error running the registration listener on " + proxy + ", " + t.getMessage());
+            LOG.error("Error running the registration listener on {}, {}", proxy, t.getMessage());
             t.printStackTrace();
             listenerOk = false;
         }
@@ -385,6 +397,7 @@ public class ZaleniumRegistry extends BaseGridRegistry implements GridRegistry {
                     ((SelfHealingProxy) proxy).startPolling();
                 }
                 proxies.add(proxy);
+                LOG.info("Registered a node {}", proxy);
                 fireMatcherStateChanged();
             }
         } finally {
@@ -477,7 +490,7 @@ public class ZaleniumRegistry extends BaseGridRegistry implements GridRegistry {
      * @see GridRegistry#getProxyById(String)
      */
     public RemoteProxy getProxyById(String id) {
-        LOG.debug("Getting proxy " + id);
+        LOG.debug("Getting proxy {}", id);
         return proxies.getProxyById(id);
     }
 
@@ -493,10 +506,12 @@ public class ZaleniumRegistry extends BaseGridRegistry implements GridRegistry {
         int maxTries = 3;
         for (int i = 1; i <= maxTries; i++) {
             try {
-                HttpClient client = httpClientFactory.createClient(url);
+                HttpClient client = httpClientFactory.builder()
+                                        .connectionTimeout(Duration.ofSeconds(connectionTimeout))
+                                        .readTimeout(Duration.ofSeconds(readTimeout))
+                                        .createClient(url);
                 if (i > 1) {
-                    String message = String.format("Successfully created HttpClient for url %s, after attempt #%s", url, i);
-                    LOG.warn(message);
+                    LOG.warn("Successfully created HttpClient for url {}, after attempt #{}", url, i);
                 }
                 return client;
             } catch (Exception | AssertionError e) {

@@ -6,7 +6,6 @@ MAX_TEST_SESSIONS=${MAX_TEST_SESSIONS:-1}
 DESIRED_CONTAINERS=${DESIRED_CONTAINERS:-2}
 MAX_DOCKER_SELENIUM_CONTAINERS=${MAX_DOCKER_SELENIUM_CONTAINERS:-10}
 ZALENIUM_ARTIFACT="$(pwd)/${project.build.finalName}.jar"
-DEPRECATED_PARAMETERS=false
 SAUCE_LABS_ENABLED=${SAUCE_LABS_ENABLED:-false}
 BROWSER_STACK_ENABLED=${BROWSER_STACK_ENABLED:-false}
 TESTINGBOT_ENABLED=${TESTINGBOT_ENABLED:-false}
@@ -27,6 +26,10 @@ WAIT_FOR_AVAILABLE_NODES=${WAIT_FOR_AVAILABLE_NODES:-true}
 TIME_TO_WAIT_TO_START=${TIME_TO_WAIT_TO_START:-180000}
 # Maximum amount of times a test request is processed before starting a new node
 MAX_TIMES_TO_PROCESS_REQUEST=${MAX_TIMES_TO_PROCESS_REQUEST:-30}
+# How often should Zalenium check the status of the current containers/pods. See checkContainers() in AutoStartProxySet
+CHECK_CONTAINERS_INTERVAL=${CHECK_CONTAINERS_INTERVAL:-5000}
+# Timeout for a proxy during cleanup tasks. See isCleaningUp() in DockerSeleniumRemoteProxy
+ZALENIUM_PROXY_CLEANUP_TIMEOUT=${ZALENIUM_PROXY_CLEANUP_TIMEOUT:-180}
 
 GA_TRACKING_ID="UA-88441352-3"
 GA_ENDPOINT=https://www.google-analytics.com/collect
@@ -38,7 +41,6 @@ if [ -f /var/run/secrets/kubernetes.io/serviceaccount/token ]; then
 fi
 
 PID_PATH_SELENIUM=/tmp/selenium-pid
-PID_PATH_DOCKER_SELENIUM_NODE=/tmp/docker-selenium-node-pid
 PID_PATH_SAUCE_LABS_NODE=/tmp/sauce-labs-node-pid
 PID_PATH_TESTINGBOT_NODE=/tmp/testingbot-node-pid
 PID_PATH_BROWSER_STACK_NODE=/tmp/browser-stack-node-pid
@@ -545,12 +547,11 @@ StartUp()
         fi
 
         # Gathering the options used to start Zalenium, in order to learn about the used options
-        ZALENIUM_START_COMMAND="zalenium.sh --deprecatedParameters $DEPRECATED_PARAMETERS
-            --desiredContainers $DESIRED_CONTAINERS --maxDockerSeleniumContainers $MAX_DOCKER_SELENIUM_CONTAINERS
-            --maxTestSessions $MAX_TEST_SESSIONS --sauceLabsEnabled $SAUCE_LABS_ENABLED
-            --browserStackEnabled $BROWSER_STACK_ENABLED --testingBotEnabled $TESTINGBOT_ENABLED
-            --videoRecordingEnabled $VIDEO_RECORDING_ENABLED --screenWidth $SCREEN_WIDTH --screenHeight $SCREEN_HEIGHT
-            --timeZone $TZ"
+        ZALENIUM_START_COMMAND="zalenium.sh --desiredContainers $DESIRED_CONTAINERS
+            --maxDockerSeleniumContainers $MAX_DOCKER_SELENIUM_CONTAINERS --maxTestSessions $MAX_TEST_SESSIONS
+            --sauceLabsEnabled $SAUCE_LABS_ENABLED --browserStackEnabled $BROWSER_STACK_ENABLED
+            --testingBotEnabled $TESTINGBOT_ENABLED --videoRecordingEnabled $VIDEO_RECORDING_ENABLED
+            --screenWidth $SCREEN_WIDTH --screenHeight $SCREEN_HEIGHT --timeZone $TZ"
 
         local args=(
             --max-time 10
@@ -690,19 +691,6 @@ ShutDown()
             echo "Failed to send kill signal to Selenium Hub!"
         else
             rm ${PID_PATH_SELENIUM}
-        fi
-    fi
-
-    if [ -f ${PID_PATH_DOCKER_SELENIUM_NODE} ];
-    then
-        echo "Stopping DockerSeleniumStarter node..."
-        PID=$(cat ${PID_PATH_DOCKER_SELENIUM_NODE});
-        kill ${PID};
-        _returnedValue=$?
-        if [ "${_returnedValue}" != "0" ] ; then
-            echo "Failed to send kill signal to DockerSeleniumStarter node!"
-        else
-            rm ${PID_PATH_DOCKER_SELENIUM_NODE}
         fi
     fi
 }

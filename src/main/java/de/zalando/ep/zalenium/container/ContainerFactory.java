@@ -14,7 +14,7 @@ public class ContainerFactory {
     private static Supplier<Boolean> isKubernetes = () -> new File("/var/run/secrets/kubernetes.io/serviceaccount/token").canRead();
 
     private static KubernetesContainerClient kubernetesContainerClient;
-    private static DockerContainerClient dockerContainerClient;
+    private static Supplier<DockerContainerClient> dockerContainerClient = DockerContainerClient::new;
     
     public static ContainerClient getContainerClient() {
 
@@ -27,16 +27,11 @@ public class ContainerFactory {
     }
 
     private static DockerContainerClient createDockerContainerClient() {
-        // It should be enough to have a single client for docker as well.
-        if (dockerContainerClient == null) {
-            synchronized (ContainerFactory.class) {
-                if (dockerContainerClient == null) {
-                    dockerContainerClient = new DockerContainerClient();
-                    dockerContainerClient.initialiseContainerEnvironment();
-                }
-            }
-        }
-        return dockerContainerClient;
+        // We actually need one client per proxy because sometimes the default size of the connection pool in the
+        // DockerClient is not big enough to handle everything when more than 40 proxies are running.
+        DockerContainerClient dockerClient = ContainerFactory.dockerContainerClient.get();
+        dockerClient.initialiseContainerEnvironment();
+        return dockerClient;
     }
     
     private static KubernetesContainerClient createKubernetesContainerClient() {
@@ -56,12 +51,12 @@ public class ContainerFactory {
     }
 
     @VisibleForTesting
-    public static void setDockerContainerClient(DockerContainerClient dockerContainerClient) {
+    public static void setDockerContainerClient(Supplier<DockerContainerClient> dockerContainerClient) {
         ContainerFactory.dockerContainerClient = dockerContainerClient;
     }
 
     @VisibleForTesting
-    public static DockerContainerClient getDockerContainerClient() {
+    public static Supplier<DockerContainerClient> getDockerContainerClient() {
         return dockerContainerClient;
     }
 

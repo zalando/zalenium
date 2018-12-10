@@ -132,6 +132,8 @@ public class CloudTestingRemoteProxy extends DefaultRemoteProxy {
 
     @Override
     public TestSession getNewSession(Map<String, Object> requestedCapability) {
+        String currentName = Thread.currentThread().getName();
+        Thread.currentThread().setName(getProxyName());
         /*
             Validate first if the capability is matched
         */
@@ -139,7 +141,8 @@ public class CloudTestingRemoteProxy extends DefaultRemoteProxy {
             return null;
         }
 
-        logger.info("Test will be forwarded to " + getProxyName() + ", " + requestedCapability);
+        logger.info("Test will be forwarded to {} - {}", getProxyName(), requestedCapability);
+        Thread.currentThread().setName(currentName);
         return super.getNewSession(requestedCapability);
     }
 
@@ -154,12 +157,14 @@ public class CloudTestingRemoteProxy extends DefaultRemoteProxy {
 
     @Override
     public void beforeCommand(TestSession session, HttpServletRequest request, HttpServletResponse response) {
+        String currentName = Thread.currentThread().getName();
+        Thread.currentThread().setName(getProxyName());
         if (request instanceof WebDriverRequest && "POST".equalsIgnoreCase(request.getMethod())) {
             WebDriverRequest seleniumRequest = (WebDriverRequest) request;
             if (seleniumRequest.getRequestType().equals(RequestType.START_SESSION)) {
                 int numberOfParallelCloudSessions = getNumberOfSessions();
                 MDC.put("numberOfParallelCloudSessions",String.valueOf(numberOfParallelCloudSessions));
-                logger.info("Currently using " + numberOfParallelCloudSessions + " parallel sessions towards " + getProxyName() + ". Attempt to start one more.");
+                logger.info("Currently using " + numberOfParallelCloudSessions + " parallel sessions . Trying to start one more.");
                 MDC.clear();
 
                 String body = seleniumRequest.getBody();
@@ -173,13 +178,12 @@ public class CloudTestingRemoteProxy extends DefaultRemoteProxy {
                 try {
                     seleniumRequest.setBody(jsonObject.toString());
                 } catch (UnsupportedEncodingException e) {
-                    logger.error("Error while setting the body request in " + getProxyName()
-                            + ", " + jsonObject.toString());
+                    logger.error("Error while setting the body request in {}, {}", getProxyName(), jsonObject.toString());
                 }
             }
 
             if (seleniumRequest.getPathInfo() != null && seleniumRequest.getPathInfo().endsWith("cookie")) {
-                logger.info(getId() + " Checking for cookies..." + seleniumRequest.getBody());
+                logger.info("Checking for cookies... {}", seleniumRequest.getBody());
                 JsonElement bodyRequest = new JsonParser().parse(seleniumRequest.getBody());
                 JsonObject cookie = bodyRequest.getAsJsonObject().getAsJsonObject("cookie");
                 JsonObject emptyName = new JsonObject();
@@ -192,10 +196,13 @@ public class CloudTestingRemoteProxy extends DefaultRemoteProxy {
             }
         }
         super.beforeCommand(session, request, response);
+        Thread.currentThread().setName(currentName);
     }
 
     @Override
     public void afterCommand(TestSession session, HttpServletRequest request, HttpServletResponse response) {
+        String currentName = Thread.currentThread().getName();
+        Thread.currentThread().setName(getProxyName());
         if (request instanceof WebDriverRequest && "DELETE".equalsIgnoreCase(request.getMethod())) {
             WebDriverRequest seleniumRequest = (WebDriverRequest) request;
             if (seleniumRequest.getRequestType().equals(RequestType.STOP_SESSION)) {
@@ -206,6 +213,7 @@ public class CloudTestingRemoteProxy extends DefaultRemoteProxy {
             }
         }
         super.afterCommand(session, request, response);
+        Thread.currentThread().setName(currentName);
     }
 
     @Override
@@ -280,7 +288,7 @@ public class CloudTestingRemoteProxy extends DefaultRemoteProxy {
             } catch (Exception e) {
                 logger.error(e.toString(), e);
             }
-        }, "CloudTestingRemoteProxy addTestToDashboard seleniumSessionId [" + seleniumSessionId + "] testCompleted ["
+        }, getProxyName() + " addTestToDashboard seleniumSessionId [" + seleniumSessionId + "] testCompleted ["
                 + testCompleted + "]").start();
     }
 
@@ -362,6 +370,8 @@ public class CloudTestingRemoteProxy extends DefaultRemoteProxy {
      */
     @VisibleForTesting
     public void terminateIdleSessions() {
+        String currentName = Thread.currentThread().getName();
+        Thread.currentThread().setName(getProxyName());
         for (TestSlot testSlot : getTestSlots()) {
             if (testSlot.getSession() != null &&
                     (testSlot.getSession().getInactivityTime() >= (getMaxTestIdleTime() * 1000L))) {
@@ -373,9 +383,10 @@ public class CloudTestingRemoteProxy extends DefaultRemoteProxy {
                     addTestToDashboard(testSlot.getSession().getExternalKey().getKey(), false);
                 }
                 getRegistry().forceRelease(testSlot, SessionTerminationReason.ORPHAN);
-                logger.info(getProxyName() + " Releasing slot and terminating session due to inactivity.");
+                logger.warn("Releasing slot and terminating session due to inactivity.");
             }
         }
+        Thread.currentThread().setName(currentName);
     }
 
     /*

@@ -32,6 +32,7 @@ import org.slf4j.LoggerFactory;
 
 import static de.zalando.ep.zalenium.util.ZaleniumConfiguration.ZALENIUM_RUNNING_LOCALLY;
 
+@SuppressWarnings("WeakerAccess")
 public class DockeredSeleniumStarter {
 
     public static final int NO_VNC_PORT_GAP = 10000;
@@ -236,8 +237,8 @@ public class DockeredSeleniumStarter {
         
         ContainerCreationStatus containerCreationStatus = startDockerSeleniumContainer(timeZone, screenSize);
         if (containerCreationStatus.isCreated()) {
-            LOGGER.debug(String.format("Created container [%s] with dimensions [%s] and tz [%s].",
-                containerCreationStatus.getContainerName(), screenSize, timeZone));
+            LOGGER.debug("Created container {} with dimensions {} and tz {}.",
+                containerCreationStatus.getContainerName(), screenSize, timeZone);
             return containerCreationStatus;        	
         }
         else {
@@ -254,7 +255,7 @@ public class DockeredSeleniumStarter {
         NetworkUtils networkUtils = new NetworkUtils();
         String hostIpAddress = networkUtils.getIp4NonLoopbackAddressOfThisMachine().getHostAddress();
         String nodePolling = String.valueOf(RandomUtils.nextInt(90, 120) * 1000);
-        String nodeRegisterCycle = String.valueOf(RandomUtils.nextInt(15, 25) * 1000);
+        String nodeRegisterCycle = String.valueOf(RandomUtils.nextInt(60, 90) * 1000);
         String seleniumNodeParams = getSeleniumNodeParameters();
         String latestImage = getLatestDownloadedImage(getDockerSeleniumImageName());
 

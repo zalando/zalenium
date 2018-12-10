@@ -10,6 +10,8 @@ import com.google.common.io.ByteStreams;
 import de.zalando.ep.zalenium.proxy.DockerSeleniumRemoteProxy;
 import de.zalando.ep.zalenium.servlet.renderer.LiveNodeHtmlRenderer;
 import de.zalando.ep.zalenium.servlet.renderer.TemplateRenderer;
+import de.zalando.ep.zalenium.util.Environment;
+
 import org.openqa.grid.internal.GridRegistry;
 import org.openqa.grid.internal.RemoteProxy;
 import org.openqa.grid.internal.utils.HtmlRenderer;
@@ -31,6 +33,8 @@ import org.slf4j.LoggerFactory;
 public class LivePreviewServlet extends RegistryBasedServlet {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LivePreviewServlet.class.getName());
+    private static final Environment env = new Environment();
+    private static final String contextPath = env.getContextPath();
 
     @SuppressWarnings("unused")
     public LivePreviewServlet(){
@@ -103,6 +107,7 @@ public class LivePreviewServlet extends RegistryBasedServlet {
         livePreviewValues.put("{{refreshInterval}}", refresh);
         livePreviewValues.put("{{leftColumnNodes}}", leftColumnNodes.toString());
         livePreviewValues.put("{{rightColumnNodes}}", rightColumnNodes.toString());
+        livePreviewValues.put("{{contextPath}}", contextPath);
         String templateFile = "html_templates/live_preview_servlet.html";
         TemplateRenderer templateRenderer = new TemplateRenderer(templateFile);
         String renderTemplate = templateRenderer.renderTemplate(livePreviewValues);

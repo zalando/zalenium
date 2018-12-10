@@ -2,6 +2,8 @@ package de.zalando.ep.zalenium.servlet;
 
 import com.google.common.io.ByteStreams;
 import de.zalando.ep.zalenium.servlet.renderer.TemplateRenderer;
+import de.zalando.ep.zalenium.util.Environment;
+
 import org.openqa.grid.internal.GridRegistry;
 import org.openqa.grid.internal.RemoteProxy;
 import org.openqa.grid.internal.utils.configuration.GridHubConfiguration;
@@ -25,6 +27,8 @@ import java.util.Map;
 public class ZaleniumConsoleServlet extends RegistryBasedServlet {
     private static String coreVersion;
     private TemplateRenderer templateRenderer;
+    private static final Environment env = new Environment();
+    private static final String contextPath = env.getContextPath();
 
     @SuppressWarnings("unused")
     public ZaleniumConsoleServlet() {
@@ -94,6 +98,7 @@ public class ZaleniumConsoleServlet extends RegistryBasedServlet {
         consoleValues.put("{{hubConfigLinkVisible}}", hubConfigLinkVisible);
         consoleValues.put("{{hubConfigVisible}}", hubConfigVisible);
         consoleValues.put("{{hubConfig}}", getConfigInfo(request.getParameter("configDebug") != null));
+        consoleValues.put("{{contextPath}}", contextPath);
 
         String renderTemplate = templateRenderer.renderTemplate(consoleValues);
 

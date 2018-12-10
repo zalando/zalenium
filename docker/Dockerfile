@@ -12,8 +12,6 @@ RUN  echo "deb ${UBUNTU_MIRROR} ${UBUNTU_FLAVOR} main universe\n" > /etc/apt/sou
   && echo "deb ${UBUNTU_MIRROR} ${UBUNTU_FLAVOR}-updates main universe\n" >> /etc/apt/sources.list \
   && echo "deb ${UBUNTU_MIRROR} ${UBUNTU_FLAVOR}-security main universe\n" >> /etc/apt/sources.list
 
-MAINTAINER Team EP <diemol+team-ep@gmail.com>
-# https://github.com/docker/docker/pull/25466#discussion-diff-74622923R677
 LABEL maintainer "Team EP <diemol+team-ep@gmail.com>"
 
 # No interactive frontend during docker build
@@ -235,25 +233,7 @@ RUN if [ "${kubernetesSlimVersion}" = "false" ]; then \
 # Var `DOCKER` points to which binary to use at runtime
 ENV DOCKER_HOST="unix:///var/run/docker.sock" \
     DOCKER_BUCKET="download.docker.com" \
-    DOCKER="18.06.1-ce"
-
-#----------------------------
-# Docker 18.06.1-ce -- 15 MB
-#----------------------------
-# https://github.com/docker-library/docker/blob/master/17.09/Dockerfile
-# Note: Starting with 1.13, newer CLIs can talk to older daemons
-RUN if [ "${kubernetesSlimVersion}" = "false" ]; then \
-        set -x \
-        && DOCKER_VERSION="18.06.1-ce" \
-        && curl -fSL "https://${DOCKER_BUCKET}/linux/static/stable/x86_64/docker-${DOCKER_VERSION}.tgz" \
-                -o docker.tgz \
-        && tar -xzvf docker.tgz \
-        && mv docker/docker /usr/bin/docker-${DOCKER_VERSION} \
-        && rm -rf docker/ && rm docker.tgz \
-        && docker-${DOCKER_VERSION} --version | grep "${DOCKER_VERSION}"; \
-    else \
-        echo "Skipping adding Docker because of kubernetes slim mode"; \
-    fi
+    DOCKER="18.09.0"
 
 #----------------------------
 # Docker 18.09 -- 15 MB
@@ -373,7 +353,6 @@ COPY zalenium.sh \
  logback.xml \
  /home/seluser/
 COPY scm-source.json /
-COPY ${ZAL_VER}.jar /home/seluser/${ZAL_VER}.jar
 
 #-----------------#
 # Fix perms again #
@@ -397,6 +376,8 @@ RUN sudo chmod +x /home/seluser/zalenium.sh \
 RUN sudo chgrp -R 0 /home/seluser && \
     sudo chmod -R g=u /home/seluser && \
     sudo chmod -R u+x /home/seluser
+
+COPY ${ZAL_VER}.jar /home/seluser/${ZAL_VER}.jar
 
 # IMPORTANT: Using the string form `CMD "entry.sh"` without
 # brackets [] causes Docker to run your process

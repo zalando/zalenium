@@ -11,3 +11,7 @@ errorShots
 .DS_Store
 .project
 bin/
+
+.classpath
+.settings
+.vscode

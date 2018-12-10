@@ -1,5 +1,5 @@
 FROM node:latest
-MAINTAINER brian.maher@zalando.de
+LABEL maintainer="brian.maher@zalando.de"
 
 RUN apt-get update && \
   apt-get install -y jq=1.4-2.1+deb8u1 --no-install-recommends && \

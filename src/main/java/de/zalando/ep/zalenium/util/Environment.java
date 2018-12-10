@@ -80,4 +80,15 @@ public class Environment {
 
         return buckets;
     }
+
+    public String getContextPath() {
+        String contextPath = getStringEnvVariable("CONTEXT_PATH", "");
+        contextPath = contextPath.trim();
+        // To load static files(css and images), if it is only '/'
+        // do not add contextPath in the generated html
+        if ("/".equals(contextPath)) {
+            contextPath = "";
+        }
+        return contextPath;
+    }
 }
