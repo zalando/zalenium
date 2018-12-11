@@ -68,7 +68,7 @@ public class DockerSeleniumRemoteProxyTest {
     private DockerSeleniumRemoteProxy proxy;
     private GridRegistry registry;
     private ContainerClient containerClient;
-    private DockerContainerClient originalDockerContainerClient;
+    private Supplier<DockerContainerClient> originalDockerContainerClient;
     private KubernetesContainerClient originalKubernetesContainerClient;
     private Supplier<Boolean> originalIsKubernetesValue;
     private Supplier<Boolean> currentIsKubernetesValue;
@@ -104,8 +104,7 @@ public class DockerSeleniumRemoteProxyTest {
             this.containerClient = KubernetesContainerMock.getMockedKubernetesContainerClient();
             ContainerFactory.setKubernetesContainerClient((KubernetesContainerClient) containerClient);
         } else {
-            this.containerClient = DockerContainerMock.getMockedDockerContainerClient();
-            ContainerFactory.setDockerContainerClient((DockerContainerClient) containerClient);
+            ContainerFactory.setDockerContainerClient(() -> (DockerContainerClient) containerClient);
         }
         ContainerFactory.setIsKubernetes(this.currentIsKubernetesValue);
 
