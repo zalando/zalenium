@@ -8,6 +8,7 @@ import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
+import java.util.function.Supplier;
 
 import javax.management.InstanceNotFoundException;
 import javax.management.MalformedObjectNameException;
@@ -37,7 +38,7 @@ public class ZaleniumConsoleServletTest {
     private GridRegistry registry;
     private HttpServletRequest request;
     private HttpServletResponse response;
-    private DockerContainerClient originalContainerClient;
+    private Supplier<DockerContainerClient> originalContainerClient;
 
     @Before
     public void setUp() throws IOException {
@@ -51,7 +52,7 @@ public class ZaleniumConsoleServletTest {
         registry = new SimpleRegistry();
 
         this.originalContainerClient = ContainerFactory.getDockerContainerClient();
-        ContainerFactory.setDockerContainerClient(DockerContainerMock.getRegisterOnlyDockerContainerClient());
+        ContainerFactory.setDockerContainerClient(DockerContainerMock::getRegisterOnlyDockerContainerClient);
 
         RegistrationRequest registrationRequest = TestUtils.getRegistrationRequestForTesting(30001, SauceLabsRemoteProxy.class.getCanonicalName());
         CommonProxyUtilities commonProxyUtilities = mock(CommonProxyUtilities.class);
