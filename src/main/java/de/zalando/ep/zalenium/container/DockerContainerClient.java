@@ -564,9 +564,13 @@ public class DockerContainerClient implements ContainerClient {
     private void deleteSeleniumContainers() {
         logger.info("About to clean up any left over DockerSelenium containers created by Zalenium");
         String image = DockeredSeleniumStarter.getDockerSeleniumImageName();
+        String zaleniumContainerName = DockeredSeleniumStarter.getContainerName();
         try {
-            List<Container> containerList = dockerClient.listContainers(withStatusRunning(), withStatusCreated());
-            containerList.stream().filter(container -> container.image().contains(image))
+            List<Container> containerList = dockerClient.listContainers(withStatusRunning(), withStatusCreated())
+                    .stream().filter(container -> container.image().contains(image)
+                            && container.names().stream().anyMatch(name -> name.contains(zaleniumContainerName)))
+                    .collect(Collectors.toList());
+            containerList.stream()
                     .parallel()
                     .forEach(container -> stopContainer(container.id()));
         } catch (Exception e) {
