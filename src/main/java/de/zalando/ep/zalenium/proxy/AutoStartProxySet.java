@@ -296,20 +296,19 @@ public class AutoStartProxySet extends ProxySet implements Iterable<RemoteProxy>
     private void checkContainers() {
         LOGGER.debug("Checking {} containers.", startedContainers.size());
 
-        // Creating proxies when needed
-        if (startedContainers.size() < this.minContainers) {
-            if (this.minContainers > this.maxContainers) {
-                LOGGER.info("Only up to {} containers will be started, since it is what is configured by " +
-                    "--maxDockerSeleniumContainers", this.maxContainers);
-                this.minContainers = this.maxContainers;
-            }
-            LOGGER.info("AutoStarting container, because {} is less than min {}", startedContainers.size(),
-                    this.minContainers);
-            long outstanding = this.minContainers - startedContainers.size();
-            for (int i = 0; i < outstanding; i++) {
-                this.startContainer(Collections.emptyMap());
-            }
-        }
+        // Shutting down proxies that are done: cannot accept more tests or have an idle test
+        // (without counting the already terminating proxies).
+        Set<ContainerCreationStatus> doneProxies = new HashSet<>();
+        this.startedContainers.entrySet().stream()
+                .filter(entry -> !entry.getValue().isShuttingDown())
+                .flatMap(entry -> entry.getValue().getProxy()
+                        .filter(DockerSeleniumRemoteProxy::shutdownIfStale)
+                        .map(proxy -> Stream.of(Pair.of(entry, proxy))).orElse(Stream.empty()))
+                .forEach(pair -> {
+                    doneProxies.add(pair.getLeft().getKey());
+                    pair.getLeft().getValue().setShuttingDown(true);
+                });
+        LOGGER.debug("{} proxies are done and will be removed.", doneProxies.size());
 
         // Removing from the tracked set the ones that were already shutdown
         Set<ContainerCreationStatus> deadProxies = this.startedContainers.keySet().stream()
@@ -327,6 +326,21 @@ public class AutoStartProxySet extends ProxySet implements Iterable<RemoteProxy>
                     Thread.currentThread().setName(currentThreadName);
                 }
             });
+        }
+
+        // Creating proxies when needed
+        if (startedContainers.size() < this.minContainers) {
+            if (this.minContainers > this.maxContainers) {
+                LOGGER.info("Only up to {} containers will be started, since it is what is configured by " +
+                    "--maxDockerSeleniumContainers", this.maxContainers);
+                this.minContainers = this.maxContainers;
+            }
+            LOGGER.info("AutoStarting container, because {} is less than min {}", startedContainers.size(),
+                    this.minContainers);
+            long outstanding = this.minContainers - startedContainers.size();
+            for (int i = 0; i < outstanding; i++) {
+                this.startContainer(Collections.emptyMap());
+            }
         }
 
         // Removing from the tracked set the ones that took too long to register (we assume they died)
@@ -359,16 +373,8 @@ public class AutoStartProxySet extends ProxySet implements Iterable<RemoteProxy>
         }
 
 
-        // Shutting down the ones that have idle tests (without counting the already terminating proxies).
-        Set<ContainerCreationStatus> idleProxies = new HashSet<>();
-        this.startedContainers.entrySet().stream().filter(entry -> !entry.getValue().isShuttingDown())
-                .flatMap(entry -> entry.getValue().getProxy().filter(DockerSeleniumRemoteProxy::shutdownIfStale)
-                        .map(proxy -> Stream.of(Pair.of(entry, proxy))).orElse(Stream.empty()))
-                .forEach(pair -> {
-                    idleProxies.add(pair.getLeft().getKey());
-                    pair.getLeft().getValue().setShuttingDown(true);
-                });
-
+        // Shutting down the extra containers (without counting the already terminating proxies).
+        Set<ContainerCreationStatus> extraProxies = new HashSet<>();
         long runningCount = this.startedContainers.values().stream()
                 .filter(container -> !container.isShuttingDown())
                 .count();
@@ -378,17 +384,18 @@ public class AutoStartProxySet extends ProxySet implements Iterable<RemoteProxy>
                     runningCount, this.minContainers);
             long extra = runningCount - minContainers;
 
-            // Shutting down the extra containers (without counting the already terminating proxies).
-            this.startedContainers.entrySet().stream().filter(entry -> !entry.getValue().isShuttingDown()).
-                    flatMap(entry -> entry.getValue().getProxy().filter(DockerSeleniumRemoteProxy::shutdownIfIdle)
+            this.startedContainers.entrySet().stream()
+                    .filter(entry -> !entry.getValue().isShuttingDown())
+                    .flatMap(entry -> entry.getValue().getProxy()
+                            .filter(DockerSeleniumRemoteProxy::shutdownIfIdle)
                             .map(proxy -> Stream.of(Pair.of(entry, proxy))).orElse(Stream.empty()))
                     .limit(extra).forEach(pair -> {
-                        idleProxies.add(pair.getLeft().getKey());
+                        extraProxies.add(pair.getLeft().getKey());
                         pair.getLeft().getValue().setShuttingDown(true);
                     });
         }
 
-        LOGGER.debug(String.format("[%d] proxies are idle and will be removed.", idleProxies.size()));
+        LOGGER.debug("{} proxies are idle and will be removed.", extraProxies.size());
     }
 
     /**
@@ -495,7 +502,7 @@ public class AutoStartProxySet extends ProxySet implements Iterable<RemoteProxy>
         return Collections.unmodifiableMap(startedContainers);
     }
 
-    @SuppressWarnings("WeakerAccess")
+    @SuppressWarnings({"WeakerAccess", "OptionalUsedAsFieldOrParameterType"})
     public static final class ContainerStatus {
         private final String containerId;
         private final long timeCreated;
