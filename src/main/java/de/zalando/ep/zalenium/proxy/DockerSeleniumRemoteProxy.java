@@ -4,11 +4,13 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -17,6 +19,8 @@ import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.compress.utils.IOUtils;
 import org.openqa.grid.common.RegistrationRequest;
+import org.openqa.grid.common.exception.RemoteException;
+import org.openqa.grid.common.exception.RemoteNotReachableException;
 import org.openqa.grid.common.exception.RemoteUnregisterException;
 import org.openqa.grid.internal.ExternalSessionKey;
 import org.openqa.grid.internal.GridRegistry;
@@ -66,6 +70,8 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     public static final String ZALENIUM_VIDEO_RECORDING_ENABLED = "ZALENIUM_VIDEO_RECORDING_ENABLED";
     @VisibleForTesting
     public static final boolean DEFAULT_VIDEO_RECORDING_ENABLED = true;
+    private static final String ZALENIUM_PROXY_CLEANUP_TIMEOUT = "ZALENIUM_PROXY_CLEANUP_TIMEOUT";
+    private static final int DEFAULT_PROXY_CLEANUP_TIMEOUT = 180;
     private static final String ZALENIUM_KEEP_ONLY_FAILED_TESTS = "ZALENIUM_KEEP_ONLY_FAILED_TESTS";
     private static final Logger LOGGER = LoggerFactory.getLogger(DockerSeleniumRemoteProxy.class.getName());
     private static final int DEFAULT_MAX_TEST_SESSIONS = 1;
@@ -75,6 +81,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     private static int maxTestSessions;
     private static boolean keepOnlyFailedTests;
     private static boolean videoRecordingEnabledGlobal;
+    private static long proxyCleanUpTimeout;
     private static Environment env = defaultEnvironment;
     private final HtmlRenderer renderer = new DefaultProxyHtmlRenderer(this);
     private final ContainerClientRegistration registration;
@@ -118,6 +125,9 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         maxTestSessions = env.getIntEnvVariable(ZALENIUM_MAX_TEST_SESSIONS, DEFAULT_MAX_TEST_SESSIONS);
         keepOnlyFailedTests = env.getBooleanEnvVariable(ZALENIUM_KEEP_ONLY_FAILED_TESTS,
                 DEFAULT_KEEP_ONLY_FAILED_TESTS);
+
+        long proxyCleanupTO = env.getIntEnvVariable(ZALENIUM_PROXY_CLEANUP_TIMEOUT, DEFAULT_PROXY_CLEANUP_TIMEOUT);
+        setProxyCleanUpTimeout(proxyCleanupTO);
     }
 
     @VisibleForTesting
@@ -128,6 +138,15 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     @VisibleForTesting
     static void restoreEnvironment() {
         env = defaultEnvironment;
+    }
+
+    public static long getProxyCleanUpTimeout() {
+        return proxyCleanUpTimeout;
+    }
+
+    public static void setProxyCleanUpTimeout(long proxyCleanUpTimeout) {
+        DockerSeleniumRemoteProxy.proxyCleanUpTimeout = proxyCleanUpTimeout < 0 ?
+                DEFAULT_PROXY_CLEANUP_TIMEOUT : proxyCleanUpTimeout;
     }
 
     private static void setVideoRecordingEnabledGlobal(boolean videoRecordingEnabled) {
@@ -681,11 +700,12 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         // A node should not be marked as stale while doing cleanup jobs. SANITY: The upper limit of cleanup jobs is 3 minutes.
         long timeSinceCleanupStarted = System.currentTimeMillis() - cleanupStartedTime;
 
-        if(this.cleaningUp && timeSinceCleanupStarted > (180L * 1000L)) {
-            LOGGER.error(String.format("[%s] has been cleaning up [%d] which is more than [%d]. The grid seems to be overloaded.", this.getContainerId(),
-                    timeSinceCleanupStarted, (180L * 1000L)));
-
-            //Cleanup is taking more then 3 minutes, return false so that the node can get marked as stale.
+        if(this.cleaningUp && timeSinceCleanupStarted > (getProxyCleanUpTimeout() * 1000L)) {
+            LOGGER.error("Proxy has been cleaning up {} which is longer than {}. The Grid seems to be overloaded. " +
+                            "You can extend this timeout through the ZALENIUM_PROXY_CLEANUP_TIMEOUT env var.",
+                    timeSinceCleanupStarted, (getProxyCleanUpTimeout() * 1000));
+            //Cleanup is taking more then getProxyCleanUpTimeout() minutes, return false so that the node can get
+            // marked as stale.
             return false;
         } else {
             return this.cleaningUp;
