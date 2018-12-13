@@ -18,7 +18,7 @@ public class ZaleniumConfiguration {
     @VisibleForTesting
     public static final int DEFAULT_TIMES_TO_PROCESS_REQUEST = 30;
     @VisibleForTesting
-    public static final int DEFAULT_CHECK_CONTAINERS_INTERVAL = 30000;
+    public static final int DEFAULT_CHECK_CONTAINERS_INTERVAL = 5000;
     @VisibleForTesting
     public static final String ZALENIUM_DESIRED_CONTAINERS = "ZALENIUM_DESIRED_CONTAINERS";
     @VisibleForTesting

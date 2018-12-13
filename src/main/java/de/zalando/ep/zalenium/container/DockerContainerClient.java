@@ -567,6 +567,7 @@ public class DockerContainerClient implements ContainerClient {
         try {
             List<Container> containerList = dockerClient.listContainers(withStatusRunning(), withStatusCreated());
             containerList.stream().filter(container -> container.image().contains(image))
+                    .parallel()
                     .forEach(container -> stopContainer(container.id()));
         } catch (Exception e) {
             logger.warn(nodeId + " Error while deleting existing DockerSelenium containers", e);
