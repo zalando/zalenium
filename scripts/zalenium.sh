@@ -694,19 +694,6 @@ ShutDown()
             rm ${PID_PATH_SELENIUM}
         fi
     fi
-
-    if [ -f ${PID_PATH_DOCKER_SELENIUM_NODE} ];
-    then
-        echo "Stopping DockerSeleniumStarter node..."
-        PID=$(cat ${PID_PATH_DOCKER_SELENIUM_NODE});
-        kill ${PID};
-        _returnedValue=$?
-        if [ "${_returnedValue}" != "0" ] ; then
-            echo "Failed to send kill signal to DockerSeleniumStarter node!"
-        else
-            rm ${PID_PATH_DOCKER_SELENIUM_NODE}
-        fi
-    fi
 }
 
 function usage()

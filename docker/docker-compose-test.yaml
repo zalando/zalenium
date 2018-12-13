@@ -12,7 +12,6 @@ services:
     volumes:
       - ${project.build.directory}/videos:/home/seluser/videos
       - /var/run/docker.sock:/var/run/docker.sock
-      - /usr/bin/docker:/usr/bin/docker
     ports:
       - 4444:4444
     command: >
