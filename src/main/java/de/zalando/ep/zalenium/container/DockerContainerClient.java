@@ -19,7 +19,6 @@ import com.spotify.docker.client.AnsiProgressHandler;
 import com.spotify.docker.client.DefaultDockerClient;
 import com.spotify.docker.client.DockerClient;
 import com.spotify.docker.client.LogStream;
-import com.spotify.docker.client.exceptions.DockerCertificateException;
 import com.spotify.docker.client.messages.PortBinding;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -82,7 +81,7 @@ public class DockerContainerClient implements ContainerClient {
 
     private final Logger logger = LoggerFactory.getLogger(DockerContainerClient.class.getName());
     private final GoogleAnalyticsApi ga = new GoogleAnalyticsApi();
-    private DockerClient dockerClient;
+    private DockerClient dockerClient = new DefaultDockerClient(dockerHost);
     private String nodeId;
     private String zaleniumNetwork;
     private List<String> zaleniumExtraHosts;
@@ -96,18 +95,6 @@ public class DockerContainerClient implements ContainerClient {
     private AtomicBoolean storageOptsLoaded = new AtomicBoolean(false);
     private AtomicBoolean mntFoldersAndHttpEnvVarsChecked = new AtomicBoolean(false);
     private AtomicBoolean seleniumContainerLabelsChecked = new AtomicBoolean(false);
-
-    public DockerContainerClient() {
-        try {
-            dockerClient = DefaultDockerClient.fromEnv()
-                    .connectTimeoutMillis(60L * 1000L)
-                    .readTimeoutMillis(60L * 1000L)
-                    .build();
-        } catch (DockerCertificateException e) {
-            logger.warn("Error starting Docker client, using basic config.", e);
-            dockerClient = new DefaultDockerClient(dockerHost);
-        }
-    }
 
     private static void readConfigurationFromEnvVariables() {
 
