@@ -455,8 +455,9 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         boolean testSessionLimitReached = isTestSessionLimitReached();
         boolean isShutdownIfIdle = testIdle || (testSessionLimitReached && !isBusy());
         if (isShutdownIfIdle) {
-            LOGGER.warn("Proxy is idle.");
-            timeout("proxy being idle after test.", (testSessionLimitReached ? ShutdownType.MAX_TEST_SESSIONS_REACHED : ShutdownType.IDLE));
+            LOGGER.debug("Proxy is idle.");
+            timeout("proxy being idle after test.", (testSessionLimitReached ?
+                    ShutdownType.MAX_TEST_SESSIONS_REACHED : ShutdownType.IDLE));
         }
         setThreadName(currentName);
         return isShutdownIfIdle;
@@ -465,7 +466,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     public boolean shutdownIfStale() {
         String currentName = configureThreadName();
         if (isBusy() && isTestIdle() && !isCleaningUp()) {
-            LOGGER.warn("No test activity been recorded recently, proxy is stale.");
+            LOGGER.debug("No test activity been recorded recently, proxy is stale.");
             timeout("proxy being stuck | stale during a test.", ShutdownType.STALE);
             setThreadName(currentName);
             return true;
@@ -800,7 +801,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         super.onEvent(remoteNotReachableEvents, lastInserted);
 
         if (lastInserted instanceof RemoteUnregisterException) {
-            LOGGER.info(lastInserted.getMessage());
+            LOGGER.debug(lastInserted.getMessage());
             GridRegistry registry = this.getRegistry();
             registry.removeIfPresent(this);
         }
