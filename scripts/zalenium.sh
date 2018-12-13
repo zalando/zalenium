@@ -28,6 +28,8 @@ TIME_TO_WAIT_TO_START=${TIME_TO_WAIT_TO_START:-180000}
 MAX_TIMES_TO_PROCESS_REQUEST=${MAX_TIMES_TO_PROCESS_REQUEST:-30}
 # How often should Zalenium check the status of the current containers/pods. See checkContainers() in AutoStartProxySet
 CHECK_CONTAINERS_INTERVAL=${CHECK_CONTAINERS_INTERVAL:-30000}
+# Timeout for a proxy during cleanup tasks. See isCleaningUp() in DockerSeleniumRemoteProxy
+ZALENIUM_PROXY_CLEANUP_TIMEOUT=${ZALENIUM_PROXY_CLEANUP_TIMEOUT:-180}
 
 GA_TRACKING_ID="UA-88441352-3"
 GA_ENDPOINT=https://www.google-analytics.com/collect
