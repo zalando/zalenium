@@ -237,8 +237,8 @@ public class DockeredSeleniumStarter {
         
         ContainerCreationStatus containerCreationStatus = startDockerSeleniumContainer(timeZone, screenSize);
         if (containerCreationStatus.isCreated()) {
-            LOGGER.debug(String.format("Created container [%s] with dimensions [%s] and tz [%s].",
-                containerCreationStatus.getContainerName(), screenSize, timeZone));
+            LOGGER.debug("Created container {} with dimensions {} and tz {}.",
+                containerCreationStatus.getContainerName(), screenSize, timeZone);
             return containerCreationStatus;        	
         }
         else {

@@ -294,11 +294,11 @@ public class ZaleniumRegistry extends BaseGridRegistry implements GridRegistry {
         if (sessionCreated) {
             String remoteName = session.getSlot().getProxy().getId();
             long timeToAssignProxy = System.currentTimeMillis() - handler.getRequest().getCreationTime();
-            LOG.info(String.format("Test session with internal key %s assigned to remote (%s) after %s seconds (%s ms).",
+            LOG.info("Test session with internal key {} assigned to remote ({}) after {} seconds ({} ms).",
                                   session.getInternalKey(),
                                   remoteName,
                                   timeToAssignProxy / 1000,
-                                  timeToAssignProxy));
+                                  timeToAssignProxy);
             seleniumTestSessionStartLatency.observe(timeToAssignProxy / Collector.MILLISECONDS_PER_SECOND);
             seleniumTestSessionsWaiting.dec();
             activeTestSessions.add(session);
@@ -335,8 +335,7 @@ public class ZaleniumRegistry extends BaseGridRegistry implements GridRegistry {
             release(session, reason);
             return;
         }
-        LOG.warn("Tried to release session with internal key " + internalKey +
-                " but couldn't find it.");
+        LOG.warn("Tried to release session with internal key {} but couldn't find it.", internalKey);
     }
 
     /**
@@ -347,7 +346,7 @@ public class ZaleniumRegistry extends BaseGridRegistry implements GridRegistry {
             return;
         }
 
-    	LOG.debug("Received a node registration request " + proxy);
+    	LOG.debug("Received a node registration request {}", proxy);
 
         try {
             lock.lock();
@@ -360,7 +359,7 @@ public class ZaleniumRegistry extends BaseGridRegistry implements GridRegistry {
              */
             if (proxy instanceof DockerSeleniumRemoteProxy) {
                 if (proxies.contains(proxy)) {
-                    LOG.debug(String.format("Proxy '%s' is already registered.", proxy));
+                    LOG.debug("Proxy '{}' is already registered.", proxy);
                     return;
                 }
             } else {
@@ -368,7 +367,7 @@ public class ZaleniumRegistry extends BaseGridRegistry implements GridRegistry {
             }
 
             if (registeringProxies.contains(proxy)) {
-                LOG.debug(String.format("Proxy '%s' is already queued for registration.", proxy));
+                LOG.debug("Proxy '{}' is already queued for registration.", proxy);
                 return;
             }
 
@@ -384,7 +383,7 @@ public class ZaleniumRegistry extends BaseGridRegistry implements GridRegistry {
                 ((RegistrationListener) proxy).beforeRegistration();
             }
         } catch (Throwable t) {
-            LOG.error("Error running the registration listener on " + proxy + ", " + t.getMessage());
+            LOG.error("Error running the registration listener on {}, {}", proxy, t.getMessage());
             t.printStackTrace();
             listenerOk = false;
         }
@@ -397,7 +396,7 @@ public class ZaleniumRegistry extends BaseGridRegistry implements GridRegistry {
                     ((SelfHealingProxy) proxy).startPolling();
                 }
                 proxies.add(proxy);
-                LOG.info("Registered a node " + proxy);
+                LOG.info("Registered a node {}", proxy);
                 fireMatcherStateChanged();
             }
         } finally {
@@ -490,7 +489,7 @@ public class ZaleniumRegistry extends BaseGridRegistry implements GridRegistry {
      * @see GridRegistry#getProxyById(String)
      */
     public RemoteProxy getProxyById(String id) {
-        LOG.debug("Getting proxy " + id);
+        LOG.debug("Getting proxy {}", id);
         return proxies.getProxyById(id);
     }
 
@@ -508,8 +507,7 @@ public class ZaleniumRegistry extends BaseGridRegistry implements GridRegistry {
             try {
                 HttpClient client = httpClientFactory.createClient(url);
                 if (i > 1) {
-                    String message = String.format("Successfully created HttpClient for url %s, after attempt #%s", url, i);
-                    LOG.warn(message);
+                    LOG.warn("Successfully created HttpClient for url {}, after attempt #{}", url, i);
                 }
                 return client;
             } catch (Exception | AssertionError e) {

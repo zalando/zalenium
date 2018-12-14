@@ -32,24 +32,28 @@ public class TestingBotRemoteProxy extends CloudTestingRemoteProxy {
 
     @VisibleForTesting
     private static RegistrationRequest updateTBCapabilities(RegistrationRequest registrationRequest, String url) {
+        String currentName = Thread.currentThread().getName();
+        Thread.currentThread().setName("TestingBot");
         JsonElement testingBotAccountInfo = getCommonProxyUtilities().readJSONFromUrl(url, TESTINGBOT_KEY, TESTINGBOT_SECRET);
         try {
             registrationRequest.getConfiguration().capabilities.clear();
-            String logMessage = String.format("[TB] Getting account max. concurrency from %s", url);
+            String logMessage = String.format("[Getting account max. concurrency from %s", url);
             int testingBotAccountConcurrency;
             if (testingBotAccountInfo == null) {
-                logMessage = String.format("[TB] Account max. concurrency was NOT fetched from %s", url);
+                logMessage = String.format("Account max. concurrency was NOT fetched from %s", url);
                 testingBotAccountConcurrency = 1;
             } else {
                 testingBotAccountConcurrency = testingBotAccountInfo.getAsJsonObject().get("max_concurrent").getAsInt();
             }
             logger.info(logMessage);
+            Thread.currentThread().setName(currentName);
             return addCapabilitiesToRegistrationRequest(registrationRequest, testingBotAccountConcurrency,
                     TESTINGBOT_PROXY_NAME);
         } catch (Exception e) {
             logger.error(e.toString(), e);
             getGa().trackException(e);
         }
+        Thread.currentThread().setName(currentName);
         return addCapabilitiesToRegistrationRequest(registrationRequest, 1, TESTINGBOT_PROXY_NAME);
     }
 
