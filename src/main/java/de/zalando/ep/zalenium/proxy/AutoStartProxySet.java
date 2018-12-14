@@ -206,12 +206,11 @@ public class AutoStartProxySet extends ProxySet implements Iterable<RemoteProxy>
         if (proxy instanceof DockerSeleniumRemoteProxy) {
             DockerSeleniumRemoteProxy dockerSeleniumRemoteProxy = (DockerSeleniumRemoteProxy) proxy;
             // Always try to remove the proxy from the pool - this will stop the container.
-            String proxyId = dockerSeleniumRemoteProxy.getId();
             try {
-                LOGGER.debug("Stopping removed container [{}", proxyId);
-                starter.stopContainer(proxyId);
+                LOGGER.debug("Stopping removed container [{}", dockerSeleniumRemoteProxy.getId());
+                starter.stopContainer(dockerSeleniumRemoteProxy.getContainerId());
             } catch (Exception e) {
-                LOGGER.error("Failed to stop container [" + proxyId + "].", e);
+                LOGGER.error("Failed to stop container [" + dockerSeleniumRemoteProxy.getId() + "].", e);
             }
         }
         return super.remove(proxy);
