@@ -17,6 +17,7 @@
     <!-- ALL TRACE DEBUG INFO WARN ERROR OFF -->
     <logger name="com.spotify.docker" level="WARN" />
     <logger name="org.seleniumhq.jetty9" level="WARN" />
+    <logger name="org.apache.http" level="WARN" />
     
     <!-- SET TO DEBUG TO GET STATUS LOGGING -->
     <logger name="de.zalando.ep.zalenium.proxy.AutoStartProxySet.Status" level="INFO" />
