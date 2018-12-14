@@ -161,10 +161,10 @@ public class AutoStartProxySet extends ProxySet implements Iterable<RemoteProxy>
         proxies.forEach(proxy -> {
             String id = proxy.getId();
             boolean hasCapability = proxy.hasCapability(desiredCapabilities);
-            LOGGER.debug(String.format("[%s] [%s] has capability ? [%s].", id, proxy.getClass(), hasCapability));
+            LOGGER.debug("{} {} has capability ? {}.", id, proxy.getClass(), hasCapability);
         });
 
-        LOGGER.debug(String.format("[%d] of [%d] proxies are busy.", busy, total));
+        LOGGER.debug("{} of {} proxies are busy.", busy, total);
 
         TestSession newSession = super.getNewSession(desiredCapabilities);
         if (newSession == null) {
@@ -206,12 +206,12 @@ public class AutoStartProxySet extends ProxySet implements Iterable<RemoteProxy>
         if (proxy instanceof DockerSeleniumRemoteProxy) {
             DockerSeleniumRemoteProxy dockerSeleniumRemoteProxy = (DockerSeleniumRemoteProxy) proxy;
             // Always try to remove the proxy from the pool - this will stop the container.
-            String containerId = dockerSeleniumRemoteProxy.getContainerId();
+            String proxyId = dockerSeleniumRemoteProxy.getId();
             try {
-                LOGGER.debug("Stopping removed container [" + containerId + "].");
-                starter.stopContainer(containerId);
+                LOGGER.debug("Stopping removed container [{}", proxyId);
+                starter.stopContainer(proxyId);
             } catch (Exception e) {
-                LOGGER.error("Failed to stop container [" + containerId + "].", e);
+                LOGGER.error("Failed to stop container [" + proxyId + "].", e);
             }
         }
         return super.remove(proxy);
@@ -242,8 +242,7 @@ public class AutoStartProxySet extends ProxySet implements Iterable<RemoteProxy>
         }
 
         if (nodesAvailable(desiredCapabilities)) {
-            LOGGER.debug(
-                    String.format("A node is coming up soon for %s, won't start a new node yet.", desiredCapabilities));
+            LOGGER.debug("A node is coming up soon for {}, won't start a new node yet.", desiredCapabilities);
             return;
         }
 

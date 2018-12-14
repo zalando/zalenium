@@ -33,26 +33,30 @@ public class SauceLabsRemoteProxy extends CloudTestingRemoteProxy {
 
     @VisibleForTesting
     static RegistrationRequest updateSLCapabilities(RegistrationRequest registrationRequest, String url) {
+        String currentName = Thread.currentThread().getName();
+        Thread.currentThread().setName("SauceLabs");
         JsonElement slAccountInfo = getCommonProxyUtilities().readJSONFromUrl(url, SAUCE_LABS_USER_NAME,
                 SAUCE_LABS_ACCESS_KEY);
         try {
             registrationRequest.getConfiguration().capabilities.clear();
-            String logMessage = String.format("[SL] Account max. concurrency fetched from %s", url);
+            String logMessage = String.format("Account max. concurrency fetched from %s", url);
             int sauceLabsAccountConcurrency;
             if (slAccountInfo == null) {
-                logMessage = String.format("[SL] Account max. concurrency was NOT fetched from %s", url);
+                logMessage = String.format("Account max. concurrency was NOT fetched from %s", url);
                 sauceLabsAccountConcurrency = 1;
             } else {
                 sauceLabsAccountConcurrency = slAccountInfo.getAsJsonObject().getAsJsonObject("concurrency_limit").
                         get("overall").getAsInt();
             }
             LOGGER.info(logMessage);
+            Thread.currentThread().setName(currentName);
             return addCapabilitiesToRegistrationRequest(registrationRequest, sauceLabsAccountConcurrency,
                     SAUCE_LABS_PROXY_NAME);
         } catch (Exception e) {
             LOGGER.warn(e.toString(), e);
             getGa().trackException(e);
         }
+        Thread.currentThread().setName(currentName);
         return addCapabilitiesToRegistrationRequest(registrationRequest, 1, SAUCE_LABS_PROXY_NAME);
     }
 

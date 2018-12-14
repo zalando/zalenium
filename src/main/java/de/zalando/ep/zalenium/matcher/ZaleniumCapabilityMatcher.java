@@ -35,8 +35,8 @@ public class ZaleniumCapabilityMatcher extends DefaultCapabilityMatcher {
         boolean matchesChrome = matcher.matches(chromeCapabilities().asMap(), requestedCapability);
 
         if (matchesChrome || matchesFirefox) {
-            logger.debug(String.format("Capability supported by docker-selenium, should not be processed by " +
-                "a Cloud Testing Provider: %s", requestedCapability));
+            logger.debug("Capability supported by docker-selenium, should not be processed by " +
+                "a Cloud Testing Provider: {}", requestedCapability);
             return false;
         }
 
