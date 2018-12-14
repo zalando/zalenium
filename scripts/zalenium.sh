@@ -41,7 +41,6 @@ if [ -f /var/run/secrets/kubernetes.io/serviceaccount/token ]; then
 fi
 
 PID_PATH_SELENIUM=/tmp/selenium-pid
-PID_PATH_DOCKER_SELENIUM_NODE=/tmp/docker-selenium-node-pid
 PID_PATH_SAUCE_LABS_NODE=/tmp/sauce-labs-node-pid
 PID_PATH_TESTINGBOT_NODE=/tmp/testingbot-node-pid
 PID_PATH_BROWSER_STACK_NODE=/tmp/browser-stack-node-pid
