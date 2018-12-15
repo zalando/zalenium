@@ -240,7 +240,7 @@ public class KubernetesContainerClient implements ContainerClient {
         final CountDownLatch latch = new CountDownLatch(1);
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
-        logger.debug(String.format("%s %s", containerId, Arrays.toString(command)));
+        logger.debug("{} {}", containerId, Arrays.toString(command));
         ExecWatch exec = client.pods().withName(containerId).writingOutput(baos).writingError(baos).usingListener(new ExecListener() {
 
             @Override
@@ -388,7 +388,7 @@ public class KubernetesContainerClient implements ContainerClient {
     }
 
     private void deleteSeleniumPods() {
-        logger.info("About to clean up any left over selenium pods created by Zalenium");
+        logger.info("About to clean up any left over docker-selenium pods created by Zalenium");
         client.pods().withLabels(createdByZaleniumMap).delete();
     }
 
@@ -424,7 +424,7 @@ public class KubernetesContainerClient implements ContainerClient {
             registration.setNoVncPort(noVncPortInt);
         }
         else {
-            logger.warn(String.format("%s Couldn't find NOVNC_PORT, live preview will not work.", containerId));
+            logger.warn("{} Couldn't find NOVNC_PORT, live preview will not work.", containerId);
         }
 
         registration.setIpAddress(currentPod.getStatus().getPodIP());

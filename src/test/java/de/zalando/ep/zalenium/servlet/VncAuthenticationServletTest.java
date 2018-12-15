@@ -8,6 +8,7 @@ import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
+import java.util.function.Supplier;
 
 import javax.management.InstanceNotFoundException;
 import javax.management.MalformedObjectNameException;
@@ -34,7 +35,7 @@ public class VncAuthenticationServletTest {
     private GridRegistry registry;
     private HttpServletRequest request;
     private HttpServletResponse response;
-    private DockerContainerClient originalContainerClient;
+    private Supplier<DockerContainerClient> originalContainerClient;
 
     @Before
     public void setUp() throws IOException {
@@ -48,7 +49,7 @@ public class VncAuthenticationServletTest {
         registry = new SimpleRegistry();
 
         this.originalContainerClient = ContainerFactory.getDockerContainerClient();
-        ContainerFactory.setDockerContainerClient(DockerContainerMock.getRegisterOnlyDockerContainerClient());
+        ContainerFactory.setDockerContainerClient(DockerContainerMock::getRegisterOnlyDockerContainerClient);
 
         // Creating the configuration and the registration request of the proxy (node)
         DockerSeleniumRemoteProxy proxyOne = TestUtils.getNewBasicRemoteProxy("app1", "http://machine1:4444/", registry);

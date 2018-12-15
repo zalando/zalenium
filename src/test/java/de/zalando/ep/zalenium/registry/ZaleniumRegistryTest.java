@@ -1,10 +1,14 @@
 package de.zalando.ep.zalenium.registry;
 
+import de.zalando.ep.zalenium.proxy.AutoStartProxySet;
 import de.zalando.ep.zalenium.proxy.DockerSeleniumRemoteProxy;
+import de.zalando.ep.zalenium.proxy.DockeredSeleniumStarter;
 import de.zalando.ep.zalenium.util.TestUtils;
 import org.awaitility.Duration;
 import org.junit.Test;
+import org.mockito.Mockito;
 import org.openqa.grid.common.RegistrationRequest;
+import org.openqa.grid.common.exception.GridException;
 import org.openqa.grid.internal.ExternalSessionKey;
 import org.openqa.grid.internal.GridRegistry;
 import org.openqa.grid.internal.ProxySet;
@@ -17,6 +21,9 @@ import org.openqa.selenium.Platform;
 import org.openqa.selenium.remote.BrowserType;
 import org.openqa.selenium.remote.CapabilityType;
 
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneId;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -24,7 +31,9 @@ import java.util.concurrent.Callable;
 
 import static org.awaitility.Awaitility.await;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
+@SuppressWarnings("Duplicates")
 public class ZaleniumRegistryTest {
 
     @Test
@@ -85,6 +94,48 @@ public class ZaleniumRegistryTest {
             Callable<Boolean> callable = () -> registry.getActiveSessions().size() == 0;
             await().pollInterval(Duration.FIVE_HUNDRED_MILLISECONDS).atMost(Duration.TWO_SECONDS).until(callable);
 
+        } finally {
+            registry.stop();
+        }
+    }
+
+    @Test(expected = GridException.class)
+    public void requestIsRejectedWhenCapabilitiesAreNotSupported() {
+        Map<String, Object> requestedCapability = new HashMap<>();
+        requestedCapability.put(CapabilityType.BROWSER_NAME, BrowserType.SAFARI);
+        requestedCapability.put(CapabilityType.PLATFORM_NAME, Platform.MAC);
+
+        Clock clock = Clock.fixed(Instant.ofEpochMilli(10000), ZoneId.systemDefault());
+
+        DockeredSeleniumStarter starter = Mockito.mock(DockeredSeleniumStarter.class);
+
+        AutoStartProxySet autoStartProxySet = new AutoStartProxySet(true, 0, 5, 1000, false, starter, clock, 30, 30000);
+        GridRegistry registry = ZaleniumRegistry.newInstance(new Hub(new GridHubConfiguration()), autoStartProxySet);
+
+        try {
+            RequestHandler newSessionRequest = TestUtils.createNewSessionHandler(registry, requestedCapability);
+            newSessionRequest.process();
+            fail("These capabilities should be rejected by the Grid.");
+        } finally {
+            registry.stop();
+        }
+    }
+
+    @Test(expected = GridException.class)
+    public void requestIsRejectedWhenPlatformIsNotSupported() {
+        Map<String, Object> requestedCapability = new HashMap<>();
+        requestedCapability.put(CapabilityType.BROWSER_NAME, BrowserType.CHROME);
+        requestedCapability.put(CapabilityType.PLATFORM_NAME, Platform.WIN8);
+
+        Clock clock = Clock.fixed(Instant.ofEpochMilli(10000), ZoneId.systemDefault());
+        DockeredSeleniumStarter starter = Mockito.mock(DockeredSeleniumStarter.class);
+        AutoStartProxySet autoStartProxySet = new AutoStartProxySet(true, 0, 5, 1000, false, starter, clock, 30, 30000);
+        GridRegistry registry = ZaleniumRegistry.newInstance(new Hub(new GridHubConfiguration()), autoStartProxySet);
+
+        try {
+            RequestHandler newSessionRequest = TestUtils.createNewSessionHandler(registry, requestedCapability);
+            newSessionRequest.process();
+            fail("These capabilities should be rejected by the Grid because the platform is not supported.");
         } finally {
             registry.stop();
         }

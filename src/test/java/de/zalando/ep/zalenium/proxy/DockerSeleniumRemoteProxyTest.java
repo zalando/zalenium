@@ -27,6 +27,7 @@ import javax.management.ObjectName;
 import javax.servlet.http.HttpServletResponse;
 
 import de.zalando.ep.zalenium.container.DockerContainerClient;
+import de.zalando.ep.zalenium.util.*;
 import org.awaitility.Duration;
 import org.junit.After;
 import org.junit.Assert;
@@ -54,11 +55,6 @@ import de.zalando.ep.zalenium.container.ContainerFactory;
 import de.zalando.ep.zalenium.container.kubernetes.KubernetesContainerClient;
 import de.zalando.ep.zalenium.dashboard.Dashboard;
 import de.zalando.ep.zalenium.dashboard.TestInformation;
-import de.zalando.ep.zalenium.util.CommonProxyUtilities;
-import de.zalando.ep.zalenium.util.DockerContainerMock;
-import de.zalando.ep.zalenium.util.Environment;
-import de.zalando.ep.zalenium.util.KubernetesContainerMock;
-import de.zalando.ep.zalenium.util.TestUtils;
 
 
 @SuppressWarnings("Duplicates")
@@ -68,7 +64,7 @@ public class DockerSeleniumRemoteProxyTest {
     private DockerSeleniumRemoteProxy proxy;
     private GridRegistry registry;
     private ContainerClient containerClient;
-    private DockerContainerClient originalDockerContainerClient;
+    private Supplier<DockerContainerClient> originalDockerContainerClient;
     private KubernetesContainerClient originalKubernetesContainerClient;
     private Supplier<Boolean> originalIsKubernetesValue;
     private Supplier<Boolean> currentIsKubernetesValue;
@@ -104,8 +100,7 @@ public class DockerSeleniumRemoteProxyTest {
             this.containerClient = KubernetesContainerMock.getMockedKubernetesContainerClient();
             ContainerFactory.setKubernetesContainerClient((KubernetesContainerClient) containerClient);
         } else {
-            this.containerClient = DockerContainerMock.getMockedDockerContainerClient();
-            ContainerFactory.setDockerContainerClient((DockerContainerClient) containerClient);
+            ContainerFactory.setDockerContainerClient(() -> (DockerContainerClient) containerClient);
         }
         ContainerFactory.setIsKubernetes(this.currentIsKubernetesValue);
 
@@ -117,7 +112,7 @@ public class DockerSeleniumRemoteProxyTest {
             // Might be that the object does not exist, it is ok. Nothing to do, this is just a cleanup task.
         }
 
-        registry = new de.zalando.ep.zalenium.util.SimpleRegistry();
+        registry = new SimpleRegistry();
 
         // Creating the configuration and the registration request of the proxy (node)
         RegistrationRequest request = TestUtils.getRegistrationRequestForTesting(40000,

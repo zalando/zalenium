@@ -32,24 +32,28 @@ public class BrowserStackRemoteProxy extends CloudTestingRemoteProxy {
 
     @VisibleForTesting
     private static RegistrationRequest updateBSCapabilities(RegistrationRequest registrationRequest, String url) {
+        String currentName = Thread.currentThread().getName();
+        Thread.currentThread().setName("BrowserStack");
         JsonElement bsAccountInfo = getCommonProxyUtilities().readJSONFromUrl(url, BROWSER_STACK_USER, BROWSER_STACK_KEY);
         try {
             registrationRequest.getConfiguration().capabilities.clear();
-            String logMessage = String.format("[BS] Getting account max. concurrency from %s", url);
+            String logMessage = String.format("Getting account max. concurrency from %s", url);
             int browserStackAccountConcurrency;
             if (bsAccountInfo == null) {
-                logMessage = String.format("[BS] Account max. concurrency was NOT fetched from %s", url);
+                logMessage = String.format("Account max. concurrency was NOT fetched from %s", url);
                 browserStackAccountConcurrency = 1;
             } else {
                 browserStackAccountConcurrency = bsAccountInfo.getAsJsonObject().get("parallel_sessions_max_allowed").getAsInt();
             }
             logger.info(logMessage);
+            Thread.currentThread().setName(currentName);
             return addCapabilitiesToRegistrationRequest(registrationRequest, browserStackAccountConcurrency,
                     BROWSER_STACK_PROXY_NAME);
         } catch (Exception e) {
             logger.error(e.toString(), e);
             getGa().trackException(e);
         }
+        Thread.currentThread().setName(currentName);
         return addCapabilitiesToRegistrationRequest(registrationRequest, 1, BROWSER_STACK_PROXY_NAME);
     }
 
