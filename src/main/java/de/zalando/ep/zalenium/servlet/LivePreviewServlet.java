@@ -34,8 +34,7 @@ public class LivePreviewServlet extends RegistryBasedServlet {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LivePreviewServlet.class.getName());
     private static final Environment env = new Environment();
-    private static final String CONTEXT_PATH = "CONTEXT_PATH";
-    private static final String contextPath = env.getStringEnvVariable(CONTEXT_PATH, "");
+    private static final String contextPath = env.getContextPath();
 
     @SuppressWarnings("unused")
     public LivePreviewServlet(){

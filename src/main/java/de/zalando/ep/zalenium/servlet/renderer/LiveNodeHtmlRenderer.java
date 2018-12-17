@@ -21,8 +21,7 @@ public class LiveNodeHtmlRenderer implements HtmlRenderer {
     private DockerSeleniumRemoteProxy proxy;
     private TemplateRenderer templateRenderer;
     private static final Environment env = new Environment();
-    private static final String CONTEXT_PATH = "CONTEXT_PATH";
-    private static final String contextPath = env.getStringEnvVariable(CONTEXT_PATH, "");
+    private static final String contextPath = env.getContextPath();
 
     @SuppressWarnings("WeakerAccess")
     public LiveNodeHtmlRenderer(DockerSeleniumRemoteProxy proxy) {
