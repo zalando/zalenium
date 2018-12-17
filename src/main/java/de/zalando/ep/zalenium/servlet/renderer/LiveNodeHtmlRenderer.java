@@ -56,7 +56,7 @@ public class LiveNodeHtmlRenderer implements HtmlRenderer {
         // Adding live preview
         int noVncPort = proxy.getRegistration().getNoVncPort();
         String noVncIpAddress = proxy.getRegistration().getIpAddress();
-        String noVncViewBaseUrl = "/%s/vnc/host/%s/port/%s/?nginx=%s:%s&view_only=%s";
+        String noVncViewBaseUrl = "%s/vnc/host/%s/port/%s/?nginx=%s:%s&view_only=%s";
         String noVncReadOnlyUrl = String.format(noVncViewBaseUrl, contextPath, noVncIpAddress, noVncPort, noVncIpAddress, noVncPort, "true");
         String noVncInteractUrl = String.format(noVncViewBaseUrl, contextPath, noVncIpAddress, noVncPort, noVncIpAddress, noVncPort, "false");
 
@@ -110,7 +110,7 @@ public class LiveNodeHtmlRenderer implements HtmlRenderer {
         String name = cap.getBrowserName().toLowerCase();
         String path = "org/openqa/grid/images/";
         InputStream in = Thread.currentThread().getContextClassLoader().getResourceAsStream(path + name + ".png");
-        return in == null ? null : "/" + contextPath + "/grid/resources/" + path + name + ".png";
+        return in == null ? null : contextPath + "/grid/resources/" + path + name + ".png";
     }
 
     private String getHtmlNodeVersion() {

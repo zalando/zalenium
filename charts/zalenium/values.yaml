@@ -153,7 +153,6 @@ ingress:
   annotations:
     kubernetes.io/ingress.class: "nginx"
     # nginx.ingress.kubernetes.io/rewrite-target: "/"
-    # nginx.ingress.kubernetes.io/add-base-url: "true"
     # kubernetes.io/tls-acme: "true"
   ## For RBAC support:
 
