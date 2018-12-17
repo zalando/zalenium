@@ -143,13 +143,13 @@ persistence:
     size: 80Gi
 
 ingress:
-  enabled: true
+  enabled: false
   tls: false
   # secretName: my-tls-cert # only needed if tls above is true
   hostname: zalenium.foobar.com
   # context path without the forward slash (/)
   # leaving this empty would run zalenium in the root context (/)
-  contextpath: 
+  contextpath: /
   annotations:
     kubernetes.io/ingress.class: "nginx"
     # nginx.ingress.kubernetes.io/rewrite-target: "/"
