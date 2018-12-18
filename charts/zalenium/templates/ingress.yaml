@@ -18,7 +18,7 @@ spec:
   - host: {{ .Values.ingress.hostname }}
     http:
       paths:
-      - path: {{ .Values.ingress.contextpath }}
+      - path: {{ .Values.ingress.path }}
         backend:
           serviceName: {{ template "zalenium.fullname" . }}
           servicePort: {{ .Values.hub.port }}

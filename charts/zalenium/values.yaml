@@ -149,9 +149,9 @@ ingress:
   hostname: zalenium.foobar.com
   # context path without the forward slash (/)
   # leaving this empty would run zalenium in the root context (/)
-  contextpath: /
+  path: /
   annotations:
-    kubernetes.io/ingress.class: "nginx"
+    # kubernetes.io/ingress.class: "nginx"
     # nginx.ingress.kubernetes.io/rewrite-target: "/"
     # kubernetes.io/tls-acme: "true"
   ## For RBAC support:
