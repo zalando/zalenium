@@ -107,6 +107,8 @@ spec:
           value: {{ .Values.hub.keepOnlyFailedTests | quote }}
         - name: RETENTION_PERIOD
           value: {{ .Values.hub.retentionPeriod | quote }}
+        - name: CONTEXT_PATH
+          value: {{ .Values.ingress.path | quote }}
         {{- if .Values.hub.sauceLabsEnabled }}
         - name: SAUCE_LABS_ENABLED
           value: {{ .Values.hub.sauceLabsEnabled | quote }}

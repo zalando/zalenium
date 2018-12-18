@@ -1,6 +1,8 @@
 package de.zalando.ep.zalenium.servlet.renderer;
 
 import de.zalando.ep.zalenium.proxy.DockerSeleniumRemoteProxy;
+import de.zalando.ep.zalenium.util.Environment;
+
 import org.openqa.grid.internal.TestSession;
 import org.openqa.grid.internal.TestSlot;
 import org.openqa.grid.internal.utils.HtmlRenderer;
@@ -18,6 +20,8 @@ public class LiveNodeHtmlRenderer implements HtmlRenderer {
 
     private DockerSeleniumRemoteProxy proxy;
     private TemplateRenderer templateRenderer;
+    private static final Environment env = new Environment();
+    private static final String contextPath = env.getContextPath();
 
     @SuppressWarnings("WeakerAccess")
     public LiveNodeHtmlRenderer(DockerSeleniumRemoteProxy proxy) {
@@ -51,9 +55,9 @@ public class LiveNodeHtmlRenderer implements HtmlRenderer {
         // Adding live preview
         int noVncPort = proxy.getRegistration().getNoVncPort();
         String noVncIpAddress = proxy.getRegistration().getIpAddress();
-        String noVncViewBaseUrl = "/vnc/host/%s/port/%s/?nginx=%s:%s&view_only=%s";
-        String noVncReadOnlyUrl = String.format(noVncViewBaseUrl, noVncIpAddress, noVncPort, noVncIpAddress, noVncPort, "true");
-        String noVncInteractUrl = String.format(noVncViewBaseUrl, noVncIpAddress, noVncPort, noVncIpAddress, noVncPort, "false");
+        String noVncViewBaseUrl = "%s/vnc/host/%s/port/%s/?nginx=%s:%s&view_only=%s";
+        String noVncReadOnlyUrl = String.format(noVncViewBaseUrl, contextPath, noVncIpAddress, noVncPort, noVncIpAddress, noVncPort, "true");
+        String noVncInteractUrl = String.format(noVncViewBaseUrl, contextPath, noVncIpAddress, noVncPort, noVncIpAddress, noVncPort, "false");
 
         if (ZALENIUM_RUNNING_LOCALLY) {
             noVncReadOnlyUrl = String.format("http://localhost:%s/?view_only=false", noVncPort);
@@ -105,7 +109,7 @@ public class LiveNodeHtmlRenderer implements HtmlRenderer {
         String name = cap.getBrowserName().toLowerCase();
         String path = "org/openqa/grid/images/";
         InputStream in = Thread.currentThread().getContextClassLoader().getResourceAsStream(path + name + ".png");
-        return in == null ? null : "/grid/resources/" + path + name + ".png";
+        return in == null ? null : contextPath + "/grid/resources/" + path + name + ".png";
     }
 
     private String getHtmlNodeVersion() {

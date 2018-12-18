@@ -41,17 +41,17 @@ hub:
     enabled: false
     fsGroup: 0
     runAsUser: 1001
-  
+
   ## Configure resource requests and limits
   ## ref: http://kubernetes.io/docs/user-guide/compute-resources/
   resources:
     requests:
       cpu: "500m"
       memory: "500Mi"
-# For Java application, it's better to not currently put limit on CPU.
-#    limits:
-#      cpu: "1000m"
-#      memory: "2Gi"
+  # For Java application, it's better to not currently put limit on CPU.
+  #    limits:
+  #      cpu: "1000m"
+  #      memory: "2Gi"
 
   ## The type of service to create
   ##   Values: ClusterIP, NodePort, LoadBalancer, or ExternalName
@@ -147,11 +147,15 @@ ingress:
   tls: false
   # secretName: my-tls-cert # only needed if tls above is true
   hostname: zalenium.foobar.com
+  # context path without the forward slash (/)
+  # leaving this empty would run zalenium in the root context (/)
+  path: /
   annotations:
     # kubernetes.io/ingress.class: "nginx"
+    # nginx.ingress.kubernetes.io/rewrite-target: "/"
     # kubernetes.io/tls-acme: "true"
   ## For RBAC support:
-  
+
 rbac:
   create: true
   ## Run the zalenium hub container with the ability to deploy/manage containers of jobs
@@ -161,7 +165,7 @@ rbac:
 serviceAccount:
   create: true
   ## Use the following Kubernetes Service Account name if not created
-  name: 
+  name:
 
 nodeSelector:
   enabled: false
