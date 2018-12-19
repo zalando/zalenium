@@ -33,6 +33,7 @@ import io.prometheus.client.Histogram;
 
 import java.net.URL;
 import java.time.Clock;
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -505,7 +506,10 @@ public class ZaleniumRegistry extends BaseGridRegistry implements GridRegistry {
         int maxTries = 3;
         for (int i = 1; i <= maxTries; i++) {
             try {
-                HttpClient client = httpClientFactory.createClient(url);
+                HttpClient client = httpClientFactory.builder()
+                                        .connectionTimeout(Duration.ofSeconds(connectionTimeout))
+                                        .readTimeout(Duration.ofSeconds(readTimeout))
+                                        .createClient(url);
                 if (i > 1) {
                     LOG.warn("Successfully created HttpClient for url {}, after attempt #{}", url, i);
                 }
