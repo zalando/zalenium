@@ -40,7 +40,7 @@ public class AutoStartProxySetTest {
         Assert.assertNull(session, "No session should have been created when proxy set is empty");
 
         // And a request should have been made to start a proxy.
-        Mockito.verify(starter).startDockerSeleniumContainer(Collections.emptyMap());
+        Mockito.verify(starter, Mockito.timeout(1000)).startDockerSeleniumContainer(Collections.emptyMap());
     }
 
     @Test
@@ -84,7 +84,7 @@ public class AutoStartProxySetTest {
         Assert.assertNull(session, "No session should have been created when proxy set is empty");
 
         // And a request should have been made to start a proxy.
-        Mockito.verify(starter).startDockerSeleniumContainer(supportedCapability);
+        Mockito.verify(starter, Mockito.timeout(1000)).startDockerSeleniumContainer(supportedCapability);
     }
 
     @Test
@@ -111,7 +111,7 @@ public class AutoStartProxySetTest {
         Assert.assertNull(session, "No session should have been created when proxy set is empty");
 
         // And a request should have been made to start a proxy.
-        Mockito.verify(starter).startDockerSeleniumContainer(supportedCapability);
+        Mockito.verify(starter, Mockito.timeout(1000)).startDockerSeleniumContainer(supportedCapability);
     }
 
     @Test
@@ -138,7 +138,7 @@ public class AutoStartProxySetTest {
         Assert.assertNull(session, "No session should have been created when proxy set is empty");
 
         // And a request should have been made to start a proxy.
-        Mockito.verify(starter).startDockerSeleniumContainer(DockeredSeleniumStarter.DEFAULT_TZ,
+        Mockito.verify(starter, Mockito.timeout(1000)).startDockerSeleniumContainer(DockeredSeleniumStarter.DEFAULT_TZ,
                 DockeredSeleniumStarter.DEFAULT_SCREEN_SIZE);
     }
 
@@ -166,7 +166,7 @@ public class AutoStartProxySetTest {
         Assert.assertNull(session, "No session should have been created when proxy set is empty");
 
         // And a request should have been made to start a proxy.
-        Mockito.verify(starter).startDockerSeleniumContainer(DockeredSeleniumStarter.DEFAULT_TZ,
+        Mockito.verify(starter, Mockito.timeout(1000)).startDockerSeleniumContainer(DockeredSeleniumStarter.DEFAULT_TZ,
                 DockeredSeleniumStarter.DEFAULT_SCREEN_SIZE);
     }
 
@@ -212,10 +212,10 @@ public class AutoStartProxySetTest {
 
         // When a new session is requested.
         Assert.assertNull(autoStartProxySet.getNewSession(session1));
-        Mockito.verify(starter).startDockerSeleniumContainer(session1);
+        Mockito.verify(starter, Mockito.timeout(1000)).startDockerSeleniumContainer(session1);
 
         Assert.assertNull(autoStartProxySet.getNewSession(session2));
-        Mockito.verify(starter).startDockerSeleniumContainer(session2);
+        Mockito.verify(starter, Mockito.timeout(1000)).startDockerSeleniumContainer(session2);
 
         TestSession newSession = autoStartProxySet.getNewSession(session3);
         Assert.assertNull(newSession);
@@ -240,7 +240,7 @@ public class AutoStartProxySetTest {
         Assert.assertNull(session, "No session should have been created when proxy set is empty");
 
         // And a request should have been made to start a proxy.
-        Mockito.verify(starter).startDockerSeleniumContainer(Collections.emptyMap());
+        Mockito.verify(starter, Mockito.timeout(1000)).startDockerSeleniumContainer(Collections.emptyMap());
 
         autoStartProxySet.getNewSession(Collections.emptyMap());
 
@@ -268,7 +268,7 @@ public class AutoStartProxySetTest {
         Assert.assertNull(session, "No session should have been created when proxy set is empty");
 
         // And a request should have been made to start a proxy.
-        Mockito.verify(starter).startDockerSeleniumContainer(Collections.emptyMap());
+        Mockito.verify(starter, Mockito.timeout(1000)).startDockerSeleniumContainer(Collections.emptyMap());
 
         // Then when the proxy is registered.
         autoStartProxySet.add(proxy);
@@ -292,6 +292,8 @@ public class AutoStartProxySetTest {
         AutoStartProxySet autoStartProxySet = new AutoStartProxySet(false, 0, 5, 1000, false, starter, clock, 30, 30000);
 
         autoStartProxySet.getNewSession(Collections.emptyMap());
+        Mockito.verify(starter, Mockito.timeout(1000)).startDockerSeleniumContainer(Collections.emptyMap());
+
         autoStartProxySet.add(proxy);
         autoStartProxySet.remove(proxy);
 
