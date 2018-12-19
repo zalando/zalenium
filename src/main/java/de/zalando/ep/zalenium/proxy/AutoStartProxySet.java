@@ -168,7 +168,13 @@ public class AutoStartProxySet extends ProxySet implements Iterable<RemoteProxy>
 
         TestSession newSession = super.getNewSession(desiredCapabilities);
         if (newSession == null) {
-            this.start(desiredCapabilities);
+            /*
+                This is done in a thread because we are in the middle of the assignRequestToProxy() pipeline, so if we
+                don't return to that method soon, it will never release the lock that it is holding and the whole
+                Grid will freeze. A previous bug shows that this is better because the docker daemon can be exhausted
+                and just hang during a container creation.
+             */
+            new Thread(() -> this.start(desiredCapabilities)).start();
         }
         else {
             filter.testSessionHasStarted(desiredCapabilities);
@@ -333,7 +339,7 @@ public class AutoStartProxySet extends ProxySet implements Iterable<RemoteProxy>
                     "--maxDockerSeleniumContainers", this.maxContainers);
                 this.minContainers = this.maxContainers;
             }
-            LOGGER.info("AutoStarting container, because {} is less than min {}", startedContainers.size(),
+            LOGGER.debug("AutoStarting container, because {} is less than min {}", startedContainers.size(),
                     this.minContainers);
             long outstanding = this.minContainers - startedContainers.size();
             for (int i = 0; i < outstanding; i++) {
