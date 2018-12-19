@@ -189,7 +189,7 @@ public class AutoStartProxySetTest {
         Assert.assertNull(session, "No session should have been created when proxy set is empty");
 
         // And a request should have been made to start a proxy.
-        Mockito.verify(starter).startDockerSeleniumContainer(Collections.emptyMap());
+        Mockito.verify(starter, Mockito.timeout(1000)).startDockerSeleniumContainer(Collections.emptyMap());
     }
 
     @Test
