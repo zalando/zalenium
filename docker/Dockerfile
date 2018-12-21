@@ -12,8 +12,6 @@ RUN  echo "deb ${UBUNTU_MIRROR} ${UBUNTU_FLAVOR} main universe\n" > /etc/apt/sou
   && echo "deb ${UBUNTU_MIRROR} ${UBUNTU_FLAVOR}-updates main universe\n" >> /etc/apt/sources.list \
   && echo "deb ${UBUNTU_MIRROR} ${UBUNTU_FLAVOR}-security main universe\n" >> /etc/apt/sources.list
 
-MAINTAINER Team EP <diemol+team-ep@gmail.com>
-# https://github.com/docker/docker/pull/25466#discussion-diff-74622923R677
 LABEL maintainer "Team EP <diemol+team-ep@gmail.com>"
 
 # No interactive frontend during docker build
