@@ -55,9 +55,9 @@ public class LiveNodeHtmlRenderer implements HtmlRenderer {
         // Adding live preview
         int noVncPort = proxy.getRegistration().getNoVncPort();
         String noVncIpAddress = proxy.getRegistration().getIpAddress();
-        String noVncViewBaseUrl = "%s/vnc/host/%s/port/%s/?nginx=%s:%s&view_only=%s";
-        String noVncReadOnlyUrl = String.format(noVncViewBaseUrl, contextPath, noVncIpAddress, noVncPort, noVncIpAddress, noVncPort, "true");
-        String noVncInteractUrl = String.format(noVncViewBaseUrl, contextPath, noVncIpAddress, noVncPort, noVncIpAddress, noVncPort, "false");
+        String noVncViewBaseUrl = "%s/vnc/host/%s/port/%s/?nginx=&path=%s/proxy/%s:%s/websockify&view_only=%s";
+        String noVncReadOnlyUrl = String.format(noVncViewBaseUrl, contextPath, noVncIpAddress, noVncPort, contextPath, noVncIpAddress, noVncPort, "true");
+        String noVncInteractUrl = String.format(noVncViewBaseUrl, contextPath, noVncIpAddress, noVncPort, contextPath, noVncIpAddress, noVncPort, "false");
 
         if (ZALENIUM_RUNNING_LOCALLY) {
             noVncReadOnlyUrl = String.format("http://localhost:%s/?view_only=false", noVncPort);
