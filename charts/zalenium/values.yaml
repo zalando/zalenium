@@ -1,10 +1,10 @@
 hub:
   ## The repository and image
-  ## ref: https://hub.docker.com/r/selenium/hub/
+  ## ref: https://hub.docker.com/r/dosel/zalenium
   image: "dosel/zalenium"
 
   ## The tag for the image
-  ## ref: https://hub.docker.com/r/selenium/hub/tags/
+  ## ref: https://hub.docker.com/r/dosel/zalenium/tags
   tag: "3"
 
   ## Specify a imagePullPolicy
@@ -16,23 +16,6 @@ hub:
 
   ## Timeout for probe Hub readiness via HTTP request on Hub console
   readinessTimeout: 1
-
-  ## Set the JAVA_OPTS environment variable
-  ## If you find your selenium hub is OOMKilled, try adding -XX:+UseSerialGC
-  javaOpts: "-Xmx400m -XX:+UseSerialGC"
-
-  ## Set the SE_OPTS environment variable
-  ## ref: http://www.seleniumhq.org/docs/07_selenium_grid.jsp#node-configuration
-  # seOpts:
-
-  ## Defining a JMX port will open the port on the container, however, it
-  ## requires additional javaOpts, ie
-  ## javaOpts: >
-  ##   -Dcom.sun.management.jmxremote.port=4000
-  ##   -Dcom.sun.management.jmxremote.authenticate=false
-  ##   -Dcom.sun.management.jmxremote.ssl=false
-  ## ref: http://openjdk.java.net/groups/jmx/
-  # jmxPort: 4000
 
   ## Pod Security Context
   ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
