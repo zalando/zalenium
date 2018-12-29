@@ -55,9 +55,15 @@ public class LiveNodeHtmlRenderer implements HtmlRenderer {
         // Adding live preview
         int noVncPort = proxy.getRegistration().getNoVncPort();
         String noVncIpAddress = proxy.getRegistration().getIpAddress();
-        String noVncViewBaseUrl = "%s/vnc/host/%s/port/%s/?nginx=&path=%s/proxy/%s:%s/websockify&view_only=%s";
-        String noVncReadOnlyUrl = String.format(noVncViewBaseUrl, contextPath, noVncIpAddress, noVncPort, contextPath, noVncIpAddress, noVncPort, "true");
-        String noVncInteractUrl = String.format(noVncViewBaseUrl, contextPath, noVncIpAddress, noVncPort, contextPath, noVncIpAddress, noVncPort, "false");
+        String websockifyContextPath = null;
+        if (contextPath == null || contextPath.isEmpty()) {
+            websockifyContextPath = "";
+        } else {
+            websockifyContextPath = contextPath + "/";
+        }
+        String noVncViewBaseUrl = "%s/vnc/host/%s/port/%s/?nginx=&path=%sproxy/%s:%s/websockify&view_only=%s";
+        String noVncReadOnlyUrl = String.format(noVncViewBaseUrl, contextPath, noVncIpAddress, noVncPort, websockifyContextPath, noVncIpAddress, noVncPort, "true");
+        String noVncInteractUrl = String.format(noVncViewBaseUrl, contextPath, noVncIpAddress, noVncPort, websockifyContextPath, noVncIpAddress, noVncPort, "false");
 
         if (ZALENIUM_RUNNING_LOCALLY) {
             noVncReadOnlyUrl = String.format("http://localhost:%s/?view_only=false", noVncPort);
