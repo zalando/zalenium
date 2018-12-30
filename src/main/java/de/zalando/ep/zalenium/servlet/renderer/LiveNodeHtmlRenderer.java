@@ -14,6 +14,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
+import com.google.common.base.Strings;
+
 import static de.zalando.ep.zalenium.util.ZaleniumConfiguration.ZALENIUM_RUNNING_LOCALLY;
 
 public class LiveNodeHtmlRenderer implements HtmlRenderer {
@@ -55,12 +57,7 @@ public class LiveNodeHtmlRenderer implements HtmlRenderer {
         // Adding live preview
         int noVncPort = proxy.getRegistration().getNoVncPort();
         String noVncIpAddress = proxy.getRegistration().getIpAddress();
-        String websockifyContextPath = null;
-        if (contextPath == null || contextPath.isEmpty()) {
-            websockifyContextPath = "";
-        } else {
-            websockifyContextPath = contextPath + "/";
-        }
+        String websockifyContextPath = Strings.isNullOrEmpty(contextPath) ? "" : contextPath + "/";
         String noVncViewBaseUrl = "%s/vnc/host/%s/port/%s/?nginx=&path=%sproxy/%s:%s/websockify&view_only=%s";
         String noVncReadOnlyUrl = String.format(noVncViewBaseUrl, contextPath, noVncIpAddress, noVncPort, websockifyContextPath, noVncIpAddress, noVncPort, "true");
         String noVncInteractUrl = String.format(noVncViewBaseUrl, contextPath, noVncIpAddress, noVncPort, websockifyContextPath, noVncIpAddress, noVncPort, "false");

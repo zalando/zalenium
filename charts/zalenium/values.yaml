@@ -147,9 +147,15 @@ ingress:
   tls: false
   # secretName: my-tls-cert # only needed if tls above is true
   hostname: zalenium.foobar.com
+  # If your ingress host name is shared with multiple
+  # applications, Enter a path starting with / (eg. /zalenium)
+  # If your ingress host name is only for Zalenium,
+  # set the path as / (root)
   path: /
   annotations:
     # kubernetes.io/ingress.class: "nginx"
+    # If your ingress.path is not root (/),
+    # then rewrite target (uncomment the line below)
     # nginx.ingress.kubernetes.io/rewrite-target: "/"
     # kubernetes.io/tls-acme: "true"
   ## For RBAC support:
