@@ -369,7 +369,9 @@ RUN sudo chmod +x /home/seluser/zalenium.sh \
   && sudo chmod +x /usr/bin/error \
   && sudo chmod +x /usr/bin/entry.sh \
   && sudo chmod 777 /etc/passwd \
-  && sudo chown -R seluser:seluser /home/seluser
+  && sudo chown -R seluser:seluser /home/seluser \
+  && sudo chown -R root:seluser /etc/nginx \
+  && sudo chmod -R g+w /etc/nginx
 
 # Allows different operations in Openshift environments
 # https://docs.openshift.com/container-platform/latest/creating_images/guidelines.html#openshift-specific-guidelines

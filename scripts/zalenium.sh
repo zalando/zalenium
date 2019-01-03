@@ -30,7 +30,8 @@ MAX_TIMES_TO_PROCESS_REQUEST=${MAX_TIMES_TO_PROCESS_REQUEST:-30}
 CHECK_CONTAINERS_INTERVAL=${CHECK_CONTAINERS_INTERVAL:-5000}
 # Timeout for a proxy during cleanup tasks. See isCleaningUp() in DockerSeleniumRemoteProxy
 ZALENIUM_PROXY_CLEANUP_TIMEOUT=${ZALENIUM_PROXY_CLEANUP_TIMEOUT:-180}
-
+# Context Path where Zalenium is listening on.  Default is root
+CONTEXT_PATH=${CONTEXT_PATH:-/}
 GA_TRACKING_ID="UA-88441352-3"
 GA_ENDPOINT=https://www.google-analytics.com/collect
 GA_API_VERSION="1"
@@ -387,6 +388,12 @@ StartUp()
     if [ ! -z ${GRID_USER} ] && [ ! -z ${GRID_PASSWORD} ]; then
         echo "Enabling basic auth via startup script..."
         htpasswd -bc /home/seluser/.htpasswd ${GRID_USER} ${GRID_PASSWORD}
+    fi
+
+    # In nginx.conf, Replace {{contextPath}} with a value from 
+    # env variable CONTEXT_PATH (Default is root) 
+    if [ ! -z "${CONTEXT_PATH}" ] && [ "${CONTEXT_PATH}" != "/" ]; then
+        sed -i.bak "s~#\s*rewrite {{contextPath}}~rewrite ${CONTEXT_PATH}~" /etc/nginx/nginx.conf
     fi
 
     echo "Starting Nginx reverse proxy..."

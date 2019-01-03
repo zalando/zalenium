@@ -28,8 +28,8 @@ public class VncAuthenticationServlet extends RegistryBasedServlet {
     
     private static final int UNAUTHORISED = 403;
     private static final int AUTHORISED = 200;
-    private static Pattern VNC_REGEX = Pattern.compile("^\\/vnc\\/host\\/(?<host>[^\\/]+)\\/port\\/(?<port>\\d+)\\/");
-    private static Pattern WEB_SOCKET_REGEX = Pattern.compile("^\\/proxy\\/(?<host>[^:]+):(?<port>\\d+)\\/websockify");
+    private static Pattern VNC_REGEX = Pattern.compile("\\/vnc\\/host\\/(?<host>[^\\/]+)\\/port\\/(?<port>\\d+)\\/");
+    private static Pattern WEB_SOCKET_REGEX = Pattern.compile("\\/proxy\\/(?<host>[^:]+):(?<port>\\d+)\\/websockify");
     
     private static final Logger LOGGER = LoggerFactory.getLogger(VncAuthenticationServlet.class.getName());
 

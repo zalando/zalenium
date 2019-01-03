@@ -43,7 +43,7 @@ spec:
           protocol: TCP
       livenessProbe:
         httpGet:
-          path: /grid/console
+          path: {{ if and (.Values.ingress.path) (not (eq .Values.ingress.path "/")) }}{{ .Values.ingress.path }}{{ end }}/grid/console
           port: {{ .Values.hub.port }}
           {{- if eq true .Values.hub.basicAuth.enabled }}
           httpHeaders:
@@ -54,7 +54,7 @@ spec:
         periodSeconds: 5
       readinessProbe:
         httpGet:
-          path: /grid/console
+          path: {{ if and (.Values.ingress.path) (not (eq .Values.ingress.path "/")) }}{{ .Values.ingress.path }}{{ end }}/grid/console
           port: {{ .Values.hub.port }}
           {{- if eq true .Values.hub.basicAuth.enabled }}
           httpHeaders:
