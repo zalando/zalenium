@@ -326,6 +326,7 @@ public class CloudTestingRemoteProxy extends DefaultRemoteProxy {
         try {
             String textToWrite = String.format("Feature not implemented for %s, we are happy to receive PRs", getProxyName());
             FileUtils.writeStringToFile(notImplemented, textToWrite, StandardCharsets.UTF_8);
+            CommonProxyUtilities.setFilePermissions(notImplemented.toPath());
         } catch (IOException e) {
             logger.info(e.toString(), e);
         }

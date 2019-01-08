@@ -1,9 +1,9 @@
 package de.zalando.ep.zalenium.proxy;
 
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -17,7 +17,6 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
-import org.apache.commons.compress.utils.IOUtils;
 import org.openqa.grid.common.RegistrationRequest;
 import org.openqa.grid.common.exception.RemoteException;
 import org.openqa.grid.common.exception.RemoteNotReachableException;
@@ -615,7 +614,6 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         }
     }
 
-    @SuppressWarnings("ResultOfMethodCallIgnored")
     @VisibleForTesting
     void copyVideos(final String containerId) {
         if (testInformation == null) {
@@ -633,14 +631,13 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                 }
                 String fileExtension = entry.getName().substring(entry.getName().lastIndexOf('.'));
                 testInformation.setFileExtension(fileExtension);
-                File videoFile = new File(testInformation.getVideoFolderPath(), testInformation.getFileName());
-                File parent = videoFile.getParentFile();
-                if (!parent.exists()) {
-                    parent.mkdirs();
+                Path videoFile = Paths.get(String.format("%s/%s", testInformation.getVideoFolderPath(),
+                        testInformation.getFileName()));
+                if (!Files.exists(Paths.get(testInformation.getVideoFolderPath()))) {
+                    Files.createDirectory(Paths.get(testInformation.getVideoFolderPath()));
                 }
-                OutputStream outputStream = new FileOutputStream(videoFile);
-                IOUtils.copy(tarStream, outputStream);
-                outputStream.close();
+                Files.copy(tarStream, videoFile);
+                CommonProxyUtilities.setFilePermissions(videoFile);
                 videoWasCopied = true;
                 LOGGER.debug("Video file copied to: {}/{}", testInformation.getVideoFolderPath(), testInformation.getFileName());
             }
@@ -661,7 +658,6 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         setThreadName(currentName);
     }
 
-    @SuppressWarnings("ResultOfMethodCallIgnored")
     @VisibleForTesting
     void copyLogs(final String containerId) {
         if (testInformation == null) {
@@ -676,15 +672,13 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                 if (entry.isDirectory()) {
                     continue;
                 }
-                String fileName = entry.getName().replace("cont/", "");
-                File logFile = new File(testInformation.getLogsFolderPath(), fileName);
-                File parent = logFile.getParentFile();
-                if (!parent.exists()) {
-                    parent.mkdirs();
+                if (!Files.exists(Paths.get(testInformation.getLogsFolderPath()))) {
+                    Files.createDirectory(Paths.get(testInformation.getLogsFolderPath()));
                 }
-                OutputStream outputStream = new FileOutputStream(logFile);
-                IOUtils.copy(tarStream, outputStream);
-                outputStream.close();
+                String fileName = entry.getName().replace("cont/", "");
+                Path logFile = Paths.get(String.format("%s/%s", testInformation.getLogsFolderPath(), fileName));
+                Files.copy(tarStream, logFile);
+                CommonProxyUtilities.setFilePermissions(logFile);
             }
             LOGGER.debug("Logs copied to: {}", testInformation.getLogsFolderPath());
         } catch (IOException | NullPointerException e) {

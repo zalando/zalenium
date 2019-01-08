@@ -27,7 +27,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
  * Class in charge of building the dashboard, using templates and coordinating video downloads.
  */
 
-@SuppressWarnings({"ResultOfMethodCallIgnored", "WeakerAccess"})
+@SuppressWarnings({"WeakerAccess"})
 public class Dashboard implements DashboardInterface {
 
     public static final String VIDEOS_FOLDER_NAME = "videos";
@@ -112,6 +112,7 @@ public class Dashboard implements DashboardInterface {
                 testListContents = testEntry.concat("\n").concat(testListContents);
             }
             FileUtils.writeStringToFile(testList, testListContents, UTF_8);
+            CommonProxyUtilities.setFilePermissions(testList.toPath());
 
             executedTests++;
             if (testInformation.isVideoRecorded()) {
@@ -124,6 +125,7 @@ public class Dashboard implements DashboardInterface {
             testQuantities.addProperty(EXECUTED_TESTS_FIELD, executedTests);
             testQuantities.addProperty(EXECUTED_TESTS_WITH_VIDEO_FIELD, executedTestsWithVideo);
             FileUtils.writeStringToFile(testCountFile, testQuantities.toString(), UTF_8);
+            CommonProxyUtilities.setFilePermissions(testCountFile.toPath());
 
             File dashboardHtml = new File(getLocalVideosPath(), DASHBOARD_FILE);
             String dashboard = FileUtils.readFileToString(new File(getCurrentLocalPath(), DASHBOARD_TEMPLATE_FILE), UTF_8);
@@ -131,10 +133,12 @@ public class Dashboard implements DashboardInterface {
                     .replace("{executedTests}", String.valueOf(executedTests))
                     .replace("{retentionPeriod}", String.valueOf(retentionPeriod));
             FileUtils.writeStringToFile(dashboardHtml, dashboard, UTF_8);
+            CommonProxyUtilities.setFilePermissions(dashboardHtml.toPath());
 
             File zalandoIco = new File(getLocalVideosPath(), ZALANDO_ICO);
             if (!zalandoIco.exists()) {
                 FileUtils.copyFile(new File(getCurrentLocalPath(), ZALANDO_ICO), zalandoIco);
+                CommonProxyUtilities.setFilePermissions(zalandoIco.toPath());
             }
 
             File cssFolder = new File(getLocalVideosPath() + CSS_FOLDER);
@@ -142,9 +146,11 @@ public class Dashboard implements DashboardInterface {
 
             if (!cssFolder.exists()) {
                 FileUtils.copyDirectory(new File(getCurrentLocalPath() + CSS_FOLDER), cssFolder);
+                CommonProxyUtilities.setFilePermissions(cssFolder.toPath());
             }
             if (!jsFolder.exists()) {
                 FileUtils.copyDirectory(new File(getCurrentLocalPath() + JS_FOLDER), jsFolder);
+                CommonProxyUtilities.setFilePermissions(jsFolder.toPath());
             }
             saveTestInformation(testInformation);
         } catch (IOException e) {
@@ -174,11 +180,11 @@ public class Dashboard implements DashboardInterface {
             deleteIfExists(dashboardHtml);
             deleteIfExists(testList);
             deleteIfExists(testCountFile);
-            
+
             String dashboard = FileUtils.readFileToString(new File(getCurrentLocalPath(), DASHBOARD_TEMPLATE_FILE), UTF_8);
-            dashboard = dashboard.replace("{testList}", "").
-                    replace("{executedTests}", "0");
+            dashboard = dashboard.replace("{testList}", "").replace("{executedTests}", "0");
             FileUtils.writeStringToFile(dashboardHtml, dashboard, UTF_8);
+            CommonProxyUtilities.setFilePermissions(dashboardHtml.toPath());
             
             for(TestInformation testInformation : validTestsInformation) {
                 updateDashboard(testInformation);
@@ -207,6 +213,7 @@ public class Dashboard implements DashboardInterface {
         String dashboard = FileUtils.readFileToString(new File(getCurrentLocalPath(), DASHBOARD_TEMPLATE_FILE), UTF_8);
         dashboard = dashboard.replace("{testList}", "").replace("{executedTests}", "0");
         FileUtils.writeStringToFile(dashboardHtml, dashboard, UTF_8);
+        CommonProxyUtilities.setFilePermissions(dashboardHtml.toPath());
     }
 
     public static void deleteIfExists(File file) {
@@ -268,6 +275,7 @@ public class Dashboard implements DashboardInterface {
                 FileUtils.writeStringToFile(testInformationFile, gson.toJson(information) + System.lineSeparator(),
                     UTF_8, true);
             }
+            CommonProxyUtilities.setFilePermissions(testInformationFile.toPath());
         } catch (Exception e) {
             LOGGER.warn(e.toString(), e);
         }
@@ -279,6 +287,7 @@ public class Dashboard implements DashboardInterface {
             Gson gson = new GsonBuilder().create();
             FileUtils.writeStringToFile(testInformationFile, gson.toJson(testInformation) + System.lineSeparator(),
                 UTF_8, true);
+            CommonProxyUtilities.setFilePermissions(testInformationFile.toPath());
         } catch (Exception e) {
             LOGGER.warn(e.toString(), e);
         }

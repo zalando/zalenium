@@ -41,6 +41,7 @@ public class ZaleniumConfiguration {
     private static int timeToWaitToStart;
     private static int maxTimesToProcessRequest;
     private static int checkContainersInterval;
+    private static String currentUser;
 
     static {
     	readConfigurationFromEnvVariables();
@@ -72,6 +73,8 @@ public class ZaleniumConfiguration {
 
         int checkContainers = env.getIntEnvVariable(CHECK_CONTAINERS_INTERVAL, DEFAULT_CHECK_CONTAINERS_INTERVAL);
         setCheckContainersInterval(checkContainers);
+
+        currentUser = System.getProperty("user.name", "seluser");
     }
 
     public static int getCheckContainersInterval() {
@@ -90,6 +93,10 @@ public class ZaleniumConfiguration {
     public static void setMaxTimesToProcessRequest(int maxTimesToProcessRequest) {
         ZaleniumConfiguration.maxTimesToProcessRequest = maxTimesToProcessRequest < 0 ?
                     DEFAULT_TIMES_TO_PROCESS_REQUEST : maxTimesToProcessRequest;
+    }
+
+    public static String getCurrentUser() {
+        return currentUser;
     }
 
     public static boolean isWaitForAvailableNodes() {
