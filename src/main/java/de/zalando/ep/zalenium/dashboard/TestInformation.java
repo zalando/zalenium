@@ -234,7 +234,6 @@ public class TestInformation {
         this.timeZone = Optional.ofNullable(builder.timeZone).orElse("");
         this.build = Optional.ofNullable(builder.build).orElse("");
         this.testFileNameTemplate = Optional.ofNullable(builder.testFileNameTemplate).orElse("");
-        this.retentionDate = Optional.ofNullable(builder.retentionDate).orElse(new Date());
         this.testStatus = builder.testStatus;
         this.videoRecorded = true;
         this.metadata = builder.metadata;
@@ -256,7 +255,6 @@ public class TestInformation {
         private String timeZone;
         private String build;
         private String testFileNameTemplate;
-        private Date retentionDate;
         private TestStatus testStatus;
         private JsonObject metadata;
 
@@ -330,11 +328,6 @@ public class TestInformation {
             return this;
         }
 
-        public TestInformationBuilder withretentionDate(Date retentionDate) {
-            this.retentionDate = retentionDate;
-            return this;
-        }
-        
         public TestInformationBuilder withTestStatus(TestStatus testStatus) {
             this.testStatus = testStatus;
             return this;

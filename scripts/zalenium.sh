@@ -391,6 +391,11 @@ StartUp()
     cp -r /home/seluser/css /home/seluser/videos
     cp -r /home/seluser/js /home/seluser/videos
 
+    if [ "${WE_HAVE_SUDO_ACCESS}" == "true" ]; then
+        sudo chown -R seluser:seluser /home/seluser
+    fi
+
+
     if [ ! -z ${GRID_USER} ] && [ ! -z ${GRID_PASSWORD} ]; then
         echo "Enabling basic auth via startup script..."
         htpasswd -bc /home/seluser/.htpasswd ${GRID_USER} ${GRID_PASSWORD}
