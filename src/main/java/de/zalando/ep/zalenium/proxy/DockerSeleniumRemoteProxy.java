@@ -673,7 +673,9 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                     continue;
                 }
                 if (!Files.exists(Paths.get(testInformation.getLogsFolderPath()))) {
-                    Files.createDirectory(Paths.get(testInformation.getLogsFolderPath()));
+                    Path directories = Files.createDirectories(Paths.get(testInformation.getLogsFolderPath()));
+                    CommonProxyUtilities.setFilePermissions(directories);
+                    CommonProxyUtilities.setFilePermissions(directories.getParent());
                 }
                 String fileName = entry.getName().replace("cont/", "");
                 Path logFile = Paths.get(String.format("%s/%s", testInformation.getLogsFolderPath(), fileName));
