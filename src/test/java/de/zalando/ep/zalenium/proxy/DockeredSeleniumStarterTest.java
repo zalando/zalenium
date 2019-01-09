@@ -176,6 +176,7 @@ public class DockeredSeleniumStarterTest {
         int amountOfMaxContainers = 8;
         int screenWidth = 1440;
         int screenHeight = 810;
+        int browserTimeout = 1000;
         String seleniumNodeParams = "-debug";
         TimeZone timeZone = TimeZone.getTimeZone("America/Montreal");
         when(environment.getEnvVariable(ZaleniumConfiguration.ZALENIUM_DESIRED_CONTAINERS))
@@ -190,6 +191,8 @@ public class DockeredSeleniumStarterTest {
                 .thenReturn(timeZone.getID());
         when(environment.getEnvVariable(DockeredSeleniumStarter.SELENIUM_NODE_PARAMS))
                 .thenReturn(seleniumNodeParams);
+        when(environment.getEnvVariable("SEL_BROWSER_TIMEOUT_SECS"))
+                .thenReturn(String.valueOf(browserTimeout));
         when(environment.getIntEnvVariable(any(String.class), any(Integer.class))).thenCallRealMethod();
         when(environment.getStringEnvVariable(any(String.class), any(String.class))).thenCallRealMethod();
         DockeredSeleniumStarter.setEnv(environment);
@@ -203,6 +206,7 @@ public class DockeredSeleniumStarterTest {
         Assert.assertEquals(screenWidth, DockeredSeleniumStarter.getConfiguredScreenSize().getWidth());
         Assert.assertEquals(timeZone.getID(), DockeredSeleniumStarter.getConfiguredTimeZone().getID());
         Assert.assertEquals(seleniumNodeParams, DockeredSeleniumStarter.getSeleniumNodeParameters());
+        Assert.assertEquals(browserTimeout, DockeredSeleniumStarter.getBrowserTimeout());
     }
 
     @Test
@@ -213,6 +217,7 @@ public class DockeredSeleniumStarterTest {
         ZaleniumConfiguration.setWaitForAvailableNodes(true);
         ZaleniumConfiguration.setMaxTimesToProcessRequest(-10);
         ZaleniumConfiguration.setCheckContainersInterval(500);
+        DockeredSeleniumStarter.setBrowserTimeout(-100);
         DockeredSeleniumStarter.setConfiguredScreenSize(new Dimension(-1, -1));
         Assert.assertEquals(ZaleniumConfiguration.DEFAULT_AMOUNT_DESIRED_CONTAINERS,
                 ZaleniumConfiguration.getDesiredContainersOnStartup());
@@ -229,6 +234,8 @@ public class DockeredSeleniumStarterTest {
         Assert.assertEquals(ZaleniumConfiguration.DEFAULT_CHECK_CONTAINERS_INTERVAL,
             ZaleniumConfiguration.getCheckContainersInterval());
         Assert.assertTrue(ZaleniumConfiguration.isWaitForAvailableNodes());
+        Assert.assertEquals(DockeredSeleniumStarter.DEFAULT_SEL_BROWSER_TIMEOUT_SECS,
+                DockeredSeleniumStarter.getBrowserTimeout());
     }
 
 }
