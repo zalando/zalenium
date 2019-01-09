@@ -30,7 +30,6 @@ MAX_TIMES_TO_PROCESS_REQUEST=${MAX_TIMES_TO_PROCESS_REQUEST:-30}
 CHECK_CONTAINERS_INTERVAL=${CHECK_CONTAINERS_INTERVAL:-5000}
 # Timeout for a proxy during cleanup tasks. See isCleaningUp() in DockerSeleniumRemoteProxy
 ZALENIUM_PROXY_CLEANUP_TIMEOUT=${ZALENIUM_PROXY_CLEANUP_TIMEOUT:-180}
-
 GA_TRACKING_ID="UA-88441352-3"
 GA_ENDPOINT=https://www.google-analytics.com/collect
 GA_API_VERSION="1"
@@ -38,6 +37,14 @@ GA_API_VERSION="1"
 KUBERNETES_ENABLED=false
 if [ -f /var/run/secrets/kubernetes.io/serviceaccount/token ]; then
     KUBERNETES_ENABLED=true
+fi
+
+# Context Path where Zalenium is listening on.  Default is root
+CONTEXT_PATH=${CONTEXT_PATH:-/}
+# If env variable CONTEXT_PATH is root (or not defined)
+# set it to empty string, to avoid two //
+if [ -z "${CONTEXT_PATH}" ] || [ "${CONTEXT_PATH}" = "/" ]; then
+    CONTEXT_PATH=""
 fi
 
 PID_PATH_SELENIUM=/tmp/selenium-pid
@@ -62,7 +69,7 @@ WaitSeleniumHub()
 {
     # Other option is to wait for certain text at
     #  logs/stdout.zalenium.hub.log
-    while ! curl -sSL "http://localhost:4444/wd/hub/status" 2>&1 \
+    while ! curl -sSL "http://localhost:4444${CONTEXT_PATH}/wd/hub/status" 2>&1 \
             | jq -r '.status' 2>&1 | grep "0" >/dev/null; do
         echo -n '.'
         sleep 0.2
@@ -85,7 +92,7 @@ export -f WaitStarterProxy
 WaitStarterProxyToRegister()
 {
     # Also wait for the Proxy to be registered into the hub
-    while ! curl -sSL "http://localhost:4444/grid/console" 2>&1 \
+    while ! curl -sSL "http://localhost:4444${CONTEXT_PATH}/grid/console" 2>&1 \
             | grep "DockerSeleniumStarterRemoteProxy" 2>&1 >/dev/null; do
         echo -n '.'
         sleep 0.2
@@ -103,7 +110,7 @@ WaitSauceLabsProxy()
     done
 
     # Also wait for the Proxy to be registered into the hub
-    while ! curl -sSL "http://localhost:4444/grid/console" 2>&1 \
+    while ! curl -sSL "http://localhost:4444${CONTEXT_PATH}/grid/console" 2>&1 \
             | grep "SauceLabsRemoteProxy" 2>&1 >/dev/null; do
         echo -n '.'
         sleep 0.2
@@ -121,7 +128,7 @@ WaitBrowserStackProxy()
     done
 
     # Also wait for the Proxy to be registered into the hub
-    while ! curl -sSL "http://localhost:4444/grid/console" 2>&1 \
+    while ! curl -sSL "http://localhost:4444${CONTEXT_PATH}/grid/console" 2>&1 \
             | grep "BrowserStackRemoteProxy" 2>&1 >/dev/null; do
         echo -n '.'
         sleep 0.2
@@ -139,7 +146,7 @@ WaitTestingBotProxy()
     done
 
     # Also wait for the Proxy to be registered into the hub
-    while ! curl -sSL "http://localhost:4444/grid/console" 2>&1 \
+    while ! curl -sSL "http://localhost:4444${CONTEXT_PATH}/grid/console" 2>&1 \
             | grep "TestingBotRemoteProxy" 2>&1 >/dev/null; do
         echo -n '.'
         sleep 0.2
@@ -389,6 +396,9 @@ StartUp()
         htpasswd -bc /home/seluser/.htpasswd ${GRID_USER} ${GRID_PASSWORD}
     fi
 
+    # In nginx.conf, Replace {{contextPath}} with value of APPEND_CONTEXT_PATH
+    sed -i.bak "s~{{contextPath}}~${CONTEXT_PATH}~" /etc/nginx/nginx.conf
+
     echo "Starting Nginx reverse proxy..."
     nginx
 
@@ -419,15 +429,15 @@ StartUp()
     ${DEBUG_FLAG} &
 
     echo $! > ${PID_PATH_SELENIUM}
-
+    
     if ! timeout --foreground "1m" bash -c WaitSeleniumHub; then
         echo "GridLauncher failed to start after 1 minute, failing..."
-        curl "http://localhost:4444/wd/hub/status"
+        curl "http://localhost:4444${CONTEXT_PATH}/wd/hub/status"
         exit 11
     fi
     echo "Selenium Hub started!"
 
-    if ! curl -sSL "http://localhost:4444" | grep Grid >/dev/null; then
+    if ! curl -sSL "http://localhost:4444${CONTEXT_PATH}" | grep Grid >/dev/null; then
         echo "Error: The Grid is not listening at port 4444"
         exit 7
     fi
@@ -437,7 +447,7 @@ StartUp()
         java -Dlogback.loglevel=${DEBUG_MODE} -Dlogback.appender=${LOGBACK_APPENDER} \
          -Dlogback.configurationFile=${LOGBACK_PATH} \
          -Djava.util.logging.config.file=logging_${DEBUG_MODE}.properties \
-         -cp ${ZALENIUM_ARTIFACT} org.openqa.grid.selenium.GridLauncherV3 -role node -hub http://localhost:4444/grid/register \
+         -cp ${ZALENIUM_ARTIFACT} org.openqa.grid.selenium.GridLauncherV3 -role node -hub http://localhost:4444${CONTEXT_PATH}/grid/register \
          -registerCycle 0 -proxy de.zalando.ep.zalenium.proxy.SauceLabsRemoteProxy \
          -nodePolling 90000 -port 30001 ${DEBUG_FLAG} &
         echo $! > ${PID_PATH_SAUCE_LABS_NODE}
@@ -466,7 +476,7 @@ StartUp()
         java -Dlogback.loglevel=${DEBUG_MODE} -Dlogback.appender=${LOGBACK_APPENDER} \
          -Dlogback.configurationFile=${LOGBACK_PATH} \
          -Djava.util.logging.config.file=logging_${DEBUG_MODE}.properties \
-         -cp ${ZALENIUM_ARTIFACT} org.openqa.grid.selenium.GridLauncherV3 -role node -hub http://localhost:4444/grid/register \
+         -cp ${ZALENIUM_ARTIFACT} org.openqa.grid.selenium.GridLauncherV3 -role node -hub http://localhost:4444${CONTEXT_PATH}/grid/register \
          -registerCycle 0 -proxy de.zalando.ep.zalenium.proxy.BrowserStackRemoteProxy \
          -nodePolling 90000 -port 30002 ${DEBUG_FLAG} &
         echo $! > ${PID_PATH_BROWSER_STACK_NODE}
@@ -494,7 +504,7 @@ StartUp()
         java -Dlogback.loglevel=${DEBUG_MODE} -Dlogback.appender=${LOGBACK_APPENDER} \
          -Dlogback.configurationFile=${LOGBACK_PATH} \
          -Djava.util.logging.config.file=logging_${DEBUG_MODE}.properties \
-         -cp ${ZALENIUM_ARTIFACT} org.openqa.grid.selenium.GridLauncherV3 -role node -hub http://localhost:4444/grid/register \
+         -cp ${ZALENIUM_ARTIFACT} org.openqa.grid.selenium.GridLauncherV3 -role node -hub http://localhost:4444${CONTEXT_PATH}/grid/register \
          -registerCycle 0 -proxy de.zalando.ep.zalenium.proxy.TestingBotRemoteProxy \
          -nodePolling 90000 -port 30003 ${DEBUG_FLAG} &
         echo $! > ${PID_PATH_TESTINGBOT_NODE}

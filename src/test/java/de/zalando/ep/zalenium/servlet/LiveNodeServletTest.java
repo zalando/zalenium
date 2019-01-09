@@ -75,10 +75,10 @@ public class LiveNodeServletTest {
         assertThat(responseContent, containsString("Zalenium Live Preview"));
         assertThat(responseContent, containsString("http://machine1:4444"));
         assertThat(responseContent, containsString("http://machine2:4444"));
-        assertThat(responseContent, containsString("/vnc/host/machine1/port/40000/?nginx=machine1:40000&view_only=true'"));
-        assertThat(responseContent, containsString("/vnc/host/machine1/port/40000/?nginx=machine1:40000&view_only=false'"));
-        assertThat(responseContent, containsString("/vnc/host/machine2/port/40000/?nginx=machine2:40000&view_only=true'"));
-        assertThat(responseContent, containsString("/vnc/host/machine2/port/40000/?nginx=machine2:40000&view_only=false'"));
+        assertThat(responseContent, containsString("/vnc/host/machine1/port/40000/?nginx=&path=proxy/machine1:40000/websockify&view_only=true'"));
+        assertThat(responseContent, containsString("/vnc/host/machine1/port/40000/?nginx=&path=proxy/machine1:40000/websockify&view_only=false'"));
+        assertThat(responseContent, containsString("/vnc/host/machine2/port/40000/?nginx=&path=proxy/machine2:40000/websockify&view_only=true'"));
+        assertThat(responseContent, containsString("/vnc/host/machine2/port/40000/?nginx=&path=proxy/machine2:40000/websockify&view_only=false'"));
     }
 
     @Test
