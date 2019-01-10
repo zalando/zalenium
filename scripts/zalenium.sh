@@ -30,6 +30,8 @@ MAX_TIMES_TO_PROCESS_REQUEST=${MAX_TIMES_TO_PROCESS_REQUEST:-30}
 CHECK_CONTAINERS_INTERVAL=${CHECK_CONTAINERS_INTERVAL:-5000}
 # Timeout for a proxy during cleanup tasks. See isCleaningUp() in DockerSeleniumRemoteProxy
 ZALENIUM_PROXY_CLEANUP_TIMEOUT=${ZALENIUM_PROXY_CLEANUP_TIMEOUT:-180}
+# browserTimeout parameter, used in hub and nodes.
+SEL_BROWSER_TIMEOUT_SECS=${SEL_BROWSER_TIMEOUT_SECS:-16000}
 GA_TRACKING_ID="UA-88441352-3"
 GA_ENDPOINT=https://www.google-analytics.com/collect
 GA_API_VERSION="1"
@@ -429,6 +431,7 @@ StartUp()
     -Djava.util.logging.config.file=logging_${DEBUG_MODE}.properties \
     -cp ${ZALENIUM_ARTIFACT} org.openqa.grid.selenium.GridLauncherV3 \
     -role hub -port 4445 -newSessionWaitTimeout ${NEW_SESSION_WAIT_TIMEOUT} \
+    -browserTimeout ${SEL_BROWSER_TIMEOUT_SECS} \
     -registry de.zalando.ep.zalenium.registry.ZaleniumRegistry \
     ${SELENIUM_HUB_PARAMS} \
     ${DEBUG_FLAG} &

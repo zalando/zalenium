@@ -36,8 +36,8 @@ import static de.zalando.ep.zalenium.util.ZaleniumConfiguration.ZALENIUM_RUNNING
 public class DockeredSeleniumStarter {
 
     public static final int NO_VNC_PORT_GAP = 10000;
-    private static final int VNC_PORT_GAP = 20000;
-
+    @VisibleForTesting
+    public static final int DEFAULT_SEL_BROWSER_TIMEOUT_SECS = 16000;
     @VisibleForTesting
     static final TimeZone DEFAULT_TZ = TimeZone.getTimeZone("Europe/Berlin");
     @VisibleForTesting
@@ -52,6 +52,7 @@ public class DockeredSeleniumStarter {
     static final String SELENIUM_NODE_PARAMS = "ZALENIUM_NODE_PARAMS";
     @VisibleForTesting
     static final String DEFAULT_SELENIUM_NODE_PARAMS = "";
+    private static final int VNC_PORT_GAP = 20000;
     private static final String DEFAULT_ZALENIUM_CONTAINER_NAME = "zalenium";
     private static final String ZALENIUM_CONTAINER_NAME = "ZALENIUM_CONTAINER_NAME";
     private static final Logger LOGGER = LoggerFactory.getLogger(DockeredSeleniumStarter.class.getName());
@@ -62,7 +63,11 @@ public class DockeredSeleniumStarter {
     private static final ContainerClient defaultContainerClient = ContainerFactory.getContainerClient();
     private static final Environment defaultEnvironment = new Environment();
     private static final List<Integer> allocatedPorts = Collections.synchronizedList(new ArrayList<>());
-
+    private static final String[] HTTP_PROXY_ENV_VARS = {
+            "zalenium_http_proxy",
+            "zalenium_https_proxy",
+            "zalenium_no_proxy"
+    };
     private static List<MutableCapabilities> dockerSeleniumCapabilities = new ArrayList<>();
     private static ContainerClient containerClient = defaultContainerClient;
     private static Environment env = defaultEnvironment;
@@ -73,13 +78,12 @@ public class DockeredSeleniumStarter {
     private static Dimension configuredScreenSize;
     private static String containerName;
     private static String dockerSeleniumImageName;
+    private static int browserTimeout;
     private static Map<String, String> zaleniumProxyVars = new HashMap<>();
-
-    private static final String[] HTTP_PROXY_ENV_VARS = {
-            "zalenium_http_proxy",
-            "zalenium_https_proxy",
-            "zalenium_no_proxy"
-    };
+    
+    static {
+    	readConfigurationFromEnvVariables();
+    }
     
     /*
      * Reading configuration values from the env variables, if a value was not provided it falls back to defaults.
@@ -103,8 +107,10 @@ public class DockeredSeleniumStarter {
         String seleniumNodeParams = env.getStringEnvVariable(SELENIUM_NODE_PARAMS, DEFAULT_SELENIUM_NODE_PARAMS);
         setSeleniumNodeParameters(seleniumNodeParams);
 
+        setBrowserTimeout(env.getIntEnvVariable("SEL_BROWSER_TIMEOUT_SECS", DEFAULT_SEL_BROWSER_TIMEOUT_SECS));
+
         sendAnonymousUsageInfo = env.getBooleanEnvVariable("ZALENIUM_SEND_ANONYMOUS_USAGE_INFO", false);
-        
+
         addProxyVars();
     }
     
@@ -116,10 +122,6 @@ public class DockeredSeleniumStarter {
                 zaleniumProxyVars.put(httpEnvVarToAdd, proxyValue);
             }
         });
-    }
-    
-    static {
-    	readConfigurationFromEnvVariables();
     }
 
     @SuppressWarnings("ConstantConditions")
@@ -164,7 +166,7 @@ public class DockeredSeleniumStarter {
     private static void setContainerName(String containerName) {
         DockeredSeleniumStarter.containerName = containerName;
     }
-    
+
     public static String getDockerSeleniumImageName() {
         return Optional.ofNullable(dockerSeleniumImageName).orElse(DEFAULT_DOCKER_SELENIUM_IMAGE);
     }
@@ -179,6 +181,14 @@ public class DockeredSeleniumStarter {
 
     public static void setSeleniumNodeParameters(String seleniumNodeParameters) {
         DockeredSeleniumStarter.seleniumNodeParameters = seleniumNodeParameters;
+    }
+
+    public static int getBrowserTimeout() {
+        return browserTimeout;
+    }
+
+    public static void setBrowserTimeout(int browserTimeout) {
+        DockeredSeleniumStarter.browserTimeout = browserTimeout < 0 ? DEFAULT_SEL_BROWSER_TIMEOUT_SECS : browserTimeout;
     }
 
     private static String getLatestDownloadedImage(String dockerSeleniumImageName) {
@@ -299,6 +309,7 @@ public class DockeredSeleniumStarter {
         envVars.put("SELENIUM_MULTINODE_PORT", String.valueOf(containerPort));
         envVars.put("CHROME", "false");
         envVars.put("FIREFOX", "false");
+        envVars.put("SEL_BROWSER_TIMEOUT_SECS", String.valueOf(getBrowserTimeout()));
         if (ZALENIUM_RUNNING_LOCALLY) {
             envVars.put("SELENIUM_NODE_PARAMS", String.format("-remoteHost http://%s:%s", hostIpAddress, containerPort));
         } else {
