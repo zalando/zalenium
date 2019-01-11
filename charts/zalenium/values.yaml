@@ -65,6 +65,7 @@ hub:
   timeZone: "UTC"
   seleniumImageName: "elgalu/selenium"
   maxTestSessions: 1
+  newSessionsWaitTimeout: 600000
   debugEnabled: false
   keepOnlyFailedTests: false
   retentionPeriod: 3
@@ -82,6 +83,10 @@ hub:
   testingBotEnabled: false
   testingBotKey: blank
   testingBotSecret: blank
+
+  ## Arbitrary environment variables
+  env: 
+    # FOO: BAR
 
   ## Use Openshift DeploymentConfig instead of Kubernetes Deployment
   ## https://docs.okd.io/latest/architecture/core_concepts/deployments.html#deployments-and-deployment-configurations
