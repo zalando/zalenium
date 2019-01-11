@@ -97,6 +97,8 @@ spec:
           value: {{ .Values.hub.screenHeight | quote }}
         - name: MAX_TEST_SESSIONS
           value: {{ .Values.hub.maxTestSessions | quote }}
+        - name: NEW_SESSION_WAIT_TIMEOUT
+          value: {{ .Values.hub.newSessionsWaitTimeout | quote }}
         - name: DEBUG_ENABLED
           value: {{ .Values.hub.debugEnabled | quote }}
         - name: SEND_ANONYMOUS_USAGE_INFO
@@ -133,10 +135,14 @@ spec:
         - name: TESTINGBOT_SECRET
           value: {{ .Values.hub.testingBotSecret | quote }}
         {{- end }}
+        {{- range $key, $val := .Values.hub.env }}
+        - name: {{ $key | quote }}
+          value: {{ $val | quote }}
+        {{ end }}
       args:
         - start
       resources:
-{{ toYaml .Values.hub.resources | indent 8 }}
+        {{ toYaml .Values.hub.resources | nindent 8 | trim }}
       volumeMounts:
         - name: {{ template "zalenium.fullname" . }}-videos
           mountPath: /home/seluser/videos

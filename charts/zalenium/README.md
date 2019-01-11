@@ -74,6 +74,7 @@ See Zalenium's [usage examples](https://github.com/zalando/zalenium/blob/master/
 | `hub.timeZone` | Time zone | UTC |
 | `hub.seleniumImageName` | The Selenium grid image | `elgalu/selenium` |
 | `hub.maxTestSessions` | The number of tests to run on each grid container before killing it and starting a new one | 1 |
+| `hub.newSessionWaitTimeout` | Time in ms that a session will be kept in the queue before it timesout while waiting for a node to be available. | 600000 |
 | `hub.debugEnabled` | 	Enables LogLevel.FINE | false |
 | `hub.keepOnlyFailedTests` | Keeps only failed tests on the dashboard (you need to send a cookie with the test result) | false |
 | `hub.retentionPeriod` | Number of day's a testentry should be kept in dashboard before cleanup | 3 |

@@ -4,8 +4,6 @@ kubectl create namespace zalenium
 
 helm template --name zalenium \
     --set hub.serviceType=NodePort \
-    --set rbac.create=true \
-    --set serviceAccount.create=true \
     --set persistence.enabled=true \
     --set persistence.data.size=1Gi \
     --set persistence.video.size=1Gi \
