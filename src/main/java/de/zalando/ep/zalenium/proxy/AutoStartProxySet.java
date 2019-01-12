@@ -24,6 +24,8 @@ import org.openqa.grid.internal.BaseRemoteProxy;
 import org.openqa.grid.internal.ProxySet;
 import org.openqa.grid.internal.RemoteProxy;
 import org.openqa.grid.internal.TestSession;
+import org.openqa.selenium.Platform;
+import org.openqa.selenium.remote.CapabilityType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -154,19 +156,8 @@ public class AutoStartProxySet extends ProxySet implements Iterable<RemoteProxy>
      * proxy.
      */
     public TestSession getNewSession(Map<String, Object> desiredCapabilities) {
-        int busy = super.getBusyProxies().size();
-        int total = super.size();
-
-        List<RemoteProxy> proxies = super.getSorted();
-        proxies.forEach(proxy -> {
-            String id = proxy.getId();
-            boolean hasCapability = proxy.hasCapability(desiredCapabilities);
-            LOGGER.debug("{} {} has capability ? {}.", id, proxy.getClass(), hasCapability);
-        });
-
-        LOGGER.debug("{} of {} proxies are busy.", busy, total);
-
-        TestSession newSession = super.getNewSession(desiredCapabilities);
+        // TestSession newSession = super.getNewSession(desiredCapabilities);
+        TestSession newSession = createNewSession(desiredCapabilities);
         if (newSession == null) {
             /*
                 This is done in a thread because we are in the middle of the assignRequestToProxy() pipeline, so if we
@@ -180,6 +171,48 @@ public class AutoStartProxySet extends ProxySet implements Iterable<RemoteProxy>
             filter.testSessionHasStarted(desiredCapabilities);
         }
         return newSession;
+    }
+
+    // This is a copy of the super method, slightly modified to handle the case where platform is Linux and there
+    // is an Android registered. The matcher will return true because Android is part of the Linux family.
+    private TestSession createNewSession(Map<String, Object> desiredCapabilities) {
+        List<RemoteProxy> sorted = getSorted();
+        LOGGER.debug("Available nodes: " + sorted);
+
+        // Removing the proxies with Android so they are not taken into account to create a session.
+        List<RemoteProxy> proxiesToConsider;
+        if (Platform.LINUX.equals(getPlatformFromCaps(desiredCapabilities))) {
+            proxiesToConsider = sorted.stream()
+                    .filter(remoteProxy ->
+                            remoteProxy
+                                    .getTestSlots().stream()
+                                    .noneMatch(testSlot ->
+                                            Platform.ANDROID.equals(getPlatformFromCaps(testSlot.getCapabilities()))))
+                    .collect(Collectors.toList());
+        } else {
+            proxiesToConsider = sorted;
+        }
+        LOGGER.info(proxiesToConsider.toString());
+
+        return proxiesToConsider.stream()
+                .map(proxy -> proxy.getNewSession(desiredCapabilities))
+                .filter(Objects::nonNull)
+                .findFirst().orElse(null);
+    }
+
+    private Platform getPlatformFromCaps(Map<String, Object> desiredCapabilities) {
+        Object requested = desiredCapabilities.get(CapabilityType.PLATFORM_NAME);
+        if (requested == null) {
+            return null;
+        }
+        if (requested instanceof Platform) {
+            return (Platform) requested;
+        }
+        try {
+            return Platform.fromString(requested.toString());
+        } catch (Exception ex) {
+            return null;
+        }
     }
 
     public void add(RemoteProxy proxy) {
