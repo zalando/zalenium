@@ -332,7 +332,7 @@ ENV ZAL_VER="${project.build.finalName}" \
     SELENIUM_WAIT_FOR_CONTAINER="true"
 
 COPY entry.sh log warn error /usr/bin/
-COPY nginx.conf /etc/nginx/
+COPY nginx.conf /home/seluser/
 COPY css/ /home/seluser/css/
 COPY js/ /home/seluser/js/
 COPY zalenium.sh \
@@ -369,9 +369,7 @@ RUN sudo chmod +x /home/seluser/zalenium.sh \
   && sudo chmod +x /usr/bin/error \
   && sudo chmod +x /usr/bin/entry.sh \
   && sudo chmod 777 /etc/passwd \
-  && sudo chown -R seluser:seluser /home/seluser \
-  && sudo chown -R root:seluser /etc/nginx \
-  && sudo chmod -R g+w /etc/nginx
+  && sudo chown -R seluser:seluser /home/seluser
 
 # Allows different operations in Openshift environments
 # https://docs.openshift.com/container-platform/latest/creating_images/guidelines.html#openshift-specific-guidelines

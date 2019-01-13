@@ -404,10 +404,10 @@ StartUp()
     fi
 
     # In nginx.conf, Replace {{contextPath}} with value of APPEND_CONTEXT_PATH
-    sed -i.bak "s~{{contextPath}}~${CONTEXT_PATH}~" /etc/nginx/nginx.conf
+    sed -i.bak "s~{{contextPath}}~${CONTEXT_PATH}~" /home/seluser/nginx.conf
 
     echo "Starting Nginx reverse proxy..."
-    nginx
+    nginx -c /home/seluser/nginx.conf
 
     echo "Starting Selenium Hub..."
 
