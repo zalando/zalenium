@@ -192,7 +192,6 @@ public class AutoStartProxySet extends ProxySet implements Iterable<RemoteProxy>
         } else {
             proxiesToConsider = sorted;
         }
-        LOGGER.info(proxiesToConsider.toString());
 
         return proxiesToConsider.stream()
                 .map(proxy -> proxy.getNewSession(desiredCapabilities))
