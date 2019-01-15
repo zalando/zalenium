@@ -32,6 +32,9 @@ CHECK_CONTAINERS_INTERVAL=${CHECK_CONTAINERS_INTERVAL:-5000}
 ZALENIUM_PROXY_CLEANUP_TIMEOUT=${ZALENIUM_PROXY_CLEANUP_TIMEOUT:-180}
 # browserTimeout parameter, used in hub and nodes.
 SEL_BROWSER_TIMEOUT_SECS=${SEL_BROWSER_TIMEOUT_SECS:-16000}
+
+HOST_UID=${HOST_UID:-1000}
+HOST_GID=${HOST_GID:-1000}
 GA_TRACKING_ID="UA-88441352-3"
 GA_ENDPOINT=https://www.google-analytics.com/collect
 GA_API_VERSION="1"
@@ -394,7 +397,7 @@ StartUp()
     cp -r /home/seluser/js /home/seluser/videos
 
     if [ "${WE_HAVE_SUDO_ACCESS}" == "true" ]; then
-        sudo chown -R seluser:seluser /home/seluser
+        sudo chown -R ${HOST_UID}:${HOST_GID} /home/seluser
     fi
 
 
