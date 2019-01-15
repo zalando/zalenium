@@ -159,12 +159,14 @@ public class CommonProxyUtilities {
     }
 
     public static void setFilePermissions(Path filePath) throws IOException {
-        UserPrincipal hostUid = filePath.getFileSystem()
-                .getUserPrincipalLookupService().lookupPrincipalByName(ZaleniumConfiguration.getHostUid());
-        Files.setOwner(filePath, hostUid);
-        GroupPrincipal hostGid = filePath.getFileSystem()
-                .getUserPrincipalLookupService().lookupPrincipalByGroupName(ZaleniumConfiguration.getHostGid());
-        Files.getFileAttributeView(filePath, PosixFileAttributeView.class).setGroup(hostGid);
+        if ("root".equalsIgnoreCase(ZaleniumConfiguration.getCurrentUser())) {
+            UserPrincipal hostUid = filePath.getFileSystem()
+                    .getUserPrincipalLookupService().lookupPrincipalByName(ZaleniumConfiguration.getHostUid());
+            Files.setOwner(filePath, hostUid);
+            GroupPrincipal hostGid = filePath.getFileSystem()
+                    .getUserPrincipalLookupService().lookupPrincipalByGroupName(ZaleniumConfiguration.getHostGid());
+            Files.getFileAttributeView(filePath, PosixFileAttributeView.class).setGroup(hostGid);
+        }
     }
 
     private static String readAll(Reader reader) throws IOException {
