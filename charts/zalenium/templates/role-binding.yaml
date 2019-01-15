@@ -4,7 +4,7 @@ kind: {{ if .Values.rbac.clusterWideAccess }}"ClusterRoleBinding"{{ else }}"Role
 metadata:
   name: {{ template "zalenium.fullname" . }}
   labels:
-{{ include "zalenium.labels" . | indent 4 }}
+    {{- include "zalenium.labels" . | nindent 4 }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: {{ if .Values.rbac.clusterWideAccess }}"ClusterRole"{{ else }}"Role"{{ end }}

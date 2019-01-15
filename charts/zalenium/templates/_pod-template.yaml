@@ -1,7 +1,7 @@
 {{- define "zalenium.podTemplate" -}}
 metadata:
   labels:
-{{ include "zalenium.labels" . | indent 4 }}
+    {{- include "zalenium.labels" . | nindent 4 }}
   annotations:
 spec:
   {{- if .Values.hub.securityContext.enabled }}
@@ -11,7 +11,7 @@ spec:
   {{- end }}
   volumes:
     - name: {{ template "zalenium.fullname" . }}-videos
-    {{- if .Values.persistence.enabled }}
+    {{- if .Values.persistence.video.enabled }}
       {{- if and (.Values.persistence.video.useExisting) (not (empty .Values.persistence.video.name))}}
       persistentVolumeClaim:
         claimName: {{ .Values.persistence.video.name }}
@@ -23,7 +23,7 @@ spec:
       emptyDir: {}
     {{- end }}
     - name: {{ template "zalenium.fullname" . }}-data
-    {{- if .Values.persistence.enabled }}
+    {{- if .Values.persistence.data.enabled }}
       {{- if and (.Values.persistence.data.useExisting) (not (empty .Values.persistence.data.name))}}
       persistentVolumeClaim:
         claimName: {{ .Values.persistence.data.name }}
@@ -142,7 +142,7 @@ spec:
       args:
         - start
       resources:
-        {{ toYaml .Values.hub.resources | nindent 8 | trim }}
+        {{- toYaml .Values.hub.resources | nindent 8 }}
       volumeMounts:
         - name: {{ template "zalenium.fullname" . }}-videos
           mountPath: /home/seluser/videos

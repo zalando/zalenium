@@ -4,16 +4,16 @@ kind: Ingress
 metadata:
   name: {{ template "zalenium.fullname" . }}
   labels:
-{{ include "zalenium.labels" . | indent 4 }}
+    {{- include "zalenium.labels" . | nindent 4 }}
   annotations:
-{{ toYaml .Values.ingress.annotations | indent 4 }}
+    {{- toYaml .Values.ingress.annotations | nindent 4 }}
 spec:
-{{- if .Values.ingress.tls }}
+  {{- if .Values.ingress.tls }}
   tls:
     - hosts:
       - {{ .Values.ingress.hostname | quote }}
       secretName: {{ .Values.ingress.secretName }}
-{{- end }}
+  {{- end }}
   rules:
   - host: {{ .Values.ingress.hostname }}
     http:
