@@ -6,6 +6,7 @@ import com.google.common.annotations.VisibleForTesting;
 /**
  * Common configuration for Zalenium.
  */
+@SuppressWarnings("WeakerAccess")
 public class ZaleniumConfiguration {
 
 
@@ -42,6 +43,8 @@ public class ZaleniumConfiguration {
     private static int maxTimesToProcessRequest;
     private static int checkContainersInterval;
     private static String currentUser;
+    private static String HOST_UID;
+    private static String HOST_GID;
 
     static {
     	readConfigurationFromEnvVariables();
@@ -75,6 +78,8 @@ public class ZaleniumConfiguration {
         setCheckContainersInterval(checkContainers);
 
         currentUser = System.getProperty("user.name", "seluser");
+        HOST_GID = env.getStringEnvVariable("HOST_GID", "1000");
+        HOST_UID = env.getStringEnvVariable("HOST_UID", "1000");
     }
 
     public static int getCheckContainersInterval() {
@@ -97,6 +102,14 @@ public class ZaleniumConfiguration {
 
     public static String getCurrentUser() {
         return currentUser;
+    }
+
+    public static String getHostUid() {
+        return HOST_UID;
+    }
+
+    public static String getHostGid() {
+        return HOST_GID;
     }
 
     public static boolean isWaitForAvailableNodes() {
