@@ -160,10 +160,12 @@ public class CommonProxyUtilities {
 
     public static void setFilePermissions(Path filePath) throws IOException {
         if ("root".equalsIgnoreCase(ZaleniumConfiguration.getCurrentUser())) {
-            UserPrincipal selUser = filePath.getFileSystem().getUserPrincipalLookupService().lookupPrincipalByName("seluser");
-            Files.setOwner(filePath, selUser);
-            GroupPrincipal selUserGroup = filePath.getFileSystem().getUserPrincipalLookupService().lookupPrincipalByGroupName("seluser");
-            Files.getFileAttributeView(filePath, PosixFileAttributeView.class).setGroup(selUserGroup);
+            UserPrincipal hostUid = filePath.getFileSystem()
+                    .getUserPrincipalLookupService().lookupPrincipalByName(ZaleniumConfiguration.getHostUid());
+            Files.setOwner(filePath, hostUid);
+            GroupPrincipal hostGid = filePath.getFileSystem()
+                    .getUserPrincipalLookupService().lookupPrincipalByGroupName(ZaleniumConfiguration.getHostGid());
+            Files.getFileAttributeView(filePath, PosixFileAttributeView.class).setGroup(hostGid);
         }
     }
 
