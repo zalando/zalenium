@@ -4,14 +4,14 @@ kind: DeploymentConfig
 metadata:
   name: {{ template "zalenium.fullname" . }}
   labels:
-{{ include "zalenium.labels" . | indent 4 }}
+    {{- include "zalenium.labels" . | nindent 4 }}
 spec:
   replicas: 1
   selector:
     app.kubernetes.io/name: {{ include "zalenium.name" . }}
     app.kubernetes.io/instance: {{ .Release.Name }}
   template:
-{{ include "zalenium.podTemplate" . | indent 4 }}
+    {{- include "zalenium.podTemplate" . | nindent 4 }}
   triggers: {{ if not .Values.hub.openshift.deploymentConfig.triggers }}[]{{ else }}
     {{ toYaml .Values.hub.openshift.deploymentConfig.triggers }}
   {{- end }}

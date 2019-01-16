@@ -1,0 +1,21 @@
+{{- if and (.Values.persistence.data.enabled) (not .Values.persistence.data.useExisting) }}
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: "{{ template "zalenium.fullname" . }}-data"
+  labels:
+    {{- include "zalenium.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    - {{ .Values.persistence.data.accessMode | quote }}
+  resources:
+    requests:
+      storage: {{ .Values.persistence.data.size | quote }}
+  {{- if .Values.persistence.data.storageClass }}
+  {{- if (eq "-" .Values.persistence.data.storageClass) }}
+  storageClassName: ""
+  {{- else }}
+  storageClassName: "{{ .Values.persistence.data.storageClass }}"
+  {{- end }}
+  {{- end }}
+{{- end }}

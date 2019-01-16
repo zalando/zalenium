@@ -44,7 +44,14 @@ See Zalenium's [usage examples](https://github.com/zalando/zalenium/blob/master/
 
 | Parameter | Description | Default |
 | --------- | ----------- | ------- |
-| `persistence` | Whether to use a persistent volume claim for storage. Set persistence.enabled to true | false |
+| `persistence.video.enabled` | Whether to use a persistent volume claim for video storage. | false |
+| `persistence.video.useExisting` | Whether to use an existing persistent volume claim for video storage. | false |
+| `persistence.video.name` | The name of the existing persistent volume claim for the video storage. | `` |
+| `persistence.video.storageClass` | The name of the storage class to use for the video persistent volume claim. | `` |
+| `persistence.data.enabled` | Whether to use a persistent volume claim for data storage. | false |
+| `persistence.data.useExisting` | Whether to use an existing persistent volume claim for data storage. | false |
+| `persistence.data.name` | The name of the existing persistent volume claim for the data storage. | `` |
+| `persistence.data.storageClass` | The name of the storage class to use for the data persistent volume claim. | `` |
 | `rbac` | If your cluster has RBAC enabled, you can choose to either have the chart create its own service account or provide one.To have the chart create the service account for you, set rbac.create to true | true |
 | `serviceAccount` | Set serviceAccount.create to true if you want to create an service account for zalenium | true |
 | `ingress` | Set ingress.enabled to true if you want to create an ingress entry for zalenium | false |

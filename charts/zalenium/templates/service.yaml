@@ -3,16 +3,16 @@ kind: Service
 metadata:
   name: {{ template "zalenium.fullname" . }}
   labels:
-{{ include "zalenium.labels" . | indent 4 }}
-{{- if .Values.hub.serviceAnnotations }}
+    {{- include "zalenium.labels" . | nindent 4 }}
+  {{- if .Values.hub.serviceAnnotations }}
   annotations:
-{{ toYaml .Values.hub.serviceAnnotations | indent 4 }}
-{{- end }}
+    {{- toYaml .Values.hub.serviceAnnotations | nindent 4 }}
+  {{- end }}
 spec:
   type: {{ .Values.hub.serviceType | quote }}
-{{- if eq .Values.hub.serviceType "LoadBalancer" }}
+  {{- if eq .Values.hub.serviceType "LoadBalancer" }}
   loadBalancerSourceRanges: {{ .Values.hub.serviceSourceRanges }}
-{{- end }}
+  {{- end }}
   sessionAffinity: {{ .Values.hub.serviceSessionAffinity | quote }}
   ports:
   - name: hub
