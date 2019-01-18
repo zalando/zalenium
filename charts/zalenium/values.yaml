@@ -100,12 +100,12 @@ hub:
 ## ref: http://kubernetes.io/docs/user-guide/persistent-volumes/
 ##
 persistence:
-  enabled: false
   data:
+    enabled: false
     ## If true will use existing PVC instead of creating one
-    # useExisting: false
+    useExisting: false
     ## Name of existing PVC to be used in the zalenium deployment
-    # name:
+    name:
     ## If defined, storageClassName: <storageClass>
     ## If set to "-", storageClassName: "", which disables dynamic provisioning
     ## If undefined (the default) or set to null, no storageClassName spec is
@@ -114,12 +114,13 @@ persistence:
     ##
     # storageClass: "-"
     accessMode: ReadWriteMany
-    size: 80Gi
+    size: 2Gi
   video:
+    enabled: false
     ## If true will use existing PVC instead of creating one
-    # useExisting: false
+    useExisting: false
     ## Name of existing PVC to be used in the zalenium deployment
-    # name:
+    name:
     ## If defined, storageClassName: <storageClass>
     ## If set to "-", storageClassName: "", which disables dynamic provisioning
     ## If undefined (the default) or set to null, no storageClassName spec is
@@ -128,7 +129,7 @@ persistence:
     ##
     # storageClass: "-"
     accessMode: ReadWriteMany
-    size: 80Gi
+    size: 10Gi
 
 ingress:
   enabled: false

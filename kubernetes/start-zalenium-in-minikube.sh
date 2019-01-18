@@ -4,8 +4,9 @@ kubectl create namespace zalenium
 
 helm template --name zalenium \
     --set hub.serviceType=NodePort \
-    --set persistence.enabled=true \
+    --set persistence.data.enabled=true \
     --set persistence.data.size=1Gi \
+    --set persistence.video.enabled=true \
     --set persistence.video.size=1Gi \
     charts/zalenium | kubectl apply --namespace zalenium -f -
 
