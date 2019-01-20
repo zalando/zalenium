@@ -14,7 +14,7 @@ rules:
   verbs:
   - create
   - delete
-  - exec
+  - deleteCollection
   - get
   - list
   - watch
