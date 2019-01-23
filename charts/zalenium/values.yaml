@@ -18,6 +18,9 @@ hub:
   ## The port which the hub listens on
   port: 4444
 
+  ## Timeout for probe Hub liveness via HTTP request on Hub console
+  livenessTimeout: 1
+  
   ## Timeout for probe Hub readiness via HTTP request on Hub console
   readinessTimeout: 1
 

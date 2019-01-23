@@ -61,6 +61,7 @@ See Zalenium's [usage examples](https://github.com/zalando/zalenium/blob/master/
 | `hub.tag` | The zalenium hub image tag | `3` |
 | `hub.pullPolicy` | The pull policy for the hub image | `IfNotPresent` |
 | `hub.port` | The port the hub listens on | `4444` |
+| `hub.livenessTimeout` | Timeout for probe Hub liveness via HTTP request on Hub console | `1` |
 | `hub.readinessTimeout` | Timeout for probe Hub readiness via HTTP request on Hub console | `1` |
 | `hub.localVolumesRoot` | The root directory to store HostPath volumes (e.g. if running in minikube) | `/tmp` |
 | `hub.resources` | The resources for the hub container, defaults to minimum half a cpu and maximum 512 mb RAM | `{"limits":{"cpu":".5", "memory":"512Mi"}}` |
