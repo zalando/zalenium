@@ -188,7 +188,7 @@ public class TestInformation {
         if ("N/A".equalsIgnoreCase(this.build) || Strings.isNullOrEmpty(this.build)) {
             buildName = "";
         } else {
-            buildName = this.build.replaceAll("[^a-zA-Z0-9]", "_") + "/";
+            buildName = "/" + this.build.replaceAll("[^a-zA-Z0-9]", "_");
         }
 
         if(Strings.isNullOrEmpty(this.testFileNameTemplate)) {
@@ -203,14 +203,13 @@ public class TestInformation {
                 .replace("{timestamp}", commonProxyUtilities.getDateAndTimeFormatted(this.timestamp))
                 .replace("{testStatus}", getTestStatus().toString())
                 .replaceAll("[^a-zA-Z0-9]", "_");
-        this.testNameNoExtension = buildName.concat(this.testNameNoExtension);
 
         this.fileName = FILE_NAME_TEMPLATE.replace("{fileName}", testNameNoExtension)
                 .replace("{fileExtension}", fileExtension);
 
-        this.videoFolderPath = commonProxyUtilities.currentLocalPath() + "/" + Dashboard.VIDEOS_FOLDER_NAME;
+        this.videoFolderPath = commonProxyUtilities.currentLocalPath() + "/" + Dashboard.VIDEOS_FOLDER_NAME + buildName;
         this.logsFolderPath = commonProxyUtilities.currentLocalPath() + "/" + Dashboard.VIDEOS_FOLDER_NAME + "/" +
-                Dashboard.LOGS_FOLDER_NAME + "/" + testNameNoExtension;
+                Dashboard.LOGS_FOLDER_NAME + buildName + "/" + testNameNoExtension;
     }
 
     public String getBrowserAndPlatform() {

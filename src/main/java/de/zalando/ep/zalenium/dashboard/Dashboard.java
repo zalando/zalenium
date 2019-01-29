@@ -21,6 +21,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.commons.io.IOUtils;
@@ -90,7 +91,7 @@ public class Dashboard implements DashboardInterface {
     public synchronized void updateDashboard(TestInformation testInformation) {
         File testCountFile = new File(getLocalVideosPath(), TEST_COUNT_FILE);
         testInformation.setRetentionDate(commonProxyUtilities.getDateAndTime(testInformation.getTimestamp(), retentionPeriod));
-        
+
         try {
             synchronizeExecutedTestsValues(testCountFile);
             testInformation.buildSeleniumLogFileName();
@@ -145,10 +146,10 @@ public class Dashboard implements DashboardInterface {
         List<TestInformation> informationList = loadTestInformationFromFile();
         Map<Boolean, List<TestInformation>> partitioned = informationList.stream()
                 .collect(Collectors.partitioningBy(testInformation -> testInformation.getRetentionDate().getTime() > new Date().getTime()));
-        
+
         List<TestInformation> validTestsInformation = partitioned.get(true);
         List<TestInformation> invalidTestsInformation = partitioned.get(false);
-        
+
         if(invalidTestsInformation.size() > 0) {
             LOGGER.info("Cleaning up " + invalidTestsInformation.size() + " test(s) from Dashboard");
 
@@ -161,7 +162,7 @@ public class Dashboard implements DashboardInterface {
             dumpTestInformationToFile(validTestsInformation);
         }
     }
-    
+
     public synchronized void resetDashboard() throws IOException {
         LOGGER.info("Resetting Dashboard");
         cleanupFiles(true);
@@ -179,6 +180,15 @@ public class Dashboard implements DashboardInterface {
             File testInformationFile = new File(getLocalVideosPath(), TEST_INFORMATION_FILE);
             File videosFolder = new File(getLocalVideosPath());
             String[] extensions = new String[] { "mp4", "mkv" };
+            // Find all the unique directories that contain videos that are in the videos folder, but not the videos folder itself.
+            // The point is to delete build directories
+            Set<File> directoriesToDelete = FileUtils.listFiles(videosFolder, extensions, true).stream()
+                    .filter(file -> file.getAbsolutePath().startsWith(videosFolder.getAbsolutePath()) && !file.getParentFile().equals(videosFolder))
+                    .map(File::getParentFile)
+                    .collect(Collectors.toSet());
+            directoriesToDelete.forEach(Dashboard::deleteIfExists);
+
+            // Delete any other videos left over, that weren't in build directories.
             for (File file : FileUtils.listFiles(videosFolder, extensions, true)) {
                 deleteIfExists(file);
             }
