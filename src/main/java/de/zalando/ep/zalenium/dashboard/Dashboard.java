@@ -286,7 +286,15 @@ public class Dashboard implements DashboardInterface {
             } else {
                 platformLogo = testInformation.getPlatform().toLowerCase();
             }
-            String testItem = itemTemplate.replace("{fileName}", testInformation.getFileName())
+            String  buildDirectory = testInformation.getVideoFolderPath().replace("/home/seluser/videos", "");
+            buildDirectory = buildDirectory.trim().length() > 0 ? buildDirectory.replace("/", "").concat("/") : "";
+            String fileName = buildDirectory.concat(testInformation.getFileName());
+            String seleniumLogFileName = "logs/".concat(buildDirectory).concat(testInformation.getSeleniumLogFileName()
+                    .replace("logs/", ""));
+            String browserDriverLogFileName = "logs/".concat(buildDirectory).concat(testInformation.getBrowserDriverLogFileName()
+                    .replace("logs/", ""));
+            String testItem = itemTemplate
+                    .replace("{fileName}", fileName)
                     .replace("{testName}", testInformation.getTestName())
                     .replace("{seleniumSessionId}", testInformation.getSeleniumSessionId())
                     .replace("{testStatus}", testInformation.getTestStatus().name())
@@ -302,8 +310,8 @@ public class Dashboard implements DashboardInterface {
                     .replace("{screenDimension}", testInformation.getScreenDimension())
                     .replace("{timeZone}", testInformation.getTimeZone())
                     .replace("{build}", testInformation.getBuild())
-                    .replace("{seleniumLogFileName}", testInformation.getSeleniumLogFileName())
-                    .replace("{browserDriverLogFileName}", testInformation.getBrowserDriverLogFileName())
+                    .replace("{seleniumLogFileName}", seleniumLogFileName)
+                    .replace("{browserDriverLogFileName}", browserDriverLogFileName)
                     .replace("{retentionDate}", testInformation.getRetentionDate().toString());
             testItems.add(testItem);
         }

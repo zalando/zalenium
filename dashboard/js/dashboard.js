@@ -125,9 +125,14 @@ function addTestItem(item) {
     } else {
         platformLogo = item.platform.toLowerCase();
     }
+    let buildDirectory = item.videoFolderPath.replace("/home/seluser/videos", "");
+    buildDirectory = buildDirectory.trim().length > 0 ? buildDirectory.replace("/", "").concat("/") : "";
+    let fileName = buildDirectory.concat(item.fileName);
+    let seleniumLogFileName = "logs/".concat(buildDirectory).concat(item.seleniumLogFileName.replace("logs/", ""));
+    let browserDriverLogFileName = "logs/".concat(buildDirectory).concat(item.browserDriverLogFileName.replace("logs/", ""));
     const testItem =
         '<a href="#" class="list-group-item list-group-item-action flex-column align-items-start p-2"' +
-        ' data-video="' + item.fileName + '"' +
+        ' data-video="' + fileName + '"' +
         ' data-test-name="' + item.testName + '"' +
         ' data-test-selenium-session-id="' + item.seleniumSessionId + '"' +
         ' data-test-status="' + item.testStatus + '"' +
@@ -140,8 +145,8 @@ function addTestItem(item) {
         ' data-screen-dimension="' + item.screenDimension + '"' +
         ' data-time-zone="' + item.timeZone + '"' +
         ' data-test-build="' + item.build + '"' +
-        ' data-selenium-log="' + item.seleniumLogFileName + '"' +
-        ' data-browser-driver="' + item.browserDriverLogFileName + '"' +
+        ' data-selenium-log="' + seleniumLogFileName + '"' +
+        ' data-browser-driver="' + browserDriverLogFileName + '"' +
         ' data-retention-date="' + item.retentionDate + '">' +
         '<div class="d-flex w-100 justify-content-between">' +
             '<small class="font-weight-bold text-truncate">' + item.testName + '</small>' +
@@ -226,7 +231,13 @@ function setTestInformation($testName, $browser, $browserVersion, $platform, $pr
         buildElement.addClass("p-1");
         buildElement.parent().removeClass("invisible");
         buildElement.append('<img alt="Build" src="img/build.png" class="mr-1" width="48px" height="48px">');
-        screenResolutionTimeZone.append('<small class="mr-1">' + $build + '</small>');
+        buildElement.append('<small class="mr-1">' + $build + '</small>');
+    } else {
+        const buildElement = $('#build');
+        buildElement.html('');
+        buildElement.removeClass("p-1");
+        buildElement.addClass("p-0");
+        buildElement.parent().addClass("invisible");
     }
 
     $('#main-container').removeClass("invisible");
