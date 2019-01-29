@@ -23,6 +23,7 @@ public class TestInformation {
     private String seleniumSessionId;
     private String testName;
     private Date timestamp;
+    private long addedToDashboardTime;
     private String proxyName;
     private String browser;
     private String browserVersion;
@@ -35,10 +36,13 @@ public class TestInformation {
     private String videoFolderPath;
     private String logsFolderPath;
     private String testNameNoExtension;
+    @SuppressWarnings({"unused", "FieldCanBeLocal"})
     private String screenDimension;
     private String timeZone;
     private String build;
     private String testFileNameTemplate;
+    private String seleniumLogFileName;
+    private String browserDriverLogFileName;
     private Date retentionDate;
     private TestStatus testStatus;
     private boolean videoRecorded;
@@ -56,6 +60,30 @@ public class TestInformation {
         return videoFolderPath;
     }
 
+    public String getSeleniumSessionId() {
+        return seleniumSessionId;
+    }
+
+    public String getBrowser() {
+        return browser;
+    }
+
+    public String getBrowserVersion() {
+        return browserVersion;
+    }
+
+    public String getPlatform() {
+        return platform;
+    }
+
+    public String getProxyName() {
+        return proxyName;
+    }
+
+    public String getScreenDimension() {
+        return screenDimension;
+    }
+
     public String getTestName() {
         return Optional.ofNullable(testName).orElse(seleniumSessionId);
     }
@@ -64,8 +92,12 @@ public class TestInformation {
         return timestamp;
     }
 
-    public String getProxyName() {
-        return proxyName;
+    public void setAddedToDashboardTime(long addedToDashboardTime) {
+        this.addedToDashboardTime = addedToDashboardTime;
+    }
+
+    public long getAddedToDashboardTime() {
+        return addedToDashboardTime;
     }
 
     public String getFileName() {
@@ -82,10 +114,6 @@ public class TestInformation {
 
     public String getLogsFolderPath() {
         return logsFolderPath;
-    }
-
-    public String getScreenDimension() {
-        return screenDimension;
     }
 
     public String getTimeZone() {
@@ -112,26 +140,41 @@ public class TestInformation {
         this.testStatus = testStatus;
     }
 
-    public String getSeleniumLogFileName() {
-        String seleniumLogFileName = Dashboard.LOGS_FOLDER_NAME + "/" + testNameNoExtension + "/";
+    public void buildSeleniumLogFileName() {
+        String fileName = Dashboard.LOGS_FOLDER_NAME + "/" + testNameNoExtension + "/";
         if (ZALENIUM_PROXY_NAME.equalsIgnoreCase(proxyName)) {
-            return seleniumLogFileName.concat("selenium-multinode-stderr.log");
+            seleniumLogFileName = fileName.concat("selenium-multinode-stderr.log");
+        } else if (SAUCE_LABS_PROXY_NAME.equalsIgnoreCase(proxyName)) {
+            seleniumLogFileName = fileName.concat("selenium-server.log");
+        } else {
+            seleniumLogFileName = fileName.concat("not_implemented.log");
         }
-        if (SAUCE_LABS_PROXY_NAME.equalsIgnoreCase(proxyName)) {
-            return seleniumLogFileName.concat("selenium-server.log");
+    }
+
+    public String getSeleniumLogFileName() {
+        if (Strings.isNullOrEmpty(seleniumLogFileName)) {
+            buildSeleniumLogFileName();
         }
-        return seleniumLogFileName.concat("not_implemented.log");
+        return seleniumLogFileName;
+    }
+
+    public void buildBrowserDriverLogFileName() {
+        String fileName = Dashboard.LOGS_FOLDER_NAME + "/" + testNameNoExtension + "/";
+        if (ZALENIUM_PROXY_NAME.equalsIgnoreCase(proxyName)) {
+            browserDriverLogFileName = fileName.concat(String.format("%s_driver.log", browser.toLowerCase()));
+        } else if (SAUCE_LABS_PROXY_NAME.equalsIgnoreCase(proxyName)) {
+            browserDriverLogFileName = fileName.concat("log.json");
+        } else {
+            browserDriverLogFileName = fileName.concat("not_implemented.log");
+        }
+
     }
 
     public String getBrowserDriverLogFileName() {
-        String browserDriverLogFileName = Dashboard.LOGS_FOLDER_NAME + "/" + testNameNoExtension + "/";
-        if (ZALENIUM_PROXY_NAME.equalsIgnoreCase(proxyName)) {
-            return browserDriverLogFileName.concat(String.format("%s_driver.log", browser.toLowerCase()));
+        if (Strings.isNullOrEmpty(browserDriverLogFileName)) {
+            buildBrowserDriverLogFileName();
         }
-        if (SAUCE_LABS_PROXY_NAME.equalsIgnoreCase(proxyName)) {
-            return browserDriverLogFileName.concat("log.json");
-        }
-        return browserDriverLogFileName.concat("not_implemented.log");
+        return browserDriverLogFileName;
     }
 
     @SuppressWarnings("SameParameterValue")
@@ -190,27 +233,15 @@ public class TestInformation {
     }
 
     public enum TestStatus {
-        COMPLETED("Completed", "primary", " 'Zalenium', 'TEST COMPLETED', --icon=/home/seluser/images/completed.png"),
-        TIMEOUT("Timeout", "warning", " 'Zalenium', 'TEST TIMED OUT', --icon=/home/seluser/images/timeout.png"),
-        SUCCESS("Success", "success", " 'Zalenium', 'TEST PASSED', --icon=/home/seluser/images/success.png"),
-        FAILED("Failed", "danger", " 'Zalenium', 'TEST FAILED', --icon=/home/seluser/images/failure.png");
+        COMPLETED(" 'Zalenium', 'TEST COMPLETED', --icon=/home/seluser/images/completed.png"),
+        TIMEOUT(" 'Zalenium', 'TEST TIMED OUT', --icon=/home/seluser/images/timeout.png"),
+        SUCCESS(" 'Zalenium', 'TEST PASSED', --icon=/home/seluser/images/success.png"),
+        FAILED(" 'Zalenium', 'TEST FAILED', --icon=/home/seluser/images/failure.png");
 
-        private String testStatus;
-        private String testBadge;
         private String testNotificationMessage;
 
-        TestStatus(String testStatus, String testBadge, String testNotificationMessage) {
-            this.testStatus = testStatus;
-            this.testBadge = testBadge;
+        TestStatus(String testNotificationMessage) {
             this.testNotificationMessage = testNotificationMessage;
-        }
-
-        public String getTestStatus() {
-            return testStatus;
-        }
-
-        public String getTestBadge() {
-            return testBadge;
         }
 
         public String getTestNotificationMessage() {

@@ -392,14 +392,14 @@ StartUp()
     fi
 
     echo "Copying files for Dashboard..."
-    cp /home/seluser/index.html /home/seluser/videos/index.html
+    cp /home/seluser/dashboard_template.html /home/seluser/videos/dashboard.html
     cp -r /home/seluser/css /home/seluser/videos
     cp -r /home/seluser/js /home/seluser/videos
+    cp -r /home/seluser/img /home/seluser/videos
 
     if [ "${WE_HAVE_SUDO_ACCESS}" == "true" ]; then
         sudo chown -R ${HOST_UID}:${HOST_GID} /home/seluser
     fi
-
 
     if [ ! -z ${GRID_USER} ] && [ ! -z ${GRID_PASSWORD} ]; then
         echo "Enabling basic auth via startup script..."

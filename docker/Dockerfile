@@ -335,6 +335,7 @@ COPY entry.sh log warn error /usr/bin/
 COPY nginx.conf /home/seluser/
 COPY css/ /home/seluser/css/
 COPY js/ /home/seluser/js/
+COPY img/ /home/seluser/img/
 COPY zalenium.sh \
  LICENSE.md \
  Analytics.md \
@@ -344,9 +345,7 @@ COPY zalenium.sh \
  wait-saucelabs.sh \
  start-testingbot.sh \
  wait-testingbot.sh \
- list_template.html \
  dashboard_template.html \
- index.html \
  zalando.ico \
  logging_info.properties \
  logging_debug.properties \
