@@ -17,6 +17,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import de.zalando.ep.zalenium.dashboard.Dashboard;
 import de.zalando.ep.zalenium.matcher.ZaleniumCapabilityMatcher;
 import org.apache.commons.lang3.tuple.Pair;
 import org.openqa.grid.common.exception.RemoteUnregisterException;
@@ -107,6 +108,7 @@ public class AutoStartProxySet extends ProxySet implements Iterable<RemoteProxy>
         this.filter = new SessionRequestFilter(maxTimesToProcessRequest);
 
         Runtime.getRuntime().addShutdownHook(new Thread(this::stopCheckingContainers, "AutoStartProxySet stop checking containers."));
+        Runtime.getRuntime().addShutdownHook(new Thread(Dashboard::saveDashboard, "Saving dashboard."));
 
         poller = new Thread(() -> {
             LOGGER.info("Starting poller.");
