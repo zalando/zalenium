@@ -11,6 +11,10 @@ hub:
   ## ref: http://kubernetes.io/docs/user-guide/images/#pre-pulling-images
   pullPolicy: "IfNotPresent"
 
+  ## Specify secrets to pull images from private repositories
+  ## ref: https://kubernetes.io/docs/concepts/containers/images/#specifying-imagepullsecrets-on-a-pod
+  #imagePullSecret: "secret1"
+
   ## The port which the hub listens on
   port: 4444
 
