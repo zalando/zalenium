@@ -1,106 +1,3 @@
-$(document).ready(function() {
-
-    // Load items as soon as the page loads
-    loadDashboardItems();
-
-    // Retrieve deltas every 15 seconds
-    setInterval(function() {
-        loadDashboardItems();
-    }, 15000);
-
-    $("#tests").on("click", ".list-group-item", function() {
-        const $this = $(this);
-        const $video = $this.data("video");
-        const $testName = $this.data("test-name");
-        const $browser = $this.data("browser");
-        const $browserVersion = $this.data("browser-version");
-        const $platform = $this.data("platform");
-        const $proxyName = $this.data("proxy-name");
-        const $dateTime = $this.data("date-time");
-        const $retentionDate = $this.data("retention-date");
-        const $seleniumLogFile = $this.data("selenium-log");
-        const $browserDriverLogFile = $this.data("browser-driver");
-        const $screenDimension = $this.data("screen-dimension");
-        const $timeZone = $this.data("time-zone");
-        const $build = $this.data("test-build");
-        const $testStatus = $this.data("test-status");
-
-        $('.active').removeClass("active");
-        $this.toggleClass("active");
-
-        // Set test info to be displayed
-        setTestInformation($testName, $browser, $browserVersion, $platform, $proxyName, $dateTime,
-            $screenDimension, $timeZone, $build, $testStatus, $retentionDate);
-
-        // Pass clicked link element to another function
-        playVideo($video);
-
-        // Load logs
-        loadLogs($seleniumLogFile, $browserDriverLogFile);
-
-        // Select first tab
-        $('#testTabs').find('a:first').tab('show')
-    });
-
-    $('#search').on('keyup', function () {
-        searchTestsList();
-    });
-
-    $(function() {
-        const url = new URL(window.location);
-        const params = url.searchParams;
-        const q = params.get('q');
-        if (q !== null && q !== '') {
-            $('#search').val(decodeURIComponent(q));
-            searchTestsList();
-        }
-    });
-
-    $("#cleanupButton").click(function () {
-        $('#cleanupModal').modal('show');
-    });
-
-    $("#resetButton").click(function () {
-        $('#resetModal').modal('show');
-    });
-
-    $("#cleanupModalConfirm").click(function () {
-        $('#cleanupModal').modal('hide');
-        block_ui();
-
-        const targetUrl = [location.protocol, '//', location.host, location.pathname].join('') + 'cleanup?action=doCleanup';
-
-        $.ajax({
-            type: "POST",
-            url: targetUrl,
-            statusCode: {
-                200: function(response){
-                    unblock_ui();
-                    window.location.reload();
-                }
-            }
-        });
-    });
-
-    $("#resetModalConfirm").click(function () {
-        $('#resetModal').modal('hide');
-        block_ui();
-
-        const targetUrl = [location.protocol, '//', location.host, location.pathname].join('') + 'cleanup?action=doReset';
-
-        $.ajax({
-            type: "POST",
-            url: targetUrl,
-            statusCode: {
-                200: function(response){
-                    unblock_ui();
-                    window.location.reload();
-                }
-            }
-        });
-    });
-});
-
 function loadDashboardItems() {
     let latestDateAdded = getLatestDateAddedToDashboard();
     if (latestDateAdded === undefined) {
@@ -149,13 +46,13 @@ function addTestItem(item) {
         ' data-browser-driver="' + browserDriverLogFileName + '"' +
         ' data-retention-date="' + item.retentionDate + '">' +
         '<div class="d-flex w-100 justify-content-between">' +
-            '<small class="font-weight-bold text-truncate">' + item.testName + '</small>' +
+        '<small class="font-weight-bold text-truncate">' + item.testName + '</small>' +
         '</div>' +
         '<div class="d-flex w-100 justify-content-between">' +
-            '<small>' + item.timestamp + '</small>' +
-            '<small>' +
-                '<img alt="' + item.proxyName + '" src="img/' + item.proxyName.toLowerCase() + '.png" width="24px" height="24px">' +
-            '</small>' +
+        '<small>' + item.timestamp + '</small>' +
+        '<small>' +
+        '<img alt="' + item.proxyName + '" src="img/' + item.proxyName.toLowerCase() + '.png" width="24px" height="24px">' +
+        '</small>' +
         '</div>' +
         '<div class="d-flex w-100 justify-content-between">' +
         '<span>' +
@@ -260,7 +157,7 @@ function loadLogs($seleniumLogFile, $browserDriverLogFile) {
 }
 
 function searchTestsList() {
-    const current_query = $('#search').val().toUpperCase();
+    const current_query = $("#search").val().toUpperCase();
     if (current_query !== "") {
         const tokens_crt_query = current_query.split(" ");
         $(".list-group-item").each(function(){
@@ -293,9 +190,9 @@ function block_ui() {
         overlay.style.right = "0px";
         overlay.style.bottom = "0px";
         overlay.addEventListener("click", function(event) {
-                event.preventDefault();
-                return false;
-            }, false);
+            event.preventDefault();
+            return false;
+        }, false);
     }
 }
 
@@ -305,3 +202,106 @@ function unblock_ui() {
         overlay.style.display = "none";
     }
 }
+
+$(document).ready(function() {
+
+    // Load items as soon as the page loads
+    loadDashboardItems();
+
+    // Retrieve deltas every 15 seconds
+    setInterval(function() {
+        loadDashboardItems();
+    }, 15000);
+
+    $("#tests").on("click", ".list-group-item", function() {
+        const $this = $(this);
+        const $video = $this.data("video");
+        const $testName = $this.data("test-name");
+        const $browser = $this.data("browser");
+        const $browserVersion = $this.data("browser-version");
+        const $platform = $this.data("platform");
+        const $proxyName = $this.data("proxy-name");
+        const $dateTime = $this.data("date-time");
+        const $retentionDate = $this.data("retention-date");
+        const $seleniumLogFile = $this.data("selenium-log");
+        const $browserDriverLogFile = $this.data("browser-driver");
+        const $screenDimension = $this.data("screen-dimension");
+        const $timeZone = $this.data("time-zone");
+        const $build = $this.data("test-build");
+        const $testStatus = $this.data("test-status");
+
+        $('.active').removeClass("active");
+        $this.toggleClass("active");
+
+        // Set test info to be displayed
+        setTestInformation($testName, $browser, $browserVersion, $platform, $proxyName, $dateTime,
+            $screenDimension, $timeZone, $build, $testStatus, $retentionDate);
+
+        // Pass clicked link element to another function
+        playVideo($video);
+
+        // Load logs
+        loadLogs($seleniumLogFile, $browserDriverLogFile);
+
+        // Select first tab
+        $("#testTabs").find('a:first').tab("show");
+    });
+
+    $("#search").on("keyup", function () {
+        searchTestsList();
+    });
+
+    $(function() {
+        const url = new URL(window.location);
+        const params = url.searchParams;
+        const q = params.get('q');
+        if (q !== null && q !== '') {
+            $('#search').val(decodeURIComponent(q));
+            searchTestsList();
+        }
+    });
+
+    $("#cleanupButton").click(function () {
+        $("#cleanupModal").modal("show");
+    });
+
+    $("#resetButton").click(function () {
+        $("#resetModal").modal("show");
+    });
+
+    $("#cleanupModalConfirm").click(function () {
+        $("#cleanupModal").modal("hide");
+        block_ui();
+
+        const targetUrl = [location.protocol, "//", location.host, location.pathname].join('') + "cleanup?action=doCleanup";
+
+        $.ajax({
+            type: "POST",
+            url: targetUrl,
+            statusCode: {
+                200: function(response){
+                    unblock_ui();
+                    window.location.reload();
+                }
+            }
+        });
+    });
+
+    $("#resetModalConfirm").click(function () {
+        $('#resetModal').modal("hide");
+        block_ui();
+
+        const targetUrl = [location.protocol, "//", location.host, location.pathname].join('') + "cleanup?action=doReset";
+
+        $.ajax({
+            type: "POST",
+            url: targetUrl,
+            statusCode: {
+                200: function(response){
+                    unblock_ui();
+                    window.location.reload();
+                }
+            }
+        });
+    });
+});
