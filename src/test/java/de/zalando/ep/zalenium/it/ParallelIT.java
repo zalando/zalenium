@@ -49,14 +49,6 @@ public class ParallelIT  {
         };
     }
 
-    // Data provider which returns the browsers that will be used to run the tests when the tunnel is on
-    @DataProvider(name = "browsersAndPlatformsWithTunnel")
-    public static Object[][] browsersAndPlatformsWithTunnelProvider() {
-        return new Object[][] {
-                new Object[]{BrowserType.FIREFOX, Platform.WIN10, true}
-        };
-    }
-
     // Data provider which returns the browsers that will be used to run the tests
     @DataProvider(name = "browsersAndPlatformsForLivePreview")
     public static Object[][] browsersAndPlatformsForLivePreviewProvider() {
@@ -127,16 +119,6 @@ public class ParallelIT  {
         assertThat(pageSource, containsString("view_only=false"));
     }
 
-
-    @Test(dataProvider = "browsersAndPlatformsWithTunnel")
-    public void loadSeleniumGridAndCheckTitle(String browserType, Platform platform, boolean local) {
-
-        // Go to the homepage
-        getWebDriver().get(String.format("http://%s:%s/grid/console", ZALENIUM_HOST, ZALENIUM_PORT));
-
-        // Assert that the title is the expected one
-        assertThat(getWebDriver().getTitle(), equalTo("Grid Console"));
-    }
 
     @Test(dataProvider = "browsersAndPlatforms")
     public void loadGooglePageAndCheckTitle(String browserType, Platform platform) {
