@@ -53,7 +53,7 @@ public class ParallelIT  {
     @DataProvider(name = "browsersAndPlatformsWithTunnel")
     public static Object[][] browsersAndPlatformsWithTunnelProvider() {
         return new Object[][] {
-                new Object[]{BrowserType.FIREFOX, Platform.WINDOWS, true}
+                new Object[]{BrowserType.FIREFOX, Platform.WIN10, true}
         };
     }
 
