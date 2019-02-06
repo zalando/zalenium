@@ -1,5 +1,29 @@
 package de.zalando.ep.zalenium.container.kubernetes;
 
+import de.zalando.ep.zalenium.container.ContainerClient;
+import de.zalando.ep.zalenium.container.ContainerClientRegistration;
+import de.zalando.ep.zalenium.container.ContainerCreationStatus;
+import de.zalando.ep.zalenium.util.Environment;
+import io.fabric8.kubernetes.api.model.ContainerStateTerminated;
+import io.fabric8.kubernetes.api.model.ContainerStatus;
+import io.fabric8.kubernetes.api.model.DoneablePod;
+import io.fabric8.kubernetes.api.model.EnvVar;
+import io.fabric8.kubernetes.api.model.HostAlias;
+import io.fabric8.kubernetes.api.model.LocalObjectReference;
+import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.api.model.PodList;
+import io.fabric8.kubernetes.api.model.Quantity;
+import io.fabric8.kubernetes.api.model.Toleration;
+import io.fabric8.kubernetes.api.model.Volume;
+import io.fabric8.kubernetes.api.model.VolumeMount;
+import io.fabric8.kubernetes.client.KubernetesClient;
+import io.fabric8.kubernetes.client.dsl.ExecListener;
+import io.fabric8.kubernetes.client.dsl.ExecWatch;
+import okhttp3.Response;
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.net.InetAddress;
@@ -18,30 +42,6 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import org.apache.commons.lang.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import de.zalando.ep.zalenium.container.ContainerClient;
-import de.zalando.ep.zalenium.container.ContainerClientRegistration;
-import de.zalando.ep.zalenium.container.ContainerCreationStatus;
-import de.zalando.ep.zalenium.util.Environment;
-import io.fabric8.kubernetes.api.model.ContainerStateTerminated;
-import io.fabric8.kubernetes.api.model.ContainerStatus;
-import io.fabric8.kubernetes.api.model.DoneablePod;
-import io.fabric8.kubernetes.api.model.EnvVar;
-import io.fabric8.kubernetes.api.model.HostAlias;
-import io.fabric8.kubernetes.api.model.Pod;
-import io.fabric8.kubernetes.api.model.PodList;
-import io.fabric8.kubernetes.api.model.Quantity;
-import io.fabric8.kubernetes.api.model.Volume;
-import io.fabric8.kubernetes.api.model.VolumeMount;
-import io.fabric8.kubernetes.api.model.Toleration;
-import io.fabric8.kubernetes.client.KubernetesClient;
-import io.fabric8.kubernetes.client.dsl.ExecListener;
-import io.fabric8.kubernetes.client.dsl.ExecWatch;
-import okhttp3.Response;
 
 public class KubernetesContainerClient implements ContainerClient {
 
@@ -66,6 +66,7 @@ public class KubernetesContainerClient implements ContainerClient {
     private Map<String, String> nodeSelector = new HashMap<>();
     private List<Toleration> tolerations = new ArrayList<>();
     private String imagePullPolicy;
+    private List<LocalObjectReference> imagePullSecrets;
 
     private final Map<String, Quantity> seleniumPodLimits = new HashMap<>();
     private final Map<String, Quantity> seleniumPodRequests = new HashMap<>();
@@ -102,6 +103,7 @@ public class KubernetesContainerClient implements ContainerClient {
             discoverHostAliases();
             discoverNodeSelector();
             discoverTolerations();
+            discoverImagePullSecrets();
 
             buildResourceMaps();
 
@@ -162,6 +164,13 @@ public class KubernetesContainerClient implements ContainerClient {
         final List<Toleration> configuredTolerations = zaleniumPod.getSpec().getTolerations();
         if (configuredTolerations != null && !configuredTolerations.isEmpty()) {
             tolerations = configuredTolerations;
+        }
+    }
+
+    private void discoverImagePullSecrets() {
+        List<LocalObjectReference> configuredPullSecrets = zaleniumPod.getSpec().getImagePullSecrets();
+        if (!configuredPullSecrets.isEmpty()) {
+            imagePullSecrets = configuredPullSecrets;
         }
     }
 
@@ -317,6 +326,7 @@ public class KubernetesContainerClient implements ContainerClient {
         labels.putAll(podSelector);
         config.setLabels(labels);
         config.setImagePullPolicy(imagePullPolicy);
+        config.setImagePullSecrets(imagePullSecrets);
         config.setMountedSharedFoldersMap(mountedSharedFoldersMap);
         config.setHostAliases(hostAliases);
         config.setNodeSelector(nodeSelector);
@@ -574,6 +584,7 @@ public class KubernetesContainerClient implements ContainerClient {
                         .endReadinessProbe()
                     .endContainer()
                     .withRestartPolicy("Never")
+                    .withImagePullSecrets(config.getImagePullSecrets())
                 .endSpec();
 
         // Add the shared folders if available

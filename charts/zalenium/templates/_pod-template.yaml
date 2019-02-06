@@ -9,6 +9,10 @@ spec:
     fsGroup: {{ .Values.hub.securityContext.fsGroup }}
     runAsUser: {{ .Values.hub.securityContext.runAsUser }}
   {{- end }}
+  {{- if .Values.hub.pullSecrets }}
+  imagePullSecrets:
+    - name: {{ .Values.hub.imagePullSecret }}
+  {{- end}}
   volumes:
     - name: {{ template "zalenium.fullname" . }}-videos
     {{- if .Values.persistence.video.enabled }}

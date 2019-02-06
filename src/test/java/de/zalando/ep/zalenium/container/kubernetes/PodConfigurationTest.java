@@ -1,25 +1,25 @@
 package de.zalando.ep.zalenium.container.kubernetes;
 
-import static org.hamcrest.CoreMatchers.containsString;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.mockito.Mockito.mock;
-
-import org.testng.annotations.BeforeTest;
-import org.testng.annotations.Test;
-
 import io.fabric8.kubernetes.api.model.EnvVar;
 import io.fabric8.kubernetes.api.model.HostAlias;
+import io.fabric8.kubernetes.api.model.LocalObjectReference;
 import io.fabric8.kubernetes.api.model.Quantity;
+import io.fabric8.kubernetes.api.model.Toleration;
 import io.fabric8.kubernetes.api.model.Volume;
 import io.fabric8.kubernetes.api.model.VolumeMount;
-import io.fabric8.kubernetes.api.model.Toleration;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import org.testng.annotations.BeforeTest;
+import org.testng.annotations.Test;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.mockito.Mockito.mock;
 
 public class PodConfigurationTest {
 
@@ -127,5 +127,15 @@ public class PodConfigurationTest {
         podConfiguration.setTolerations(tolerations);
         assertThat(podConfiguration.getTolerations().size(), is(1));
         assertThat(podConfiguration.getTolerations().get(0), is(toleration));
+    }
+
+    @Test
+    public void testSetImagePullSecrets() {
+        List<LocalObjectReference> secrets = new ArrayList<>();
+        LocalObjectReference secret = mock(LocalObjectReference.class);
+        secrets.add(secret);
+        podConfiguration.setImagePullSecrets(secrets);
+        assertThat(podConfiguration.getImagePullSecrets().size(), is(1));
+        assertThat(podConfiguration.getImagePullSecrets().get(0), is(secret));
     }
 }
