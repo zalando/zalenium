@@ -22,7 +22,7 @@ function addTestItem(item) {
         " data-test-name=\"" + item.testName + "\"" +
         " data-test-selenium-session-id=\"" + item.seleniumSessionId + "\"" +
         " data-test-status=\"" + item.testStatus + "\"" +
-        " data-browser=\"" + item.browser + '"' +
+        " data-browser=\"" + item.browser + "\"" +
         " data-browser-version=\"" + item.browserVersion + "\"" +
         " data-platform=\"" + platformLogo + "\"" +
         " data-proxy-name=\"" + item.proxyName + "\"" +
@@ -90,24 +90,24 @@ function playVideo($video) {
 function setTestInformation($testName, $browser, $browserVersion, $platform, $proxyName, $dateTime,
                             $screenDimension, $timeZone, $build, $testStatus, $retentionDate) {
     const testName = $("#test-name");
-    testName.html('');
-    testName.append('<img alt="' + $testStatus + '" src="img/' + $testStatus.toLowerCase() + '.png" class="mr-1" ' +
-        'width="48px" height="48px">');
+    testName.html("");
+    testName.append("<img alt=\"" + $testStatus + "\" src=\"img/" + $testStatus.toLowerCase() + ".png\" class=\"mr-1\" " +
+        "width=\"48px\" height=\"48px\">");
     testName.append($testName);
-    testName.append('<small class="float-right">' + $dateTime + '</small>');
+    testName.append("<small class=\"float-right\">" + $dateTime + "</small>");
 
-    const browserPlatformProxy = $('#browser-platform-proxy');
-    browserPlatformProxy.html('');
-    browserPlatformProxy.append('<img alt="' + $platform + '" src="img/' + $platform.toLowerCase() + '.png" class="mr-1" ' +
-        'width="48px" height="48px">');
-    browserPlatformProxy.append('<img alt="' + $browser + '" src="img/' + $browser.toLowerCase() + '.png" class="mr-1" ' +
-        'width="48px" height="48px">');
+    const browserPlatformProxy = $("#browser-platform-proxy");
+    browserPlatformProxy.html("");
+    browserPlatformProxy.append("<img alt=\"" + $platform + "\" src=\"img/" + $platform.toLowerCase() + ".png\" class=\"mr-1\" " +
+        "width=\"48px\" height=\"48px\">");
+    browserPlatformProxy.append("<img alt=\"" + $browser + "\" src=\"img/" + $browser.toLowerCase() + ".png\" class=\"mr-1\" " +
+        "width=\"48px\" height=\"48px\">");
     browserPlatformProxy.append($browserVersion);
-    browserPlatformProxy.append('<img alt="' + $proxyName + '" src="img/' + $proxyName.toLowerCase() + '.png" class="float-right" ' +
-        'width="48px" height="48px">');
+    browserPlatformProxy.append("<img alt=\"" + $proxyName + "\" src=\"img/" + $proxyName.toLowerCase() + ".png\" class=\"float-right\" " +
+        "width=\"48px\" height=\"48px\">");
 
-    const screenResolutionTimeZone = $('#screen-resolution-time-zone');
-    screenResolutionTimeZone.html('');
+    const screenResolutionTimeZone = $("#screen-resolution-time-zone");
+    screenResolutionTimeZone.html("");
     if ($screenDimension.length > 0) {
         screenResolutionTimeZone.append('<img alt="Screen Resolution" src="img/screen-resolution.png" class="mr-1" ' +
             'width="48px" height="48px">');
@@ -156,8 +156,8 @@ function loadLogs($seleniumLogFile, $browserDriverLogFile) {
     }
 }
 
-function block_ui() {
-    const overlay = document.getElementById('ui_blocker');
+function blockUi() {
+    const overlay = document.getElementById("ui_blocker");
     if (overlay != null) {
         overlay.style.display = "block";
         overlay.style.right = "0px";
@@ -169,7 +169,7 @@ function block_ui() {
     }
 }
 
-function unblock_ui() {
+function unblockUi() {
     const overlay = document.getElementById("ui_blocker");
     if (overlay != null) {
         overlay.style.display = "none";
@@ -271,7 +271,7 @@ $(document).ready(function() {
 
     $("#cleanupModalConfirm").click(function () {
         $("#cleanupModal").modal("hide");
-        block_ui();
+        blockUi();
 
         const targetUrl = [location.protocol, "//", location.host, location.pathname].join('') + "cleanup?action=doCleanup";
 
@@ -280,7 +280,7 @@ $(document).ready(function() {
             url: targetUrl,
             statusCode: {
                 200: function(response){
-                    unblock_ui();
+                    unblockUi();
                     window.location.reload();
                 }
             }
@@ -289,7 +289,7 @@ $(document).ready(function() {
 
     $("#resetModalConfirm").click(function () {
         $('#resetModal').modal("hide");
-        block_ui();
+        blockUi();
 
         const targetUrl = [location.protocol, "//", location.host, location.pathname].join('') + "cleanup?action=doReset";
 
@@ -298,7 +298,7 @@ $(document).ready(function() {
             url: targetUrl,
             statusCode: {
                 200: function(response){
-                    unblock_ui();
+                    unblockUi();
                     window.location.reload();
                 }
             }
