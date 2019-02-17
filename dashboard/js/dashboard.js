@@ -18,39 +18,39 @@ function addTestItem(item) {
     let browserDriverLogFileName = "logs/".concat(buildDirectory).concat(item.browserDriverLogFileName.replace("logs/", ""));
     const testItem =
         "<a href=\"#\" class=\"list-group-item list-group-item-action flex-column align-items-start p-2\"" +
-        " data-video=\"" + fileName + '"' +
-        " data-test-name=\"" + item.testName + '"' +
-        " data-test-selenium-session-id=\"" + item.seleniumSessionId + '"' +
-        " data-test-status=\"" + item.testStatus + '"' +
+        " data-video=\"" + fileName + "\"" +
+        " data-test-name=\"" + item.testName + "\"" +
+        " data-test-selenium-session-id=\"" + item.seleniumSessionId + "\"" +
+        " data-test-status=\"" + item.testStatus + "\"" +
         " data-browser=\"" + item.browser + '"' +
-        " data-browser-version=\"" + item.browserVersion + '"' +
-        " data-platform=\"" + platformLogo + '"' +
-        " data-proxy-name=\"" + item.proxyName + '"' +
-        " data-date-time=\"" + item.timestamp + '"' +
-        " data-added-to-dashboard=\"" + item.addedToDashboardTime + '"' +
-        " data-screen-dimension=\"" + item.screenDimension + '"' +
-        " data-time-zone=\"" + item.timeZone + '"' +
-        " data-test-build=\"" + item.build + '"' +
-        " data-selenium-log=\"" + seleniumLogFileName + '"' +
-        " data-browser-driver=\"" + browserDriverLogFileName + '"' +
-        " data-retention-date=\"" + item.retentionDate + '">' +
+        " data-browser-version=\"" + item.browserVersion + "\"" +
+        " data-platform=\"" + platformLogo + "\"" +
+        " data-proxy-name=\"" + item.proxyName + "\"" +
+        " data-date-time=\"" + item.timestamp + "\"" +
+        " data-added-to-dashboard=\"" + item.addedToDashboardTime + "\"" +
+        " data-screen-dimension=\"" + item.screenDimension + "\"" +
+        " data-time-zone=\"" + item.timeZone + "\"" +
+        " data-test-build=\"" + item.build + "\"" +
+        " data-selenium-log=\"" + seleniumLogFileName + "\"" +
+        " data-browser-driver=\"" + browserDriverLogFileName + "\"" +
+        " data-retention-date=\"" + item.retentionDate + "\">" +
         "<div class=\"d-flex w-100 justify-content-between\">" +
-        "<small class=\"font-weight-bold text-truncate\">" + item.testName + '</small>' +
+        "<small class=\"font-weight-bold text-truncate\">" + item.testName + "</small>" +
         "</div>" +
         "<div class=\"d-flex w-100 justify-content-between\">" +
-        "<small>" + item.timestamp + '</small>' +
+        "<small>" + item.timestamp + "</small>" +
         "<small>" +
-        "<img alt=\"" + item.proxyName + '" src="img/' + item.proxyName.toLowerCase() + '.png" width="24px" height="24px">' +
+        "<img alt=\"" + item.proxyName + "\" src=\"img/" + item.proxyName.toLowerCase() + ".png\" width=\"24px\" height=\"24px\">" +
         "</small>" +
         "</div>" +
         "<div class=\"d-flex w-100 justify-content-between\">" +
         "<span>" +
-        "<img alt=\"" + platformLogo + '" src="img/' + platformLogo + '.png" width="24px" height="24px">' +
-        "<img alt=\"" + item.browser + '" src="img/' + item.browser.toLowerCase() + '.png" width="24px" height="24px">' +
-        "<small class=\"pl-1\">" + item.browserVersion + '</small>' +
+        "<img alt=\"" + platformLogo + "\" src=\"img/" + platformLogo + ".png\" width=\"24px\" height=\"24px\">" +
+        "<img alt=\"" + item.browser + "\" src=\"img/" + item.browser.toLowerCase() + ".png\" width=\"24px\" height=\"24px\">" +
+        "<small class=\"pl-1\">" + item.browserVersion + "</small>" +
         "</span>" +
         "<span>" +
-        "<img alt=\"" + item.testStatus + '" src="img/' + item.testStatus.toLowerCase() + '.png" width="24px" height="24px">' +
+        "<img alt=\"" + item.testStatus + "\" src=\"img/" + item.testStatus.toLowerCase() + ".png\" width=\"24px\" height=\"24px\">" +
         "</span>" +
         "</div>" +
         "</a>";
@@ -59,7 +59,7 @@ function addTestItem(item) {
     const testCountElement = $('#testCount');
     testCountElement.removeClass("btn-dark");
     testCountElement.addClass("btn-light");
-    testCountElement.html('Tests <span class="badge badge-primary">' + testCount + '</span>');
+    testCountElement.html("Tests <span class=\"badge badge-primary\">" + testCount + "</span>");
 }
 
 function loadDashboardItems() {
