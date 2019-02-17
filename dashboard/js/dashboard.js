@@ -1,16 +1,5 @@
-function loadDashboardItems() {
-    let latestDateAdded = getLatestDateAddedToDashboard();
-    if (latestDateAdded === undefined) {
-        latestDateAdded = 0;
-    }
-    const newDashboardItems = [location.protocol, '//', location.host, location.pathname].join('') +
-        'information?lastDateAddedToDashboard=' + latestDateAdded;
-    $.getJSON(newDashboardItems, function(data) {
-        $.each(data, function (i, item) {
-            addTestItem(item);
-        });
-        searchTestsList();
-    });
+function getLatestDateAddedToDashboard() {
+    return $(".list-group-item").first().data('added-to-dashboard');
 }
 
 function addTestItem(item) {
@@ -28,43 +17,43 @@ function addTestItem(item) {
     let seleniumLogFileName = "logs/".concat(buildDirectory).concat(item.seleniumLogFileName.replace("logs/", ""));
     let browserDriverLogFileName = "logs/".concat(buildDirectory).concat(item.browserDriverLogFileName.replace("logs/", ""));
     const testItem =
-        '<a href="#" class="list-group-item list-group-item-action flex-column align-items-start p-2"' +
-        ' data-video="' + fileName + '"' +
-        ' data-test-name="' + item.testName + '"' +
-        ' data-test-selenium-session-id="' + item.seleniumSessionId + '"' +
-        ' data-test-status="' + item.testStatus + '"' +
-        ' data-browser="' + item.browser + '"' +
-        ' data-browser-version="' + item.browserVersion + '"' +
-        ' data-platform="' + platformLogo + '"' +
-        ' data-proxy-name="' + item.proxyName + '"' +
-        ' data-date-time="' + item.timestamp + '"' +
-        ' data-added-to-dashboard="' + item.addedToDashboardTime + '"' +
-        ' data-screen-dimension="' + item.screenDimension + '"' +
-        ' data-time-zone="' + item.timeZone + '"' +
-        ' data-test-build="' + item.build + '"' +
-        ' data-selenium-log="' + seleniumLogFileName + '"' +
-        ' data-browser-driver="' + browserDriverLogFileName + '"' +
-        ' data-retention-date="' + item.retentionDate + '">' +
-        '<div class="d-flex w-100 justify-content-between">' +
-        '<small class="font-weight-bold text-truncate">' + item.testName + '</small>' +
-        '</div>' +
-        '<div class="d-flex w-100 justify-content-between">' +
-        '<small>' + item.timestamp + '</small>' +
-        '<small>' +
-        '<img alt="' + item.proxyName + '" src="img/' + item.proxyName.toLowerCase() + '.png" width="24px" height="24px">' +
-        '</small>' +
-        '</div>' +
-        '<div class="d-flex w-100 justify-content-between">' +
-        '<span>' +
-        '<img alt="' + platformLogo + '" src="img/' + platformLogo + '.png" width="24px" height="24px">' +
-        '<img alt="' + item.browser + '" src="img/' + item.browser.toLowerCase() + '.png" width="24px" height="24px">' +
-        '<small class="pl-1">' + item.browserVersion + '</small>' +
-        '</span>' +
-        '<span>' +
-        '<img alt="' + item.testStatus + '" src="img/' + item.testStatus.toLowerCase() + '.png" width="24px" height="24px">' +
-        '</span>' +
-        '</div>' +
-        '</a>';
+        "<a href=\"#\" class=\"list-group-item list-group-item-action flex-column align-items-start p-2\"" +
+        " data-video=\"" + fileName + '"' +
+        " data-test-name=\"" + item.testName + '"' +
+        " data-test-selenium-session-id=\"" + item.seleniumSessionId + '"' +
+        " data-test-status=\"" + item.testStatus + '"' +
+        " data-browser=\"" + item.browser + '"' +
+        " data-browser-version=\"" + item.browserVersion + '"' +
+        " data-platform=\"" + platformLogo + '"' +
+        " data-proxy-name=\"" + item.proxyName + '"' +
+        " data-date-time=\"" + item.timestamp + '"' +
+        " data-added-to-dashboard=\"" + item.addedToDashboardTime + '"' +
+        " data-screen-dimension=\"" + item.screenDimension + '"' +
+        " data-time-zone=\"" + item.timeZone + '"' +
+        " data-test-build=\"" + item.build + '"' +
+        " data-selenium-log=\"" + seleniumLogFileName + '"' +
+        " data-browser-driver=\"" + browserDriverLogFileName + '"' +
+        " data-retention-date=\"" + item.retentionDate + '">' +
+        "<div class=\"d-flex w-100 justify-content-between\">" +
+        "<small class=\"font-weight-bold text-truncate\">" + item.testName + '</small>' +
+        "</div>" +
+        "<div class=\"d-flex w-100 justify-content-between\">" +
+        "<small>" + item.timestamp + '</small>' +
+        "<small>" +
+        "<img alt=\"" + item.proxyName + '" src="img/' + item.proxyName.toLowerCase() + '.png" width="24px" height="24px">' +
+        "</small>" +
+        "</div>" +
+        "<div class=\"d-flex w-100 justify-content-between\">" +
+        "<span>" +
+        "<img alt=\"" + platformLogo + '" src="img/' + platformLogo + '.png" width="24px" height="24px">' +
+        "<img alt=\"" + item.browser + '" src="img/' + item.browser.toLowerCase() + '.png" width="24px" height="24px">' +
+        "<small class=\"pl-1\">" + item.browserVersion + '</small>' +
+        "</span>" +
+        "<span>" +
+        "<img alt=\"" + item.testStatus + '" src="img/' + item.testStatus.toLowerCase() + '.png" width="24px" height="24px">' +
+        "</span>" +
+        "</div>" +
+        "</a>";
     $('#tests').prepend(testItem);
     const testCount = $(".list-group-item").length;
     const testCountElement = $('#testCount');
@@ -73,15 +62,26 @@ function addTestItem(item) {
     testCountElement.html('Tests <span class="badge badge-primary">' + testCount + '</span>');
 }
 
-function getLatestDateAddedToDashboard() {
-    return $(".list-group-item").first().data('added-to-dashboard');
+function loadDashboardItems() {
+    let latestDateAdded = getLatestDateAddedToDashboard();
+    if (latestDateAdded === undefined) {
+        latestDateAdded = 0;
+    }
+    const newDashboardItems = [location.protocol, '//', location.host, location.pathname].join('') +
+        'information?lastDateAddedToDashboard=' + latestDateAdded;
+    $.getJSON(newDashboardItems, function(data) {
+        $.each(data, function (i, item) {
+            addTestItem(item);
+        });
+        searchTestsList();
+    });
 }
 
 function playVideo($video) {
     const video = $('#video');
     const source = $('#video-source');
-    source.attr('src', $video);
-    source.attr('type', 'video/mp4');
+    source.attr("src", $video);
+    source.attr("type", "video/mp4");
     video.get(0).pause();
     video.get(0).load();
     video.get(0).play();
@@ -89,7 +89,7 @@ function playVideo($video) {
 
 function setTestInformation($testName, $browser, $browserVersion, $platform, $proxyName, $dateTime,
                             $screenDimension, $timeZone, $build, $testStatus, $retentionDate) {
-    const testName = $('#test-name');
+    const testName = $("#test-name");
     testName.html('');
     testName.append('<img alt="' + $testStatus + '" src="img/' + $testStatus.toLowerCase() + '.png" class="mr-1" ' +
         'width="48px" height="48px">');
@@ -156,6 +156,26 @@ function loadLogs($seleniumLogFile, $browserDriverLogFile) {
     }
 }
 
+function block_ui() {
+    const overlay = document.getElementById('ui_blocker');
+    if (overlay != null) {
+        overlay.style.display = "block";
+        overlay.style.right = "0px";
+        overlay.style.bottom = "0px";
+        overlay.addEventListener("click", function(event) {
+            event.preventDefault();
+            return false;
+        }, false);
+    }
+}
+
+function unblock_ui() {
+    const overlay = document.getElementById("ui_blocker");
+    if (overlay != null) {
+        overlay.style.display = "none";
+    }
+}
+
 function searchTestsList() {
     const current_query = $("#search").val().toUpperCase();
     if (current_query !== "") {
@@ -180,26 +200,6 @@ function searchTestsList() {
         });
     } else {
         $(".list-group-item").show();
-    }
-}
-
-function block_ui() {
-    const overlay = document.getElementById('ui_blocker');
-    if (overlay != null) {
-        overlay.style.display = "block";
-        overlay.style.right = "0px";
-        overlay.style.bottom = "0px";
-        overlay.addEventListener("click", function(event) {
-            event.preventDefault();
-            return false;
-        }, false);
-    }
-}
-
-function unblock_ui() {
-    const overlay = document.getElementById('ui_blocker');
-    if (overlay != null) {
-        overlay.style.display = "none";
     }
 }
 
