@@ -109,43 +109,43 @@ function setTestInformation($testName, $browser, $browserVersion, $platform, $pr
     const screenResolutionTimeZone = $("#screen-resolution-time-zone");
     screenResolutionTimeZone.html("");
     if ($screenDimension.length > 0) {
-        screenResolutionTimeZone.append('<img alt="Screen Resolution" src="img/screen-resolution.png" class="mr-1" ' +
-            'width="48px" height="48px">');
-        screenResolutionTimeZone.append('<small class="mr-1">' + $screenDimension + '</small>');
+        screenResolutionTimeZone.append("<img alt=\"Screen Resolution\" src=\"img/screen-resolution.png\" class=\"mr-1\" " +
+            "width=\"48px\" height=\"48px\">");
+        screenResolutionTimeZone.append("<small class=\"mr-1\">" + $screenDimension + "</small>");
     }
     if ($timeZone.length > 0) {
-        screenResolutionTimeZone.append('<img alt="Time Zone" src="img/timezone.png" class="mr-1" ' +
-            'width="48px" height="48px">');
-        screenResolutionTimeZone.append('<small class="mr-1">' + $timeZone + '</small>');
+        screenResolutionTimeZone.append("<img alt=\"Time Zone\" src=\"img/timezone.png\" class=\"mr-1\" " +
+            "width=\"48px\" height=\"48px\">");
+        screenResolutionTimeZone.append("<small class=\"mr-1\">" + $timeZone + "</small>");
     }
-    screenResolutionTimeZone.append('<span class="float-right"><img alt="Retention Date" src="img/retention-date.png" ' +
-        'class="mr-1" width="48px" height="48px"><small>' + $retentionDate + '</small></span>');
+    screenResolutionTimeZone.append("<span class=\"float-right\"><img alt=\"Retention Date\" src=\"img/retention-date.png\" " +
+        "class=\"mr-1\" width=\"48px\" height=\"48px\"><small>" + $retentionDate + "</small></span>");
 
     if ($build.length > 0) {
-        const buildElement = $('#build');
-        buildElement.html('');
+        const buildElement = $("#build");
+        buildElement.html("");
         buildElement.removeClass("p-0");
         buildElement.addClass("p-1");
         buildElement.parent().removeClass("invisible");
-        buildElement.append('<img alt="Build" src="img/build.png" class="mr-1" width="48px" height="48px">');
-        buildElement.append('<small class="mr-1">' + $build + '</small>');
+        buildElement.append("<img alt=\"Build\" src=\"img/build.png\" class=\"mr-1\" width=\"48px\" height=\"48px\">");
+        buildElement.append("<small class=\"mr-1\">" + $build + "</small>");
     } else {
-        const buildElement = $('#build');
-        buildElement.html('');
+        const buildElement = $("#build");
+        buildElement.html("");
         buildElement.removeClass("p-1");
         buildElement.addClass("p-0");
         buildElement.parent().addClass("invisible");
     }
 
-    $('#main-container').removeClass("invisible");
+    $("#main-container").removeClass("invisible");
 }
 
 function loadLogs($seleniumLogFile, $browserDriverLogFile) {
-    $('#collapseOne').removeClass("show");
-    $('#collapseTwo').removeClass("show");
-    const seleniumLog = $('#seleniumLog');
+    $("#collapseOne").removeClass("show");
+    $("#collapseTwo").removeClass("show");
+    const seleniumLog = $("#seleniumLog");
     seleniumLog.html("Selenium Log not loaded yet...");
-    const browserDriverLog = $('#browserDriverLog');
+    const browserDriverLog = $("#browserDriverLog");
     browserDriverLog.html("Browser Driver Log not loaded yet...");
 
     if ($seleniumLogFile.length > 0) {
@@ -177,24 +177,24 @@ function unblockUi() {
 }
 
 function searchTestsList() {
-    const current_query = $("#search").val().toUpperCase();
-    if (current_query !== "") {
-        const tokens_crt_query = current_query.split(" ");
+    const currentQuery = $("#search").val().toUpperCase();
+    if (currentQuery !== "") {
+        const tokensCrtQuery = currentQuery.split(" ");
         $(".list-group-item").each(function(){
             $(this).hide();
-            const current_keyword = $(this).text().toUpperCase() + $(this).data("browser").toUpperCase() +
+            const currentKeyword = $(this).text().toUpperCase() + $(this).data("browser").toUpperCase() +
                 $(this).data("platform").toUpperCase() + $(this).data("test-build").toUpperCase() +
                 $(this).data("test-status").toUpperCase() + $(this).data("proxy-name").toUpperCase() +
                 $(this).data("time-zone").toUpperCase();
-            let all_tokens_found = true;
-            for (let i = 0; i < tokens_crt_query.length; i++) {
-                const crt_token = tokens_crt_query[i];
-                if (current_keyword.indexOf(crt_token) < 0) {
-                    all_tokens_found = false;
+            let allTokensFound = true;
+            for (let i = 0; i < tokensCrtQuery.length; i++) {
+                const crt_token = tokensCrtQuery[i];
+                if (currentKeyword.indexOf(crt_token) < 0) {
+                    allTokensFound = false;
                     break;
                 }
             }
-            if (all_tokens_found) {
+            if (allTokensFound) {
                 $(this).show();
             }
         });
@@ -244,7 +244,7 @@ $(document).ready(function() {
         loadLogs($seleniumLogFile, $browserDriverLogFile);
 
         // Select first tab
-        $("#testTabs").find('a:first').tab("show");
+        $("#testTabs").find("a:first").tab("show");
     });
 
     $("#search").on("keyup", function () {
@@ -273,7 +273,7 @@ $(document).ready(function() {
         $("#cleanupModal").modal("hide");
         blockUi();
 
-        const targetUrl = [location.protocol, "//", location.host, location.pathname].join('') + "cleanup?action=doCleanup";
+        const targetUrl = [location.protocol, "//", location.host, location.pathname].join("") + "cleanup?action=doCleanup";
 
         $.ajax({
             type: "POST",
@@ -288,10 +288,10 @@ $(document).ready(function() {
     });
 
     $("#resetModalConfirm").click(function () {
-        $('#resetModal').modal("hide");
+        $("#resetModal").modal("hide");
         blockUi();
 
-        const targetUrl = [location.protocol, "//", location.host, location.pathname].join('') + "cleanup?action=doReset";
+        const targetUrl = [location.protocol, "//", location.host, location.pathname].join("") + "cleanup?action=doReset";
 
         $.ajax({
             type: "POST",
