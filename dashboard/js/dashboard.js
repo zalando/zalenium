@@ -188,8 +188,8 @@ function searchTestsList() {
                 $(this).data("time-zone").toUpperCase();
             let allTokensFound = true;
             for (let i = 0; i < tokensCrtQuery.length; i++) {
-                const crt_token = tokensCrtQuery[i];
-                if (currentKeyword.indexOf(crt_token) < 0) {
+                const crtToken = tokensCrtQuery[i];
+                if (currentKeyword.indexOf(crtToken) < 0) {
                     allTokensFound = false;
                     break;
                 }
