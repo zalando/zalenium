@@ -208,8 +208,8 @@ public class TestInformation {
                 .replace("{fileExtension}", fileExtension);
 
         this.videoFolderPath = commonProxyUtilities.currentLocalPath() + "/" + Dashboard.VIDEOS_FOLDER_NAME + buildName;
-        this.logsFolderPath = commonProxyUtilities.currentLocalPath() + "/" + Dashboard.VIDEOS_FOLDER_NAME + "/" +
-                Dashboard.LOGS_FOLDER_NAME + buildName + "/" + testNameNoExtension;
+        this.logsFolderPath = commonProxyUtilities.currentLocalPath() + "/" + Dashboard.VIDEOS_FOLDER_NAME +
+                buildName + "/" + Dashboard.LOGS_FOLDER_NAME + "/" + testNameNoExtension;
     }
 
     public String getBrowserAndPlatform() {
@@ -221,11 +221,11 @@ public class TestInformation {
 
     public JsonObject getMetadata() { return this.metadata;}
     public void setMetadata(JsonObject metadata) { this.metadata = metadata;}
-    
+
     public boolean equals(Object obj) {
         if (obj == null) return false;
         if (obj == this) return true;
-        
+
         if (!(obj instanceof TestInformation)) return false;
         TestInformation o = (TestInformation) obj;
         return o.getFileName().equals(this.getFileName());

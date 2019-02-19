@@ -13,9 +13,9 @@ function addTestItem(item) {
     }
     let buildDirectory = item.videoFolderPath.replace("/home/seluser/videos", "");
     buildDirectory = buildDirectory.trim().length > 0 ? buildDirectory.replace("/", "").concat("/") : "";
-    let fileName = buildDirectory.concat(item.fileName);
-    let seleniumLogFileName = "logs/".concat(buildDirectory).concat(item.seleniumLogFileName.replace("logs/", ""));
-    let browserDriverLogFileName = "logs/".concat(buildDirectory).concat(item.browserDriverLogFileName.replace("logs/", ""));
+    const fileName = buildDirectory.concat(item.fileName);
+    const seleniumLogFileName = buildDirectory.concat(item.seleniumLogFileName);
+    const browserDriverLogFileName = buildDirectory.concat(item.browserDriverLogFileName);
     const testItem =
         "<a href=\"#\" class=\"list-group-item list-group-item-action flex-column align-items-start p-2\"" +
         " data-video=\"" + fileName + "\"" +
