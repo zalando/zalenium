@@ -1,16 +1,5 @@
-function loadDashboardItems() {
-    let latestDateAdded = getLatestDateAddedToDashboard();
-    if (latestDateAdded === undefined) {
-        latestDateAdded = 0;
-    }
-    const newDashboardItems = [location.protocol, '//', location.host, location.pathname].join('') +
-        'information?lastDateAddedToDashboard=' + latestDateAdded;
-    $.getJSON(newDashboardItems, function(data) {
-        $.each(data, function (i, item) {
-            addTestItem(item);
-        });
-        searchTestsList();
-    });
+function getLatestDateAddedToDashboard() {
+    return $(".list-group-item").first().data('added-to-dashboard');
 }
 
 function addTestItem(item) {
@@ -28,60 +17,71 @@ function addTestItem(item) {
     let seleniumLogFileName = "logs/".concat(buildDirectory).concat(item.seleniumLogFileName.replace("logs/", ""));
     let browserDriverLogFileName = "logs/".concat(buildDirectory).concat(item.browserDriverLogFileName.replace("logs/", ""));
     const testItem =
-        '<a href="#" class="list-group-item list-group-item-action flex-column align-items-start p-2"' +
-        ' data-video="' + fileName + '"' +
-        ' data-test-name="' + item.testName + '"' +
-        ' data-test-selenium-session-id="' + item.seleniumSessionId + '"' +
-        ' data-test-status="' + item.testStatus + '"' +
-        ' data-browser="' + item.browser + '"' +
-        ' data-browser-version="' + item.browserVersion + '"' +
-        ' data-platform="' + platformLogo + '"' +
-        ' data-proxy-name="' + item.proxyName + '"' +
-        ' data-date-time="' + item.timestamp + '"' +
-        ' data-added-to-dashboard="' + item.addedToDashboardTime + '"' +
-        ' data-screen-dimension="' + item.screenDimension + '"' +
-        ' data-time-zone="' + item.timeZone + '"' +
-        ' data-test-build="' + item.build + '"' +
-        ' data-selenium-log="' + seleniumLogFileName + '"' +
-        ' data-browser-driver="' + browserDriverLogFileName + '"' +
-        ' data-retention-date="' + item.retentionDate + '">' +
-        '<div class="d-flex w-100 justify-content-between">' +
-        '<small class="font-weight-bold text-truncate">' + item.testName + '</small>' +
-        '</div>' +
-        '<div class="d-flex w-100 justify-content-between">' +
-        '<small>' + item.timestamp + '</small>' +
-        '<small>' +
-        '<img alt="' + item.proxyName + '" src="img/' + item.proxyName.toLowerCase() + '.png" width="24px" height="24px">' +
-        '</small>' +
-        '</div>' +
-        '<div class="d-flex w-100 justify-content-between">' +
-        '<span>' +
-        '<img alt="' + platformLogo + '" src="img/' + platformLogo + '.png" width="24px" height="24px">' +
-        '<img alt="' + item.browser + '" src="img/' + item.browser.toLowerCase() + '.png" width="24px" height="24px">' +
-        '<small class="pl-1">' + item.browserVersion + '</small>' +
-        '</span>' +
-        '<span>' +
-        '<img alt="' + item.testStatus + '" src="img/' + item.testStatus.toLowerCase() + '.png" width="24px" height="24px">' +
-        '</span>' +
-        '</div>' +
-        '</a>';
+        "<a href=\"#\" class=\"list-group-item list-group-item-action flex-column align-items-start p-2\"" +
+        " data-video=\"" + fileName + "\"" +
+        " data-test-name=\"" + item.testName + "\"" +
+        " data-test-selenium-session-id=\"" + item.seleniumSessionId + "\"" +
+        " data-test-status=\"" + item.testStatus + "\"" +
+        " data-browser=\"" + item.browser + "\"" +
+        " data-browser-version=\"" + item.browserVersion + "\"" +
+        " data-platform=\"" + platformLogo + "\"" +
+        " data-proxy-name=\"" + item.proxyName + "\"" +
+        " data-date-time=\"" + item.timestamp + "\"" +
+        " data-added-to-dashboard=\"" + item.addedToDashboardTime + "\"" +
+        " data-screen-dimension=\"" + item.screenDimension + "\"" +
+        " data-time-zone=\"" + item.timeZone + "\"" +
+        " data-test-build=\"" + item.build + "\"" +
+        " data-selenium-log=\"" + seleniumLogFileName + "\"" +
+        " data-browser-driver=\"" + browserDriverLogFileName + "\"" +
+        " data-retention-date=\"" + item.retentionDate + "\">" +
+        "<div class=\"d-flex w-100 justify-content-between\">" +
+        "<small class=\"font-weight-bold text-truncate\">" + item.testName + "</small>" +
+        "</div>" +
+        "<div class=\"d-flex w-100 justify-content-between\">" +
+        "<small>" + item.timestamp + "</small>" +
+        "<small>" +
+        "<img alt=\"" + item.proxyName + "\" src=\"img/" + item.proxyName.toLowerCase() + ".png\" width=\"24px\" height=\"24px\">" +
+        "</small>" +
+        "</div>" +
+        "<div class=\"d-flex w-100 justify-content-between\">" +
+        "<span>" +
+        "<img alt=\"" + platformLogo + "\" src=\"img/" + platformLogo + ".png\" width=\"24px\" height=\"24px\">" +
+        "<img alt=\"" + item.browser + "\" src=\"img/" + item.browser.toLowerCase() + ".png\" width=\"24px\" height=\"24px\">" +
+        "<small class=\"pl-1\">" + item.browserVersion + "</small>" +
+        "</span>" +
+        "<span>" +
+        "<img alt=\"" + item.testStatus + "\" src=\"img/" + item.testStatus.toLowerCase() + ".png\" width=\"24px\" height=\"24px\">" +
+        "</span>" +
+        "</div>" +
+        "</a>";
     $('#tests').prepend(testItem);
     const testCount = $(".list-group-item").length;
     const testCountElement = $('#testCount');
     testCountElement.removeClass("btn-dark");
     testCountElement.addClass("btn-light");
-    testCountElement.html('Tests <span class="badge badge-primary">' + testCount + '</span>');
+    testCountElement.html("Tests <span class=\"badge badge-primary\">" + testCount + "</span>");
 }
 
-function getLatestDateAddedToDashboard() {
-    return $(".list-group-item").first().data('added-to-dashboard');
+function loadDashboardItems() {
+    let latestDateAdded = getLatestDateAddedToDashboard();
+    if (latestDateAdded === undefined) {
+        latestDateAdded = 0;
+    }
+    const newDashboardItems = [location.protocol, '//', location.host, location.pathname].join('') +
+        'information?lastDateAddedToDashboard=' + latestDateAdded;
+    $.getJSON(newDashboardItems, function(data) {
+        $.each(data, function (i, item) {
+            addTestItem(item);
+        });
+        searchTestsList();
+    });
 }
 
 function playVideo($video) {
     const video = $('#video');
     const source = $('#video-source');
-    source.attr('src', $video);
-    source.attr('type', 'video/mp4');
+    source.attr("src", $video);
+    source.attr("type", "video/mp4");
     video.get(0).pause();
     video.get(0).load();
     video.get(0).play();
@@ -89,63 +89,63 @@ function playVideo($video) {
 
 function setTestInformation($testName, $browser, $browserVersion, $platform, $proxyName, $dateTime,
                             $screenDimension, $timeZone, $build, $testStatus, $retentionDate) {
-    const testName = $('#test-name');
-    testName.html('');
-    testName.append('<img alt="' + $testStatus + '" src="img/' + $testStatus.toLowerCase() + '.png" class="mr-1" ' +
-        'width="48px" height="48px">');
+    const testName = $("#test-name");
+    testName.html("");
+    testName.append("<img alt=\"" + $testStatus + "\" src=\"img/" + $testStatus.toLowerCase() + ".png\" class=\"mr-1\" " +
+        "width=\"48px\" height=\"48px\">");
     testName.append($testName);
-    testName.append('<small class="float-right">' + $dateTime + '</small>');
+    testName.append("<small class=\"float-right\">" + $dateTime + "</small>");
 
-    const browserPlatformProxy = $('#browser-platform-proxy');
-    browserPlatformProxy.html('');
-    browserPlatformProxy.append('<img alt="' + $platform + '" src="img/' + $platform.toLowerCase() + '.png" class="mr-1" ' +
-        'width="48px" height="48px">');
-    browserPlatformProxy.append('<img alt="' + $browser + '" src="img/' + $browser.toLowerCase() + '.png" class="mr-1" ' +
-        'width="48px" height="48px">');
+    const browserPlatformProxy = $("#browser-platform-proxy");
+    browserPlatformProxy.html("");
+    browserPlatformProxy.append("<img alt=\"" + $platform + "\" src=\"img/" + $platform.toLowerCase() + ".png\" class=\"mr-1\" " +
+        "width=\"48px\" height=\"48px\">");
+    browserPlatformProxy.append("<img alt=\"" + $browser + "\" src=\"img/" + $browser.toLowerCase() + ".png\" class=\"mr-1\" " +
+        "width=\"48px\" height=\"48px\">");
     browserPlatformProxy.append($browserVersion);
-    browserPlatformProxy.append('<img alt="' + $proxyName + '" src="img/' + $proxyName.toLowerCase() + '.png" class="float-right" ' +
-        'width="48px" height="48px">');
+    browserPlatformProxy.append("<img alt=\"" + $proxyName + "\" src=\"img/" + $proxyName.toLowerCase() + ".png\" class=\"float-right\" " +
+        "width=\"48px\" height=\"48px\">");
 
-    const screenResolutionTimeZone = $('#screen-resolution-time-zone');
-    screenResolutionTimeZone.html('');
+    const screenResolutionTimeZone = $("#screen-resolution-time-zone");
+    screenResolutionTimeZone.html("");
     if ($screenDimension.length > 0) {
-        screenResolutionTimeZone.append('<img alt="Screen Resolution" src="img/screen-resolution.png" class="mr-1" ' +
-            'width="48px" height="48px">');
-        screenResolutionTimeZone.append('<small class="mr-1">' + $screenDimension + '</small>');
+        screenResolutionTimeZone.append("<img alt=\"Screen Resolution\" src=\"img/screen-resolution.png\" class=\"mr-1\" " +
+            "width=\"48px\" height=\"48px\">");
+        screenResolutionTimeZone.append("<small class=\"mr-1\">" + $screenDimension + "</small>");
     }
     if ($timeZone.length > 0) {
-        screenResolutionTimeZone.append('<img alt="Time Zone" src="img/timezone.png" class="mr-1" ' +
-            'width="48px" height="48px">');
-        screenResolutionTimeZone.append('<small class="mr-1">' + $timeZone + '</small>');
+        screenResolutionTimeZone.append("<img alt=\"Time Zone\" src=\"img/timezone.png\" class=\"mr-1\" " +
+            "width=\"48px\" height=\"48px\">");
+        screenResolutionTimeZone.append("<small class=\"mr-1\">" + $timeZone + "</small>");
     }
-    screenResolutionTimeZone.append('<span class="float-right"><img alt="Retention Date" src="img/retention-date.png" ' +
-        'class="mr-1" width="48px" height="48px"><small>' + $retentionDate + '</small></span>');
+    screenResolutionTimeZone.append("<span class=\"float-right\"><img alt=\"Retention Date\" src=\"img/retention-date.png\" " +
+        "class=\"mr-1\" width=\"48px\" height=\"48px\"><small>" + $retentionDate + "</small></span>");
 
     if ($build.length > 0) {
-        const buildElement = $('#build');
-        buildElement.html('');
+        const buildElement = $("#build");
+        buildElement.html("");
         buildElement.removeClass("p-0");
         buildElement.addClass("p-1");
         buildElement.parent().removeClass("invisible");
-        buildElement.append('<img alt="Build" src="img/build.png" class="mr-1" width="48px" height="48px">');
-        buildElement.append('<small class="mr-1">' + $build + '</small>');
+        buildElement.append("<img alt=\"Build\" src=\"img/build.png\" class=\"mr-1\" width=\"48px\" height=\"48px\">");
+        buildElement.append("<small class=\"mr-1\">" + $build + "</small>");
     } else {
-        const buildElement = $('#build');
-        buildElement.html('');
+        const buildElement = $("#build");
+        buildElement.html("");
         buildElement.removeClass("p-1");
         buildElement.addClass("p-0");
         buildElement.parent().addClass("invisible");
     }
 
-    $('#main-container').removeClass("invisible");
+    $("#main-container").removeClass("invisible");
 }
 
 function loadLogs($seleniumLogFile, $browserDriverLogFile) {
-    $('#collapseOne').removeClass("show");
-    $('#collapseTwo').removeClass("show");
-    const seleniumLog = $('#seleniumLog');
+    $("#collapseOne").removeClass("show");
+    $("#collapseTwo").removeClass("show");
+    const seleniumLog = $("#seleniumLog");
     seleniumLog.html("Selenium Log not loaded yet...");
-    const browserDriverLog = $('#browserDriverLog');
+    const browserDriverLog = $("#browserDriverLog");
     browserDriverLog.html("Browser Driver Log not loaded yet...");
 
     if ($seleniumLogFile.length > 0) {
@@ -156,35 +156,8 @@ function loadLogs($seleniumLogFile, $browserDriverLogFile) {
     }
 }
 
-function searchTestsList() {
-    const current_query = $("#search").val().toUpperCase();
-    if (current_query !== "") {
-        const tokens_crt_query = current_query.split(" ");
-        $(".list-group-item").each(function(){
-            $(this).hide();
-            const current_keyword = $(this).text().toUpperCase() + $(this).data("browser").toUpperCase() +
-                $(this).data("platform").toUpperCase() + $(this).data("test-build").toUpperCase() +
-                $(this).data("test-status").toUpperCase() + $(this).data("proxy-name").toUpperCase() +
-                $(this).data("time-zone").toUpperCase();
-            let all_tokens_found = true;
-            for (let i = 0; i < tokens_crt_query.length; i++) {
-                const crt_token = tokens_crt_query[i];
-                if (current_keyword.indexOf(crt_token) < 0) {
-                    all_tokens_found = false;
-                    break;
-                }
-            }
-            if (all_tokens_found) {
-                $(this).show();
-            }
-        });
-    } else {
-        $(".list-group-item").show();
-    }
-}
-
-function block_ui() {
-    const overlay = document.getElementById('ui_blocker');
+function blockUi() {
+    const overlay = document.getElementById("ui_blocker");
     if (overlay != null) {
         overlay.style.display = "block";
         overlay.style.right = "0px";
@@ -196,10 +169,37 @@ function block_ui() {
     }
 }
 
-function unblock_ui() {
-    const overlay = document.getElementById('ui_blocker');
+function unblockUi() {
+    const overlay = document.getElementById("ui_blocker");
     if (overlay != null) {
         overlay.style.display = "none";
+    }
+}
+
+function searchTestsList() {
+    const currentQuery = $("#search").val().toUpperCase();
+    if (currentQuery !== "") {
+        const tokensCrtQuery = currentQuery.split(" ");
+        $(".list-group-item").each(function(){
+            $(this).hide();
+            const currentKeyword = $(this).text().toUpperCase() + $(this).data("browser").toUpperCase() +
+                $(this).data("platform").toUpperCase() + $(this).data("test-build").toUpperCase() +
+                $(this).data("test-status").toUpperCase() + $(this).data("proxy-name").toUpperCase() +
+                $(this).data("time-zone").toUpperCase();
+            let allTokensFound = true;
+            for (let i = 0; i < tokensCrtQuery.length; i++) {
+                const crtToken = tokensCrtQuery[i];
+                if (currentKeyword.indexOf(crtToken) < 0) {
+                    allTokensFound = false;
+                    break;
+                }
+            }
+            if (allTokensFound) {
+                $(this).show();
+            }
+        });
+    } else {
+        $(".list-group-item").show();
     }
 }
 
@@ -244,7 +244,7 @@ $(document).ready(function() {
         loadLogs($seleniumLogFile, $browserDriverLogFile);
 
         // Select first tab
-        $("#testTabs").find('a:first').tab("show");
+        $("#testTabs").find("a:first").tab("show");
     });
 
     $("#search").on("keyup", function () {
@@ -271,16 +271,16 @@ $(document).ready(function() {
 
     $("#cleanupModalConfirm").click(function () {
         $("#cleanupModal").modal("hide");
-        block_ui();
+        blockUi();
 
-        const targetUrl = [location.protocol, "//", location.host, location.pathname].join('') + "cleanup?action=doCleanup";
+        const targetUrl = [location.protocol, "//", location.host, location.pathname].join("") + "cleanup?action=doCleanup";
 
         $.ajax({
             type: "POST",
             url: targetUrl,
             statusCode: {
                 200: function(response){
-                    unblock_ui();
+                    unblockUi();
                     window.location.reload();
                 }
             }
@@ -288,17 +288,17 @@ $(document).ready(function() {
     });
 
     $("#resetModalConfirm").click(function () {
-        $('#resetModal').modal("hide");
-        block_ui();
+        $("#resetModal").modal("hide");
+        blockUi();
 
-        const targetUrl = [location.protocol, "//", location.host, location.pathname].join('') + "cleanup?action=doReset";
+        const targetUrl = [location.protocol, "//", location.host, location.pathname].join("") + "cleanup?action=doReset";
 
         $.ajax({
             type: "POST",
             url: targetUrl,
             statusCode: {
                 200: function(response){
-                    unblock_ui();
+                    unblockUi();
                     window.location.reload();
                 }
             }
