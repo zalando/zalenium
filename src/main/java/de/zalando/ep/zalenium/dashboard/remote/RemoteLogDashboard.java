@@ -28,14 +28,15 @@ public class RemoteLogDashboard extends RemoteDashboard {
 
         List<FormField> fields = new ArrayList<>();
         FormFile uploadFile = new FormFile();
-        // uploadFile.keyName = "driverlog";
         uploadFile.keyName = this.logType;
         uploadFile.mimeType = ContentType.create("text/plain");
-        if (uploadFile.keyName.equalsIgnoreCase("driverlog")) {
-            uploadFile.stream = new FileInputStream(Paths.get( testInformation.getVideoFolderPath(), testInformation.getBrowserDriverLogFileName()).toString());
+        if ("driverlog".equalsIgnoreCase(uploadFile.keyName)) {
+            uploadFile.stream = new FileInputStream(Paths.get(testInformation.getVideoFolderPath(),
+                    testInformation.getBrowserDriverLogFileName()).toString());
         } else {
             // We assume that it is "seleniumlog"
-            uploadFile.stream = new FileInputStream(Paths.get( testInformation.getVideoFolderPath(), testInformation.getSeleniumLogFileName()).toString());
+            uploadFile.stream = new FileInputStream(Paths.get(testInformation.getVideoFolderPath(),
+                    testInformation.getSeleniumLogFileName()).toString());
         }
         uploadFile.fileName = testInformation.getBrowserDriverLogFileName();
         fields.add(uploadFile);
