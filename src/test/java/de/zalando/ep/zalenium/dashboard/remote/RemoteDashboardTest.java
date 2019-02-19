@@ -23,7 +23,7 @@ public class RemoteDashboardTest {
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
-    private List<RemoteDashboard> dashboardsToTest = new ArrayList<RemoteDashboard>();
+    private List<RemoteDashboard> dashboardsToTest = new ArrayList<>();
 
     private TestInformation.TestInformationBuilder builder = new TestInformation.TestInformationBuilder()
             .withSeleniumSessionId("seleniumSessionId")
@@ -39,8 +39,8 @@ public class RemoteDashboardTest {
 
     public RemoteDashboardTest() {
         dashboardsToTest.add(new RemoteVideoDashboard());
-        dashboardsToTest.add(new RemoteSeleniumLogDashboard());
-        dashboardsToTest.add(new RemoteDriverLogDashboard());
+        dashboardsToTest.add(new RemoteLogDashboard("driverlog"));
+        dashboardsToTest.add(new RemoteLogDashboard("seleniumlog"));
     }
 
     @Test

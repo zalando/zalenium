@@ -1,8 +1,7 @@
 package de.zalando.ep.zalenium.dashboard;
 
 import de.zalando.ep.zalenium.dashboard.remote.RemoteDashboard;
-import de.zalando.ep.zalenium.dashboard.remote.RemoteDriverLogDashboard;
-import de.zalando.ep.zalenium.dashboard.remote.RemoteSeleniumLogDashboard;
+import de.zalando.ep.zalenium.dashboard.remote.RemoteLogDashboard;
 import de.zalando.ep.zalenium.dashboard.remote.RemoteVideoDashboard;
 
 import java.util.ArrayList;
@@ -31,8 +30,8 @@ public class DashboardCollection {
         if(remoteDashboardsEnabled) {
             remoteDashboards = new ArrayList<>();
             remoteDashboards.add(new RemoteVideoDashboard());
-            remoteDashboards.add(new RemoteDriverLogDashboard());
-            remoteDashboards.add(new RemoteSeleniumLogDashboard());
+            remoteDashboards.add(new RemoteLogDashboard("driverlog"));
+            remoteDashboards.add(new RemoteLogDashboard("seleniumlog"));
              String host = getenv("REMOTE_DASHBOARD_HOST");
             for (RemoteDashboard dashboard : remoteDashboards) {
                 dashboard.setUrl(host);
@@ -84,7 +83,7 @@ public class DashboardCollection {
             }
         }
     }
-    
+
     public static synchronized void cleanupDashboard() {
         String errMsg = "Error during cleanup of dashboard: ";
         if (!remoteDashboardsEnabled) {

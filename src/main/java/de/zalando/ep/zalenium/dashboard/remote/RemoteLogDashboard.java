@@ -8,11 +8,19 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
-public class RemoteDriverLogDashboard extends RemoteDashboard {
+public class RemoteLogDashboard extends RemoteDashboard {
+
+    private String logType;
+
+    public RemoteLogDashboard(String logType) {
+        this.logType = logType;
+    }
 
     @Override
     public void updateDashboard(TestInformation testInformation) throws Exception {
-        if (null == testInformation) throw new IllegalArgumentException("testInformation");
+        if (null == testInformation) {
+            throw new IllegalArgumentException("testInformation");
+        }
 
         if(!isEnabled()) {
             return;
@@ -20,9 +28,15 @@ public class RemoteDriverLogDashboard extends RemoteDashboard {
 
         List<FormField> fields = new ArrayList<>();
         FormFile uploadFile = new FormFile();
-        uploadFile.keyName = "driverlog";
+        // uploadFile.keyName = "driverlog";
+        uploadFile.keyName = this.logType;
         uploadFile.mimeType = ContentType.create("text/plain");
-        uploadFile.stream = new FileInputStream(Paths.get( testInformation.getVideoFolderPath(), testInformation.getBrowserDriverLogFileName()).toString());
+        if (uploadFile.keyName.equalsIgnoreCase("driverlog")) {
+            uploadFile.stream = new FileInputStream(Paths.get( testInformation.getVideoFolderPath(), testInformation.getBrowserDriverLogFileName()).toString());
+        } else {
+            // We assume that it is "seleniumlog"
+            uploadFile.stream = new FileInputStream(Paths.get( testInformation.getVideoFolderPath(), testInformation.getSeleniumLogFileName()).toString());
+        }
         uploadFile.fileName = testInformation.getBrowserDriverLogFileName();
         fields.add(uploadFile);
 
