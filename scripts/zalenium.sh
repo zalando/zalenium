@@ -441,7 +441,7 @@ StartUp()
 
     echo $! > ${PID_PATH_SELENIUM}
     
-    if ! timeout --foreground "1m" bash -c WaitSeleniumHub; then
+    if ! timeout --foreground "90m" bash -c WaitSeleniumHub; then
         echo "GridLauncher failed to start after 1 minute, failing..."
         curl "http://localhost:4444${CONTEXT_PATH}/wd/hub/status"
         exit 11
