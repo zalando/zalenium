@@ -27,7 +27,7 @@ $ helm install --name my-release local/zalenium
 
 A sample installation steps would look like this:
 ```
-helm repo add zalenim-github https://raw.githubusercontent.com/axozoid/zalenium/master/charts/zalenium
+helm repo add zalenim-github https://raw.githubusercontent.com/zalando/zalenium/master/charts/zalenium
 helm install --name my-release --namespace my-zalenium zalenim-github/zalenium
 ```
 Where:
