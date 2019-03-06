@@ -47,12 +47,12 @@ To uninstall/delete the `my-release` deployment:
 $ helm delete my-release
 ```
 
-To remove the release name from the Helm store, use the following command:
+To remove the release name from the Helm store (so you may use it again), issue the following command:
 ```
 $ helm delete my-release --purge
 ```
 
-The command removes all the Kubernetes components associated with the chart and deletes the release.
+> **Note**: The command removes all the Kubernetes components associated with the chart and deletes the release.
 
 ## Configuration
 
