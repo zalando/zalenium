@@ -80,6 +80,7 @@ public class DockeredSeleniumStarter {
     private static String dockerSeleniumImageName;
     private static int browserTimeout;
     private static Map<String, String> zaleniumProxyVars = new HashMap<>();
+    private static String hubIpAddress = null;
     
     static {
     	readConfigurationFromEnvVariables();
@@ -257,13 +258,20 @@ public class DockeredSeleniumStarter {
         }
     }
     
+    public static String getHubIpAddress() {
+        if (hubIpAddress == null) {
+            NetworkUtils networkUtils = new NetworkUtils();
+            hubIpAddress = networkUtils.getIp4NonLoopbackAddressOfThisMachine().getHostAddress();
+        }
+        return hubIpAddress;
+    }
+
     public ContainerCreationStatus startDockerSeleniumContainer(final TimeZone timeZone, final Dimension screenSize) {
 
         TimeZone effectiveTimeZone = ObjectUtils.defaultIfNull(timeZone, DEFAULT_TZ);
         Dimension effectiveScreenSize = ObjectUtils.defaultIfNull(screenSize, DEFAULT_SCREEN_SIZE);
 
-        NetworkUtils networkUtils = new NetworkUtils();
-        String hostIpAddress = networkUtils.getIp4NonLoopbackAddressOfThisMachine().getHostAddress();
+        String hostIpAddress = getHubIpAddress();
         String nodePolling = String.valueOf(RandomUtils.nextInt(90, 120) * 1000);
         String nodeRegisterCycle = String.valueOf(RandomUtils.nextInt(60, 90) * 1000);
         String seleniumNodeParams = getSeleniumNodeParameters();
