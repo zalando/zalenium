@@ -5,6 +5,7 @@ SELENIUM_IMAGE_NAME=${SELENIUM_IMAGE_NAME:-"elgalu/selenium"}
 MAX_TEST_SESSIONS=${MAX_TEST_SESSIONS:-1}
 DESIRED_CONTAINERS=${DESIRED_CONTAINERS:-2}
 MAX_DOCKER_SELENIUM_CONTAINERS=${MAX_DOCKER_SELENIUM_CONTAINERS:-10}
+SWARM_OVERLAY_NETWORK=${SWARM_OVERLAY_NETWORK:-""}
 ZALENIUM_ARTIFACT="$(pwd)/${project.build.finalName}.jar"
 SAUCE_LABS_ENABLED=${SAUCE_LABS_ENABLED:-false}
 BROWSER_STACK_ENABLED=${BROWSER_STACK_ENABLED:-false}
@@ -346,6 +347,7 @@ StartUp()
 
     export ZALENIUM_DESIRED_CONTAINERS=${DESIRED_CONTAINERS}
     export ZALENIUM_MAX_DOCKER_SELENIUM_CONTAINERS=${MAX_DOCKER_SELENIUM_CONTAINERS}
+    export ZALENIUM_SWARM_OVERLAY_NETWORK=${SWARM_OVERLAY_NETWORK}
     export ZALENIUM_VIDEO_RECORDING_ENABLED=${VIDEO_RECORDING_ENABLED}
     export ZALENIUM_TZ=${TZ}
     export ZALENIUM_SCREEN_WIDTH=${SCREEN_WIDTH}
@@ -570,6 +572,7 @@ StartUp()
         # Gathering the options used to start Zalenium, in order to learn about the used options
         ZALENIUM_START_COMMAND="zalenium.sh --desiredContainers $DESIRED_CONTAINERS
             --maxDockerSeleniumContainers $MAX_DOCKER_SELENIUM_CONTAINERS --maxTestSessions $MAX_TEST_SESSIONS
+            --swarmOverlayNetwork $SWARM_OVERLAY_NETWORK
             --sauceLabsEnabled $SAUCE_LABS_ENABLED --browserStackEnabled $BROWSER_STACK_ENABLED
             --testingBotEnabled $TESTINGBOT_ENABLED --videoRecordingEnabled $VIDEO_RECORDING_ENABLED
             --screenWidth $SCREEN_WIDTH --screenHeight $SCREEN_HEIGHT --timeZone $TZ"
@@ -725,6 +728,7 @@ function usage()
     echo -e "\t start <options, see below>"
     echo -e "\t --desiredContainers -> Number of nodes/containers created on startup. Default is 2."
     echo -e "\t --maxDockerSeleniumContainers -> Max number of docker-selenium containers running at the same time. Default is 10."
+    echo -e "\t --swarmOverlayNetwork -> Netowrk used for the swarm."
     echo -e "\t --sauceLabsEnabled -> Determines if the Sauce Labs node is started. Defaults to 'false'."
     echo -e "\t --browserStackEnabled -> Determines if the Browser Stack node is started. Defaults to 'false'."
     echo -e "\t --testingBotEnabled -> Determines if the TestingBot node is started. Defaults to 'false'."
@@ -778,6 +782,9 @@ case ${SCRIPT_ACTION} in
                     ;;
                 --maxDockerSeleniumContainers)
                     MAX_DOCKER_SELENIUM_CONTAINERS=${VALUE}
+                    ;;
+                --swarmOverlayNetwork)
+                    SWARM_OVERLAY_NETWORK=${VALUE}
                     ;;
                 --sauceLabsEnabled)
                     SAUCE_LABS_ENABLED=${VALUE}
