@@ -9,7 +9,9 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.TimeZone;
 
+import com.spotify.docker.client.messages.ContainerInfo;
 import de.zalando.ep.zalenium.container.DockerContainerClient;
+import de.zalando.ep.zalenium.container.swarm.SwarmUtilities;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.RandomUtils;
 import org.openqa.grid.common.RegistrationRequest;
@@ -262,7 +264,13 @@ public class DockeredSeleniumStarter {
         if (hubIpAddress == null) {
             NetworkUtils networkUtils = new NetworkUtils();
             hubIpAddress = networkUtils.getIp4NonLoopbackAddressOfThisMachine().getHostAddress();
+
+            if (SwarmUtilities.isSwarmActive()) {
+                ContainerInfo containerInfo = SwarmUtilities.getContainerByIp(hubIpAddress);
+                hubIpAddress = SwarmUtilities.getSwarmIp(containerInfo);
+            }
         }
+
         return hubIpAddress;
     }
 
@@ -296,7 +304,7 @@ public class DockeredSeleniumStarter {
         envVars.put("ZALENIUM", "true");
         envVars.put("SELENIUM_HUB_HOST", hostIpAddress);
         envVars.put("SELENIUM_HUB_PORT", "4445");
-        envVars.put("SELENIUM_NODE_HOST", "0.0.0.0");
+        envVars.put("SELENIUM_NODE_HOST", "__CONTAINER_IP__");
         envVars.put("GRID", "false");
         envVars.put("WAIT_TIMEOUT", "120s");
         envVars.put("PICK_ALL_RANDOM_PORTS", "false");
