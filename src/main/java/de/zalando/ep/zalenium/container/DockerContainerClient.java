@@ -19,9 +19,7 @@ import com.spotify.docker.client.AnsiProgressHandler;
 import com.spotify.docker.client.DefaultDockerClient;
 import com.spotify.docker.client.DockerClient;
 import com.spotify.docker.client.LogStream;
-import com.spotify.docker.client.messages.*;
-import de.zalando.ep.zalenium.container.swarm.SwarmUtilities;
-import de.zalando.ep.zalenium.util.ZaleniumConfiguration;
+import com.spotify.docker.client.messages.PortBinding;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.slf4j.Logger;
@@ -32,6 +30,16 @@ import com.google.common.collect.ImmutableMap;
 import com.spotify.docker.client.exceptions.ContainerNotFoundException;
 import com.spotify.docker.client.exceptions.DockerException;
 import com.spotify.docker.client.exceptions.DockerRequestException;
+import com.spotify.docker.client.messages.AttachedNetwork;
+import com.spotify.docker.client.messages.Container;
+import com.spotify.docker.client.messages.ContainerConfig;
+import com.spotify.docker.client.messages.ContainerCreation;
+import com.spotify.docker.client.messages.ContainerInfo;
+import com.spotify.docker.client.messages.ContainerMount;
+import com.spotify.docker.client.messages.ExecCreation;
+import com.spotify.docker.client.messages.HostConfig;
+import com.spotify.docker.client.messages.Image;
+import com.spotify.docker.client.messages.NetworkSettings;
 
 import de.zalando.ep.zalenium.proxy.DockeredSeleniumStarter;
 import de.zalando.ep.zalenium.util.Environment;
@@ -590,11 +598,6 @@ public class DockerContainerClient implements ContainerClient {
             String hubIpAddress = DockeredSeleniumStarter.getHubIpAddress();
             ContainerInfo containerInfo = dockerClient.inspectContainer(zaleniumContainerId);
             ImmutableMap<String, AttachedNetwork> networks = containerInfo.networkSettings().networks();
-
-            if(SwarmUtilities.isSwarmActive()) {
-                return ZaleniumConfiguration.getSwarmOverlayNetwork();
-            }
-
             for (Map.Entry<String, AttachedNetwork> networkEntry : networks.entrySet()) {
                 if (networkEntry.getValue().ipAddress().equalsIgnoreCase(hubIpAddress)) {
                     zaleniumNetwork = networkEntry.getKey();
