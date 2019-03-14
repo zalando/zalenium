@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import de.zalando.ep.zalenium.container.swarm.SwarmUtilities;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.openqa.grid.common.RegistrationRequest;
@@ -661,6 +662,11 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
 
     @VisibleForTesting
     void copyLogs(final String containerId) {
+        if (SwarmUtilities.isSwarmActive()) {
+            // Disabling logs in swarm mode
+            return;
+        }
+
         if (testInformation == null) {
             // No tests run, nothing to copy and nothing to update.
             return;
