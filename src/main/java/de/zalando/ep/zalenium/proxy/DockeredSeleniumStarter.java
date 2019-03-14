@@ -11,6 +11,7 @@ import java.util.TimeZone;
 
 import com.spotify.docker.client.messages.ContainerInfo;
 import de.zalando.ep.zalenium.container.DockerContainerClient;
+import de.zalando.ep.zalenium.container.swarm.SwarmContainerClient;
 import de.zalando.ep.zalenium.container.swarm.SwarmUtilities;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.RandomUtils;
@@ -286,7 +287,7 @@ public class DockeredSeleniumStarter {
         String latestImage = getLatestDownloadedImage(getDockerSeleniumImageName());
 
         int containerPort = LOWER_PORT_BOUNDARY;
-        if (containerClient instanceof DockerContainerClient) {
+        if (containerClient instanceof DockerContainerClient || containerClient instanceof SwarmContainerClient) {
             containerPort = findFreePortInRange();
         }
         Map<String, String> envVars = buildEnvVars(effectiveTimeZone, effectiveScreenSize, hostIpAddress, sendAnonymousUsageInfo,
