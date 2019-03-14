@@ -1,0 +1,3 @@
+This is to improve the documentation to running zalenium with AWS ECS CLuster using EC2 instances.
+
+There is no clear instructions to configure the task definition and due to this its not easy to setup
