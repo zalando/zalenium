@@ -195,9 +195,13 @@ public class SwarmContainerClient implements ContainerClient {
         try {
             List<Task> tasks = dockerClient.listTasks();
             for (Task task : tasks) {
-                if (task.status().containerStatus().containerId().equals(containerId)) {
+                ContainerStatus containerStatus = task.status().containerStatus();
+                if (containerStatus != null && containerStatus.containerId().equals(containerId)) {
                     String serviceId = task.serviceId();
-                    dockerClient.removeService(serviceId);
+                    List<Service> services = dockerClient.listServices();
+                    if (services.stream().anyMatch(service -> service.id().equals(serviceId))) {
+                        dockerClient.removeService(serviceId);
+                    }
                 }
             }
         } catch (DockerException | InterruptedException e) {
@@ -206,17 +210,18 @@ public class SwarmContainerClient implements ContainerClient {
         }
     }
 
-    // TODO: Work In Progress => Must be implemented correctly
     public void executeCommand(String containerId, String[] command, boolean waitForExecution) {
         String swarmNodeIp = null;
         try {
             List<Task> tasks = dockerClient.listTasks();
             for (Task task : tasks) {
-                if (task.status().containerStatus().containerId().equals(containerId)) {
+                ContainerStatus containerStatus = task.status().containerStatus();
+                if (containerStatus != null && containerStatus.containerId().equals(containerId)) {
                     List<Node> nodes = dockerClient.listNodes();
                     for (Node node :nodes) {
                         if (node.id().equals(task.nodeId())) {
                             swarmNodeIp = node.status().addr();
+                            execCommandOnRemote(swarmNodeIp, containerId, command);
                         }
                     }
                 }
@@ -225,25 +230,34 @@ public class SwarmContainerClient implements ContainerClient {
             logger.debug(nodeId + " Error while executing the command", e);
             ga.trackException(e);
         }
-
-        if (swarmNodeIp != null) {
-            execCommandOnRemote(swarmNodeIp, containerId, command);
-        }
     }
 
-    // TODO: Work In Progress => Must be implemented correctly
     private void execCommandOnRemote (String ip, String containerId, String[] command) {
         SSHClient ssh = new SSHClient();
+        Session session = null;
         try {
+            ssh.addHostKeyVerifier(new PromiscuousVerifier());
             ssh.connect(ip);
-            ssh.authPublickey("id_rsa");
-            Session session = ssh.startSession();
-            Session.Command cmd = session.exec("docker exec -ti " + containerId + " sh -c notify 'Zalenium', 'TEST COMPLETED', --icon=/home/seluser/images/completed.png");
-            System.out.println(cmd.toString());
+            // todo implement passing username as variable
+            ssh.authPublickey("tester", "/home/seluser/.ssh/id_rsa");
+            session = ssh.startSession();
+            String cmd = String.format("docker exec -d %s %s", containerId, command[2]);
+            logger.debug("------------- Executing Command -------------: " + cmd);
+            session.exec(cmd);
             session.close();
             ssh.disconnect();
         } catch (IOException e) {
             e.printStackTrace();
+        } finally {
+            try {
+                if (session != null) {
+                    session.close();
+                }
+
+                ssh.disconnect();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -338,8 +352,15 @@ public class SwarmContainerClient implements ContainerClient {
                 .condition("none")
                 .build();
 
+        final List<String> placementList = new ArrayList<>();
+
+        placementList.add("node.role==worker");
+
+        final Placement placement = Placement.create(placementList);
+
         final TaskSpec.Builder taskSpecBuilder = TaskSpec.builder()
                 .restartPolicy(restartPolicy)
+                .placement(placement)
                 .containerSpec(containerSpec);
 
         return taskSpecBuilder.build();
@@ -373,6 +394,7 @@ public class SwarmContainerClient implements ContainerClient {
     }
 
     private TaskStatus waitForTaskStatus(String serviceId) throws DockerException, InterruptedException {
+        logger.debug("--------------Waiting for Task to be ready--------------------------------");
         return waitForTaskStatus(serviceId, 0);
     }
 
@@ -401,9 +423,11 @@ public class SwarmContainerClient implements ContainerClient {
         for (Task task : tasks) {
             if (task.serviceId().equals(serviceId)) {
                 ContainerStatus containerStatus = task.status().containerStatus();
-                String containerId = containerStatus.containerId();
-                String containerName =  containerStatus.containerId();
-                return new ContainerCreationStatus(true, containerName, containerId, nodePort);
+                if (containerStatus != null) {
+                    String containerId = containerStatus.containerId();
+                    String containerName =  containerStatus.containerId();
+                    return new ContainerCreationStatus(true, containerName, containerId, nodePort);
+                }
             }
         }
 
@@ -639,10 +663,9 @@ public class SwarmContainerClient implements ContainerClient {
             List<Task> tasks = dockerClient.listTasks();
             for (Task task : tasks) {
                 TaskStatus taskStatus = task.status();
-                boolean isContainer = taskStatus.containerStatus().containerId().equals(containerId);
                 String state = taskStatus.state();
-                if (isContainer && termStates.contains(state)) {
-                    return true;
+                if (termStates.contains(state)) {
+                    return taskStatus.containerStatus().containerId().equals(containerId);
                 }
             }
             return false;
