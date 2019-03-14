@@ -6,6 +6,8 @@ import java.util.function.Supplier;
 import com.google.common.annotations.VisibleForTesting;
 
 import de.zalando.ep.zalenium.container.kubernetes.KubernetesContainerClient;
+import de.zalando.ep.zalenium.container.swarm.SwarmContainerClient;
+import de.zalando.ep.zalenium.container.swarm.SwarmUtilities;
 import de.zalando.ep.zalenium.util.Environment;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 
@@ -15,11 +17,15 @@ public class ContainerFactory {
 
     private static KubernetesContainerClient kubernetesContainerClient;
     private static Supplier<DockerContainerClient> dockerContainerClient = DockerContainerClient::new;
+    private static Supplier<SwarmContainerClient> swarmContainerClient = SwarmContainerClient::new;
     
     public static ContainerClient getContainerClient() {
 
         if (isKubernetes.get()) {
             return createKubernetesContainerClient();
+        }
+        else if (SwarmUtilities.isSwarmActive()) {
+            return createSwarmContainerClient();
         }
         else {
             return createDockerContainerClient();
@@ -48,6 +54,12 @@ public class ContainerFactory {
             }
         }
         return kubernetesContainerClient;
+    }
+
+    private static SwarmContainerClient createSwarmContainerClient() {
+        SwarmContainerClient dockerClient = ContainerFactory.swarmContainerClient.get();
+        dockerClient.initialiseContainerEnvironment();
+        return dockerClient;
     }
 
     @VisibleForTesting
