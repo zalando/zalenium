@@ -220,6 +220,7 @@ public class SwarmContainerClient implements ContainerClient {
                     binds.add("/var/run/docker.sock:/var/run/docker.sock");
 
                     HostConfig.Builder hostConfigBuilder = HostConfig.builder()
+                            .autoRemove(true)
                             .appendBinds(binds);
 
                     HostConfig hostConfig = hostConfigBuilder.build();
@@ -383,27 +384,38 @@ public class SwarmContainerClient implements ContainerClient {
     }
 
     private TaskStatus waitForTaskStatus(String serviceId) throws DockerException, InterruptedException {
-        logger.debug("--------------Waiting for Task to be ready--------------------------------");
         return waitForTaskStatus(serviceId, 0);
     }
 
     private TaskStatus waitForTaskStatus(String serviceId, int attempts) throws DockerException, InterruptedException {
-        int attemptsLimit = 50;
-        Thread.sleep(2000);
+        int attemptsLimit = 1000;
+        Thread.sleep(100);
         TaskStatus taskStatus = null;
-        List<Task> tasks = dockerClient.listTasks();
+        String serviceName = dockerClient.inspectService(serviceId).spec().name();
+        Task.Criteria criteria = Task.Criteria.builder().serviceName(serviceName).build();
+        List<Task> tasks = dockerClient.listTasks(criteria);
+        Task task = tasks.get(0);
 
-        for (Task task : tasks) {
-            String currentId = task.serviceId();
-            if (currentId.equals(serviceId) && task.status().state().equals("running")) {
-                taskStatus = task.status();
-            }
-        }
+        String taskId = task == null ? null : task.id();
+//        logger.debug(String.format("[VBN] ServiceID: %s, Tries: %s/%s, Task: %s",
+//                serviceId,
+//                attempts,
+//                attemptsLimit,
+//                taskId));
 
-        if (taskStatus == null && attempts < attemptsLimit) {
+
+        if (task == null && attempts < attemptsLimit) {
             return waitForTaskStatus(serviceId, attempts + 1);
         } else {
-            return taskStatus;
+            ContainerStatus containerStatus = task.status().containerStatus();
+            if (containerStatus == null) {
+                return waitForTaskStatus(serviceId, attempts + 1);
+//            } else {
+//                logger.debug(String.format("[VBN] Retrieved container id %s after %s ms.",
+//                        containerStatus.containerId(),
+//                        attempts * 100));
+            }
+            return task.status();
         }
     }
 
@@ -652,9 +664,10 @@ public class SwarmContainerClient implements ContainerClient {
             List<Task> tasks = dockerClient.listTasks();
             for (Task task : tasks) {
                 TaskStatus taskStatus = task.status();
-                String state = taskStatus.state();
-                if (termStates.contains(state)) {
-                    return taskStatus.containerStatus().containerId().equals(containerId);
+                ContainerStatus containerStatus = taskStatus.containerStatus();
+                if (containerStatus != null && containerStatus.containerId().equals(containerId)) {
+                    String state = taskStatus.state();
+                    return termStates.contains(state);
                 }
             }
             return false;
