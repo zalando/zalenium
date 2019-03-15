@@ -254,12 +254,6 @@
             <version>${awaitility.version}</version>
             <scope>test</scope>
         </dependency>
-        <!-- Needed to execute container commands on workers -->
-        <dependency>
-            <groupId>com.hierynomus</groupId>
-            <artifactId>sshj</artifactId>
-            <version>0.27.0</version>
-        </dependency>
     </dependencies>
 
     <build>
