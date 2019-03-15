@@ -16,9 +16,6 @@ import de.zalando.ep.zalenium.proxy.DockeredSeleniumStarter;
 import de.zalando.ep.zalenium.util.Environment;
 import de.zalando.ep.zalenium.util.GoogleAnalyticsApi;
 import de.zalando.ep.zalenium.util.ZaleniumConfiguration;
-import net.schmizz.sshj.SSHClient;
-import net.schmizz.sshj.connection.channel.direct.Session;
-import net.schmizz.sshj.transport.verification.PromiscuousVerifier;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.slf4j.Logger;
@@ -211,53 +208,45 @@ public class SwarmContainerClient implements ContainerClient {
     }
 
     public void executeCommand(String containerId, String[] command, boolean waitForExecution) {
-        String swarmNodeIp = null;
         try {
             List<Task> tasks = dockerClient.listTasks();
             for (Task task : tasks) {
                 ContainerStatus containerStatus = task.status().containerStatus();
                 if (containerStatus != null && containerStatus.containerId().equals(containerId)) {
-                    List<Node> nodes = dockerClient.listNodes();
-                    for (Node node :nodes) {
-                        if (node.id().equals(task.nodeId())) {
-                            swarmNodeIp = node.status().addr();
-                            execCommandOnRemote(swarmNodeIp, containerId, command);
-                        }
-                    }
+                    String taskId = task.id();
+                    String image = "datagridsys/skopos-plugin-swarm-exec:latest";
+
+                    List<String> binds = new ArrayList<>();
+                    binds.add("/var/run/docker.sock:/var/run/docker.sock");
+
+                    HostConfig.Builder hostConfigBuilder = HostConfig.builder()
+                            .appendBinds(binds);
+
+                    HostConfig hostConfig = hostConfigBuilder.build();
+
+                    command[0] = "task-exec";
+                    command[1] = taskId;
+
+                    logger.debug(String.format("Container ID: %s; Task ID: %s; Command: %s",
+                            containerId,
+                            taskId,
+                            Arrays.toString(command)));
+
+                    dockerClient.pull(image, new AnsiProgressHandler());
+
+                    ContainerConfig containerConfig = ContainerConfig.builder()
+                            .image(image)
+                            .hostConfig(hostConfig)
+                            .cmd(command)
+                            .build();
+
+                    ContainerCreation containerCreation = dockerClient.createContainer(containerConfig);
+
+                    dockerClient.startContainer(containerCreation.id());
                 }
             }
-        } catch (DockerException | InterruptedException | NullPointerException e) {
-            logger.debug(nodeId + " Error while executing the command", e);
-            ga.trackException(e);
-        }
-    }
-
-    private void execCommandOnRemote (String ip, String containerId, String[] command) {
-        SSHClient ssh = new SSHClient();
-        Session session = null;
-        try {
-            ssh.addHostKeyVerifier(new PromiscuousVerifier());
-            ssh.connect(ip);
-            // todo implement passing username as variable
-            ssh.authPublickey("tester", "/home/seluser/.ssh/id_rsa");
-            session = ssh.startSession();
-            String cmd = String.format("docker exec -d %s %s", containerId, command[2]);
-            logger.debug("------------- Executing Command -------------: " + cmd);
-            session.exec(cmd);
-            session.close();
-            ssh.disconnect();
-        } catch (IOException e) {
+        } catch (DockerException | InterruptedException e) {
             e.printStackTrace();
-        } finally {
-            try {
-                if (session != null) {
-                    session.close();
-                }
-
-                ssh.disconnect();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
         }
     }
 
