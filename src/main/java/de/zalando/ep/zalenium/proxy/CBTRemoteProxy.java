@@ -27,7 +27,7 @@ public class CBTRemoteProxy extends CloudTestingRemoteProxy {
     private static final Logger LOGGER = LoggerFactory.getLogger(CBTRemoteProxy.class.getName());
     private static final String CBT_PROXY_NAME = "CrossBrowserTesting";
 
-    public CrossBrowserTestingRemoteProxy(RegistrationRequest request, GridRegistry registry) { 
+    public CBTRemoteProxy(RegistrationRequest request, GridRegistry registry) { 
         super(updateCBTCapabilities(request, CBT_ACCOUNT_INFO), registry);
     }
 
