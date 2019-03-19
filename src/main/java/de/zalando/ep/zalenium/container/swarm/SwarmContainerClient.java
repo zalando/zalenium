@@ -169,12 +169,12 @@ public class SwarmContainerClient implements ContainerClient {
         if (containerList != null) {
             String containerByName = containerList.stream()
                     .filter(container -> containerNameSearch.equalsIgnoreCase(container.names().get(0)))
-                    .findFirst().map(Container::id).orElse(null);
+                    .findFirst().map(Container::id).orElse(containerName);
             return containerByName != null ? containerByName : containerList.stream()
                     .filter(container -> container.names().get(0).contains(containerName))
-                    .findFirst().map(Container::id).orElse(null);
+                    .findFirst().map(Container::id).orElse(containerName);
         } else {
-            return null;
+            return containerName;
         }
     }
 
@@ -197,7 +197,16 @@ public class SwarmContainerClient implements ContainerClient {
                     String serviceId = task.serviceId();
                     List<Service> services = dockerClient.listServices();
                     if (services.stream().anyMatch(service -> service.id().equals(serviceId))) {
+                        // TODO: This should STOP the container and not remove the service.
+                        //       After this command there is nothing left from the container
+                        //       but it still is registered inside the zalenium logik
                         dockerClient.removeService(serviceId);
+
+
+                        // TODO: Replicas reduzieren?!?
+                        // Service service = dockerClient.inspectService(serviceId);
+                        // ServiceSpec serviceSpec = service.spec();
+                        // dockerClient.updateService(serviceId, 1L, );
                     }
                 }
             }
@@ -388,7 +397,7 @@ public class SwarmContainerClient implements ContainerClient {
     }
 
     private TaskStatus waitForTaskStatus(String serviceId, int attempts) throws DockerException, InterruptedException {
-        int attemptsLimit = 1000;
+        int attemptsLimit = 100;
         Thread.sleep(100);
         TaskStatus taskStatus = null;
         String serviceName = dockerClient.inspectService(serviceId).spec().name();
@@ -397,11 +406,6 @@ public class SwarmContainerClient implements ContainerClient {
         Task task = tasks.get(0);
 
         String taskId = task == null ? null : task.id();
-//        logger.debug(String.format("[VBN] ServiceID: %s, Tries: %s/%s, Task: %s",
-//                serviceId,
-//                attempts,
-//                attemptsLimit,
-//                taskId));
 
 
         if (task == null && attempts < attemptsLimit) {
@@ -410,10 +414,6 @@ public class SwarmContainerClient implements ContainerClient {
             ContainerStatus containerStatus = task.status().containerStatus();
             if (containerStatus == null) {
                 return waitForTaskStatus(serviceId, attempts + 1);
-//            } else {
-//                logger.debug(String.format("[VBN] Retrieved container id %s after %s ms.",
-//                        containerStatus.containerId(),
-//                        attempts * 100));
             }
             return task.status();
         }
@@ -533,41 +533,6 @@ public class SwarmContainerClient implements ContainerClient {
         }
     }
 
-    private List<String> generateMountedFolderBinds() {
-        List<String> result = new ArrayList<>();
-
-        this.mntFolders.stream().filter(mount -> mount.destination().startsWith(NODE_MOUNT_POINT)).forEach(
-                containerMount -> {
-                    String destination = containerMount.destination().substring(NODE_MOUNT_POINT.length());
-
-                    if (Arrays.stream(PROTECTED_NODE_MOUNT_POINTS).anyMatch(item -> item.equalsIgnoreCase(destination))) {
-                        throw new IllegalArgumentException("The following points may not be mounted via node mounting: "
-                                + String.join(",", PROTECTED_NODE_MOUNT_POINTS));
-                    }
-                    String mountedBind = String.format("%s:%s", containerMount.source(), destination);
-                    result.add(mountedBind);
-                }
-        );
-
-        return result;
-    }
-
-    private synchronized List<String> getContainerExtraHosts(String zaleniumContainerName) {
-        if (zaleniumExtraHosts != null) {
-            return zaleniumExtraHosts;
-        }
-        String containerId = getContainerId(zaleniumContainerName);
-        ContainerInfo containerInfo;
-        try {
-            containerInfo = dockerClient.inspectContainer(containerId);
-            zaleniumExtraHosts = containerInfo.hostConfig().extraHosts();
-        } catch (DockerException | InterruptedException | NullPointerException e) {
-            logger.debug(nodeId + " Error while getting Zalenium extra hosts.", e);
-            ga.trackException(e);
-        }
-        return Optional.ofNullable(zaleniumExtraHosts).orElse(new ArrayList<>());
-    }
-
     @Override
     public void initialiseContainerEnvironment() {
         if (!environmentInitialised.getAndSet(true)) {
@@ -621,12 +586,21 @@ public class SwarmContainerClient implements ContainerClient {
             return null;
         }
         try {
-            ContainerInfo containerInfo = dockerClient.inspectContainer(containerId);
-            if (containerInfo.networkSettings().ipAddress().trim().isEmpty()) {
-                ImmutableMap<String, AttachedNetwork> networks = containerInfo.networkSettings().networks();
-                return networks.entrySet().stream().findFirst().get().getValue().ipAddress();
+            List<Task> tasks = dockerClient.listTasks();
+            String swarmOverlayNetwork = ZaleniumConfiguration.getSwarmOverlayNetwork();
+            for (Task task : tasks) {
+                ContainerStatus containerStatus = task.status().containerStatus();
+                if (containerStatus != null) {
+                    if (containerStatus.containerId().equals(containerId)) {
+                        for (NetworkAttachment networkAttachment : task.networkAttachments()) {
+                            if (networkAttachment.network().spec().name().equals(swarmOverlayNetwork)) {
+                                String cidrSuffix = "/\\d+$";
+                                return networkAttachment.addresses().get(0).replaceAll(cidrSuffix, "");
+                            }
+                        }
+                    }
+                }
             }
-            return containerInfo.networkSettings().ipAddress();
         } catch (DockerException | InterruptedException e) {
             logger.debug(nodeId + " Error while getting the container IP.", e);
             ga.trackException(e);
@@ -637,9 +611,6 @@ public class SwarmContainerClient implements ContainerClient {
     @Override
     public boolean isReady(ContainerCreationStatus container) {
         String containerIp = this.getContainerIp(container.getContainerName());
-        if (ZALENIUM_RUNNING_LOCALLY) {
-            containerIp = "localhost";
-        }
         if (containerIp != null) {
             try {
                 URL statusUrl = new URL(String.format("http://%s:%s/wd/hub/status", containerIp, container.getNodePort()));
