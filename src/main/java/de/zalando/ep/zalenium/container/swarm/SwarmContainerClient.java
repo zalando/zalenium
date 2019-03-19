@@ -138,13 +138,14 @@ public class SwarmContainerClient implements ContainerClient {
     private String getContainerId(String zaleniumContainerName, URL remoteUrl) {
         try {
             List<Task> tasks = dockerClient.listTasks();
-            logger.debug("---------------Size of tasks list : {} ---------------", tasks.size());
             for (Task task : tasks) {
-                logger.debug("--------------- Task : {} ---------------", task);
-                for (NetworkAttachment networkAttachment : task.networkAttachments()) {
-                    for (String address : networkAttachment.addresses()) {
-                        if (address.startsWith(remoteUrl.getHost())) {
-                            return task.status().containerStatus().containerId();
+                List<NetworkAttachment> networkAttachments = task.networkAttachments();
+                if (networkAttachments != null) {
+                    for (NetworkAttachment networkAttachment : task.networkAttachments()) {
+                        for (String address : networkAttachment.addresses()) {
+                            if (address.startsWith(remoteUrl.getHost())) {
+                                return task.status().containerStatus().containerId();
+                            }
                         }
                     }
                 }
@@ -416,7 +417,11 @@ public class SwarmContainerClient implements ContainerClient {
     }
 
     private ContainerCreationStatus getContainerCreationStatus(String serviceId, String nodePort) throws DockerException, InterruptedException {
-        List<Task> tasks = dockerClient.listTasks();
+        Service service = dockerClient.inspectService(serviceId);
+        Task.Criteria criteria = Task.Criteria.builder()
+                .serviceName(service.spec().name())
+                .build();
+        List<Task> tasks = dockerClient.listTasks(criteria);
         for (Task task : tasks) {
             if (task.serviceId().equals(serviceId)) {
                 ContainerStatus containerStatus = task.status().containerStatus();
