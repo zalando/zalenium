@@ -138,7 +138,9 @@ public class SwarmContainerClient implements ContainerClient {
     private String getContainerId(String zaleniumContainerName, URL remoteUrl) {
         try {
             List<Task> tasks = dockerClient.listTasks();
+            logger.debug("---------------Size of tasks list : {} ---------------", tasks.size());
             for (Task task : tasks) {
+                logger.debug("--------------- Task : {} ---------------", task);
                 for (NetworkAttachment networkAttachment : task.networkAttachments()) {
                     for (String address : networkAttachment.addresses()) {
                         if (address.startsWith(remoteUrl.getHost())) {
@@ -195,18 +197,12 @@ public class SwarmContainerClient implements ContainerClient {
                 ContainerStatus containerStatus = task.status().containerStatus();
                 if (containerStatus != null && containerStatus.containerId().equals(containerId)) {
                     String serviceId = task.serviceId();
-                    List<Service> services = dockerClient.listServices();
-                    if (services.stream().anyMatch(service -> service.id().equals(serviceId))) {
-                        // TODO: This should STOP the container and not remove the service.
-                        //       After this command there is nothing left from the container
-                        //       but it still is registered inside the zalenium logik
+                    Service.Criteria criteria = Service.Criteria.builder()
+                            .serviceId(serviceId)
+                            .build();
+                    List<Service> services = dockerClient.listServices(criteria);
+                    if (services.size() > 0 ) {
                         dockerClient.removeService(serviceId);
-
-
-                        // TODO: Replicas reduzieren?!?
-                        // Service service = dockerClient.inspectService(serviceId);
-                        // ServiceSpec serviceSpec = service.spec();
-                        // dockerClient.updateService(serviceId, 1L, );
                     }
                 }
             }
@@ -304,7 +300,7 @@ public class SwarmContainerClient implements ContainerClient {
 
             TaskStatus taskStatus = waitForTaskStatus(service.id());
 
-            if(taskStatus != null) {
+            if (taskStatus != null) {
                 return getContainerCreationStatus(service.id(), nodePort);
             }
         } catch (DockerException | InterruptedException e) {
@@ -348,7 +344,7 @@ public class SwarmContainerClient implements ContainerClient {
 
     private TaskSpec buildTaskSpec(ContainerSpec containerSpec) {
         final RestartPolicy restartPolicy = RestartPolicy.builder()
-                .condition("none")
+                .condition("on-failure")
                 .build();
 
         final List<String> placementList = new ArrayList<>();
@@ -405,9 +401,6 @@ public class SwarmContainerClient implements ContainerClient {
         List<Task> tasks = dockerClient.listTasks(criteria);
         Task task = tasks.get(0);
 
-        String taskId = task == null ? null : task.id();
-
-
         if (task == null && attempts < attemptsLimit) {
             return waitForTaskStatus(serviceId, attempts + 1);
         } else {
@@ -415,18 +408,21 @@ public class SwarmContainerClient implements ContainerClient {
             if (containerStatus == null) {
                 return waitForTaskStatus(serviceId, attempts + 1);
             }
+
+            logger.debug("container {} is ready", containerStatus.containerId());
+
             return task.status();
         }
     }
 
-    private ContainerCreationStatus getContainerCreationStatus (String serviceId, String nodePort) throws DockerException, InterruptedException {
+    private ContainerCreationStatus getContainerCreationStatus(String serviceId, String nodePort) throws DockerException, InterruptedException {
         List<Task> tasks = dockerClient.listTasks();
         for (Task task : tasks) {
             if (task.serviceId().equals(serviceId)) {
                 ContainerStatus containerStatus = task.status().containerStatus();
                 if (containerStatus != null) {
                     String containerId = containerStatus.containerId();
-                    String containerName =  containerStatus.containerId();
+                    String containerName = containerStatus.containerId();
                     return new ContainerCreationStatus(true, containerName, containerId, nodePort);
                 }
             }
@@ -628,20 +624,32 @@ public class SwarmContainerClient implements ContainerClient {
 
     @Override
     public boolean isTerminated(ContainerCreationStatus container) {
-        List<String> termStates = Arrays.asList("complete", "failed", "shutdown", "rejected", "orphaned", "removed");
-        String containerId = container.getContainerId();
-
         try {
+            List<String> termStates = Arrays.asList("complete", "failed", "shutdown", "rejected", "orphaned", "removed");
+            String containerId = container.getContainerId();
             List<Task> tasks = dockerClient.listTasks();
-            for (Task task : tasks) {
-                TaskStatus taskStatus = task.status();
-                ContainerStatus containerStatus = taskStatus.containerStatus();
-                if (containerStatus != null && containerStatus.containerId().equals(containerId)) {
-                    String state = taskStatus.state();
-                    return termStates.contains(state);
-                }
+            boolean containerExists = tasks.stream().anyMatch(task -> {
+                ContainerStatus containerStatus = task.status().containerStatus();
+                return containerStatus != null && containerStatus.containerId().equals(containerId);
+            });
+
+            if (!containerExists) {
+                logger.info("Container {} has no task - terminal.", container);
+                return true;
+            } else {
+                return tasks.stream().anyMatch(task -> {
+                    ContainerStatus containerStatus = task.status().containerStatus();
+                    boolean hasTerminalState = termStates.contains(task.status().state());
+                    boolean isContainer = containerStatus != null && containerStatus.containerId().equals(containerId);
+                    boolean isTerminated = isContainer && hasTerminalState;
+
+                    if (isTerminated) {
+                        logger.info("Container {} is {} - terminal.", container, task.status().state());
+                    }
+
+                    return isTerminated;
+                });
             }
-            return false;
         } catch (DockerException | InterruptedException e) {
             logger.warn("Failed to fetch container status [" + container + "].", e);
             return false;
