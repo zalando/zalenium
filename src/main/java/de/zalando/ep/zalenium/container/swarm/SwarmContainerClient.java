@@ -1,7 +1,7 @@
 package de.zalando.ep.zalenium.container.swarm;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.ImmutableMap;
+import com.google.common.base.Strings;
 import com.spotify.docker.client.AnsiProgressHandler;
 import com.spotify.docker.client.DefaultDockerClient;
 import com.spotify.docker.client.DockerClient;
@@ -31,20 +31,10 @@ import java.util.stream.Collectors;
 
 import static com.spotify.docker.client.DockerClient.ListContainersParam.withStatusCreated;
 import static com.spotify.docker.client.DockerClient.ListContainersParam.withStatusRunning;
-import static de.zalando.ep.zalenium.util.ZaleniumConfiguration.ZALENIUM_RUNNING_LOCALLY;
 
 @SuppressWarnings("ConstantConditions")
 public class SwarmContainerClient implements ContainerClient {
 
-    private static final String DEFAULT_DOCKER_NETWORK_MODE = "default";
-    private static final String DEFAULT_DOCKER_NETWORK_NAME = "bridge";
-    private static final String DOCKER_NETWORK_HOST_MODE_NAME = "host";
-    private static final String NODE_MOUNT_POINT = "/tmp/node";
-    private static final String[] PROTECTED_NODE_MOUNT_POINTS = {
-            "/var/run/docker.sock",
-            "/home/seluser/videos",
-            "/dev/shm"
-    };
     private static final String ZALENIUM_SELENIUM_CONTAINER_CPU_LIMIT = "ZALENIUM_SELENIUM_CONTAINER_CPU_LIMIT";
     private static final String ZALENIUM_SELENIUM_CONTAINER_MEMORY_LIMIT = "ZALENIUM_SELENIUM_CONTAINER_MEMORY_LIMIT";
 
@@ -52,7 +42,6 @@ public class SwarmContainerClient implements ContainerClient {
     /**
      * Number of times to attempt to create a container when the generated name is not unique.
      */
-    private static final int NAME_COLLISION_RETRIES = 10;
     private static Environment env = defaultEnvironment;
     private static String seleniumContainerCpuLimit;
     private static String seleniumContainerMemoryLimit;
@@ -67,17 +56,7 @@ public class SwarmContainerClient implements ContainerClient {
     private final GoogleAnalyticsApi ga = new GoogleAnalyticsApi();
     private DockerClient dockerClient = new DefaultDockerClient(dockerHost);
     private String nodeId;
-    private String zaleniumNetwork;
-    private List<String> zaleniumExtraHosts;
-    private List<ContainerMount> mntFolders = new ArrayList<>();
     private Map<String, String> seleniumContainerLabels = new HashMap<>();
-    private boolean pullSeleniumImage = false;
-    private boolean isZaleniumPrivileged = true;
-    private ImmutableMap<String, String> storageOpt;
-    private AtomicBoolean pullSeleniumImageChecked = new AtomicBoolean(false);
-    private AtomicBoolean isZaleniumPrivilegedChecked = new AtomicBoolean(false);
-    private AtomicBoolean storageOptsLoaded = new AtomicBoolean(false);
-    private AtomicBoolean mntFoldersAndHttpEnvVarsChecked = new AtomicBoolean(false);
     private AtomicBoolean seleniumContainerLabelsChecked = new AtomicBoolean(false);
 
     private static void readConfigurationFromEnvVariables() {
@@ -118,24 +97,11 @@ public class SwarmContainerClient implements ContainerClient {
         SwarmContainerClient.seleniumContainerMemoryLimit = seleniumContainerMemoryLimit;
     }
 
-    private static boolean isNameCollision(Exception e, String containerName) {
-        return e.getMessage().contains("The container name \"" + containerName + "/\" is already in use by container ");
-    }
-
-    private static boolean hasRemainingAttempts(int collisionAttempts) {
-        return collisionAttempts > 0;
-    }
-
-    @VisibleForTesting
-    public void setContainerClient(final DockerClient client) {
-        dockerClient = client;
-    }
-
     public void setNodeId(String nodeId) {
         this.nodeId = nodeId;
     }
 
-    private String getContainerId(String zaleniumContainerName, URL remoteUrl) {
+    private String getContainerId(URL remoteUrl) {
         try {
             List<Task> tasks = dockerClient.listTasks();
             for (Task task : tasks) {
@@ -182,12 +148,7 @@ public class SwarmContainerClient implements ContainerClient {
     }
 
     public InputStream copyFiles(String containerId, String folderName) {
-        try {
-            return dockerClient.archiveContainer(containerId, folderName);
-        } catch (DockerException | InterruptedException e) {
-            logger.warn(nodeId + " Something happened while copying the folder " + folderName + ", " +
-                    "most of the time it is an issue while closing the input/output stream, which is usually OK.", e);
-        }
+        // TODO: Implement behaviour
         return null;
     }
 
@@ -258,34 +219,14 @@ public class SwarmContainerClient implements ContainerClient {
     }
 
     public String getLatestDownloadedImage(String imageName) {
-        List<Image> images;
-        try {
-            images = dockerClient.listImages(DockerClient.ListImagesParam.byName(imageName));
-            if (images.isEmpty()) {
-                logger.error(nodeId + " A downloaded docker-selenium image was not found!");
-                return imageName;
-            }
-            for (int i = images.size() - 1; i >= 0; i--) {
-                if (images.get(i).repoTags() == null) {
-                    images.remove(i);
-                }
-            }
-            images.sort((o1, o2) -> o2.created().compareTo(o1.created()));
-            return images.get(0).repoTags().get(0);
-        } catch (DockerException | InterruptedException e) {
-            logger.warn(nodeId + " Error while executing the command", e);
-            ga.trackException(e);
-        }
+        // TODO: verify this is handled by docker
         return imageName;
     }
 
     public ContainerCreationStatus createContainer(String zaleniumContainerName, String image, Map<String, String> envVars,
                                                    String nodePort) {
-        loadMountedFolders(zaleniumContainerName);
+        // TODO: is it meaningful to add labels to identify services/containers in the swarm?
         loadSeleniumContainerLabels();
-        loadPullSeleniumImageFlag();
-        loadIsZaleniumPrivileged(zaleniumContainerName);
-        loadStorageOpts(zaleniumContainerName);
 
         List<String> flattenedEnvVars = envVars.entrySet().stream()
                 .map(e -> e.getKey() + "=" + e.getValue())
@@ -306,20 +247,6 @@ public class SwarmContainerClient implements ContainerClient {
             }
         } catch (DockerException | InterruptedException e) {
             e.printStackTrace();
-        }
-
-        try {
-            if (pullSeleniumImage) {
-                List<Image> images = dockerClient.listImages(DockerClient.ListImagesParam.byName(image));
-                if (images.size() == 0) {
-                    // If the image has no tag, we add latest, otherwise we end up pulling all the images with that name.
-                    String imageToPull = image.lastIndexOf(':') > 0 ? image : image.concat(":latest");
-                    dockerClient.pull(imageToPull, new AnsiProgressHandler());
-                }
-            }
-        } catch (DockerException | InterruptedException e) {
-            logger.warn(nodeId + " Error while checking (and pulling) if the image is present", e);
-            ga.trackException(e);
         }
 
         return null;
@@ -354,7 +281,24 @@ public class SwarmContainerClient implements ContainerClient {
 
         final Placement placement = Placement.create(placementList);
 
+        Resources.Builder resourceBuilder = Resources.builder();
+        String cpuLimit = getSeleniumContainerCpuLimit();
+        String memLimit = getSeleniumContainerMemoryLimit();
+
+        if (!Strings.isNullOrEmpty(cpuLimit)) {
+            resourceBuilder.nanoCpus(Long.valueOf(cpuLimit));
+        }
+
+        if (!Strings.isNullOrEmpty( memLimit)) {
+            resourceBuilder.memoryBytes(Long.valueOf(memLimit));
+        }
+
+        ResourceRequirements resourceRequirements = ResourceRequirements.builder()
+                .limits(resourceBuilder.build())
+                .build();
+
         final TaskSpec.Builder taskSpecBuilder = TaskSpec.builder()
+                .resources(resourceRequirements)
                 .restartPolicy(restartPolicy)
                 .placement(placement)
                 .containerSpec(containerSpec);
@@ -396,7 +340,6 @@ public class SwarmContainerClient implements ContainerClient {
     private TaskStatus waitForTaskStatus(String serviceId, int attempts) throws DockerException, InterruptedException {
         int attemptsLimit = 100;
         Thread.sleep(100);
-        TaskStatus taskStatus = null;
         String serviceName = dockerClient.inspectService(serviceId).spec().name();
         Task.Criteria criteria = Task.Criteria.builder().serviceName(serviceName).build();
         List<Task> tasks = dockerClient.listTasks(criteria);
@@ -459,107 +402,18 @@ public class SwarmContainerClient implements ContainerClient {
         }
     }
 
-    private void loadPullSeleniumImageFlag() {
-        if (!this.pullSeleniumImageChecked.getAndSet(true)) {
-            pullSeleniumImage = env.getBooleanEnvVariable("PULL_SELENIUM_IMAGE", false);
-        }
-    }
-
-    private void loadIsZaleniumPrivileged(String zaleniumContainerName) {
-        if (!this.isZaleniumPrivilegedChecked.getAndSet(true)) {
-            String containerId = getContainerId(zaleniumContainerName);
-            if (containerId == null) {
-                return;
-            }
-
-            ContainerInfo containerInfo;
-
-            try {
-                containerInfo = dockerClient.inspectContainer(containerId);
-                isZaleniumPrivileged = containerInfo.hostConfig().privileged();
-            } catch (DockerException | InterruptedException e) {
-                logger.warn(nodeId + " Error while getting value to check if Zalenium is running in privileged mode.", e);
-                ga.trackException(e);
-            }
-        }
-    }
-
-    private void loadStorageOpts(String zaleniumContainerName) {
-        if (!this.storageOptsLoaded.getAndSet(true)) {
-            String containerId = getContainerId(zaleniumContainerName);
-            if (containerId == null) {
-                return;
-            }
-
-            ContainerInfo containerInfo;
-
-            try {
-                containerInfo = dockerClient.inspectContainer(containerId);
-                storageOpt = containerInfo.hostConfig().storageOpt();
-            } catch (DockerException | InterruptedException e) {
-                logger.warn(nodeId + " Error while getting value to use passed storageOpts.", e);
-                ga.trackException(e);
-            }
-        }
-    }
-
-    private void loadMountedFolders(String zaleniumContainerName) {
-        if (!this.mntFoldersAndHttpEnvVarsChecked.get()) {
-            String containerId = getContainerId(zaleniumContainerName);
-            if (containerId == null) {
-                return;
-            }
-
-            ContainerInfo containerInfo = null;
-
-            try {
-                containerInfo = dockerClient.inspectContainer(containerId);
-            } catch (DockerException | InterruptedException e) {
-                logger.warn(nodeId + " Error while getting mounted folders and env vars.", e);
-                ga.trackException(e);
-            }
-
-            loadMountedFolders(containerInfo);
-        }
-    }
-
-    private synchronized void loadMountedFolders(ContainerInfo containerInfo) {
-        if (!this.mntFoldersAndHttpEnvVarsChecked.getAndSet(true)) {
-
-            for (ContainerMount containerMount : containerInfo.mounts()) {
-                if (containerMount.destination().startsWith(NODE_MOUNT_POINT)) {
-                    this.mntFolders.add(containerMount);
-                }
-            }
-        }
-    }
-
     @Override
     public void initialiseContainerEnvironment() {
         if (!environmentInitialised.getAndSet(true)) {
-            // Delete any leftover containers from a previous time
-            deleteSeleniumContainers();
+            // Delete any leftover services from a previous time
+            deleteSwarmServices();
             // Register a shutdown hook to cleanup pods
-            Runtime.getRuntime().addShutdownHook(new Thread(this::deleteSeleniumContainers, "DockerContainerClient shutdown hook"));
+            Runtime.getRuntime().addShutdownHook(new Thread(this::deleteSwarmServices, "SwarmContainerClient shutdown hook"));
         }
     }
 
-    private void deleteSeleniumContainers() {
-        logger.info("About to clean up any left over DockerSelenium containers created by Zalenium");
-        String image = DockeredSeleniumStarter.getDockerSeleniumImageName();
-        String zaleniumContainerName = DockeredSeleniumStarter.getContainerName();
-        try {
-            List<Container> containerList = dockerClient.listContainers(withStatusRunning(), withStatusCreated())
-                    .stream().filter(container -> container.image().contains(image)
-                            && container.names().stream().anyMatch(name -> name.contains(zaleniumContainerName)))
-                    .collect(Collectors.toList());
-            containerList.stream()
-                    .parallel()
-                    .forEach(container -> stopContainer(container.id()));
-        } catch (Exception e) {
-            logger.warn(nodeId + " Error while deleting existing DockerSelenium containers", e);
-            ga.trackException(e);
-        }
+    private void deleteSwarmServices() {
+        // TODO: Implement functionality
     }
 
     @Override
@@ -568,7 +422,7 @@ public class SwarmContainerClient implements ContainerClient {
 
         Integer noVncPort = remoteHost.getPort() + DockeredSeleniumStarter.NO_VNC_PORT_GAP;
 
-        String containerId = this.getContainerId(zaleniumContainerName, remoteHost);
+        String containerId = this.getContainerId(remoteHost);
 
         if (containerId == null) {
             logger.warn("No container id for {} - {}, can't register.", zaleniumContainerName, remoteHost.toExternalForm());
