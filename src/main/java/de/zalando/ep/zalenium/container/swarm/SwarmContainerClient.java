@@ -461,9 +461,12 @@ public class SwarmContainerClient implements ContainerClient {
     @Override
     public String getContainerIp(String containerName) {
         String containerId = this.getContainerId(containerName);
+
         if (containerId == null) {
+            logger.warn("Failed to get id of container: {} ", containerName);
             return null;
         }
+
         try {
             List<Task> tasks = dockerClient.listTasks();
             String swarmOverlayNetwork = ZaleniumConfiguration.getSwarmOverlayNetwork();
@@ -471,7 +474,7 @@ public class SwarmContainerClient implements ContainerClient {
                 ContainerStatus containerStatus = task.status().containerStatus();
                 if (containerStatus != null) {
                     if (containerStatus.containerId().equals(containerId)) {
-                        for (NetworkAttachment networkAttachment : task.networkAttachments()) {
+                        for (NetworkAttachment networkAttachment : CollectionUtils.emptyIfNull(task.networkAttachments())) {
                             if (networkAttachment.network().spec().name().equals(swarmOverlayNetwork)) {
                                 String cidrSuffix = "/\\d+$";
                                 return networkAttachment.addresses().get(0).replaceAll(cidrSuffix, "");
@@ -484,6 +487,8 @@ public class SwarmContainerClient implements ContainerClient {
             logger.debug(nodeId + " Error while getting the container IP.", e);
             ga.trackException(e);
         }
+
+        logger.warn("Failed to get ip of container: {}", containerName);
         return null;
     }
 
