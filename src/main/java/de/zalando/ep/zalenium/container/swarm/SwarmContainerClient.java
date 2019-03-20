@@ -16,6 +16,7 @@ import de.zalando.ep.zalenium.proxy.DockeredSeleniumStarter;
 import de.zalando.ep.zalenium.util.Environment;
 import de.zalando.ep.zalenium.util.GoogleAnalyticsApi;
 import de.zalando.ep.zalenium.util.ZaleniumConfiguration;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.slf4j.Logger;
@@ -105,13 +106,10 @@ public class SwarmContainerClient implements ContainerClient {
         try {
             List<Task> tasks = dockerClient.listTasks();
             for (Task task : tasks) {
-                List<NetworkAttachment> networkAttachments = task.networkAttachments();
-                if (networkAttachments != null) {
-                    for (NetworkAttachment networkAttachment : task.networkAttachments()) {
-                        for (String address : networkAttachment.addresses()) {
-                            if (address.startsWith(remoteUrl.getHost())) {
-                                return task.status().containerStatus().containerId();
-                            }
+                for (NetworkAttachment networkAttachment : CollectionUtils.emptyIfNull(task.networkAttachments())) {
+                    for (String address : networkAttachment.addresses()) {
+                        if (address.startsWith(remoteUrl.getHost())) {
+                            return task.status().containerStatus().containerId();
                         }
                     }
                 }
