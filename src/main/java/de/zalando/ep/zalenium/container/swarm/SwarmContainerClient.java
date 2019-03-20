@@ -42,9 +42,7 @@ public class SwarmContainerClient implements ContainerClient {
     private static final String SWARM_EXEC_IMAGE = "datagridsys/skopos-plugin-swarm-exec:latest";
 
     private static final Environment defaultEnvironment = new Environment();
-    /**
-     * Number of times to attempt to create a container when the generated name is not unique.
-     */
+
     private static Environment env = defaultEnvironment;
     private static String seleniumContainerCpuLimit;
     private static String seleniumContainerMemoryLimit;
