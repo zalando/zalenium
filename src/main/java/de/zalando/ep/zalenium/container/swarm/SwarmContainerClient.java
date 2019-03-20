@@ -522,7 +522,7 @@ public class SwarmContainerClient implements ContainerClient {
             });
 
             if (!containerExists) {
-                logger.info("Container {} has no task - terminal.", container);
+                logger.info("Container {} has no corresponding task - flagging it as terminated", container);
                 return true;
             } else {
                 return tasks.stream().anyMatch(task -> {
@@ -532,7 +532,9 @@ public class SwarmContainerClient implements ContainerClient {
                     boolean isTerminated = isContainer && hasTerminalState;
 
                     if (isTerminated) {
-                        logger.info("Container {} is {} - terminal.", container, task.status().state());
+                        logger.info("State of Container {} is {} - flagging it as terminated",
+                                container,
+                                task.status().state());
                     }
 
                     return isTerminated;
