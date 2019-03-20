@@ -247,14 +247,14 @@ public class SwarmContainerClient implements ContainerClient {
     public ContainerCreationStatus createContainer(String zaleniumContainerName, String image, Map<String, String> envVars,
                                                    String nodePort) {
         // TODO: is it meaningful to add labels to identify services/containers in the swarm?
-        loadSeleniumContainerLabels();
 
         List<String> flattenedEnvVars = envVars.entrySet().stream()
                 .map(e -> e.getKey() + "=" + e.getValue())
                 .collect(Collectors.toList());
-
         final ContainerSpec containerSpec = buildContainerSpec(flattenedEnvVars, image);
+
         final TaskSpec taskSpec = buildTaskSpec(containerSpec);
+
         String noVncPort = envVars.get("NOVNC_PORT");
         final ServiceSpec serviceSpec = buildServiceSpec(taskSpec, nodePort, noVncPort);
 
@@ -270,6 +270,7 @@ public class SwarmContainerClient implements ContainerClient {
             e.printStackTrace();
         }
 
+        logger.debug("Something went wrong while creating service");
         return null;
     }
 
@@ -283,6 +284,8 @@ public class SwarmContainerClient implements ContainerClient {
                 .env(flattenedEnvVars)
                 .image(image)
                 .mounts(mountBuilder.build());
+
+        loadSeleniumContainerLabels();
 
         if (seleniumContainerLabels.size() > 0) {
             containerSpecBuilder.labels(seleniumContainerLabels);
