@@ -20,10 +20,11 @@ die () {
 
 
 # Start tunnel
-cbt_tunnels \
---username ${CBT_USERNAME} \
---authkey ${CBT_AUTHKEY} > ${CBT_LOG_FILE} &
-  CBT_TUNNEL_PID=$!
+cbt_tunnels-linux-x64 \
+  --username ${CBT_USERNAME} \
+  --authkey ${CBT_AUTHKEY} \
+  --tunnelname ${CBT_TUNNEL_ID} > ${CBT_LOG_FILE} &
+CBT_TUNNEL_PID=$!
 
 
 
