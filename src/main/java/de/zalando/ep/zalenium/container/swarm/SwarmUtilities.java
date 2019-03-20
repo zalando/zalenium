@@ -46,8 +46,10 @@ public class SwarmUtilities {
         } catch (DockerException | InterruptedException e) {
             e.printStackTrace();
         }
+        if (containerInfo == null) {
+            logger.warn("Failed to get info of Container by IP Address. {} is not listed in any network", ipAddress);
+        }
 
-        logger.warn("Failed to get info of Container by IP Address. {} is not listed in any network", ipAddress);
         return containerInfo;
     }
 
