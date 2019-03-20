@@ -163,7 +163,7 @@ public class SwarmContainerClient implements ContainerClient {
                             .serviceId(serviceId)
                             .build();
                     List<Service> services = dockerClient.listServices(criteria);
-                    if (services.size() > 0 ) {
+                    if (!CollectionUtils.isEmpty(services)) {
                         dockerClient.removeService(serviceId);
                     }
                 }
@@ -180,7 +180,7 @@ public class SwarmContainerClient implements ContainerClient {
             List<Task> tasks = dockerClient.listTasks();
             Iterator<Task> tasksIterator = tasks.iterator();
 
-            while(!found && tasksIterator.hasNext()) {
+            while (!found && tasksIterator.hasNext()) {
                 Task task = tasksIterator.next();
                 ContainerStatus containerStatus = task.status().containerStatus();
 
