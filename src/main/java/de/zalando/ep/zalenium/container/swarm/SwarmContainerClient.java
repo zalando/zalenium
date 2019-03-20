@@ -187,11 +187,7 @@ public class SwarmContainerClient implements ContainerClient {
                 if (containerStatus != null && containerStatus.containerId().equals(containerId)) {
                     found = true;
 
-                    logger.debug("Executing command: {} - on Container: {}",
-                            Arrays.toString(command),
-                            containerId);
-
-                    startSwarmExecContainer(task, command);
+                    startSwarmExecContainer(task, command, containerId);
                 }
             }
         } catch (DockerException | InterruptedException e) {
@@ -212,7 +208,7 @@ public class SwarmContainerClient implements ContainerClient {
         }
     }
 
-    private void startSwarmExecContainer(Task task, String[] command) throws DockerException, InterruptedException {
+    private void startSwarmExecContainer(Task task, String[] command, String containerId) throws DockerException, InterruptedException {
         String taskId = task.id();
 
         List<String> binds = new ArrayList<>();
@@ -226,6 +222,10 @@ public class SwarmContainerClient implements ContainerClient {
 
         command[0] = "task-exec";
         command[1] = taskId;
+
+        logger.debug("Executing command: {} - on Container: {}",
+                Arrays.toString(command),
+                containerId);
 
         ContainerConfig containerConfig = ContainerConfig.builder()
                 .image(SWARM_EXEC_IMAGE)
