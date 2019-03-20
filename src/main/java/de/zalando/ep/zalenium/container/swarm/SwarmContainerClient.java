@@ -238,7 +238,6 @@ public class SwarmContainerClient implements ContainerClient {
     }
 
     public String getLatestDownloadedImage(String imageName) {
-        // TODO: verify this is handled by docker
         return imageName;
     }
 
@@ -531,7 +530,7 @@ public class SwarmContainerClient implements ContainerClient {
 
                     if (isTerminated) {
                         logger.info("State of Container {} is {} - flagging it as terminated",
-                                container,
+                                container.getContainerId(),
                                 task.status().state());
                     }
 
@@ -539,7 +538,7 @@ public class SwarmContainerClient implements ContainerClient {
                 });
             }
         } catch (DockerException | InterruptedException e) {
-            logger.warn("Failed to fetch container status [" + container + "].", e);
+            logger.warn("Failed to fetch container status [" + container.getContainerId() + "].", e);
             return false;
         }
     }
