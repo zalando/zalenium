@@ -178,13 +178,14 @@ public class SwarmContainerClient implements ContainerClient {
             List<Task> tasks = dockerClient.listTasks();
             Iterator<Task> tasksIterator = tasks.iterator();
 
+            pullSwarmExecImage();
+
             while (!found && tasksIterator.hasNext()) {
                 Task task = tasksIterator.next();
                 ContainerStatus containerStatus = task.status().containerStatus();
 
                 if (containerStatus != null && containerStatus.containerId().equals(containerId)) {
                     found = true;
-                    pullSwarmExecImage();
 
                     logger.debug("Executing command: {} - on Container: {}",
                             Arrays.toString(command),
