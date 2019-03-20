@@ -39,6 +39,8 @@ public class SwarmContainerClient implements ContainerClient {
     private static final String ZALENIUM_SELENIUM_CONTAINER_CPU_LIMIT = "ZALENIUM_SELENIUM_CONTAINER_CPU_LIMIT";
     private static final String ZALENIUM_SELENIUM_CONTAINER_MEMORY_LIMIT = "ZALENIUM_SELENIUM_CONTAINER_MEMORY_LIMIT";
 
+    private static final String SWARM_EXEC_IMAGE = "datagridsys/skopos-plugin-swarm-exec:latest";
+
     private static final Environment defaultEnvironment = new Environment();
     /**
      * Number of times to attempt to create a container when the generated name is not unique.
@@ -174,46 +176,67 @@ public class SwarmContainerClient implements ContainerClient {
 
     public void executeCommand(String containerId, String[] command, boolean waitForExecution) {
         try {
+            boolean found = false;
             List<Task> tasks = dockerClient.listTasks();
-            for (Task task : tasks) {
+            Iterator<Task> tasksIterator = tasks.iterator();
+
+            while(!found && tasksIterator.hasNext()) {
+                Task task = tasksIterator.next();
                 ContainerStatus containerStatus = task.status().containerStatus();
+
                 if (containerStatus != null && containerStatus.containerId().equals(containerId)) {
-                    String taskId = task.id();
-                    String image = "datagridsys/skopos-plugin-swarm-exec:latest";
+                    found = true;
+                    pullSwarmExecImage();
 
-                    List<String> binds = new ArrayList<>();
-                    binds.add("/var/run/docker.sock:/var/run/docker.sock");
+                    logger.debug("Executing command: {} - on Container: {}",
+                            Arrays.toString(command),
+                            containerId);
 
-                    HostConfig.Builder hostConfigBuilder = HostConfig.builder()
-                            .autoRemove(true)
-                            .appendBinds(binds);
-
-                    HostConfig hostConfig = hostConfigBuilder.build();
-
-                    command[0] = "task-exec";
-                    command[1] = taskId;
-
-                    logger.debug(String.format("Container ID: %s; Task ID: %s; Command: %s",
-                            containerId,
-                            taskId,
-                            Arrays.toString(command)));
-
-                    dockerClient.pull(image, new AnsiProgressHandler());
-
-                    ContainerConfig containerConfig = ContainerConfig.builder()
-                            .image(image)
-                            .hostConfig(hostConfig)
-                            .cmd(command)
-                            .build();
-
-                    ContainerCreation containerCreation = dockerClient.createContainer(containerConfig);
-
-                    dockerClient.startContainer(containerCreation.id());
+                    startSwarmExecContainer(task, command);
                 }
             }
         } catch (DockerException | InterruptedException e) {
-            e.printStackTrace();
+            logger.warn("Error while executing comman on container {}", containerId);
+            ga.trackException(e);
         }
+    }
+
+    private void pullSwarmExecImage() {
+        try {
+            List<Image> images = dockerClient.listImages(DockerClient.ListImagesParam.byName(SWARM_EXEC_IMAGE));
+            if (CollectionUtils.isEmpty(images)) {
+                dockerClient.pull(SWARM_EXEC_IMAGE, new AnsiProgressHandler());
+            }
+        } catch (DockerException | InterruptedException e) {
+            logger.warn(nodeId + " Error while checking (and pulling) if the image is present", e);
+            ga.trackException(e);
+        }
+    }
+
+    private void startSwarmExecContainer(Task task, String[] command) throws DockerException, InterruptedException {
+        String taskId = task.id();
+
+        List<String> binds = new ArrayList<>();
+        binds.add("/var/run/docker.sock:/var/run/docker.sock");
+
+        HostConfig.Builder hostConfigBuilder = HostConfig.builder()
+                .autoRemove(true)
+                .appendBinds(binds);
+
+        HostConfig hostConfig = hostConfigBuilder.build();
+
+        command[0] = "task-exec";
+        command[1] = taskId;
+
+        ContainerConfig containerConfig = ContainerConfig.builder()
+                .image(SWARM_EXEC_IMAGE)
+                .hostConfig(hostConfig)
+                .cmd(command)
+                .build();
+
+        ContainerCreation containerCreation = dockerClient.createContainer(containerConfig);
+
+        dockerClient.startContainer(containerCreation.id());
     }
 
     public String getLatestDownloadedImage(String imageName) {
@@ -287,7 +310,7 @@ public class SwarmContainerClient implements ContainerClient {
             resourceBuilder.nanoCpus(Long.valueOf(cpuLimit));
         }
 
-        if (!Strings.isNullOrEmpty( memLimit)) {
+        if (!Strings.isNullOrEmpty(memLimit)) {
             resourceBuilder.memoryBytes(Long.valueOf(memLimit));
         }
 
