@@ -47,19 +47,20 @@ public class SwarmUtilities {
             e.printStackTrace();
         }
 
-        logger.warn("Failed to get info of the Zalenium Container. {} is not listed in any network", ipAddress);
+        logger.warn("Failed to get info of Container by IP Address. {} is not listed in any network", ipAddress);
         return containerInfo;
     }
 
     public static String getSwarmIp(ContainerInfo containerInfo) {
-        AttachedNetwork attachedNetwork = null;
-        ImmutableMap<String, AttachedNetwork> networks = containerInfo.networkSettings().networks();
+        AttachedNetwork attachedNetwork = MapUtils.emptyIfNull(containerInfo.networkSettings().networks())
+                .get(overlayNetwork);
+        String ipAddress = attachedNetwork == null ? "" : attachedNetwork.ipAddress();
 
-        if (networks != null) {
-            attachedNetwork = networks.get(overlayNetwork);
+        if (ipAddress.isEmpty()) {
+            logger.warn("Failed to get the swarm IP Address of container {}", containerInfo.id());
         }
 
-        return attachedNetwork == null ? "" : attachedNetwork.ipAddress();
+        return ipAddress;
     }
 
     public static boolean isSwarmActive() {
