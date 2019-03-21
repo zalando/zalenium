@@ -364,7 +364,11 @@ public class SwarmContainerClient implements ContainerClient {
         String serviceName = dockerClient.inspectService(serviceId).spec().name();
         Task.Criteria criteria = Task.Criteria.builder().serviceName(serviceName).build();
         List<Task> tasks = dockerClient.listTasks(criteria);
-        Task task = tasks.get(0);
+        Task task = null;
+
+        if (!CollectionUtils.isEmpty(tasks)) {
+            task = tasks.get(0);
+        }
 
         if (task == null && attempts < attemptsLimit) {
             return waitForTaskStatus(serviceId, attempts + 1);
