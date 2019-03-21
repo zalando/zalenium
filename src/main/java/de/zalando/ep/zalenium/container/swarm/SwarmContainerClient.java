@@ -174,26 +174,24 @@ public class SwarmContainerClient implements ContainerClient {
 
     public void executeCommand(String containerId, String[] command, boolean waitForExecution) {
         try {
-            boolean found = false;
             List<Task> tasks = dockerClient.listTasks();
-            Iterator<Task> tasksIterator = tasks.iterator();
 
             pullSwarmExecImage();
 
-            while (!found && tasksIterator.hasNext()) {
-                Task task = tasksIterator.next();
+            for (Task task : CollectionUtils.emptyIfNull(tasks)) {
                 ContainerStatus containerStatus = task.status().containerStatus();
 
                 if (containerStatus != null && containerStatus.containerId().equals(containerId)) {
-                    found = true;
-
                     startSwarmExecContainer(task, command, containerId);
+                    return;
                 }
             }
         } catch (DockerException | InterruptedException e) {
             logger.warn("Error while executing comman on container {}", containerId);
             ga.trackException(e);
         }
+
+        logger.warn("Couldn't execute command on container {}", containerId);
     }
 
     private void pullSwarmExecImage() {
