@@ -237,6 +237,7 @@ public class SwarmContainerClient implements ContainerClient {
     }
 
     public String getLatestDownloadedImage(String imageName) {
+        // TODO: verify this is handled by docker
         return imageName;
     }
 
