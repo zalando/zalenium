@@ -29,8 +29,6 @@ public class SwarmUtilities {
     private static final Logger logger = LoggerFactory.getLogger(SwarmUtilities.class.getName());
 
     public static ContainerInfo getContainerByIp(String ipAddress) {
-        ContainerInfo containerInfo = null;
-
         try {
             List<Network> networks = dockerClient.listNetworks();
             for (Network network : CollectionUtils.emptyIfNull(networks)) {
@@ -39,18 +37,17 @@ public class SwarmUtilities {
 
                 for (Map.Entry<String, Network.Container> container : MapUtils.emptyIfNull(containers).entrySet()) {
                     if (container.getValue().ipv4Address().startsWith(ipAddress)) {
-                        containerInfo = dockerClient.inspectContainer(container.getKey());
+                        return dockerClient.inspectContainer(container.getKey());
                     }
                 }
             }
         } catch (DockerException | InterruptedException e) {
             e.printStackTrace();
         }
-        if (containerInfo == null) {
-            logger.warn("Failed to get info of Container by IP Address. {} is not listed in any network", ipAddress);
-        }
 
-        return containerInfo;
+        logger.warn("Failed to get info of Container by IP Address. {} is not listed in any network", ipAddress);
+
+        return null;
     }
 
     public static String getSwarmIp(ContainerInfo containerInfo) {
