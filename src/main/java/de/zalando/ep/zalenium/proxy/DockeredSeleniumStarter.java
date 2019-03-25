@@ -305,7 +305,7 @@ public class DockeredSeleniumStarter {
         envVars.put("ZALENIUM", "true");
         envVars.put("SELENIUM_HUB_HOST", hostIpAddress);
         envVars.put("SELENIUM_HUB_PORT", "4445");
-        envVars.put("SELENIUM_NODE_HOST", "__CONTAINER_IP__");
+        envVars.put("SELENIUM_NODE_HOST", "0.0.0.0");
         envVars.put("GRID", "false");
         envVars.put("WAIT_TIMEOUT", "120s");
         envVars.put("PICK_ALL_RANDOM_PORTS", "false");
@@ -331,6 +331,10 @@ public class DockeredSeleniumStarter {
             envVars.put("SELENIUM_NODE_PARAMS", String.format("-remoteHost http://%s:%s", hostIpAddress, containerPort));
         } else {
             envVars.put("SELENIUM_NODE_PARAMS", seleniumNodeParams);
+        }
+
+        if (SwarmUtilities.isSwarmActive()) {
+            envVars.put("SELENIUM_NODE_HOST", "__CONTAINER_IP__");
         }
 
         // Add the proxy vars
