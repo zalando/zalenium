@@ -171,19 +171,14 @@ public class CBTRemoteProxyTest {
             requestedCapability.put(CapabilityType.BROWSER_NAME, BrowserType.CHROME);
             requestedCapability.put(CapabilityType.PLATFORM_NAME, Platform.WIN10);
 
-            JsonElement informationSample = TestUtils.getTestInformationSample("crossbrowsertesting_testinformation.json");
-            TestUtils.ensureRequiredInputFilesExist(temporaryFolder);
-            CommonProxyUtilities commonProxyUtilities = TestUtils.mockCommonProxyUtilitiesForDashboardTesting(temporaryFolder);
-            Environment env = new Environment();
-            String mockTestInformationUrl = "https://crossbrowsertesting.com/api/v3/selenium/11089424-25EC-4EDD-88CD-FB331A10E969";
-            when(commonProxyUtilities.readJSONFromUrl(mockTestInformationUrl,
-                    env.getStringEnvVariable("CBT_USERNAME", ""),
-                    env.getStringEnvVariable("CBT_AUTHKEY", ""))).thenReturn(informationSample);
-            CBTRemoteProxy.setCommonProxyUtilities(commonProxyUtilities);
-            Dashboard.setCommonProxyUtilities(commonProxyUtilities);
-
+            
             // Getting a test session in the CBT node
             CBTRemoteProxy cbtSpyProxy = spy(cbtProxy);
+            JsonElement informationSample = TestUtils.getTestInformationSample("crossbrowsertesting_testinformation.json");
+            CommonProxyUtilities commonProxyUtilities = mock(CommonProxyUtilites.class);
+            when(commonProxyUtilities.readJSONFromUrl(anyString(), anyString(), anyString())).thenReturn(informationSample);
+            CBTRemoteProxy.setCommonProxyUtilities(commonProxyUtilities);
+            
             TestSession testSession = cbtSpyProxy.getNewSession(requestedCapability);
             Assert.assertNotNull(testSession);
             String mockSeleniumSessionId = "11089424-25EC-4EDD-88CD-FB331A10E969";
@@ -198,8 +193,6 @@ public class CBTRemoteProxyTest {
             cbtSpyProxy.afterCommand(testSession, request, response);
 
             verify(cbtSpyProxy, timeout(1000 * 5)).getTestInformation(mockSeleniumSessionId);
-            Callable<Boolean> callable = () -> CBTRemoteProxy.addToDashboardCalled;
-            await().pollInterval(Duration.FIVE_HUNDRED_MILLISECONDS).atMost(Duration.TWO_SECONDS).until(callable);
             TestInformation testInformation = cbtSpyProxy.getTestInformation(mockSeleniumSessionId);
             Assert.assertEquals("loadZalandoPageAndCheckTitle", testInformation.getTestName());
             Assert.assertThat(testInformation.getFileName(),
@@ -210,9 +203,7 @@ public class CBTRemoteProxyTest {
 
         } finally {
             CBTRemoteProxy.restoreCommonProxyUtilities();
-            CBTRemoteProxy.restoreGa();
-            CBTRemoteProxy.restoreEnvironment();
-            Dashboard.restoreCommonProxyUtilities();
+            
         }
     }
 
