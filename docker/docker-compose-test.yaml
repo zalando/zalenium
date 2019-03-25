@@ -5,7 +5,7 @@ version: '2.1'
 services:
   #--------------#
   zalenium:
-    image: "${project.artifactId}:${project.version}"
+    image: "dosel/zalenium"
     container_name: zalenium
     hostname: zalenium
     tty: true
