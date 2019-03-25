@@ -175,7 +175,7 @@ public class CBTRemoteProxyTest {
             // Getting a test session in the CBT node
             CBTRemoteProxy cbtSpyProxy = spy(cbtProxy);
             JsonElement informationSample = TestUtils.getTestInformationSample("crossbrowsertesting_testinformation.json");
-            CommonProxyUtilities commonProxyUtilities = mock(CommonProxyUtilites.class);
+            CommonProxyUtilities commonProxyUtilities = mock(CommonProxyUtilities.class);
             when(commonProxyUtilities.readJSONFromUrl(anyString(), anyString(), anyString())).thenReturn(informationSample);
             CBTRemoteProxy.setCommonProxyUtilities(commonProxyUtilities);
             
