@@ -8,8 +8,6 @@ import org.openqa.grid.common.RegistrationRequest;
 import org.openqa.grid.internal.GridRegistry;
 import org.openqa.selenium.remote.server.jmx.ManagedService;
 
-import java.util.ArrayList;
-import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,7 +18,7 @@ import org.slf4j.LoggerFactory;
 @ManagedService(description = "CrossBrowserTesting TestSlots")
 public class CBTRemoteProxy extends CloudTestingRemoteProxy {
     
-    private static final String CBT_ACCOUNT_INFO = "https://app.crossbrowsertesting.com/account";
+    private static final String CBT_ACCOUNT_INFO = "https://app.crossbrowsertesting.com/api/v3/account/maxParallelLimits";
     private static final String CBT_USERNAME = getEnv().getStringEnvVariable("CBT_USERNAME", "");
     private static final String CBT_AUTHKEY = getEnv().getStringEnvVariable("CBT_AUTHKEY", "");
     private static final String CBT_URL = getEnv().getStringEnvVariable("CBT_URL", "http://hub.crossbrowsertesting.com:80/wd/hub");
@@ -48,8 +46,7 @@ public class CBTRemoteProxy extends CloudTestingRemoteProxy {
                 logMessage = String.format("Account max. concurrency was NOT fetched from %s", url);
                 cbtAccountConcurrency = 1;
             } else {
-                cbtAccountConcurrency = cbtAccountInfo.getAsJsonObject().getAsJsonObject("concurrency_limit").
-                        get("overall").getAsInt();
+                cbtAccountConcurrency = cbtAccountInfo.get("automated").getAsInt();
             }
             LOGGER.info(logMessage);
             Thread.currentThread().setName(currentName);
