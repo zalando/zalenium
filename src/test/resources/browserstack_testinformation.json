@@ -15,6 +15,8 @@
     "logs": "https://www.browserstack.com/automate/builds/dfceb784d33931f3e96822de8782c9142001ee2a/sessions/77e51cead8e6e37b0a0feb0dfa69325b2c4acf97/logs",
     "browser_url": "https://www.browserstack.com/automate/builds/dfceb784d33931f3e96822de8782c9142001ee2a/sessions/77e51cead8e6e37b0a0feb0dfa69325b2c4acf97",
     "public_url": "https://www.browserstack.com/automate/builds/dfceb784d33931f3e96822de8782c9142001ee2a/sessions/77e51cead8e6e37b0a0feb0dfa69325b2c4acf97?auth_token=f2f29cf4b3e5dd8cfb7c6a4aaef316c1b7efec703605028c3f5bcda52ef2bee6",
-    "video_url": "https://www.browserstack.com/s3-upload/bs-video-logs-use/s3/77e51cead8e6e37b0a0feb0dfa69325b2c4acf97/video-77e51cead8e6e37b0a0feb0dfa69325b2c4acf97.mp4?AWSAccessKeyId=AKIAIOW7IEY5D4X2OFIA&Expires=1497088589&Signature=tQ9SCH1lgg6FjlBIhlTDwummLWc%3D&response-content-type=video%2Fmp4"
+    "video_url": "https://www.browserstack.com/s3-upload/bs-video-logs-use/s3/77e51cead8e6e37b0a0feb0dfa69325b2c4acf97/video-77e51cead8e6e37b0a0feb0dfa69325b2c4acf97.mp4?AWSAccessKeyId=AKIAIOW7IEY5D4X2OFIA&Expires=1497088589&Signature=tQ9SCH1lgg6FjlBIhlTDwummLWc%3D&response-content-type=video%2Fmp4",
+    "browser_console_logs_url": "https://www.browserstack.com/s3-upload/bs-video-logs-use/s3/77e51cead8e6e37b0a0feb0dfa69325b2c4acf97/video-77e51cead8e6e37b0a0feb0dfa69325b2c4acf97.mp4?AWSAccessKeyId=AKIAIOW7IEY5D4X2OFIA&Expires=1497088589&Signature=tQ9SCH1lgg6FjlBIhlTDwummLWc%3D&response-content-type=video%2Fmp4",
+    "selenium_logs_url": "https://www.browserstack.com/s3-upload/bs-video-logs-use/s3/77e51cead8e6e37b0a0feb0dfa69325b2c4acf97/video-77e51cead8e6e37b0a0feb0dfa69325b2c4acf97.mp4?AWSAccessKeyId=AKIAIOW7IEY5D4X2OFIA&Expires=1497088589&Signature=tQ9SCH1lgg6FjlBIhlTDwummLWc%3D&response-content-type=video%2Fmp4"
   }
 }
