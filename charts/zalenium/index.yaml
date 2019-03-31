@@ -1,0 +1,21 @@
+apiVersion: v1
+entries:
+  zalenium:
+  - appVersion: 3.141.59
+    created: 2019-03-14T15:03:33.384156+11:00
+    description: Chart for selenium grid
+    digest: 81e9690407ee7cd6345f41efff5c09928d69555acf8a2aad93b0de70117a0680
+    engine: gotpl
+    home: https://github.com/zalando/zalenium
+    keywords:
+    - qa
+    maintainers:
+    - email: diemol@gmail.com
+      name: diemol
+    name: zalenium
+    sources:
+    - https://github.com/zalando/zalenium
+    urls:
+    - zalenium-3.141.59.tgz
+    version: 3.141.59
+generated: 2019-03-14T15:03:33.383116+11:00
