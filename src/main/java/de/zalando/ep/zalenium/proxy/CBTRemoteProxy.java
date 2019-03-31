@@ -17,7 +17,7 @@ import org.slf4j.LoggerFactory;
  */
 @ManagedService(description = "CrossBrowserTesting TestSlots")
 public class CBTRemoteProxy extends CloudTestingRemoteProxy {
-    
+
     private static final String CBT_ACCOUNT_INFO = "https://app.crossbrowsertesting.com/api/v3/account/maxParallelLimits";
     private static final String CBT_USERNAME = getEnv().getStringEnvVariable("CBT_USERNAME", "");
     private static final String CBT_AUTHKEY = getEnv().getStringEnvVariable("CBT_AUTHKEY", "");
@@ -25,17 +25,17 @@ public class CBTRemoteProxy extends CloudTestingRemoteProxy {
     private static final Logger LOGGER = LoggerFactory.getLogger(CBTRemoteProxy.class.getName());
     private static final String CBT_PROXY_NAME = "CrossBrowserTesting";
 
-    public CBTRemoteProxy(RegistrationRequest request, GridRegistry registry) { 
+    public CBTRemoteProxy(RegistrationRequest request, GridRegistry registry) {
         super(updateCBTCapabilities(request, CBT_ACCOUNT_INFO), registry);
     }
 
-    
+
     @VisibleForTesting
     static RegistrationRequest updateCBTCapabilities(RegistrationRequest registrationRequest, String url) {
         String currentName = Thread.currentThread().getName();
         Thread.currentThread().setName("CrossBrowserTesting");
 
-        
+
         JsonElement cbtAccountInfo = getCommonProxyUtilities().readJSONFromUrl(url, CBT_USERNAME,
                 CBT_AUTHKEY);
         try {
@@ -46,7 +46,7 @@ public class CBTRemoteProxy extends CloudTestingRemoteProxy {
                 logMessage = String.format("Account max. concurrency was NOT fetched from %s", url);
                 cbtAccountConcurrency = 1;
             } else {
-                cbtAccountConcurrency = cbtAccountInfo.get("automated").getAsInt();
+                cbtAccountConcurrency = cbtAccountInfo.getAsJsonObject().get("automated").getAsInt();
             }
             LOGGER.info(logMessage);
             Thread.currentThread().setName(currentName);
@@ -59,7 +59,7 @@ public class CBTRemoteProxy extends CloudTestingRemoteProxy {
         Thread.currentThread().setName(currentName);
         return addCapabilitiesToRegistrationRequest(registrationRequest, 1, CBT_PROXY_NAME);
     }
-    
+
 
     @Override
     public String getUserNameProperty() {
@@ -67,7 +67,7 @@ public class CBTRemoteProxy extends CloudTestingRemoteProxy {
     }
 
     @Override
-    public String getUserNameValue() {  
+    public String getUserNameValue() {
         return CBT_USERNAME;
     }
 
@@ -91,7 +91,7 @@ public class CBTRemoteProxy extends CloudTestingRemoteProxy {
         return true;
     }
 
-    @Override 
+    @Override
     public boolean useAuthenticationToDownloadFile() {
         return true;
     }
@@ -100,7 +100,7 @@ public class CBTRemoteProxy extends CloudTestingRemoteProxy {
     public TestInformation getTestInformation(String seleniumSessionId) {
         String cbtTestUrl = "https://crossbrowsertesting.com/api/v3/selenium/%s";
         cbtTestUrl = String.format(cbtTestUrl, seleniumSessionId);
-     
+
 
         JsonObject testData = getCommonProxyUtilities().readJSONFromUrl(cbtTestUrl, CBT_USERNAME,
                 CBT_AUTHKEY).getAsJsonObject();
@@ -111,7 +111,7 @@ public class CBTRemoteProxy extends CloudTestingRemoteProxy {
         String browser = testData.get("caps").getAsJsonObject().get("browserName").isJsonNull() ? null : testData.get("caps").getAsJsonObject().get("browserName").getAsString();
         String browserVersion = testData.get("caps").getAsJsonObject().get("version").isJsonNull() ? null : testData.get("caps").getAsJsonObject().get("version").getAsString();
         String platform = testData.get("caps").getAsJsonObject().get("platform").isJsonNull() ? null : testData.get("caps").getAsJsonObject().get("platform").getAsString();
-     
+
         return new TestInformation.TestInformationBuilder()
                 .withSeleniumSessionId(seleniumSessionId)
                 .withTestName(testName)
