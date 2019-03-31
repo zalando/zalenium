@@ -57,7 +57,6 @@ public class CBTRemoteProxyTest {
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
-    @SuppressWarnings("ConstantConditions")
     @Before
     public void setUp() {
         try {
@@ -78,7 +77,7 @@ public class CBTRemoteProxyTest {
 
         // We add both nodes to the registry
         registry.add(cbtProxy);
-        
+
         // Creating the configuration and the registration request of the proxy (node)
         RegistrationRequest proxyRequest = TestUtils.getRegistrationRequestForTesting(40000,
                 DockerSeleniumRemoteProxy.class.getCanonicalName());
@@ -166,14 +165,14 @@ public class CBTRemoteProxyTest {
             requestedCapability.put(CapabilityType.BROWSER_NAME, BrowserType.CHROME);
             requestedCapability.put(CapabilityType.PLATFORM_NAME, Platform.WIN10);
 
-            
+
             // Getting a test session in the CBT node
             CBTRemoteProxy cbtSpyProxy = spy(cbtProxy);
             JsonElement informationSample = TestUtils.getTestInformationSample("crossbrowsertesting_testinformation.json");
             CommonProxyUtilities commonProxyUtilities = mock(CommonProxyUtilities.class);
             when(commonProxyUtilities.readJSONFromUrl(anyString(), anyString(), anyString())).thenReturn(informationSample);
             CBTRemoteProxy.setCommonProxyUtilities(commonProxyUtilities);
-            
+
             TestSession testSession = cbtSpyProxy.getNewSession(requestedCapability);
             Assert.assertNotNull(testSession);
             String mockSeleniumSessionId = "11089424-25EC-4EDD-88CD-FB331A10E969";
@@ -191,14 +190,14 @@ public class CBTRemoteProxyTest {
             TestInformation testInformation = cbtSpyProxy.getTestInformation(mockSeleniumSessionId);
             Assert.assertEquals("loadZalandoPageAndCheckTitle", testInformation.getTestName());
             Assert.assertThat(testInformation.getFileName(),
-                    CoreMatchers.containsString("crossbrowsertesting_loadZalandoPageAndCheckTitle_Safari_MAC_OSX_10.14"));
-            Assert.assertEquals("Safari, Mac OSX 10.14", testInformation.getBrowserAndPlatform());
+                    CoreMatchers.containsString("crossbrowsertesting_loadZalandoPageAndCheckTitle_Safari_Mac_OSX_10_14"));
+            Assert.assertEquals("Safari 12, Mac OSX 10.14", testInformation.getBrowserAndPlatform());
             Assert.assertEquals("https://s3.amazonaws.com/media.crossbrowsertesting.com/users/494827/videos/ze3bfcf468564beb0b87.mp4",
                     testInformation.getVideoUrl());
 
         } finally {
             CBTRemoteProxy.restoreCommonProxyUtilities();
-            
+
         }
     }
 

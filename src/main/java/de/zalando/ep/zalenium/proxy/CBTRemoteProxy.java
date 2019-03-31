@@ -106,11 +106,16 @@ public class CBTRemoteProxy extends CloudTestingRemoteProxy {
                 CBT_AUTHKEY).getAsJsonObject();
 
 
-        String cbtVideoUrl = testData.get("videos").isJsonNull() ? null : testData.get("videos").getAsJsonArray().get(0).getAsJsonObject().get("video").getAsString();
-        String testName = testData.get("caps").getAsJsonObject().get("name").isJsonNull() ? null : testData.get("caps").getAsJsonObject().get("name").getAsString();
-        String browser = testData.get("caps").getAsJsonObject().get("browserName").isJsonNull() ? null : testData.get("caps").getAsJsonObject().get("browserName").getAsString();
-        String browserVersion = testData.get("caps").getAsJsonObject().get("version").isJsonNull() ? null : testData.get("caps").getAsJsonObject().get("version").getAsString();
-        String platform = testData.get("caps").getAsJsonObject().get("platform").isJsonNull() ? null : testData.get("caps").getAsJsonObject().get("platform").getAsString();
+        String cbtVideoUrl = testData.get("videos").isJsonNull() ?
+                null : testData.get("videos").getAsJsonArray().get(0).getAsJsonObject().get("video").getAsString();
+        String testName = testData.get("caps").getAsJsonObject().get("name").isJsonNull() ?
+                null : testData.get("caps").getAsJsonObject().get("name").getAsString();
+        String browser = testData.get("caps").getAsJsonObject().get("browserName").isJsonNull() ?
+                null : testData.get("caps").getAsJsonObject().get("browserName").getAsString();
+        String browserVersion = testData.get("browser").getAsJsonObject().get("version").isJsonNull() ?
+                null : testData.get("browser").getAsJsonObject().get("version").getAsString();
+        String platform = testData.get("caps").getAsJsonObject().get("platform").isJsonNull() ?
+                null : testData.get("caps").getAsJsonObject().get("platform").getAsString();
 
         return new TestInformation.TestInformationBuilder()
                 .withSeleniumSessionId(seleniumSessionId)
