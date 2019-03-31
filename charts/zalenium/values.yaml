@@ -120,7 +120,7 @@ persistence:
     ##   GKE, AWS & OpenStack)
     ##
     # storageClass: "-"
-    accessMode: ReadWriteMany
+    accessMode: ReadWriteOnce
     size: 2Gi
   video:
     enabled: false
@@ -135,7 +135,7 @@ persistence:
     ##   GKE, AWS & OpenStack)
     ##
     # storageClass: "-"
-    accessMode: ReadWriteMany
+    accessMode: ReadWriteOnce
     size: 10Gi
 
 ingress:
