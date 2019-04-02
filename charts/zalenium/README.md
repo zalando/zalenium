@@ -14,13 +14,26 @@ This chart bootstraps a [Zalenium](https://github.com/zalando/zalenium) deployme
 
 - Kubernetes 1.5+ with Beta APIs enabled
 
-## Installing the Chart
 
-To install the chart with the release name `my-release`:
+## Installing the Chart from local repo
+
+To install the chart with the release name `my-release`(provided you have cloned this repo):
 
 ```console
 $ helm install --name my-release local/zalenium
 ```
+
+## Install from this GitHub repo:
+
+A sample installation steps would look like this:
+```
+helm repo add zalenim-github https://raw.githubusercontent.com/zalando/zalenium/master/charts/zalenium
+helm install --name my-release --namespace my-zalenium zalenim-github/zalenium
+```
+Where:
+* `zalenim-github` is the name of this repo (you may call it whatever you want);
+* `my-release` is the Helm's release name;
+* `my-zalenium` is the Kubernetes namespace in which Zalenium will be installed (will be created if not exists);
 
 The command deploys Zalenium on the Kubernetes cluster in the default configuration. The [configuration](#configuration) section lists the parameters that can be configured during installation.
 
@@ -34,7 +47,12 @@ To uninstall/delete the `my-release` deployment:
 $ helm delete my-release
 ```
 
-The command removes all the Kubernetes components associated with the chart and deletes the release.
+To remove the release name from the Helm store (so you may use it again), issue the following command:
+```
+$ helm delete my-release --purge
+```
+
+> **Note**: The command removes all the Kubernetes components associated with the chart and deletes the release.
 
 ## Configuration
 

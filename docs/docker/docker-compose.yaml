@@ -24,6 +24,7 @@ services:
             --sauceLabsEnabled false
             --browserStackEnabled false
             --testingBotEnabled false
+            --cbtEnabled false
             --startTunnel false
     environment:
       - HOST_UID
@@ -34,6 +35,8 @@ services:
       - BROWSER_STACK_KEY
       - TESTINGBOT_KEY
       - TESTINGBOT_SECRET
+      - CBT_USERNAME
+      - CBT_AUTHKEY
 
   mock:
     image: elgalu/google_adwords_mock
