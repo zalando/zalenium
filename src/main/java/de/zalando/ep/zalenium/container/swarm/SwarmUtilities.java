@@ -58,11 +58,11 @@ public class SwarmUtilities {
         return null;
     }
 
-    static synchronized List<Container> getRunningAndCreatedContainers() throws DockerException, InterruptedException {
+    public static synchronized List<Container> getRunningAndCreatedContainers() throws DockerException, InterruptedException {
         return dockerClient.listContainers(withStatusRunning(), withStatusCreated());
     }
 
-    static synchronized ContainerStatus getContainerByRemoteUrl(URL remoteUrl) throws DockerException, InterruptedException {
+    public static synchronized ContainerStatus getContainerByRemoteUrl(URL remoteUrl) throws DockerException, InterruptedException {
         List<Task> tasks = dockerClient.listTasks();
         for (Task task : tasks) {
             for (NetworkAttachment networkAttachment : CollectionUtils.emptyIfNull(task.networkAttachments())) {
@@ -77,7 +77,7 @@ public class SwarmUtilities {
         return null;
     }
 
-    static synchronized void stopServiceByContainerId(String containerId) throws DockerException, InterruptedException {
+    public static synchronized void stopServiceByContainerId(String containerId) throws DockerException, InterruptedException {
         List<Task> tasks = dockerClient.listTasks();
         for (Task task : tasks) {
             ContainerStatus containerStatus = task.status().containerStatus();
@@ -94,7 +94,7 @@ public class SwarmUtilities {
         }
     }
 
-    static synchronized Task getTaskByContainerId(String containerId) throws DockerException, InterruptedException {
+    public static synchronized Task getTaskByContainerId(String containerId) throws DockerException, InterruptedException {
         List<Task> tasks = dockerClient.listTasks();
 
         for (Task task : CollectionUtils.emptyIfNull(tasks)) {
@@ -108,7 +108,7 @@ public class SwarmUtilities {
         return null;
     }
 
-    static synchronized Task getTaskByServiceId(String serviceId) throws DockerException, InterruptedException {
+    public static synchronized Task getTaskByServiceId(String serviceId) throws DockerException, InterruptedException {
         String serviceName = dockerClient.inspectService(serviceId).spec().name();
         Task.Criteria criteria = Task.Criteria.builder().serviceName(serviceName).build();
         List<Task> tasks = dockerClient.listTasks(criteria);
@@ -121,19 +121,19 @@ public class SwarmUtilities {
         return task;
     }
 
-    static synchronized void pullImageIfNotPresent(String imageName) throws DockerException, InterruptedException {
+    public static synchronized void pullImageIfNotPresent(String imageName) throws DockerException, InterruptedException {
         List<Image> images = dockerClient.listImages(DockerClient.ListImagesParam.byName(imageName));
         if (CollectionUtils.isEmpty(images)) {
             dockerClient.pull(imageName, new AnsiProgressHandler());
         }
     }
 
-    static synchronized void startContainer(ContainerConfig containerConfig) throws DockerException, InterruptedException {
+    public static synchronized void startContainer(ContainerConfig containerConfig) throws DockerException, InterruptedException {
         ContainerCreation containerCreation = dockerClient.createContainer(containerConfig);
         dockerClient.startContainer(containerCreation.id());
     }
 
-    static synchronized ServiceCreateResponse createService(ServiceSpec serviceSpec) throws DockerException, InterruptedException {
+    public static synchronized ServiceCreateResponse createService(ServiceSpec serviceSpec) throws DockerException, InterruptedException {
         return dockerClient.createService(serviceSpec);
     }
 
