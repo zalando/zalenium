@@ -106,8 +106,8 @@ hub:
       enabled: false
       hostname:
       tls:
-        termination: edge
-        insecureEdgeTerminationPolicy: Redirect
+      #  termination: edge
+      #  insecureEdgeTerminationPolicy: Redirect
 
 ## Enable persistence using Persistent Volume Claims
 ## ref: http://kubernetes.io/docs/user-guide/persistent-volumes/
