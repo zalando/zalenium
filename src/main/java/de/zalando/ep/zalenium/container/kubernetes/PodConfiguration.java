@@ -1,6 +1,7 @@
 package de.zalando.ep.zalenium.container.kubernetes;
 
 import io.fabric8.kubernetes.api.model.EnvVar;
+import io.fabric8.kubernetes.api.model.PodSecurityContext;
 import io.fabric8.kubernetes.api.model.HostAlias;
 import io.fabric8.kubernetes.api.model.LocalObjectReference;
 import io.fabric8.kubernetes.api.model.Quantity;
@@ -29,6 +30,7 @@ public class PodConfiguration {
     private Map<String, String> nodeSelector;
     private List<Toleration> tolerations;
     private String nodePort;
+    private PodSecurityContext podSecurityContext;
 
     public String getNodePort() {
         return nodePort;
@@ -115,4 +117,13 @@ public class PodConfiguration {
     public void setTolerations(final List<Toleration> tolerations) {
         this.tolerations = tolerations;
     }
+
+	public PodSecurityContext getPodSecurityContext() {
+		return podSecurityContext;
+	}
+
+	public void setPodSecurityContext(PodSecurityContext podSecurityContext) {
+		this.podSecurityContext = podSecurityContext;
+	}
+
 }

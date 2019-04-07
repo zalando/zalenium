@@ -3,6 +3,7 @@ package de.zalando.ep.zalenium.container.kubernetes;
 import io.fabric8.kubernetes.api.model.EnvVar;
 import io.fabric8.kubernetes.api.model.HostAlias;
 import io.fabric8.kubernetes.api.model.LocalObjectReference;
+import io.fabric8.kubernetes.api.model.PodSecurityContext;
 import io.fabric8.kubernetes.api.model.Quantity;
 import io.fabric8.kubernetes.api.model.Toleration;
 import io.fabric8.kubernetes.api.model.Volume;
@@ -137,5 +138,12 @@ public class PodConfigurationTest {
         podConfiguration.setImagePullSecrets(secrets);
         assertThat(podConfiguration.getImagePullSecrets().size(), is(1));
         assertThat(podConfiguration.getImagePullSecrets().get(0), is(secret));
+    }
+    
+    @Test
+    public void testSetPodSecurityContext() {
+        PodSecurityContext securityContext = mock(PodSecurityContext.class);
+        podConfiguration.setPodSecurityContext(securityContext);
+        assertThat(podConfiguration.getPodSecurityContext(), is(securityContext));
     }
 }
