@@ -339,6 +339,7 @@ public class KubernetesContainerClient implements ContainerClient {
         config.setTolerations(tolerations);
         config.setPodLimits(seleniumPodLimits);
         config.setPodRequests(seleniumPodRequests);
+        config.setOwner(zaleniumPod);
         config.setPodSecurityContext(configuredSecurityContext);
 
         DoneablePod doneablePod = createDoneablePod.apply(config);
@@ -552,6 +553,7 @@ public class KubernetesContainerClient implements ContainerClient {
                 .withNewMetadata()
                     .withGenerateName(config.getContainerIdPrefix())
                     .addToLabels(config.getLabels())
+                    .withOwnerReferences(config.getOwnerRef())
                 .endMetadata()
                 .withNewSpec()
                     .withNodeSelector(config.getNodeSelector())
