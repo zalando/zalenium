@@ -158,11 +158,12 @@ spec:
   nodeSelector:
     {{ .Values.nodeSelector.key }}: {{ .Values.nodeSelector.value | quote }}
   {{- end }}
-  {{- if .Values.tolerations.enabled }}
+  {{- if .Values.tolerations }}
   tolerations:
-    - key: {{ .Values.tolerations.key }}
-      operator: {{ .Values.tolerations.operator }}
-      value: {{ .Values.tolerations.value | quote }}
-      effect: {{ .Values.tolerations.effect }}
+{{ toYaml .Values.tolerations | indent 4 }}
   {{- end }}
+  {{- if .Values.affinity }}
+  affinity:
+{{ toYaml .Values.affinity | indent 4 }}
+  {{- end -}}
 {{- end }}

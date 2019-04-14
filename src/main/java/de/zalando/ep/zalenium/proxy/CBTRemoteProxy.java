@@ -8,6 +8,8 @@ import org.openqa.grid.common.RegistrationRequest;
 import org.openqa.grid.internal.GridRegistry;
 import org.openqa.selenium.remote.server.jmx.ManagedService;
 
+import java.util.ArrayList;
+import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,7 +23,7 @@ public class CBTRemoteProxy extends CloudTestingRemoteProxy {
     private static final String CBT_ACCOUNT_INFO = "https://app.crossbrowsertesting.com/api/v3/account/maxParallelLimits";
     private static final String CBT_USERNAME = getEnv().getStringEnvVariable("CBT_USERNAME", "");
     private static final String CBT_AUTHKEY = getEnv().getStringEnvVariable("CBT_AUTHKEY", "");
-    private static final String CBT_URL = getEnv().getStringEnvVariable("CBT_URL", "http://hub.crossbrowsertesting.com:80/wd/hub");
+    private static final String CBT_URL = getEnv().getStringEnvVariable("CBT_URL", "http://hub.crossbrowsertesting.com:80");
     private static final Logger LOGGER = LoggerFactory.getLogger(CBTRemoteProxy.class.getName());
     private static final String CBT_PROXY_NAME = "CrossBrowserTesting";
 
@@ -92,11 +94,6 @@ public class CBTRemoteProxy extends CloudTestingRemoteProxy {
     }
 
     @Override
-    public boolean useAuthenticationToDownloadFile() {
-        return true;
-    }
-
-    @Override
     public TestInformation getTestInformation(String seleniumSessionId) {
         String cbtTestUrl = "https://crossbrowsertesting.com/api/v3/selenium/%s";
         cbtTestUrl = String.format(cbtTestUrl, seleniumSessionId);
@@ -116,6 +113,7 @@ public class CBTRemoteProxy extends CloudTestingRemoteProxy {
                 null : testData.get("browser").getAsJsonObject().get("version").getAsString();
         String platform = testData.get("caps").getAsJsonObject().get("platform").isJsonNull() ?
                 null : testData.get("caps").getAsJsonObject().get("platform").getAsString();
+        List<String> logUrls = new ArrayList<>();
 
         return new TestInformation.TestInformationBuilder()
                 .withSeleniumSessionId(seleniumSessionId)
@@ -127,6 +125,7 @@ public class CBTRemoteProxy extends CloudTestingRemoteProxy {
                 .withTestStatus(TestInformation.TestStatus.COMPLETED)
                 .withFileExtension(getVideoFileExtension())
                 .withVideoUrl(cbtVideoUrl)
+                .withLogUrls(logUrls)
                 .withMetadata(getMetadata())
                 .build();
     }

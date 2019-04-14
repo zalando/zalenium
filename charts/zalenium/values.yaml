@@ -63,6 +63,7 @@ hub:
   desiredContainers: 2
   maxDockerSeleniumContainers: 10
   videoRecordingEnabled: true
+  # the limits/requests below are for Selenium pods (containers)
   cpuRequest: 250m
   cpuLimit: 1000m
   memRequest: 500Mi
@@ -102,6 +103,12 @@ hub:
       enabled: false
       triggers:
         - type: ConfigChange
+    route:
+      enabled: false
+      hostname:
+      tls:
+      #  termination: edge
+      #  insecureEdgeTerminationPolicy: Redirect
 
 ## Enable persistence using Persistent Volume Claims
 ## ref: http://kubernetes.io/docs/user-guide/persistent-volumes/
@@ -170,10 +177,38 @@ nodeSelector:
   ## key: test
   ## value: test
 
-tolerations:
-  enabled: false
-  ## Set tolerations to run zalenium hub on nodes with taints
-  ## key: test
-  ## operator: Equal
-  ## value: test
-  ## effect: NoSchedule
+# Allow pods to run on nodes with taints
+# https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
+#
+# tolerations:
+# - key: "<key-name>"
+#   operator: "Equal"
+#   value: "<key-value>"
+#   effect: "NoSchedule"
+
+# More flexible way to manage pods' allocation
+# https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity
+#
+# affinity:
+#   # soft preference to go to dedicated nodes
+#   nodeAffinity:
+#     preferredDuringSchedulingIgnoredDuringExecution:
+#     - weight: 100
+#       preference:
+#         matchExpressions:
+#         - key: <key-name>
+#           operator: In
+#           values:
+#           - <key-value>
+#   # prefer not to start the pod on a node that's having another pod with specific labels
+#   podAntiAffinity:
+#     preferredDuringSchedulingIgnoredDuringExecution:
+#     - weight: 100
+#       podAffinityTerm:
+#         labelSelector:
+#           matchExpressions:
+#           - key: <key-name>
+#             operator: In
+#             values:
+#             - <key-value>
+#         topologyKey: "kubernetes.io/hostname"

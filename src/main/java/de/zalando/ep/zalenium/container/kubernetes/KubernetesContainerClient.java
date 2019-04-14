@@ -12,6 +12,7 @@ import io.fabric8.kubernetes.api.model.HostAlias;
 import io.fabric8.kubernetes.api.model.LocalObjectReference;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodList;
+import io.fabric8.kubernetes.api.model.PodSecurityContext;
 import io.fabric8.kubernetes.api.model.Quantity;
 import io.fabric8.kubernetes.api.model.Toleration;
 import io.fabric8.kubernetes.api.model.Volume;
@@ -67,6 +68,7 @@ public class KubernetesContainerClient implements ContainerClient {
     private List<Toleration> tolerations = new ArrayList<>();
     private String imagePullPolicy;
     private List<LocalObjectReference> imagePullSecrets;
+    private PodSecurityContext configuredSecurityContext;
 
     private final Map<String, Quantity> seleniumPodLimits = new HashMap<>();
     private final Map<String, Quantity> seleniumPodRequests = new HashMap<>();
@@ -104,7 +106,7 @@ public class KubernetesContainerClient implements ContainerClient {
             discoverNodeSelector();
             discoverTolerations();
             discoverImagePullSecrets();
-
+            discoverSecurityContext();
             buildResourceMaps();
 
             logger.info(String.format(
@@ -204,6 +206,10 @@ public class KubernetesContainerClient implements ContainerClient {
         }
 
         return hostname;
+    }
+    
+    private void discoverSecurityContext() {
+    	configuredSecurityContext = zaleniumPod.getSpec().getSecurityContext();
     }
 
     @Override
@@ -333,6 +339,8 @@ public class KubernetesContainerClient implements ContainerClient {
         config.setTolerations(tolerations);
         config.setPodLimits(seleniumPodLimits);
         config.setPodRequests(seleniumPodRequests);
+        config.setOwner(zaleniumPod);
+        config.setPodSecurityContext(configuredSecurityContext);
 
         DoneablePod doneablePod = createDoneablePod.apply(config);
 
@@ -545,10 +553,12 @@ public class KubernetesContainerClient implements ContainerClient {
                 .withNewMetadata()
                     .withGenerateName(config.getContainerIdPrefix())
                     .addToLabels(config.getLabels())
+                    .withOwnerReferences(config.getOwnerRef())
                 .endMetadata()
                 .withNewSpec()
                     .withNodeSelector(config.getNodeSelector())
                     .withTolerations(config.getTolerations())
+                    .withSecurityContext(config.getPodSecurityContext())
                     // Add a memory volume that we can use for /dev/shm
                     .addNewVolume()
                         .withName("dshm")
