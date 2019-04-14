@@ -3,6 +3,8 @@ package de.zalando.ep.zalenium.dashboard;
 
 import com.google.common.base.Strings;
 import com.google.gson.JsonObject;
+
+import de.zalando.ep.zalenium.proxy.RemoteLogFile;
 import de.zalando.ep.zalenium.util.CommonProxyUtilities;
 
 import java.util.Date;
@@ -33,6 +35,7 @@ public class TestInformation {
     private String fileExtension;
     private String videoUrl;
     private List<String> logUrls;
+    private List<RemoteLogFile> remoteLogFiles;
     private String videoFolderPath;
     private String logsFolderPath;
     private String testNameNoExtension;
@@ -108,6 +111,10 @@ public class TestInformation {
         return logUrls;
     }
 
+    public List<RemoteLogFile> getRemoteLogFiles() {
+        return remoteLogFiles;
+    }
+
     public String getVideoUrl() {
         return videoUrl;
     }
@@ -146,6 +153,8 @@ public class TestInformation {
             seleniumLogFileName = fileName.concat("selenium-multinode-stderr.log");
         } else if (SAUCE_LABS_PROXY_NAME.equalsIgnoreCase(proxyName)) {
             seleniumLogFileName = fileName.concat("selenium-server.log");
+        } else if (BROWSER_STACK_PROXY_NAME.equalsIgnoreCase(proxyName)){
+            seleniumLogFileName = fileName.concat("selenium.log");
         } else {
             seleniumLogFileName = fileName.concat("not_implemented.log");
         }
@@ -164,6 +173,8 @@ public class TestInformation {
             browserDriverLogFileName = fileName.concat(String.format("%s_driver.log", browser.toLowerCase()));
         } else if (SAUCE_LABS_PROXY_NAME.equalsIgnoreCase(proxyName)) {
             browserDriverLogFileName = fileName.concat("log.json");
+        } else if (BROWSER_STACK_PROXY_NAME.equalsIgnoreCase(proxyName)){
+            browserDriverLogFileName = fileName.concat("browserstack.log");
         } else {
             browserDriverLogFileName = fileName.concat("not_implemented.log");
         }
@@ -260,6 +271,7 @@ public class TestInformation {
         this.videoUrl = builder.videoUrl;
         this.fileExtension = Optional.ofNullable(builder.fileExtension).orElse("");
         this.logUrls = builder.logUrls;
+        this.remoteLogFiles = builder.remoteLogFiles;
         this.screenDimension = Optional.ofNullable(builder.screenDimension).orElse("");
         this.timeZone = Optional.ofNullable(builder.timeZone).orElse("");
         this.build = Optional.ofNullable(builder.build).orElse("");
@@ -287,6 +299,7 @@ public class TestInformation {
         private String testFileNameTemplate;
         private TestStatus testStatus;
         private JsonObject metadata;
+        private List<RemoteLogFile> remoteLogFiles;
 
         public TestInformationBuilder withSeleniumSessionId(String seleniumSessionId) {
             this.seleniumSessionId = seleniumSessionId;
@@ -335,6 +348,11 @@ public class TestInformation {
 
         public TestInformationBuilder withLogUrls(List<String> logUrls) {
             this.logUrls = logUrls;
+            return this;
+        }
+
+        public TestInformationBuilder withRemoteLogFiles(List<RemoteLogFile> remoteLogFiles) {
+            this.remoteLogFiles = remoteLogFiles;
             return this;
         }
 
