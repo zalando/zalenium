@@ -1,9 +1,18 @@
 package de.zalando.ep.zalenium.util;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.type.CollectionType;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.google.common.annotations.VisibleForTesting;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class Environment {
 
@@ -79,6 +88,49 @@ public class Environment {
         }
 
         return buckets;
+    }
+
+    public <T> List<T> getYamlListEnvVariable(String envVariableName, Class<T> clazz, List<T> defaultValues) {
+        String envVariable = getEnvVariable(envVariableName);
+
+        if (envVariable != null) {
+            try {
+                ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+
+                CollectionType javaType = mapper.getTypeFactory()
+                        .constructCollectionType(List.class, clazz);
+                return mapper.readValue(envVariable, javaType);
+            } catch (IOException e) {
+                logger.warn("Unable to parse Yaml type from env variable. Falling back to default values.", e);
+                logger.warn(String.format(ENV_VAR_IS_NOT_A_VALID_DATA_TYPE, envVariableName, "yamlList"));
+                logger.debug(String.format(ENV_VAR_IS_NOT_A_VALID_DATA_TYPE, envVariableName, "yamlList"), e);
+                return defaultValues;
+            }
+        } else {
+            return defaultValues;
+        }
+    }
+
+    public Map<String,String> getMapEnvVariable(String envVariableName, Map<String,String> defaultValues) {
+        String envVariable = getEnvVariable(envVariableName);
+
+        if (envVariable != null) {
+            try {
+                Map<String,String> values = Stream.of(envVariable.split(","))
+                        .map(str -> str.split("="))
+                        .collect(Collectors.toMap(str -> str[0], str -> str[1]));
+
+                return values;
+            } catch (Exception e) {
+                logger.warn("Unable to parse Yaml type from env variable. Falling back to default values.", e);
+                logger.warn(String.format(ENV_VAR_IS_NOT_A_VALID_DATA_TYPE, envVariableName, "yamlMap"));
+                logger.debug(String.format(ENV_VAR_IS_NOT_A_VALID_DATA_TYPE, envVariableName, "yamlMap"), e);
+                return defaultValues;
+            }
+        }
+        else {
+            return defaultValues;
+        }
     }
 
     public String getContextPath() {

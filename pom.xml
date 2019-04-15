@@ -89,6 +89,7 @@
         <skip.failsafe.setup>false</skip.failsafe.setup>
         <integrationToTest>sauceLabs</integrationToTest>
         <httpmime.version>4.5.6</httpmime.version>
+        <junit.system-rules.version>1.19.0</junit.system-rules.version>
     </properties>
 
     <dependencies>
@@ -240,6 +241,12 @@
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
             <version>${mockito.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.github.stefanbirkner</groupId>
+            <artifactId>system-rules</artifactId>
+            <version>${junit.system-rules.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
