@@ -16,11 +16,11 @@ jobs:
       - docker pull elgalu/selenium
       - travis_retry ./run_integration_tests.sh sauceLabs
 
-#    - env: step=browserStack
-#      if: type = pull_request
-#      script:
-#        - docker pull elgalu/selenium
-#        - travis_retry ./run_integration_tests.sh browserStack
+    - env: step=browserStack
+      if: type = pull_request
+      script:
+        - docker pull elgalu/selenium
+        - travis_retry ./run_integration_tests.sh browserStack
 
     - env: step=dockerCompose
       if: type = pull_request

@@ -84,14 +84,18 @@ public class CommonProxyUtilities {
         return null;
     }
 
+    public void downloadFile(String fileUrl, String fileNameWithFullPath, String user, String password,
+    boolean authenticate) throws InterruptedException{
+        downloadFile(fileUrl, fileNameWithFullPath, user, password, authenticate, 10);
+    }
+
     /*
         Downloading a file, method adapted from:
         http://code.runnable.com/Uu83dm5vSScIAACw/download-a-file-from-the-web-for-java-files-and-save
      */
     public void downloadFile(String fileUrl, String fileNameWithFullPath, String user, String password,
-                             boolean authenticate)
+                             boolean authenticate, int maxAttempts)
             throws InterruptedException {
-        int maxAttempts = 10;
         int currentAttempts = 0;
         // Videos are usually not ready right away, we put a little sleep to avoid falling into the catch/retry.
         Thread.sleep(1000 * 5);
@@ -105,6 +109,7 @@ public class CommonProxyUtilities {
                     urlConnection.setRequestProperty("Authorization", basicAuth);
                 }
 
+                urlConnection.setRequestProperty("Accept", "*/*");
                 //Code to download
                 InputStream in = new BufferedInputStream(urlConnection.getInputStream());
                 ByteArrayOutputStream out = new ByteArrayOutputStream();
