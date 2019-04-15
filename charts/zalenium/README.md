@@ -27,11 +27,11 @@ $ helm install --name my-release local/zalenium
 
 A sample installation steps would look like this:
 ```
-helm repo add zalenim-github https://raw.githubusercontent.com/zalando/zalenium/master/charts/zalenium
-helm install --name my-release --namespace my-zalenium zalenim-github/zalenium
+helm repo add zalenium-github https://raw.githubusercontent.com/zalando/zalenium/master/charts/zalenium
+helm install --name my-release --namespace my-zalenium zalenium-github/zalenium
 ```
 Where:
-* `zalenim-github` is the name of this repo (you may call it whatever you want);
+* `zalenium-github` is the name of this repo (you may call it whatever you want);
 * `my-release` is the Helm's release name;
 * `my-zalenium` is the Kubernetes namespace in which Zalenium will be installed (will be created if not exists);
 
