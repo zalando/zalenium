@@ -53,6 +53,9 @@ public class KubernetesContainerClient implements ContainerClient {
 
     private static final Logger logger = LoggerFactory.getLogger(KubernetesContainerClient.class.getName());
 
+    private static final String ZALENIUM_KUBERNETES_TOLERATIONS = "ZALENIUM_KUBERNETES_TOLERATIONS";
+    private static final String ZALENIUM_KUBERNETES_NODE_SELECTOR = "ZALENIUM_KUBERNETES_NODE_SELECTOR";
+
     private KubernetesClient client;
 
     private String zaleniumAppName;
@@ -156,16 +159,26 @@ public class KubernetesContainerClient implements ContainerClient {
     }
 
     private void discoverNodeSelector() {
-        final Map<String, String> configuredNodeSelector = zaleniumPod.getSpec().getNodeSelector();
-        if (configuredNodeSelector != null && !configuredNodeSelector.isEmpty()) {
-            nodeSelector = configuredNodeSelector;
+        final Map<String,String> nodeSelectorFromEnv = environment.getMapEnvVariable(ZALENIUM_KUBERNETES_NODE_SELECTOR, new HashMap<>());
+        if (nodeSelectorFromEnv != null && !nodeSelectorFromEnv.isEmpty()) {
+            nodeSelector = nodeSelectorFromEnv;
+        } else {
+            final Map<String, String> configuredNodeSelector = zaleniumPod.getSpec().getNodeSelector();
+            if (configuredNodeSelector != null && !configuredNodeSelector.isEmpty()) {
+                nodeSelector = configuredNodeSelector;
+            }
         }
     }
 
     private void discoverTolerations() {
-        final List<Toleration> configuredTolerations = zaleniumPod.getSpec().getTolerations();
-        if (configuredTolerations != null && !configuredTolerations.isEmpty()) {
-            tolerations = configuredTolerations;
+        final List<Toleration> tolerationsFromEnv = environment.getYamlListEnvVariable(ZALENIUM_KUBERNETES_TOLERATIONS, Toleration.class, new ArrayList<Toleration>());
+        if (tolerationsFromEnv != null && !tolerationsFromEnv.isEmpty()) {
+            tolerations = tolerationsFromEnv;
+        } else {
+            final List<Toleration> configuredTolerations = zaleniumPod.getSpec().getTolerations();
+            if (configuredTolerations != null && !configuredTolerations.isEmpty()) {
+                tolerations = configuredTolerations;
+            }
         }
     }
 
