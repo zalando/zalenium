@@ -115,7 +115,7 @@ public class ParallelIT  {
         try {
             webDriver.set(new RemoteWebDriver(new URL(zaleniumUrl), desiredCapabilities));
         } catch (Exception e) {
-            LOGGER.warn("FAILED {} on {} - {}", desiredCapabilities.toString());
+            LOGGER.warn("FAILED on {}", desiredCapabilities.toString());
             throw e;
         }
 
@@ -123,10 +123,15 @@ public class ParallelIT  {
 
     @AfterMethod(alwaysRun = true)
     public void quitBrowser(Method method, Object[] desiredCaps) {
-        webDriver.get().quit();
         DesiredCapabilities desiredCapabilities = (DesiredCapabilities) desiredCaps[0];
         LOGGER.info("Integration to test: {}", System.getProperty("integrationToTest"));
-        LOGGER.info("FINISHING {}", desiredCapabilities.toString());
+        try {
+            webDriver.get().quit();
+            LOGGER.info("FINISHING {}", desiredCapabilities.toString());
+        } catch (Exception e) {
+            LOGGER.warn("FAILED on {}", desiredCapabilities.toString());
+            throw e;
+        }
     }
 
     // Returns the webDriver for the current thread
