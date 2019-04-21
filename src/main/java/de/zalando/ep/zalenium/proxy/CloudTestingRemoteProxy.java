@@ -288,7 +288,7 @@ public class CloudTestingRemoteProxy extends DefaultRemoteProxy {
                             getUserNameValue(), getAccessKeyValue(), useAuthenticationToDownloadFile(), 2);
                 }
                 for (RemoteLogFile remoteLogFile : testInformation.getRemoteLogFiles()) {
-                    fileNameWithFullPath = testInformation.getLogsFolderPath() + "/" + remoteLogFile.getLocalFileName();;
+                    fileNameWithFullPath = testInformation.getLogsFolderPath() + "/" + remoteLogFile.getLocalFileName();
                     commonProxyUtilities.downloadFile(remoteLogFile.getRemoteUrl(), fileNameWithFullPath,
                             getUserNameValue(), getAccessKeyValue(), remoteLogFile.isAuthenticationRequired(), 2);
                 }
@@ -346,20 +346,17 @@ public class CloudTestingRemoteProxy extends DefaultRemoteProxy {
 
     @Override
     public void startPolling() {
-        super.startPolling();
         cloudProxyNodePoller = new CloudProxyNodePoller(this);
         cloudProxyNodePoller.start();
     }
 
     @Override
     public void stopPolling() {
-        super.stopPolling();
         cloudProxyNodePoller.interrupt();
     }
 
     @Override
     public void teardown() {
-        super.teardown();
         stopPolling();
     }
 
