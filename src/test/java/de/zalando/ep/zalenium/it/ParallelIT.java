@@ -109,7 +109,7 @@ public class ParallelIT  {
         String zaleniumUrl = String.format("http://%s:%s/wd/hub", ZALENIUM_HOST, ZALENIUM_PORT);
         DesiredCapabilities desiredCapabilities = (DesiredCapabilities) desiredCaps[0];
         desiredCapabilities.setCapability("name", method.getName());
-        LOGGER.info("Integration to test {}: ", System.getProperty("integrationToTest"));
+        LOGGER.info("Integration to test: {}", System.getProperty("integrationToTest"));
         LOGGER.info("STARTING {}", desiredCapabilities.toString());
 
         try {
@@ -125,7 +125,7 @@ public class ParallelIT  {
     public void quitBrowser(Method method, Object[] desiredCaps) {
         webDriver.get().quit();
         DesiredCapabilities desiredCapabilities = (DesiredCapabilities) desiredCaps[0];
-        LOGGER.info("Integration to test {}: ", System.getProperty("integrationToTest"));
+        LOGGER.info("Integration to test: {}", System.getProperty("integrationToTest"));
         LOGGER.info("FINISHING {}", desiredCapabilities.toString());
     }
 
