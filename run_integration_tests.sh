@@ -7,7 +7,7 @@ INTEGRATION_TO_TEST=$1
 VIDEOS_FOLDER=$(pwd)/target/videos
 echo ${VIDEOS_FOLDER}
 
-if [[ "$TRAVIS_PULL_REQUEST" = "false" ]] && [[ -n "${TRAVIS_TAG}" ]] && [[ "${TRAVIS_TAG}" != "latest" ]]; then
+if [ "$TRAVIS_PULL_REQUEST" = "false" ] && [ -n "${TRAVIS_TAG}" ] && [ "${TRAVIS_TAG}" != "latest" ]; then
     echo "TRAVIS_TAG=${TRAVIS_TAG}"
 	echo "Not running integration tests when a TAG is set, we assume they already ran in the PR."
 else
