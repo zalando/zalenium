@@ -4,7 +4,6 @@ import org.openqa.selenium.Platform;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.net.NetworkUtils;
 import org.openqa.selenium.remote.BrowserType;
-import org.openqa.selenium.remote.CapabilityType;
 import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.remote.RemoteWebDriver;
 import org.slf4j.Logger;
@@ -44,74 +43,90 @@ public class ParallelIT  {
 
     // Data provider which returns the browsers that will be used to run the tests
     @DataProvider(name = "browsersAndPlatforms")
-    public static Object[][] browsersAndPlatformsProvider() {
+    public static Object[] browsersAndPlatformsProvider() {
+        DesiredCapabilities chromeCaps = new DesiredCapabilities();
+        chromeCaps.setBrowserName(BrowserType.CHROME);
+        chromeCaps.setPlatform(Platform.ANY);
+
+        DesiredCapabilities firefoxCaps = new DesiredCapabilities();
+        firefoxCaps.setBrowserName(BrowserType.FIREFOX);
+        firefoxCaps.setPlatform(Platform.ANY);
+
+        DesiredCapabilities safariCaps = new DesiredCapabilities();
+        safariCaps.setBrowserName(BrowserType.SAFARI);
+
+        DesiredCapabilities edgeCaps = new DesiredCapabilities();
+        edgeCaps.setBrowserName(BrowserType.EDGE);
+
         String integrationToTest = System.getProperty("integrationToTest");
         if (!Strings.isNullOrEmpty(integrationToTest) && sauceLabsIntegration.equalsIgnoreCase(integrationToTest)) {
-            return new Object[][] {
-                    new Object[]{BrowserType.SAFARI, "macOS 10.14", "12"},
-                    new Object[]{BrowserType.EDGE, "Windows 10", "18.17763"},
-                    new Object[]{BrowserType.CHROME, Platform.LINUX},
-                    new Object[]{BrowserType.FIREFOX, Platform.ANY}
-            };
+            safariCaps.setCapability("platform", "macOS 10.14");
+            safariCaps.setVersion("12");
+            edgeCaps.setCapability("platform", "Windows 10");
+            edgeCaps.setVersion("18.17763");
+
         }
         if (!Strings.isNullOrEmpty(integrationToTest) && browserStackIntegration.equalsIgnoreCase(integrationToTest)) {
-            return new Object[][] {
-                    new Object[]{BrowserType.SAFARI, "OS X", "12"},
-                    new Object[]{BrowserType.EDGE, "Windows", "18.0"},
-                    new Object[]{BrowserType.CHROME, Platform.LINUX},
-                    new Object[]{BrowserType.FIREFOX, Platform.ANY}
-            };
+            edgeCaps.setCapability("os", "Windows");
+            edgeCaps.setCapability("os_version", "10");
+            edgeCaps.setCapability("browser_version", "18.0");
+            safariCaps.setCapability("os", "OS X");
+            safariCaps.setCapability("os_version", "Mojave");
         }
-        return new Object[][] {
-                new Object[]{BrowserType.CHROME, Platform.LINUX},
-                new Object[]{BrowserType.FIREFOX, Platform.ANY}
-        };
+        if (!Strings.isNullOrEmpty(integrationToTest) && crossBrowserTestingIntegration.equalsIgnoreCase(integrationToTest)) {
+            edgeCaps.setCapability("version", "18");
+            edgeCaps.setCapability("platform", "Windows 10");
+            edgeCaps.setCapability("record_video", "true");
+            safariCaps.setCapability("version", "12");
+            safariCaps.setCapability("platform", "Mac OSX 10.14");
+            safariCaps.setCapability("record_video", "true");
+        }
+        if (!Strings.isNullOrEmpty(integrationToTest) && testingBotIntegration.equalsIgnoreCase(integrationToTest)) {
+            edgeCaps.setCapability("version", "18");
+            edgeCaps.setCapability("platform", "WIN10");
+            safariCaps.setCapability("version", "11");
+            safariCaps.setCapability("platform", "HIGH-SIERRA");
+        }
+        return new Object[] {safariCaps, edgeCaps, chromeCaps, firefoxCaps};
     }
 
     // Data provider which returns the browsers that will be used to run the tests
     @DataProvider(name = "browsersAndPlatformsForLivePreview")
-    public static Object[][] browsersAndPlatformsForLivePreviewProvider() {
-        return new Object[][] {
-                new Object[]{BrowserType.CHROME, Platform.LINUX},
-                new Object[]{BrowserType.FIREFOX, Platform.ANY},
-        };
+    public static Object[] browsersAndPlatformsForLivePreviewProvider() {
+        DesiredCapabilities chromeCaps = new DesiredCapabilities();
+        chromeCaps.setBrowserName(BrowserType.CHROME);
+        chromeCaps.setPlatform(Platform.ANY);
+
+        DesiredCapabilities firefoxCaps = new DesiredCapabilities();
+        firefoxCaps.setBrowserName(BrowserType.FIREFOX);
+        firefoxCaps.setPlatform(Platform.ANY);
+
+        return new Object[] {chromeCaps, firefoxCaps};
     }
 
     @BeforeMethod(alwaysRun = true)
-    public void startWebDriverAndGetBaseUrl(Method method, Object[] testArgs) throws MalformedURLException {
+    public void startWebDriverAndGetBaseUrl(Method method, Object[] desiredCaps) throws MalformedURLException {
         String zaleniumUrl = String.format("http://%s:%s/wd/hub", ZALENIUM_HOST, ZALENIUM_PORT);
-        String browserType = testArgs[0].toString();
-        Platform platform = (Platform) testArgs[1];
-        String version = "";
-        if (testArgs.length > 2) {
-            version = String.valueOf(testArgs[2]);
-        }
-        LOGGER.info("STARTING {} on {} - {}, using {}", method.getName(), browserType, platform.name(), zaleniumUrl);
-        LOGGER.info("Integration to test {}", System.getProperty("integrationToTest"));
-
-        DesiredCapabilities desiredCapabilities = new DesiredCapabilities();
-        desiredCapabilities.setCapability(CapabilityType.BROWSER_NAME, browserType);
-        desiredCapabilities.setCapability(CapabilityType.PLATFORM_NAME, platform);
-        if (!Strings.isNotNullAndNotEmpty(version)) {
-            desiredCapabilities.setCapability(CapabilityType.VERSION, version);
-        }
+        DesiredCapabilities desiredCapabilities = (DesiredCapabilities) desiredCaps[0];
         desiredCapabilities.setCapability("name", method.getName());
+        LOGGER.info("Integration to test {}: ", System.getProperty("integrationToTest"));
+        LOGGER.info("STARTING {}", desiredCapabilities.toString());
 
         try {
             webDriver.set(new RemoteWebDriver(new URL(zaleniumUrl), desiredCapabilities));
         } catch (Exception e) {
-            LOGGER.warn("FAILED {} on {} - {}", method.getName(), browserType, platform.name());
+            LOGGER.warn("FAILED {} on {} - {}", desiredCapabilities.toString());
             throw e;
         }
 
     }
 
     @AfterMethod(alwaysRun = true)
-    public void quitBrowser(Method method, Object[] testArgs) {
+    public void quitBrowser(Method method, Object[] desiredCaps) {
         webDriver.get().quit();
-        String browserType = testArgs[0].toString();
-        Platform platform = (Platform) testArgs[1];
-        LOGGER.info("FINISHING {} on {} - {}", method.getName(), browserType, platform.name());
+        DesiredCapabilities desiredCapabilities = (DesiredCapabilities) desiredCaps[0];
+        LOGGER.info("Integration to test {}: ", System.getProperty("integrationToTest"));
+        LOGGER.info("FINISHING {}", desiredCapabilities.toString());
     }
 
     // Returns the webDriver for the current thread
@@ -120,7 +135,7 @@ public class ParallelIT  {
     }
 
     @Test(dataProvider = "browsersAndPlatformsForLivePreview")
-    public void checkIframeLinksForLivePreviewWithMachineIp(String browserType, Platform platform) {
+    public void checkIframeLinksForLivePreviewWithMachineIp(DesiredCapabilities desiredCapabilities) {
 
         NetworkUtils networkUtils = new NetworkUtils();
         String hostIpAddress = networkUtils.getIp4NonLoopbackAddressOfThisMachine().getHostAddress();
@@ -138,7 +153,7 @@ public class ParallelIT  {
 
 
     @Test(dataProvider = "browsersAndPlatforms")
-    public void loadGooglePageAndCheckTitle(String browserType, Platform platform) {
+    public void loadGooglePageAndCheckTitle(DesiredCapabilities desiredCapabilities) {
 
         // Go to the homepage
         getWebDriver().get("http://www.google.com");
@@ -149,7 +164,7 @@ public class ParallelIT  {
 
     @SuppressWarnings("groupsTestNG")
     @Test(dataProvider = "browsersAndPlatformsForLivePreview", groups = {"minikube"})
-    public void loadTheInternetPageAndCheckTitle(String browserType, Platform platform) {
+    public void loadTheInternetPageAndCheckTitle(DesiredCapabilities desiredCapabilities) {
 
         // Go to the homepage
         getWebDriver().get("https://the-internet.herokuapp.com/");
