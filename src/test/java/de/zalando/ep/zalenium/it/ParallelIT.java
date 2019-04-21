@@ -28,9 +28,9 @@ public class ParallelIT  {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ParallelIT.class);
     private static final String sauceLabsIntegration = "sauceLabs";
-    private final String browserStackIntegration = "browserStack";
-    private final String testingBotIntegration = "testingBot";
-    private final String crossBrowserTestingIntegration = "crossBrowserTesting";
+    private static final String browserStackIntegration = "browserStack";
+    private static final String testingBotIntegration = "testingBot";
+    private static final String crossBrowserTestingIntegration = "crossBrowserTesting";
 
     // Zalenium setup variables
     private static final String ZALENIUM_HOST = System.getenv("ZALENIUM_GRID_HOST") != null ?
@@ -50,6 +50,14 @@ public class ParallelIT  {
             return new Object[][] {
                     new Object[]{BrowserType.SAFARI, "macOS 10.14", "12"},
                     new Object[]{BrowserType.EDGE, "Windows 10", "18.17763"},
+                    new Object[]{BrowserType.CHROME, Platform.LINUX},
+                    new Object[]{BrowserType.FIREFOX, Platform.ANY}
+            };
+        }
+        if (!Strings.isNullOrEmpty(integrationToTest) && browserStackIntegration.equalsIgnoreCase(integrationToTest)) {
+            return new Object[][] {
+                    new Object[]{BrowserType.SAFARI, "OS X", "12"},
+                    new Object[]{BrowserType.EDGE, "Windows", "18.0"},
                     new Object[]{BrowserType.CHROME, Platform.LINUX},
                     new Object[]{BrowserType.FIREFOX, Platform.ANY}
             };
