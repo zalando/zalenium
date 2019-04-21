@@ -151,7 +151,7 @@ public class CBTRemoteProxyTest {
 
         // The body should now have the CBT variables
         String expectedBody = String.format("{\"desiredCapabilities\":{\"browserName\":\"internet explorer\",\"platformName\":" +
-                                "\"WIN8\",\"username\":\"%s\",\"authkey\":\"%s\",\"version\":\"latest\"}}",
+                                "\"WIN8\",\"username\":\"%s\",\"password\":\"%s\",\"version\":\"latest\"}}",
                         env.getStringEnvVariable("CBT_USERNAME", ""),
                         env.getStringEnvVariable("CBT_AUTHKEY", ""));
         verify(request).setBody(expectedBody);
