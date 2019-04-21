@@ -75,7 +75,7 @@ public class CBTRemoteProxy extends CloudTestingRemoteProxy {
 
     @Override
     public String getAccessKeyProperty() {
-        return "authkey";
+        return "password";
     }
 
     @Override
@@ -144,6 +144,5 @@ public class CBTRemoteProxy extends CloudTestingRemoteProxy {
     public String getProxyClassName() {
         return CBTRemoteProxy.class.getName();
     }
-
 
 }
