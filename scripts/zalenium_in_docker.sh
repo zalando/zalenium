@@ -6,7 +6,7 @@ INTEGRATION_TO_TEST=$3
 
 # In OSX install gtimeout through `brew install coreutils`
 function mtimeout() {
-    if [ "$(uname -s)" = 'Darwin' ]; then
+    if [[ "$(uname -s)" = 'Darwin' ]]; then
         gtimeout "$@"
     else
         timeout "$@"
@@ -28,18 +28,18 @@ export -f WaitZaleniumStarted
 StartUp()
 {
     HOST_OPTIONS=""
-    if [ "$(uname -s)" != 'Darwin' ]; then
+    if [[ "$(uname -s)" != 'Darwin' ]]; then
         HOST_OPTIONS="-e HOST_UID=\"$(id -u)\" -e HOST_GID=\"$(id -g)\""
     fi
 
     DOCKER_SELENIUM_IMAGE_COUNT=$(docker images | grep "elgalu/selenium" | wc -l)
-    if [ ${DOCKER_SELENIUM_IMAGE_COUNT} -eq 0 ]; then
+    if [[ ${DOCKER_SELENIUM_IMAGE_COUNT} -eq 0 ]]; then
         echo "Seems that docker-selenium's image has not been downloaded yet, please run 'docker pull elgalu/selenium' first"
         exit 1
     fi
 
     CONTAINERS=$(docker ps -a -f name=zalenium -q | wc -l)
-    if [ ${CONTAINERS} -gt 0 ]; then
+    if [[ ${CONTAINERS} -gt 0 ]]; then
         echo "Removing exited docker-selenium containers..."
         docker rm -f $(docker ps -a -f name=zalenium -q)
     fi
@@ -47,12 +47,12 @@ StartUp()
     VIDEOS_FOLDER=${project.build.directory}/videos
     mkdir -p "${VIDEOS_FOLDER}"
 
-    if [ "$INTEGRATION_TO_TEST" = sauceLabs ]; then
+    if [[ "$INTEGRATION_TO_TEST" = sauceLabs ]]; then
         echo "Starting Zalenium in docker with Sauce Labs..."
         SAUCE_USERNAME="${SAUCE_USERNAME:=abc}"
         SAUCE_ACCESS_KEY="${SAUCE_ACCESS_KEY:=abc}"
 
-        if [ "$SAUCE_USERNAME" = abc ]; then
+        if [[ "${SAUCE_USERNAME}" = abc ]]; then
             echo "SAUCE_USERNAME environment variable is not set, cannot start Sauce Labs node, exiting..."
             exit 2
         fi
@@ -114,6 +114,29 @@ StartUp()
               -v ${VIDEOS_FOLDER}:/home/seluser/videos \
               -v /var/run/docker.sock:/var/run/docker.sock \
               ${ZALENIUM_DOCKER_IMAGE} start --testingBotEnabled true --startTunnel true
+    fi
+
+    if [ "$INTEGRATION_TO_TEST" = crossBrowserTesting ]; then
+        echo "Starting Zalenium in docker with CrossBrowserTesting..."
+        CBT_USERNAME="${CBT_USERNAME:=abc}"
+        CBT_AUTHKEY="${CBT_AUTHKEY:=abc}"
+
+        if [ "$CBT_AUTHKEY" = abc ]; then
+            echo "CBT_AUTHKEY environment variable is not set, cannot start CrossBrowserTesting node, exiting..."
+            exit 6
+        fi
+
+        if [ "$CBT_USERNAME" = abc ]; then
+            echo "CBT_USERNAME environment variable is not set, cannot start CrossBrowserTesting node, exiting..."
+            exit 7
+        fi
+
+        docker run -d -ti --name zalenium -p 4444:4444 \
+              ${HOST_OPTIONS} \
+              -e CBT_USERNAME -e CBT_AUTHKEY \
+              -v ${VIDEOS_FOLDER}:/home/seluser/videos \
+              -v /var/run/docker.sock:/var/run/docker.sock \
+              ${ZALENIUM_DOCKER_IMAGE} start --cbtEnabled true --startTunnel true
     fi
 
     if ! mtimeout --foreground "2m" bash -c WaitZaleniumStarted; then

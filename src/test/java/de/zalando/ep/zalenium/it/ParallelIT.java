@@ -13,6 +13,7 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
+import org.testng.util.Strings;
 
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
@@ -26,6 +27,10 @@ import static org.hamcrest.CoreMatchers.containsString;
 public class ParallelIT  {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ParallelIT.class);
+    private static final String sauceLabsIntegration = "sauceLabs";
+    private final String browserStackIntegration = "browserStack";
+    private final String testingBotIntegration = "testingBot";
+    private final String crossBrowserTestingIntegration = "crossBrowserTesting";
 
     // Zalenium setup variables
     private static final String ZALENIUM_HOST = System.getenv("ZALENIUM_GRID_HOST") != null ?
@@ -40,9 +45,16 @@ public class ParallelIT  {
     // Data provider which returns the browsers that will be used to run the tests
     @DataProvider(name = "browsersAndPlatforms")
     public static Object[][] browsersAndPlatformsProvider() {
+        String integrationToTest = System.getProperty("integrationToTest");
+        if (!Strings.isNullOrEmpty(integrationToTest) && sauceLabsIntegration.equalsIgnoreCase(integrationToTest)) {
+            return new Object[][] {
+                    new Object[]{BrowserType.SAFARI, "macOS 10.14", "12"},
+                    new Object[]{BrowserType.EDGE, "Windows 10", "18.17763"},
+                    new Object[]{BrowserType.CHROME, Platform.LINUX},
+                    new Object[]{BrowserType.FIREFOX, Platform.ANY}
+            };
+        }
         return new Object[][] {
-                new Object[]{BrowserType.SAFARI, Platform.ANY},
-                new Object[]{BrowserType.IE, Platform.WIN8},
                 new Object[]{BrowserType.CHROME, Platform.LINUX},
                 new Object[]{BrowserType.FIREFOX, Platform.ANY}
         };
@@ -62,22 +74,20 @@ public class ParallelIT  {
         String zaleniumUrl = String.format("http://%s:%s/wd/hub", ZALENIUM_HOST, ZALENIUM_PORT);
         String browserType = testArgs[0].toString();
         Platform platform = (Platform) testArgs[1];
-        boolean localTesting = false;
+        String version = "";
         if (testArgs.length > 2) {
-            localTesting = testArgs[2] != null && (boolean) testArgs[2];
+            version = String.valueOf(testArgs[2]);
         }
         LOGGER.info("STARTING {} on {} - {}, using {}", method.getName(), browserType, platform.name(), zaleniumUrl);
+        LOGGER.info("Integration to test {}", System.getProperty("integrationToTest"));
 
         DesiredCapabilities desiredCapabilities = new DesiredCapabilities();
         desiredCapabilities.setCapability(CapabilityType.BROWSER_NAME, browserType);
         desiredCapabilities.setCapability(CapabilityType.PLATFORM_NAME, platform);
-        desiredCapabilities.setCapability("name", method.getName());
-        if (localTesting) {
-            desiredCapabilities.setCapability("tunnel", "true");
-            desiredCapabilities.setCapability("browserstack.local", "true");
-            desiredCapabilities.setCapability("browserstack.localIdentifier", "zalenium");
-            desiredCapabilities.setCapability("tunnelIdentifier", "zalenium");
+        if (!Strings.isNotNullAndNotEmpty(version)) {
+            desiredCapabilities.setCapability(CapabilityType.VERSION, version);
         }
+        desiredCapabilities.setCapability("name", method.getName());
 
         try {
             webDriver.set(new RemoteWebDriver(new URL(zaleniumUrl), desiredCapabilities));
