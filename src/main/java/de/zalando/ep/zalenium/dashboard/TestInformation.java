@@ -7,6 +7,7 @@ import com.google.gson.JsonObject;
 import de.zalando.ep.zalenium.proxy.RemoteLogFile;
 import de.zalando.ep.zalenium.util.CommonProxyUtilities;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -112,7 +113,7 @@ public class TestInformation {
     }
 
     public List<RemoteLogFile> getRemoteLogFiles() {
-        return remoteLogFiles;
+        return remoteLogFiles == null ? new ArrayList<>() : remoteLogFiles;
     }
 
     public String getVideoUrl() {
