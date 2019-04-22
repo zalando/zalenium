@@ -1,22 +1,22 @@
 package de.zalando.ep.zalenium.proxy;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.stream.Collectors;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
+import com.google.common.annotations.VisibleForTesting;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import de.zalando.ep.zalenium.container.ContainerClient;
+import de.zalando.ep.zalenium.container.ContainerClientRegistration;
+import de.zalando.ep.zalenium.container.ContainerFactory;
+import de.zalando.ep.zalenium.dashboard.DashboardCollection;
+import de.zalando.ep.zalenium.dashboard.TestInformation;
+import de.zalando.ep.zalenium.matcher.DockerSeleniumCapabilityMatcher;
+import de.zalando.ep.zalenium.matcher.ZaleniumCapabilityType;
+import de.zalando.ep.zalenium.util.CommonProxyUtilities;
+import de.zalando.ep.zalenium.util.Environment;
+import de.zalando.ep.zalenium.util.GoogleAnalyticsApi;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
+import org.apache.commons.lang3.StringUtils;
 import org.openqa.grid.common.RegistrationRequest;
 import org.openqa.grid.common.exception.RemoteException;
 import org.openqa.grid.common.exception.RemoteNotReachableException;
@@ -38,21 +38,19 @@ import org.openqa.selenium.remote.server.jmx.ManagedService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-
-import de.zalando.ep.zalenium.container.ContainerClient;
-import de.zalando.ep.zalenium.container.ContainerClientRegistration;
-import de.zalando.ep.zalenium.container.ContainerFactory;
-import de.zalando.ep.zalenium.dashboard.DashboardCollection;
-import de.zalando.ep.zalenium.dashboard.TestInformation;
-import de.zalando.ep.zalenium.matcher.DockerSeleniumCapabilityMatcher;
-import de.zalando.ep.zalenium.matcher.ZaleniumCapabilityType;
-import de.zalando.ep.zalenium.util.CommonProxyUtilities;
-import de.zalando.ep.zalenium.util.Environment;
-import de.zalando.ep.zalenium.util.GoogleAnalyticsApi;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
 /*
     The implementation of this class was inspired on https://gist.github.com/krmahadevan/4649607
@@ -616,8 +614,8 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
 
     @VisibleForTesting
     void copyVideos(final String containerId) {
-        if (testInformation == null) {
-            // No tests run, nothing to copy and nothing to update.
+        if (testInformation == null || StringUtils.isEmpty(containerId)) {
+            // No tests run or container has been removed, nothing to copy and nothing to update.
             return;
         }
         String currentName = configureThreadName();
@@ -660,8 +658,8 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
 
     @VisibleForTesting
     void copyLogs(final String containerId) {
-        if (testInformation == null) {
-            // No tests run, nothing to copy and nothing to update.
+        if (testInformation == null|| StringUtils.isEmpty(containerId)) {
+            // No tests run or container has been removed, nothing to copy and nothing to update.
             return;
         }
         String currentName = configureThreadName();
