@@ -36,7 +36,7 @@ public class GridStatusServlet extends RegistryBasedServlet {
 
         int allProxiesCount = Optional.ofNullable(getRegistry().getAllProxies().size()).orElse(0);
 
-        GridStatus status = ZaleniumConfiguration.getDesiredContainersOnStartup() == allProxiesCount ? GridStatus.FULL_CAPACITY
+        GridStatus status = ZaleniumConfiguration.getDesiredContainersOnStartup() <= allProxiesCount ? GridStatus.FULL_CAPACITY
                 : allProxiesCount > 0 ? GridStatus.AVAILABLE
                 : GridStatus.UNAVAILABLE;
 
