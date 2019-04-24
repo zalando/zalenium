@@ -20,7 +20,7 @@ hub:
 
   ## Timeout for probe Hub liveness via HTTP request on Hub console
   livenessTimeout: 1
-  
+
   ## Timeout for probe Hub readiness via HTTP request on Hub console
   readinessTimeout: 1
 
@@ -47,6 +47,9 @@ hub:
   ##   Values: ClusterIP, NodePort, LoadBalancer, or ExternalName
   ## ref: https://kubernetes.io/docs/user-guide/services/
   serviceType: "NodePort"
+
+  ## Port on which K8s service is listening on. Zalenium WebUI will be available there.
+  svcPort: 80
 
   ## If serviceType is LoadBalancer:
   ##   Add list of IPs allowed to connect to the service
@@ -93,7 +96,7 @@ hub:
   testingBotSecret: blank
 
   ## Arbitrary environment variables
-  env: 
+  env:
     # FOO: BAR
 
   ## Use Openshift DeploymentConfig instead of Kubernetes Deployment
