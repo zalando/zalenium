@@ -14,13 +14,26 @@ This chart bootstraps a [Zalenium](https://github.com/zalando/zalenium) deployme
 
 - Kubernetes 1.5+ with Beta APIs enabled
 
-## Installing the Chart
 
-To install the chart with the release name `my-release`:
+## Installing the Chart from local repo
+
+To install the chart with the release name `my-release`(provided you have cloned this repo):
 
 ```console
 $ helm install --name my-release local/zalenium
 ```
+
+## Install from this GitHub repo:
+
+A sample installation steps would look like this:
+```
+helm repo add zalenium-github https://raw.githubusercontent.com/zalando/zalenium/master/charts/zalenium
+helm install --name my-release --namespace my-zalenium zalenium-github/zalenium
+```
+Where:
+* `zalenium-github` is the name of this repo (you may call it whatever you want);
+* `my-release` is the Helm's release name;
+* `my-zalenium` is the Kubernetes namespace in which Zalenium will be installed (will be created if not exists);
 
 The command deploys Zalenium on the Kubernetes cluster in the default configuration. The [configuration](#configuration) section lists the parameters that can be configured during installation.
 
@@ -34,7 +47,12 @@ To uninstall/delete the `my-release` deployment:
 $ helm delete my-release
 ```
 
-The command removes all the Kubernetes components associated with the chart and deletes the release.
+To remove the release name from the Helm store (so you may use it again), issue the following command:
+```
+$ helm delete my-release --purge
+```
+
+> **Note**: The command removes all the Kubernetes components associated with the chart and deletes the release.
 
 ## Configuration
 
@@ -96,6 +114,10 @@ See Zalenium's [usage examples](https://github.com/zalando/zalenium/blob/master/
 | `hub.basicAuth.enabled` | Enables basic authentication | false |
 | `hub.basicAuth.username` | Username for basic authentication | zalenium |
 | `hub.basicAuth.password` | Password for basic authentication | password |
+| `hub.openshift.route.enabled`  | Set to true if you want to create a route for zalenium | false |
+| `hub.openshift.route.hostname` | If you want to have a specific hostname specify it here | blank |
+| `hub.openshift.route.tls` | Configures tls settings for OpenShift route. Set it to empty if you don't want it | edge termination + redirect |
+
 
 Specify each parameter using the `--set key=value[,key=value]` argument to `helm install`. For example,
 

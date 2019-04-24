@@ -595,10 +595,11 @@ public class DockerContainerClient implements ContainerClient {
                     "variable ZALENIUM_CONTAINER_NAME has an appropriate value", zaleniumContainerName));
         }
         try {
+            String hubIpAddress = DockeredSeleniumStarter.getHubIpAddress();
             ContainerInfo containerInfo = dockerClient.inspectContainer(zaleniumContainerId);
             ImmutableMap<String, AttachedNetwork> networks = containerInfo.networkSettings().networks();
             for (Map.Entry<String, AttachedNetwork> networkEntry : networks.entrySet()) {
-                if (!DEFAULT_DOCKER_NETWORK_NAME.equalsIgnoreCase(networkEntry.getKey())) {
+                if (networkEntry.getValue().ipAddress().equalsIgnoreCase(hubIpAddress)) {
                     zaleniumNetwork = networkEntry.getKey();
                     return zaleniumNetwork;
                 }

@@ -24,7 +24,6 @@ public class RemoteVideoDashboard extends RemoteDashboard {
         uploadFile.mimeType = ContentType.create("video/mp4");
         uploadFile.stream = new FileInputStream(Paths.get(testInformation.getVideoFolderPath(), testInformation.getFileName()).toString());
         uploadFile.fileName = testInformation.getFileName();
-        fields.add(uploadFile);
 
         this.setupMetadata(testInformation).addProperty("Type", "video");
 
@@ -32,7 +31,9 @@ public class RemoteVideoDashboard extends RemoteDashboard {
         kvp.keyName = "metadata";
         kvp.mimeType = ContentType.create("application/json");
         kvp.value = jsonToString(testInformation.getMetadata());
+
         fields.add(kvp);
+        fields.add(uploadFile);
 
         this.getFormPoster().post(fields);
     }
