@@ -9,6 +9,7 @@ ZALENIUM_ARTIFACT="$(pwd)/${project.build.finalName}.jar"
 SAUCE_LABS_ENABLED=${SAUCE_LABS_ENABLED:-false}
 BROWSER_STACK_ENABLED=${BROWSER_STACK_ENABLED:-false}
 TESTINGBOT_ENABLED=${TESTINGBOT_ENABLED:-false}
+CBT_ENABLED=${CBT_ENABLED:-false}
 VIDEO_RECORDING_ENABLED=${VIDEO_RECORDING_ENABLED:-true}
 SCREEN_WIDTH=${SCREEN_WIDTH:-1920}
 SCREEN_HEIGHT=${SCREEN_HEIGHT:-1080}
@@ -56,9 +57,11 @@ PID_PATH_SELENIUM=/tmp/selenium-pid
 PID_PATH_SAUCE_LABS_NODE=/tmp/sauce-labs-node-pid
 PID_PATH_TESTINGBOT_NODE=/tmp/testingbot-node-pid
 PID_PATH_BROWSER_STACK_NODE=/tmp/browser-stack-node-pid
+PID_PATH_CBT_NODE=/tmp/cbt-node-pid
 PID_PATH_SAUCE_LABS_TUNNEL=/tmp/sauce-labs-tunnel-pid
 PID_PATH_TESTINGBOT_TUNNEL=/tmp/testingbot-tunnel-pid
 PID_PATH_BROWSER_STACK_TUNNEL=/tmp/browser-stack-tunnel-pid
+PID_PATH_CBT_TUNNEL=/tmp/cbt-tunnel-pid
 
 echoerr() { printf "%s\n" "$*" >&2; }
 
@@ -158,6 +161,24 @@ WaitTestingBotProxy()
     done
 }
 export -f WaitTestingBotProxy
+
+WaitCBTProxy()
+{
+    # Wait for the cbt node success
+    while ! curl -sSL "http://localhost:30003/wd/hub/status" 2>&1 \
+            | jq -r '.status' 2>&1 | grep "0" >/dev/null; do
+        echo -n '.'
+        sleep 0.2
+    done
+
+    # Also wait for the Proxy to be registered into the hub
+    while ! curl -sSL "http://localhost:4444${CONTEXT_PATH}/grid/console" 2>&1 \
+            | grep "CBTRemoteProxy" 2>&1 >/dev/null; do
+        echo -n '.'
+        sleep 0.2
+    done
+}
+export -f WaitCBTProxy
 
 WaitForVideosTransferred() {
     local __amount_of_tests_with_video=$(jq .executedTestsWithVideo /home/seluser/videos/executedTestsInfo.json)
@@ -343,7 +364,23 @@ StartUp()
             exit 5
         fi
     fi
+    
+    
+    if [ "$CBT_ENABLED" = true ]; then
+        CBT_USERNAME="${CBT_USERNAME:=abc}"
+        CBT_AUTHKEY="${CBT_AUTHKEY:=abc}"
 
+        if [ "CBT_USERNAME" = abc ]; then
+            echo "CBT_USERNAME environment variable is not set, cannot start TestingBot node, exiting..."
+            exit 4
+        fi
+
+        if [ "$CBT_AUTHKEY" = abc ]; then
+            echo "CBT_AUTHKEY environment variable is not set, cannot start TestingBot node, exiting..."
+            exit 5
+        fi
+    fi
+    
     export ZALENIUM_DESIRED_CONTAINERS=${DESIRED_CONTAINERS}
     export ZALENIUM_MAX_DOCKER_SELENIUM_CONTAINERS=${MAX_DOCKER_SELENIUM_CONTAINERS}
     export ZALENIUM_VIDEO_RECORDING_ENABLED=${VIDEO_RECORDING_ENABLED}
@@ -392,14 +429,14 @@ StartUp()
     fi
 
     echo "Copying files for Dashboard..."
-    cp /home/seluser/index.html /home/seluser/videos/index.html
+    cp /home/seluser/dashboard_template.html /home/seluser/videos/dashboard.html
     cp -r /home/seluser/css /home/seluser/videos
     cp -r /home/seluser/js /home/seluser/videos
+    cp -r /home/seluser/img /home/seluser/videos
 
     if [ "${WE_HAVE_SUDO_ACCESS}" == "true" ]; then
         sudo chown -R ${HOST_UID}:${HOST_GID} /home/seluser
     fi
-
 
     if [ ! -z ${GRID_USER} ] && [ ! -z ${GRID_PASSWORD} ]; then
         echo "Enabling basic auth via startup script..."
@@ -537,7 +574,35 @@ StartUp()
     else
         echo "TestingBot not enabled..."
     fi
+    
+    if [ "$CBT_ENABLED" = true ]; then
+        echo "Starting CBT node..."
+        java -Dlogback.loglevel=${DEBUG_MODE} -Dlogback.appender=${LOGBACK_APPENDER} \
+         -Dlogback.configurationFile=${LOGBACK_PATH} \
+         -Djava.util.logging.config.file=logging_${DEBUG_MODE}.properties \
+         -cp ${ZALENIUM_ARTIFACT} org.openqa.grid.selenium.GridLauncherV3 -role node -hub http://localhost:4444${CONTEXT_PATH}/grid/register \
+         -registerCycle 0 -proxy de.zalando.ep.zalenium.proxy.CBTRemoteProxy \
+         -nodePolling 90000 -port 30003 ${DEBUG_FLAG} &
+        echo $! > ${PID_PATH_TESTINGBOT_NODE}
 
+        if ! timeout --foreground "40s" bash -c WaitCBTProxy; then
+            echo "CBTRemoteProxy failed to start after 40 seconds, failing..."
+            exit 12
+        fi
+        echo "CBT node started!"
+        if [ "$START_TUNNEL" = true ]; then
+            export CBT_LOG_FILE="$(pwd)/logs/cbt-stdout.log"
+            export CBT_TUNNEL="true"
+            echo "Starting CBT Tunnel..."
+            ./start-cbt.sh &
+            echo $! > ${PID_PATH_CBT_TUNNEL}
+            # Now wait for the tunnel to be ready
+            timeout --foreground ${CBT_WAIT_TIMEOUT} ./wait-cbt.sh
+        fi
+    else
+        echo "CBT not enabled..."
+    fi
+    
     echo "Zalenium is now ready!"
 
     if [ "$SEND_ANONYMOUS_USAGE_INFO" = true ]; then
@@ -571,7 +636,8 @@ StartUp()
         ZALENIUM_START_COMMAND="zalenium.sh --desiredContainers $DESIRED_CONTAINERS
             --maxDockerSeleniumContainers $MAX_DOCKER_SELENIUM_CONTAINERS --maxTestSessions $MAX_TEST_SESSIONS
             --sauceLabsEnabled $SAUCE_LABS_ENABLED --browserStackEnabled $BROWSER_STACK_ENABLED
-            --testingBotEnabled $TESTINGBOT_ENABLED --videoRecordingEnabled $VIDEO_RECORDING_ENABLED
+            --testingBotEnabled $TESTINGBOT_ENABLED --cbtEnabled $CBT_ENABLED
+            --videoRecordingEnabled $VIDEO_RECORDING_ENABLED
             --screenWidth $SCREEN_WIDTH --screenHeight $SCREEN_HEIGHT --timeZone $TZ"
 
         local args=(
@@ -649,7 +715,20 @@ ShutDown()
             rm ${PID_PATH_TESTINGBOT_NODE}
         fi
     fi
-
+    
+    if [ -f ${PID_PATH_CBT_NODE} ];
+    then
+        echo "Stopping CBT node..."
+        PID=$(cat ${PID_PATH_CBT_NODE});
+        kill ${PID};
+        _returnedValue=$?
+        if [ "${_returnedValue}" != "0" ] ; then
+            echo "Failed to send kill signal to CBT node!"
+        else
+            rm ${PID_PATH_CBT_NODE}
+        fi
+    fi
+    
     if [ -f ${PID_PATH_SAUCE_LABS_TUNNEL} ];
     then
         echo "Stopping Sauce Connect..."
@@ -691,7 +770,21 @@ ShutDown()
             rm ${PID_PATH_TESTINGBOT_TUNNEL}
         fi
     fi
-
+    
+    if [ -f ${PID_PATH_CBT_TUNNEL} ];
+    then
+        echo "Stopping CBT tunnel..."
+        PID=$(cat ${PID_PATH_CBT_TUNNEL});
+        kill -SIGTERM ${PID};
+        wait ${PID};
+        _returnedValue=$?
+        if [ "${_returnedValue}" != "0" ] ; then
+            echo "Failed to send kill signal to the CBT tunnel!"
+        else
+            rm ${PID_PATH_CBT_TUNNEL}
+        fi
+    fi
+    
     if [ -f /home/seluser/videos/executedTestsInfo.json ]; then
         # Wait for the dashboard and the videos, if applies
         if timeout --foreground "40s" bash -c WaitForVideosTransferred; then
@@ -728,6 +821,7 @@ function usage()
     echo -e "\t --sauceLabsEnabled -> Determines if the Sauce Labs node is started. Defaults to 'false'."
     echo -e "\t --browserStackEnabled -> Determines if the Browser Stack node is started. Defaults to 'false'."
     echo -e "\t --testingBotEnabled -> Determines if the TestingBot node is started. Defaults to 'false'."
+    echo -e "\t --cbtEnabled -> Determines if the CBT node is started. Defaults to 'false'."
     echo -e "\t --startTunnel -> When using a cloud testing platform is enabled, starts the tunnel to allow local testing. Defaults to 'false'."
     echo -e "\t --videoRecordingEnabled -> Sets if video is recorded in every test. Defaults to 'true'."
     echo -e "\t --screenWidth -> Sets the screen width. Defaults to 1900"
@@ -787,6 +881,9 @@ case ${SCRIPT_ACTION} in
                     ;;
                 --testingBotEnabled)
                     TESTINGBOT_ENABLED=${VALUE}
+                    ;;
+                --cbtEnabled)
+                    CBT_ENABLED=${VALUE}
                     ;;
                 --videoRecordingEnabled)
                     VIDEO_RECORDING_ENABLED=${VALUE}

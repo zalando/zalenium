@@ -1,11 +1,15 @@
 package de.zalando.ep.zalenium.container.kubernetes;
 
 import io.fabric8.kubernetes.api.model.EnvVar;
+import io.fabric8.kubernetes.api.model.PodSecurityContext;
 import io.fabric8.kubernetes.api.model.HostAlias;
+import io.fabric8.kubernetes.api.model.LocalObjectReference;
 import io.fabric8.kubernetes.api.model.Quantity;
+import io.fabric8.kubernetes.api.model.Toleration;
 import io.fabric8.kubernetes.api.model.Volume;
 import io.fabric8.kubernetes.api.model.VolumeMount;
-import io.fabric8.kubernetes.api.model.Toleration;
+import io.fabric8.kubernetes.api.model.OwnerReference;
+import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.client.KubernetesClient;
 
 import java.util.List;
@@ -18,6 +22,8 @@ public class PodConfiguration {
     private String containerIdPrefix;
     private String image;
     private String imagePullPolicy;
+    private String nodePort;
+    private List<LocalObjectReference> imagePullSecrets;
     private List<EnvVar> envVars;
     private List<HostAlias> hostAliases;
     private Map<String, String> labels;
@@ -26,15 +32,24 @@ public class PodConfiguration {
     private Map<String, Quantity> podRequests;
     private Map<String, String> nodeSelector;
     private List<Toleration> tolerations;
-
-    private String nodePort;
+    private OwnerReference ownerReference;
+    private PodSecurityContext podSecurityContext;
 
     public String getNodePort() {
         return nodePort;
     }
+
     public void setNodePort(String nodePort) {
         this.nodePort = nodePort;
     }
+
+    public void setOwner(Pod ownerPod) {
+        this.ownerReference = new OwnerReference(ownerPod.getApiVersion(), false, true, ownerPod.getKind(), ownerPod.getMetadata().getName(), ownerPod.getMetadata().getUid());
+    }
+    public OwnerReference getOwnerRef() {
+        return ownerReference;
+    }
+
     public KubernetesClient getClient() {
         return client;
     }
@@ -61,6 +76,12 @@ public class PodConfiguration {
     }
     public List<EnvVar> getEnvVars() {
         return envVars;
+    }
+    public List<LocalObjectReference> getImagePullSecrets() {
+        return imagePullSecrets;
+    }
+    public void setImagePullSecrets(List<LocalObjectReference> imagePullSecrets) {
+        this.imagePullSecrets = imagePullSecrets;
     }
     public void setEnvVars(List<EnvVar> envVars) {
         this.envVars = envVars;
@@ -107,4 +128,13 @@ public class PodConfiguration {
     public void setTolerations(final List<Toleration> tolerations) {
         this.tolerations = tolerations;
     }
+
+	public PodSecurityContext getPodSecurityContext() {
+		return podSecurityContext;
+	}
+
+	public void setPodSecurityContext(PodSecurityContext podSecurityContext) {
+		this.podSecurityContext = podSecurityContext;
+	}
+
 }

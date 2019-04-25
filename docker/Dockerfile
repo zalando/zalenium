@@ -300,6 +300,20 @@ RUN if [ "${testingBotEnabled}" = "true" ]; then \
   else echo "Testing Bot Disabled"; \
   fi
 
+# ------------------------------#
+# CrossBrowserTesting Tunneling #
+# ------------------------------#
+# https://help.crossbrowsertesting.com/local-connection/general/local-tunnel-overview/
+ENV CBT_TUNNEL_URL="https://github.com/crossbrowsertesting/cbt-tunnel-nodejs/releases/download/v0.9.9" \
+    CBT_TUNNEL_ZIP="cbt_tunnels-linux-x64.zip"
+RUN cd /tmp \
+  && wget -nv "${CBT_TUNNEL_URL}/${CBT_TUNNEL_ZIP}" \
+  && unzip "${CBT_TUNNEL_ZIP}" \
+  && rm "${CBT_TUNNEL_ZIP}" \
+  && mv cbt_tunnels-linux-x64 /usr/local/bin \
+  && which cbt_tunnels-linux-x64
+
+
 #===================================================
 # Run the following commands as non-privileged user
 #===================================================
@@ -326,6 +340,8 @@ ENV ZAL_VER="${project.build.finalName}" \
     TESTINGBOT_TUNNEL_OPTS="--se-port 4447" \
     TESTINGBOT_TUNNEL="false" \
     TESTINGBOT_WAIT_TIMEOUT="2m" \
+    CBT_TUNNEL_ID="zalenium" \
+    CBT_TUNNEL="false" \
     SELENIUM_HUB_PARAMS="" \
     SELENIUM_NODE_PARAMS="" \
     SELENIUM_CONTAINER_LABELS="" \
@@ -335,6 +351,7 @@ COPY entry.sh log warn error /usr/bin/
 COPY nginx.conf /home/seluser/
 COPY css/ /home/seluser/css/
 COPY js/ /home/seluser/js/
+COPY img/ /home/seluser/img/
 COPY zalenium.sh \
  LICENSE.md \
  Analytics.md \
@@ -344,9 +361,9 @@ COPY zalenium.sh \
  wait-saucelabs.sh \
  start-testingbot.sh \
  wait-testingbot.sh \
- list_template.html \
+ start-cbt.sh \
+ wait-cbt.sh \
  dashboard_template.html \
- index.html \
  zalando.ico \
  logging_info.properties \
  logging_debug.properties \
@@ -364,6 +381,8 @@ RUN sudo chmod +x /home/seluser/zalenium.sh \
   && sudo chmod +x /home/seluser/wait-saucelabs.sh \
   && sudo chmod +x /home/seluser/start-testingbot.sh \
   && sudo chmod +x /home/seluser/wait-testingbot.sh \
+  && sudo chmod +x /home/seluser/start-cbt.sh \
+  && sudo chmod +x /home/seluser/wait-cbt.sh \
   && sudo chmod +x /usr/bin/log \
   && sudo chmod +x /usr/bin/warn \
   && sudo chmod +x /usr/bin/error \

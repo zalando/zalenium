@@ -252,10 +252,11 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         LOGGER.debug("Creating session for {}", requestedCapability);
         String browserName = requestedCapability.get(CapabilityType.BROWSER_NAME).toString();
         testName = getCapability(requestedCapability, ZaleniumCapabilityType.TEST_NAME, "");
+        String seleniumSessionId = newSession.getExternalKey() != null ?
+                newSession.getExternalKey().getKey() :
+                newSession.getInternalKey();
         if (testName.isEmpty()) {
-            testName = newSession.getExternalKey() != null ?
-                    newSession.getExternalKey().getKey() :
-                    newSession.getInternalKey();
+            testName = seleniumSessionId;
         }
         testBuild = getCapability(requestedCapability, ZaleniumCapabilityType.BUILD_NAME, "");
         if (requestedCapability.containsKey(ZaleniumCapabilityType.RECORD_VIDEO)) {
@@ -268,7 +269,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         String timeZone = getCapability(newSession.getSlot().getCapabilities(), ZaleniumCapabilityType.TIME_ZONE, "N/A");
         testInformation = new TestInformation.TestInformationBuilder()
                 .withTestName(testName)
-                .withSeleniumSessionId(testName)
+                .withSeleniumSessionId(seleniumSessionId)
                 .withProxyName("Zalenium")
                 .withBrowser(browserName)
                 .withBrowserVersion(browserVersion)
@@ -634,7 +635,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                 Path videoFile = Paths.get(String.format("%s/%s", testInformation.getVideoFolderPath(),
                         testInformation.getFileName()));
                 if (!Files.exists(Paths.get(testInformation.getVideoFolderPath()))) {
-                    Files.createDirectory(Paths.get(testInformation.getVideoFolderPath()));
+                    Files.createDirectories(Paths.get(testInformation.getVideoFolderPath()));
                 }
                 Files.copy(tarStream, videoFile);
                 CommonProxyUtilities.setFilePermissions(videoFile);

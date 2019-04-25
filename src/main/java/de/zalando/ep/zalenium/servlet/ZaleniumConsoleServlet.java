@@ -25,7 +25,7 @@ import java.util.Map;
     Taken from the original org.openqa.grid.web.servlet.beta.ConsoleServlet
  */
 public class ZaleniumConsoleServlet extends RegistryBasedServlet {
-    private static String coreVersion;
+    private static String coreVersion = "No version info loaded...";
     private TemplateRenderer templateRenderer;
     private static final Environment env = new Environment();
     private static final String contextPath = env.getContextPath();

@@ -1,420 +1,202 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <meta name="description" content="">
-    <meta name="author" content="">
-    <link rel="icon" href="zalando.ico">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <meta name="description" content="">
+        <meta name="author" content="">
+        <link rel="icon" href="zalando.ico">
 
-    <title>Zalenium - Dashboard</title>
+        <title>Zalenium - Dashboard</title>
+        <link rel="stylesheet" href="css/bootstrap.min.css">
+        <link href="css/dashboard.css" rel="stylesheet">
+        <script src="js/jquery.min.js"></script>
+        <script src="js/tether.min.js"></script>
+        <script src="js/bootstrap.bundle.min.js"></script>
+        <script src="js/dashboard.js"></script>
+    </head>
 
-    <!-- Bootstrap core CSS -->
-    <!-- Current Bootstrap version - 4.0.0-beta -->
-    <!-- Taken from https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/css/bootstrap.min.css -->
-    <link rel="stylesheet" href="css/bootstrap.min.css">
-
-    <!-- Custom styles for this template -->
-    <link href="css/dashboard.css" rel="stylesheet">
-</head>
-
-<body>
-    <div id="ui_blocker" class="ui_blocker">
-      <div class="ui_blocker_msg">
-        <div>
-          Please wait...
-        </div>
-      </div>
-    </div>
-    <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
-        <a class="navbar-brand" href="#">Zalenium - Dashboard</a>
-        <button class="navbar-toggler d-lg-none" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault" aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-
-        <div class="collapse navbar-collapse" id="navbarsExampleDefault">
-            <ul class="navbar-nav mr-auto">
-            </ul>
-            <form class="form-inline mt-2 mt-md-0">
-                <button class="btn btn-danger my-2 my-sm-0" type="button" id="cleanupButton">Cleanup</button>
-                <button class="btn btn-danger ml-2 my-2 my-sm-0" type="button" id="resetButton">Reset</button>
-            </form>
-        </div>
-    </nav>
-
-    <div class="container-fluid">
-        <div class="row">
-
-            <nav class="col-sm-3 col-md-3 d-none d-sm-block bg-light sidebar">
+    <body>
+        <div id="ui_blocker" class="ui_blocker">
+            <div class="ui_blocker_msg">
                 <div>
-                    <input id="search" type="text" class="form-control input" placeholder="Search" />
+                    Please wait...
                 </div>
-                <ul id="tests" class="nav nav-pills flex-column list-group">
-                    <li class="nav-item" id="testsHeader">
-                        <h6 class="nav-link bg-success text-white text-center font-weight-bold">Tests ({executedTests})</h6>
-                    </li>
-{testList}
-                </ul>
-            </nav>
-
-            <main class="col-sm-9 ml-sm-auto col-md-9 pt-2 invisible" role="main" id="main-container">
-                <div class="card border-dark mb-1">
-                    <h6 class="card-header text-truncate" id="test-name">
-                        <span class="badge badge-primary float-right" id="test-badge"></span>
-                    </h6>
-                </div>
-                <div class="row">
-                    <div class="col-sm-3 pr-0">
-                        <div class="card border-dark">
-                            <h6 class="card-header">Date</h6>
-                            <div class="card-body">
-                                <p class="card-text" id="date-time"></p>
-                            </div>
-                            <h6 class="card-header">Retention Date</h6>
-                            <div class="card-body">
-                                <p class="card-text" id="retention-date"></p>
-                            </div>
-                            <h6 class="card-header">Browser/Platform</h6>
-                            <div class="card-body">
-                                <p class="card-text" id="browser-platform"></p>
-                            </div>
-                            <h6 class="card-header">Screen Dimension</h6>
-                            <div class="card-body">
-                                <p class="card-text" id="screen-dimension"></p>
-                            </div>
-                            <h6 class="card-header">Time Zone</h6>
-                            <div class="card-body">
-                                <p class="card-text" id="time-zone"></p>
-                            </div>
-                            <h6 class="card-header">Proxy</h6>
-                            <div class="card-body">
-                                <p class="card-text" id="proxy-name"></p>
-                            </div>
-                            <h6 class="card-header">Build</h6>
-                            <div class="card-body">
-                                <p class="card-text" id="build-name"></p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-sm-9 pl-1">
-                        <div class="card">
-                            <ul class="nav nav-tabs" id="testTabs" role="tablist">
-                                <li class="nav-item">
-                                    <a class="nav-link active" data-toggle="tab" href="#videoFile" role="tab">Video</a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link" data-toggle="tab" href="#logs" role="tab">Logs</a>
-                                </li>
-                            </ul>
-
-                            <div class="tab-content" id="videoLogsContent">
-                                <div class="tab-pane fade show active" id="videoFile" role="tabpanel">
-                                    <div align="center" class="embed-responsive embed-responsive-16by9 bg-faded">
-                                        <video id="video" controls autoplay class="embed-responsive-item">
-                                            <source id="video-source" src="" type=video/mp4>
-                                        </video>
-                                    </div>
-                                </div>
-                                <div class="tab-pane fade" id="logs" role="tabpanel">
-                                    <div id="accordion" role="tablist" aria-multiselectable="true">
-                                        <div class="card">
-                                            <div class="card-header" role="tab" id="headingOne">
-                                                <h5 class="mb-0">
-                                                    <a data-toggle="collapse" data-parent="#accordion" href="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
-                                                        Selenium Log
-                                                    </a>
-                                                </h5>
-                                            </div>
-
-                                            <div id="collapseOne" class="collapse" role="tabpanel" aria-labelledby="headingOne">
-                                                <div class="card-block">
-                                                    <pre id="seleniumLog">
-                                                        Selenium Log not loaded yet...
-                                                    </pre>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="card">
-                                            <div class="card-header" role="tab" id="headingTwo">
-                                                <h5 class="mb-0">
-                                                    <a class="collapsed" data-toggle="collapse" data-parent="#accordion" href="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
-                                                        Browser Driver Log
-                                                    </a>
-                                                </h5>
-                                            </div>
-                                            <div id="collapseTwo" class="collapse" role="tabpanel" aria-labelledby="headingTwo">
-                                                <div class="card-block">
-                                                    <pre id="browserDriverLog">
-                                                        Browser Driver Log not loaded yet...
-                                                    </pre>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                        </div>
-                    </div>
-                </div>
-            </main>
-
-            <div class="modal fade" id="cleanupModal" tabindex="-1" role="dialog">
-              <div class="modal-dialog" role="document">
-                <div class="modal-content">
-                  <div class="modal-header">
-                    <h5 class="modal-title" id="cleanupModalLabel">Confirmation</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                      <span aria-hidden="true">&times;</span>
-                    </button>
-                  </div>
-                  <div class="modal-body">
-                    Are you sure you want to cleanup tests older then {retentionPeriod} days?
-                  </div>
-                  <div class="modal-footer">
-                    <button type="button" class="btn btn-danger" data-dismiss="modal">No</button>
-                    <button type="button" class="btn btn-success" id="cleanupModalConfirm">Yes</button>
-                  </div>
-                </div>
-              </div>
             </div>
-
-            <div class="modal fade" id="resetModal" tabindex="-1" role="dialog">
-              <div class="modal-dialog" role="document">
-                <div class="modal-content">
-                  <div class="modal-header">
-                    <h5 class="modal-title" id="resetModalLabel">Confirmation</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                      <span aria-hidden="true">&times;</span>
-                    </button>
-                  </div>
-                  <div class="modal-body">
-                    Are you sure you want to reset the dashboard?
-                  </div>
-                  <div class="modal-footer">
-                    <button type="button" class="btn btn-danger" data-dismiss="modal">No</button>
-                    <button type="button" class="btn btn-success" id="resetModalConfirm">Yes</button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
         </div>
-    </div>
 
-    <!-- Bootstrap core JavaScript
-    ================================================== -->
-    <!-- Placed at the end of the document so the pages load faster -->
-    <!-- Taken from https://code.jquery.com/jquery-3.2.1.min.js -->
-    <script src="js/jquery.min.js"></script>
-    <!-- Taken from https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js -->
-    <script src="js/tether.min.js"></script>
-    <!-- Taken from https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js -->
-    <script src="js/popper.min.js"></script>
-    <!-- Taken from https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/js/bootstrap.min.js -->
-    <script src="js/bootstrap.min.js"></script>
-    <script>
-        $(function() {
-            var url = new URL(window.location);
-            var params = url.searchParams;
-            var q = params.get('q');
-            if (q !== null && q !== '') {
-                $('#search').val(decodeURIComponent(q));
-                searchTestsList();
-            }
-        });
+        <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
+            <p class="navbar-brand mb-0 mr-5">Zalenium - Dashboard</p>
+            <button type="button" class="btn btn-dark ml-5" id="testCount"></button>
+            <span class="ml-5 text-white">
+                <img alt="Completed" src="img/completed.png" width="24px" height="24px">
+                <small>Completed</small>
+            </span>
+            <span class="ml-2 text-white">
+                <img alt="Success" src="img/success.png" width="24px" height="24px">
+                <small>Success</small>
+            </span>
+            <span class="ml-2 text-white">
+                <img alt="Failed" src="img/failed.png" width="24px" height="24px">
+                <small>Failed</small>
+            </span>
+            <span class="ml-2 text-white">
+                <img alt="Timeout" src="img/timeout.png" width="24px" height="24px">
+                <small>Timeout</small>
+            </span>
 
-        $(document).on('keyup', '#search', function () {
-            searchTestsList();
-        });
 
-        function searchTestsList() {
-            var current_query = $('#search').val().toUpperCase();
-            if (current_query !== "") {
-                var tokens_crt_query = current_query.split(" ");
-                $(".list-group li").each(function(){
-                    var current_id = $(this).attr('id');
-                    if (current_id !== "testsHeader") {
-                        $(this).hide();
-                        var current_keyword = $(this).text().toUpperCase();
-                        var all_tokens_found = true;
-                        for (var i = 0; i < tokens_crt_query.length; i++) {
-                            var crt_token = tokens_crt_query[i];
-                            if (current_keyword.indexOf(crt_token) <0) {
-                                all_tokens_found = false;
-                                break;
-                            }
-                        }
-                        if (all_tokens_found) {
-                            $(this).show();
-                        }
-                    }
-                });
-            } else {
-                $(".list-group li").show();
-            }
-        }
+            <div class="collapse navbar-collapse" id="navbarsExampleDefault">
+                <ul class="navbar-nav mr-auto"></ul>
+                <form class="form-inline mt-2 mt-md-0">
+                    <button class="btn btn-danger my-2 my-sm-0" type="button" id="cleanupButton">Cleanup</button>
+                    <button class="btn btn-danger ml-2 my-2 my-sm-0" type="button" id="resetButton">Reset</button>
+                </form>
+            </div>
+        </nav>
 
-        $("#tests").on("click", ".list-group-item", function() {
-            var $this = $(this);
-            var $video = $this.data("video");
-            var $testName = $this.data("test-name");
-            var $browserPlatform = $this.data("browser-platform");
-            var $proxyName = $this.data("proxy-name");
-            var $dateTime = $this.data("date-time");
-            var $retentionDate = $this.data("retention-date");
-            var $seleniumLogFile = $this.data("selenium-log");
-            var $browserDriverLogFile = $this.data("browser-driver");
-            var $screenDimension = $this.data("screen-dimension");
-            var $timeZone = $this.data("time-zone");
-            var $build = $this.data("test-build");
-            var $testStatus = $this.data("test-status");
-            var $testBadge = $this.data("test-badge");
+        <div class="container-fluid">
+            <div class="row">
+                <nav class="col-sm-3 col-md-3 d-none d-sm-block bg-light sidebar px-1 pt-4">
+                    <div>
+                        <input id="search" type="text" class="form-control input" placeholder="Search" />
+                    </div>
+                    <div id="tests" class="nav nav-pills flex-column list-group">
+                    </div>
+                </nav>
 
-            $('.active').removeClass("active");
-            $this.toggleClass("active");
+                <main class="col-sm-9 ml-sm-auto col-md-9 pt-1 invisible" role="main" id="main-container">
+                    <div class="row mb-1 pt-1 px-1">
+                        <div class="card w-100">
+                            <h5 class="card-header text-truncate p-1" id="test-name"></h5>
+                        </div>
+                    </div>
+                    <div class="row mb-1 px-1">
+                        <div class="col-sm-4 p-0">
+                            <div class="card">
+                                <div class="card-body p-1" id="browser-platform-proxy">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-8 p-0">
+                            <div class="card">
+                                <div class="card-body p-1" id="screen-resolution-time-zone">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mb-1 px-1">
+                        <div class="col-sm-12 p-0 text-center">
+                            <div class="card invisible">
+                                <div class="card-body p-0" id="build"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-12 px-1">
+                            <div class="card">
+                                <ul class="nav nav-tabs" id="testTabs" role="tablist">
+                                    <li class="nav-item">
+                                        <a class="nav-link active" data-toggle="tab" href="#videoFile" role="tab">Video</a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link" data-toggle="tab" href="#logs" role="tab">Logs</a>
+                                    </li>
+                                </ul>
 
-            // Pass clicked link element to another function
-            playVideo($video);
+                                <div class="tab-content" id="videoLogsContent">
+                                    <div class="tab-pane fade show active" id="videoFile" role="tabpanel">
+                                        <div align="center" class="embed-responsive embed-responsive-16by9 bg-faded">
+                                            <video id="video" controls autoplay class="embed-responsive-item">
+                                                <source id="video-source" src="" type=video/mp4>
+                                            </video>
+                                        </div>
+                                    </div>
+                                    <div class="tab-pane fade" id="logs" role="tabpanel">
+                                        <div id="accordion" role="tablist" aria-multiselectable="true">
+                                            <div class="card">
+                                                <div class="card-header" role="tab" id="headingOne">
+                                                    <h5 class="mb-0">
+                                                        <a data-toggle="collapse" data-parent="#accordion" href="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
+                                                            Selenium Log
+                                                        </a>
+                                                    </h5>
+                                                </div>
 
-            // Set test info to be displayed
-            setTestInformation($testName, $browserPlatform, $proxyName, $dateTime,
-                $screenDimension, $timeZone, $build, $testStatus, $testBadge, $retentionDate);
+                                                <div id="collapseOne" class="collapse" role="tabpanel" aria-labelledby="headingOne">
+                                                    <div class="card-block">
+                                                            <pre id="seleniumLog">
+                                                                Selenium Log not loaded yet...
+                                                            </pre>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="card">
+                                                <div class="card-header" role="tab" id="headingTwo">
+                                                    <h5 class="mb-0">
+                                                        <a class="collapsed" data-toggle="collapse" data-parent="#accordion" href="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                                                            Browser Driver Log
+                                                        </a>
+                                                    </h5>
+                                                </div>
+                                                <div id="collapseTwo" class="collapse" role="tabpanel" aria-labelledby="headingTwo">
+                                                    <div class="card-block">
+                                                            <pre id="browserDriverLog">
+                                                                Browser Driver Log not loaded yet...
+                                                            </pre>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
 
-            // Load logs
-            loadLogs($seleniumLogFile, $browserDriverLogFile);
+                            </div>
+                        </div>
+                    </div>
+                </main>
 
-            // Select first tab
-            $('#testTabs').find('a:first').tab('show')
-        });
+                <div class="modal fade" id="cleanupModal" tabindex="-1" role="dialog">
+                    <div class="modal-dialog" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="cleanupModalLabel">Confirmation</h5>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                            <div class="modal-body">
+                                Are you sure you want to cleanup tests older then {retentionPeriod} days?
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-danger" data-dismiss="modal">No</button>
+                                <button type="button" class="btn btn-success" id="cleanupModalConfirm">Yes</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-        function playVideo($video) {
-            var video = document.getElementById("video");
-            var source = document.getElementById("video-source");
-            source.setAttribute("src", $video);
-            source.setAttribute("type", "video/mp4");
-            video.pause();
-            video.load();
-            video.play();
-        }
+                <div class="modal fade" id="resetModal" tabindex="-1" role="dialog">
+                    <div class="modal-dialog" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="resetModalLabel">Confirmation</h5>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                            <div class="modal-body">
+                                Are you sure you want to reset the dashboard?
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-danger" data-dismiss="modal">No</button>
+                                <button type="button" class="btn btn-success" id="resetModalConfirm">Yes</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-        function setTestInformation($testName, $browserPlatform, $proxyName, $dateTime,
-                                    $screenDimension, $timeZone, $build, $testStatus,
-                                    $testBadge, $retentionDate) {
-            var badgeHtml = '<span class="badge badge-' + $testBadge +
-                ' float-right">' + $testStatus + '</span>';
-            document.getElementById("test-name").innerHTML = $testName + badgeHtml;
-            document.getElementById("browser-platform").textContent = $browserPlatform;
-            document.getElementById("proxy-name").textContent = $proxyName;
-            document.getElementById("date-time").textContent = $dateTime;
-            document.getElementById("screen-dimension").textContent = $screenDimension;
-            document.getElementById("time-zone").textContent = $timeZone;
-            document.getElementById("build-name").textContent = $build;
-            document.getElementById("retention-date").textContent = $retentionDate;
-            $('#main-container').removeClass("invisible");
-        }
-
-        function loadLogs($seleniumLogFile, $browserDriverLogFile) {
-            $('#collapseOne').removeClass("show");
-            $('#collapseTwo').removeClass("show");
-            $('#seleniumLog').html("Selenium Log not loaded yet...");
-            $('#browserDriverLog').html("Browser Driver Log not loaded yet...");
-
-            if ($seleniumLogFile.length > 0) {
-                $('#seleniumLog').load($seleniumLogFile);
-            }
-            if ($browserDriverLogFile.length > 0) {
-                $('#browserDriverLog').load($browserDriverLogFile);
-            }
-        }
-
-        // This will only work when the page is accessed via a WebServer
-        // Loads new tests in the list as the file gets modified
-        setInterval(function() {
-            var current_query = $('#search').val().toUpperCase();
-            if (current_query === "") {
-                $('#tests').load(document.URL +  ' #tests');
-            }
-        }, 5000);
-
-        $("#cleanupButton").click(function () {
-          $('#cleanupModal').modal('show');
-        });
-        
-        $("#resetButton").click(function () {
-            $('#resetModal').modal('show');
-          });
-
-        $("#cleanupModalConfirm").click(function () {
-          $('#cleanupModal').modal('hide');
-       	  block_ui();
-       	  
-          var targetUrl = [location.protocol, '//', location.host, location.pathname].join('') + 'cleanup?action=doCleanup';
-          
-          $.ajax({
-              type: "POST",
-              url: targetUrl,
-              statusCode: {
-                  200: function(response){
-                  	unblock_ui();
-                    window.location.reload();
-                  }
-              }
-          });
-        });
-        
-        $("#resetModalConfirm").click(function () {
-            $('#resetModal').modal('hide');
-            block_ui();
-         	  
-            var targetUrl = [location.protocol, '//', location.host, location.pathname].join('') + 'cleanup?action=doReset';
-            
-            $.ajax({
-                type: "POST",
-                url: targetUrl,
-                statusCode: {
-                    200: function(response){
-                    	unblock_ui();
-                        window.location.reload();
-                    }
-                }
-            });
-        });
-        
-        function block_ui() 
-        {
-        	if (console != null)
-        	{
-        		console.log("Blocking ui...");
-        	}
-        	var overlay = document.getElementById('ui_blocker');
-        	
-        	if (overlay != null)
-        	{
-        		overlay.style.display = "block";
-        		overlay.style.right = "0px";
-        		overlay.style.bottom = "0px";
-        		overlay.addEventListener("click",
-        		  function(event)
-        		  {
-        		    event.preventDefault();
-        		    return false;
-        		  }, false);
-        	}
-        }
-
-        function unblock_ui() 
-        {
-          if (console != null)
-          {
-            console.log("Unblocking ui...");
-          }
-          var overlay = document.getElementById('ui_blocker');
-          if (overlay != null)
-          {
-        	overlay.style.display = "none";
-          }
-        }
-    </script>
-</body>
+            </div>
+        </div>
+    </body>
 </html>

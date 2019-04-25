@@ -1,0 +1,24 @@
+{{- if .Values.hub.openshift.route.enabled -}}
+apiVersion: v1
+kind: Route
+metadata:
+  name: {{ template "zalenium.fullname" . }}
+  labels:
+    {{- include "zalenium.labels" . | nindent 4 }}
+  annotations:
+    {{- toYaml .Values.ingress.annotations | nindent 4 }}
+spec:
+  {{- if .Values.hub.openshift.route.hostname }}
+  host: {{ .Values.hub.openshift.route.hostname | quote }}
+  {{- end }}
+  to:
+    kind: Service
+    name: {{ template "zalenium.fullname" . }}
+    weight: 100
+  port:
+    targetPort: {{ .Values.hub.port }}
+  {{- if .Values.hub.openshift.route.tls }}
+  tls:
+    {{- toYaml .Values.hub.openshift.route.tls | nindent 4 }}
+  {{- end -}}
+{{- end -}}

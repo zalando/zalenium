@@ -1,0 +1,123 @@
+{
+  "selenium_test_id": 19407615,
+  "selenium_session_id": "11089424-25EC-4EDD-88CD-FB331A10E969",
+  "start_date": "2019-03-21T18:46:52.000Z",
+  "finish_date": "2019-03-21T18:47:06.000Z",
+  "test_score": "unset",
+  "reason_stopped": "Undefined reason",
+  "active": false,
+  "state": "stopped",
+  "vnc_password": "uZcP8wtb",
+  "vnc_port": 6098,
+  "rating": null,
+  "feedback": null,
+  "startup_finish_date": "2019-03-21T18:46:58.000Z",
+  "url": "",
+  "client_platform": "api",
+  "client_browser": "",
+  "use_copyrect": true,
+  "scale": "1.0",
+  "is_packet_capturing": 0,
+  "tunnel_id": 0,
+  "archived": false,
+  "selenium_version": "3.11.0",
+  "show_result_web_url": "https://app.crossbrowsertesting.com/selenium/19407615",
+  "show_result_public_url": "https://app.crossbrowsertesting.com/public/i79395ca5130c81e/selenium/19407615/99035086",
+  "download_results_zip_url": "https://app.crossbrowsertesting.com/api/v3/selenium/19407615/snapshots/zip",
+  "download_results_zip_public_url": "https://app.crossbrowsertesting.com/api/v3/public/i79395ca5130c81e/selenium/19407615/snapshots/zip/99035086",
+  "launch_live_test_url": "https://app.crossbrowsertesting.com/livetests/run?browser=Mac10.14|Safari12|1366x768&url=&launch=true",
+  "resolution": {
+    "width": 1366,
+    "height": 768,
+    "desktop_width": 1366,
+    "desktop_height": 768,
+    "name": "1366x768",
+    "requested_name": "1366x768"
+  },
+  "os": {
+    "name": "Mac OSX 10.14",
+    "type": "Mac",
+    "version": "Mac OSX 10.14",
+    "api_name": "Mac10.14",
+    "device": "desktop",
+    "device_type": null,
+    "icon_class": "mac",
+    "requested_api_name": "Mac10.14"
+  },
+  "browser": {
+    "name": "Safari 12",
+    "type": "Safari",
+    "version": "12",
+    "api_name": "Safari12",
+    "icon_class": "safari",
+    "requested_api_name": "Safari12"
+  },
+  "requestMethod": "AUTOMATED",
+  "api_version": "3.0",
+  "description": null,
+  "tags": [],
+  "videos": [
+    {
+      "hash": "ze3bfcf468564beb0b87",
+      "date_added": "2019-03-21T18:46:58.000Z",
+      "is_finished": true,
+      "description": null,
+      "tags": [],
+      "show_result_web_url": "https://app.crossbrowsertesting.com/selenium/19407615/videos/ze3bfcf468564beb0b87",
+      "show_result_public_url": "https://app.crossbrowsertesting.com/public/i79395ca5130c81e/selenium/19407615/videos/ze3bfcf468564beb0b87",
+      "video": "https://s3.amazonaws.com/media.crossbrowsertesting.com/users/494827/videos/ze3bfcf468564beb0b87.mp4",
+      "image": "https://s3.amazonaws.com/media.crossbrowsertesting.com/users/494827/snapshots/ze3bfcf468564beb0b87.png",
+      "thumbnail_image": "https://s3.amazonaws.com/media.crossbrowsertesting.com/users/494827/snapshots/thumbs/ze3bfcf468564beb0b87.png"
+    }
+  ],
+  "snapshots": [],
+  "networks": [],
+  "caps": {
+    "platform": "Mac OSX 10.14",
+    "browserName": "Safari",
+    "record_video": "true",
+    "name": "loadZalandoPageAndCheckTitle"
+  },
+  "commands": [
+    {
+      "body": "{\"capabilities\":{\"alwaysMatch\":{\"browserName\":\"Safari\",\"platformName\":\"mac osx 10.14\"},\"firstMatch\":[{}]},\"desiredCapabilities\":{\"browserName\":\"safari\",\"safari_binary\":\"/Applications/Safari.app/Contents/MacOS/Safari\",\"browserVersion\":\"12.0\"}}",
+      "method": "POST",
+      "path": "/wd/hub/session",
+      "date_issued": "2019-03-21T18:45:58.109Z",
+      "response_code": "200",
+      "response_body": "{\"value\":{\"sessionId\":\"11089424-25EC-4EDD-88CD-FB331A10E969\",\"capabilities\":{\"browserVersion\":\"12.0\",\"acceptInsecureCerts\":false,\"browserName\":\"Safari\",\"platformName\":\"macOS\",\"setWindowRect\":true,\"webdriver.remote.sessionid\":\"11089424-25EC-4EDD-88CD-FB331A10E969\"}}}",
+      "step_number": null,
+      "hash": null
+    },
+    {
+      "body": "{\"url\":\"http://www.zalando.de\"}",
+      "method": "POST",
+      "path": "/wd/hub/session/11089424-25EC-4EDD-88CD-FB331A10E969/url",
+      "date_issued": "2019-03-21T18:46:02.021Z",
+      "response_code": "200",
+      "response_body": "{\"value\":null}",
+      "step_number": null,
+      "hash": null
+    },
+    {
+      "body": "",
+      "method": "GET",
+      "path": "/wd/hub/session/11089424-25EC-4EDD-88CD-FB331A10E969/title",
+      "date_issued": "2019-03-21T18:46:02.407Z",
+      "response_code": "200",
+      "response_body": "{\"value\":\"Schuhe, Mode und Accessoires online kaufen | Schnelle Lieferung von Zalando\"}",
+      "step_number": null,
+      "hash": null
+    },
+    {
+      "body": "",
+      "method": "DELETE",
+      "path": "/wd/hub/session/11089424-25EC-4EDD-88CD-FB331A10E969",
+      "date_issued": "2019-03-21T18:46:02.485Z",
+      "response_code": "200",
+      "response_body": "{\"value\":null}",
+      "step_number": null,
+      "hash": null
+    }
+  ]
+}

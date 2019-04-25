@@ -12,6 +12,7 @@ import java.util.logging.Level;
 /**
  * Represents some external system that stores and indexes artifacts related to test execution
  */
+@SuppressWarnings("WeakerAccess")
 public abstract class RemoteDashboard implements DashboardInterface {
 
     private Logger LOGGER = Logger.getLogger(RemoteDashboard.class.getName());
@@ -45,7 +46,7 @@ public abstract class RemoteDashboard implements DashboardInterface {
         }
     }
 
-    public void resetDashboard() throws Exception {throw new UnsupportedOperationException();}
-    public void cleanupDashboard() throws Exception {throw new UnsupportedOperationException();}
+    public void resetDashboard() {throw new UnsupportedOperationException();}
+    public void cleanupDashboard() {throw new UnsupportedOperationException();}
     public abstract void updateDashboard(TestInformation testInformation) throws Exception;
 }

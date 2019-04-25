@@ -55,6 +55,18 @@ import org.slf4j.MDC;
 @ThreadSafe
 public class ZaleniumRegistry extends BaseGridRegistry implements GridRegistry {
     private static final Logger LOG = LoggerFactory.getLogger(ZaleniumRegistry.class.getName());
+    private static final Environment defaultEnvironment = new Environment();
+    private static final double[] DEFAULT_TEST_SESSION_LATENCY_BUCKETS =
+            new double[] { 0.5,2.5,5,10,15,20,25,30,35,40,50,60 };
+    // Allows overriding of the test session latency buckets for prometheus
+    private static final String ZALENIUM_TEST_SESSION_LATENCY_BUCKETS = "ZALENIUM_TEST_SESSION_LATENCY_BUCKETS";
+    private static final Histogram seleniumTestSessionStartLatency = Histogram.build()
+            .name("selenium_test_session_start_latency_seconds")
+            .help("The Selenium test session start time latency in seconds.")
+            .buckets(defaultEnvironment.getDoubleArrayEnvVariable(ZALENIUM_TEST_SESSION_LATENCY_BUCKETS, DEFAULT_TEST_SESSION_LATENCY_BUCKETS))
+            .register();
+    private static final Gauge seleniumTestSessionsWaiting = Gauge.build()
+            .name("selenium_test_sessions_waiting").help("The number of Selenium test sessions that are waiting for a container").register();
     // lock for anything modifying the tests session currently running on this
     // registry.
     private final ReentrantLock lock = new ReentrantLock();
@@ -65,23 +77,6 @@ public class ZaleniumRegistry extends BaseGridRegistry implements GridRegistry {
     private final Matcher matcherThread = new Matcher();
     private final Set<RemoteProxy> registeringProxies = ConcurrentHashMap.newKeySet();
     private volatile boolean stop = false;
-    
-    private static final Environment defaultEnvironment = new Environment();
-    
-    private static final double[] DEFAULT_TEST_SESSION_LATENCY_BUCKETS =
-            new double[] { 0.5,2.5,5,10,15,20,25,30,35,40,50,60 };
-
-    // Allows overriding of the test session latency buckets for prometheus
-    private static final String ZALENIUM_TEST_SESSION_LATENCY_BUCKETS = "ZALENIUM_TEST_SESSION_LATENCY_BUCKETS";
-    
-    static final Gauge seleniumTestSessionsWaiting = Gauge.build()
-            .name("selenium_test_sessions_waiting").help("The number of Selenium test sessions that are waiting for a container").register();
-    
-    static final Histogram seleniumTestSessionStartLatency = Histogram.build()
-            .name("selenium_test_session_start_latency_seconds")
-            .help("The Selenium test session start time latency in seconds.")
-            .buckets(defaultEnvironment.getDoubleArrayEnvVariable(ZALENIUM_TEST_SESSION_LATENCY_BUCKETS, DEFAULT_TEST_SESSION_LATENCY_BUCKETS))
-            .register();
 
     @SuppressWarnings("unused")
     public ZaleniumRegistry() {
@@ -91,7 +86,7 @@ public class ZaleniumRegistry extends BaseGridRegistry implements GridRegistry {
     public ZaleniumRegistry(Hub hub) {
         super(hub);
         this.newSessionQueue = new NewSessionRequestQueue();
-        
+
         long minContainers = ZaleniumConfiguration.getDesiredContainersOnStartup();
         long maxContainers = ZaleniumConfiguration.getMaxDockerSeleniumContainers();
         long timeToWaitToStart = ZaleniumConfiguration.getTimeToWaitToStart();
@@ -105,7 +100,7 @@ public class ZaleniumRegistry extends BaseGridRegistry implements GridRegistry {
             waitForAvailableNodes, starter, Clock.systemDefaultZone(), maxTimesToProcessRequest, checkContainersInterval);
         proxies = autoStart;
         this.matcherThread.setUncaughtExceptionHandler(new UncaughtExceptionHandler());
-        
+
         new TestSessionCollectorExports(proxies).register();
         new ContainerStatusCollectorExports(autoStart.getStartedContainers()).register();
     }
@@ -494,12 +489,6 @@ public class ZaleniumRegistry extends BaseGridRegistry implements GridRegistry {
         return proxies.getProxyById(id);
     }
 
-    protected static class UncaughtExceptionHandler implements Thread.UncaughtExceptionHandler {
-        public void uncaughtException(Thread t, Throwable e) {
-            LOG.debug("Matcher thread dying due to unhandled exception.", e);
-        }
-    }
-
     @Override
     public HttpClient getHttpClient(URL url, int connectionTimeout, int readTimeout) {
         // https://github.com/zalando/zalenium/issues/491
@@ -528,6 +517,12 @@ public class ZaleniumRegistry extends BaseGridRegistry implements GridRegistry {
             }
         }
         throw new IllegalStateException(String.format("Something went wrong while creating a HttpClient for url %s", url));
+    }
+
+    protected static class UncaughtExceptionHandler implements Thread.UncaughtExceptionHandler {
+        public void uncaughtException(Thread t, Throwable e) {
+            LOG.debug("Matcher thread dying due to unhandled exception.", e);
+        }
     }
 
     /**
