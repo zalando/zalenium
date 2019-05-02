@@ -16,6 +16,11 @@ public class SessionsServlet extends ActionsServlet {
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = LoggerFactory.getLogger(SessionsServlet.class.getName());
 
+    @SuppressWarnings("unused")
+    public SessionsServlet() {
+        this(null);
+    }
+
     public SessionsServlet(ZaleniumRegistry registry) {
         super(registry);
     }
