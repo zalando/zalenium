@@ -32,7 +32,7 @@ public class SessionsServlet extends ActionsServlet {
             for (TestSession testSession : getRegistry().getActiveSessions()) {
                 LOGGER.info("Delete session {}", testSession.getExternalKey());
                 getRegistry().terminate(testSession, SessionTerminationReason.CLIENT_STOPPED_SESSION);
-                testSession.sendDeleteSessionRequest();
+                testSession.sendDeleteSessionRequest(); // To quickly clean up browsers
                 LOGGER.info("Release slot {}", testSession.getSlot().getInternalKey());
                 getRegistry().forceRelease(testSession.getSlot(), SessionTerminationReason.CLIENT_STOPPED_SESSION);
             }
