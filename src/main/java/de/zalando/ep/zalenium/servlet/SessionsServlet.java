@@ -27,11 +27,13 @@ public class SessionsServlet extends ActionsServlet {
 
     @Override
     protected ResponseAction doAction(final String action) {
+
         if (DO_CLEANUP_ACTIVE_SESSIONS.equals(action)) {
             for (TestSession testSession : getRegistry().getActiveSessions()) {
-                LOGGER.debug("Delete session {}", testSession.getExternalKey());
+                LOGGER.info("Delete session {}", testSession.getExternalKey());
                 getRegistry().terminate(testSession, SessionTerminationReason.CLIENT_STOPPED_SESSION);
-                LOGGER.debug("Release slot {}", testSession.getSlot().getInternalKey());
+                testSession.sendDeleteSessionRequest();
+                LOGGER.info("Release slot {}", testSession.getSlot().getInternalKey());
                 getRegistry().forceRelease(testSession.getSlot(), SessionTerminationReason.CLIENT_STOPPED_SESSION);
             }
             return successResponseAction;
