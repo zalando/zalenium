@@ -120,8 +120,7 @@ function setTestInformation($testName, $browser, $browserVersion, $platform, $pr
     }
     screenResolutionTimeZone.append("<span class=\"float-right\"><img alt=\"Retention Date\" src=\"img/retention-date.png\" " +
         "class=\"mr-1\" width=\"48px\" height=\"48px\"><small>" + $retentionDate + "</small></span>");
-
-    if ($build.length > 0) {
+    if ($build.toString().length > 0) {
         const buildElement = $("#build");
         buildElement.html("");
         buildElement.removeClass("p-0");
