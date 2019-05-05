@@ -160,7 +160,7 @@ spec:
   nodeSelector:
     {{ .Values.nodeSelector.key }}: {{ .Values.nodeSelector.value | quote }}
   {{- end }}
-  {{- if .Values.tolerations.enabled }}
+  {{- if (.Values.tolerations) and (.Values.tolerations.enabled) }}
   tolerations:
     - key: {{ .Values.tolerations.key }}
       operator: {{ .Values.tolerations.operator }}
