@@ -41,8 +41,8 @@ public abstract class ActionsServlet extends RegistryBasedServlet {
     }
 
     public class ResponseAction {
-        String resultMsg;
-        int responseStatus;
+        private String resultMsg;
+        private int responseStatus;
 
         public ResponseAction(String resultMsg, int responseStatus) {
             this.resultMsg = resultMsg;
