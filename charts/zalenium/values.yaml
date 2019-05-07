@@ -156,8 +156,8 @@ ingress:
   # If your ingress host name is shared with multiple
   # applications, Enter a path starting with / (eg. /zalenium)
   # If your ingress host name is only for Zalenium,
-  # set the path as / (root)
-  path: /
+  # no need to set path
+  # path: /
   annotations:
     # kubernetes.io/ingress.class: "nginx"
     # kubernetes.io/tls-acme: "true"
