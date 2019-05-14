@@ -16,7 +16,7 @@ spec:
   sessionAffinity: {{ .Values.hub.serviceSessionAffinity | quote }}
   ports:
   - name: hub
-    port: {{ .Values.hub.port }}
+    port: {{ .Values.hub.svcPort }}
     targetPort: {{ .Values.hub.port }}
   selector:
     app.kubernetes.io/name: {{ include "zalenium.name" . }}

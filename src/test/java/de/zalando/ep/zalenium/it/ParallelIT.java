@@ -96,10 +96,12 @@ public class ParallelIT  {
         DesiredCapabilities chromeCaps = new DesiredCapabilities();
         chromeCaps.setBrowserName(BrowserType.CHROME);
         chromeCaps.setPlatform(Platform.ANY);
+        chromeCaps.setCapability("build", "2389");
 
         DesiredCapabilities firefoxCaps = new DesiredCapabilities();
         firefoxCaps.setBrowserName(BrowserType.FIREFOX);
         firefoxCaps.setPlatform(Platform.ANY);
+        firefoxCaps.setCapability("build", "sample build");
 
         return new Object[] {chromeCaps, firefoxCaps};
     }
