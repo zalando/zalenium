@@ -52,7 +52,7 @@ StartUp()
         SAUCE_USERNAME="${SAUCE_USERNAME:=abc}"
         SAUCE_ACCESS_KEY="${SAUCE_ACCESS_KEY:=abc}"
 
-        if [ "$SAUCE_USERNAME" = abc ]; then
+        if [ "${SAUCE_USERNAME}" = abc ]; then
             echo "SAUCE_USERNAME environment variable is not set, cannot start Sauce Labs node, exiting..."
             exit 2
         fi
@@ -114,6 +114,29 @@ StartUp()
               -v ${VIDEOS_FOLDER}:/home/seluser/videos \
               -v /var/run/docker.sock:/var/run/docker.sock \
               ${ZALENIUM_DOCKER_IMAGE} start --testingBotEnabled true --startTunnel true
+    fi
+
+    if [ "$INTEGRATION_TO_TEST" = crossBrowserTesting ]; then
+        echo "Starting Zalenium in docker with CrossBrowserTesting..."
+        CBT_USERNAME="${CBT_USERNAME:=abc}"
+        CBT_AUTHKEY="${CBT_AUTHKEY:=abc}"
+
+        if [ "$CBT_AUTHKEY" = abc ]; then
+            echo "CBT_AUTHKEY environment variable is not set, cannot start CrossBrowserTesting node, exiting..."
+            exit 6
+        fi
+
+        if [ "$CBT_USERNAME" = abc ]; then
+            echo "CBT_USERNAME environment variable is not set, cannot start CrossBrowserTesting node, exiting..."
+            exit 7
+        fi
+
+        docker run -d -ti --name zalenium -p 4444:4444 \
+              ${HOST_OPTIONS} \
+              -e CBT_USERNAME -e CBT_AUTHKEY \
+              -v ${VIDEOS_FOLDER}:/home/seluser/videos \
+              -v /var/run/docker.sock:/var/run/docker.sock \
+              ${ZALENIUM_DOCKER_IMAGE} start --cbtEnabled true --startTunnel true
     fi
 
     if ! mtimeout --foreground "2m" bash -c WaitZaleniumStarted; then

@@ -20,7 +20,8 @@ import org.slf4j.LoggerFactory;
 @ManagedService(description = "SauceLabs TestSlots")
 public class SauceLabsRemoteProxy extends CloudTestingRemoteProxy {
 
-    private static final String SAUCE_LABS_ACCOUNT_INFO = "https://saucelabs.com/rest/v1/users/%s";
+    private static final String SAUCE_LABS_API_URL = getEnv().getStringEnvVariable("SAUCE_LABS_API_URL", "https://saucelabs.com/rest/v1/");
+    private static final String SAUCE_LABS_ACCOUNT_INFO = SAUCE_LABS_API_URL.concat("users/%s");
     private static final String SAUCE_LABS_USER_NAME = getEnv().getStringEnvVariable("SAUCE_USERNAME", "");
     private static final String SAUCE_LABS_ACCESS_KEY = getEnv().getStringEnvVariable("SAUCE_ACCESS_KEY", "");
     private static final String SAUCE_LABS_URL = getEnv().getStringEnvVariable("SAUCE_LABS_URL", "http://ondemand.saucelabs.com:80");
@@ -98,7 +99,7 @@ public class SauceLabsRemoteProxy extends CloudTestingRemoteProxy {
     @Override
     public TestInformation getTestInformation(String seleniumSessionId) {
         // https://saucelabs.com/rest/v1/SL_USER/jobs/SELENIUM_SESSION_ID
-        String sauceLabsTestUrl = "https://saucelabs.com/rest/v1/%s/jobs/%s";
+        String sauceLabsTestUrl = SAUCE_LABS_API_URL.concat("%s/jobs/%s");
         sauceLabsTestUrl = String.format(sauceLabsTestUrl, SAUCE_LABS_USER_NAME, seleniumSessionId);
         String sauceLabsVideoUrl = sauceLabsTestUrl + "/assets/video.mp4";
         String sauceLabsBrowserLogUrl = sauceLabsTestUrl + "/assets/log.json";

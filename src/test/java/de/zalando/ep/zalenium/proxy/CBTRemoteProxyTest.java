@@ -91,7 +91,7 @@ public class CBTRemoteProxyTest {
 
     @After
     public void tearDown() throws MalformedObjectNameException {
-        ObjectName objectName = new ObjectName("org.seleniumhq.grid:type=RemoteProxy,node=\"http://hub.crossbrowsertesting.com:80/wd/hub\"");
+        ObjectName objectName = new ObjectName("org.seleniumhq.grid:type=RemoteProxy,node=\"http://hub.crossbrowsertesting.com:80\"");
         new JMXHelper().unregister(objectName);
         objectName = new ObjectName("org.seleniumhq.grid:type=RemoteProxy,node=\"http://localhost:30000\"");
         new JMXHelper().unregister(objectName);
@@ -151,7 +151,7 @@ public class CBTRemoteProxyTest {
 
         // The body should now have the CBT variables
         String expectedBody = String.format("{\"desiredCapabilities\":{\"browserName\":\"internet explorer\",\"platformName\":" +
-                                "\"WIN8\",\"username\":\"%s\",\"authkey\":\"%s\",\"version\":\"latest\"}}",
+                                "\"WIN8\",\"username\":\"%s\",\"password\":\"%s\",\"version\":\"latest\"}}",
                         env.getStringEnvVariable("CBT_USERNAME", ""),
                         env.getStringEnvVariable("CBT_AUTHKEY", ""));
         verify(request).setBody(expectedBody);

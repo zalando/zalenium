@@ -278,10 +278,21 @@ public class CloudTestingRemoteProxy extends DefaultRemoteProxy {
                         getUserNameValue(), getAccessKeyValue(), useAuthenticationToDownloadFile());
                 for (String logUrl : testInformation.getLogUrls()) {
                     String fileName = logUrl.substring(logUrl.lastIndexOf('/') + 1);
+                    // In order to not try to save questionable characters that the filesystem might disagree with
+
+                    if(fileName.contains("?")){
+                        fileName = fileName.substring(0, fileName.indexOf('?'));
+                    }
                     fileNameWithFullPath = testInformation.getLogsFolderPath() + "/" + fileName;
                     commonProxyUtilities.downloadFile(logUrl, fileNameWithFullPath,
-                            getUserNameValue(), getAccessKeyValue(), useAuthenticationToDownloadFile());
+                            getUserNameValue(), getAccessKeyValue(), useAuthenticationToDownloadFile(), 2);
                 }
+                for (RemoteLogFile remoteLogFile : testInformation.getRemoteLogFiles()) {
+                    fileNameWithFullPath = testInformation.getLogsFolderPath() + "/" + remoteLogFile.getLocalFileName();
+                    commonProxyUtilities.downloadFile(remoteLogFile.getRemoteUrl(), fileNameWithFullPath,
+                            getUserNameValue(), getAccessKeyValue(), remoteLogFile.isAuthenticationRequired(), 2);
+                }
+
                 createFeatureNotImplementedFile(testInformation.getLogsFolderPath());
                 DashboardCollection.updateDashboard(testInformation);
                 addToDashboardCalled = true;
@@ -335,20 +346,17 @@ public class CloudTestingRemoteProxy extends DefaultRemoteProxy {
 
     @Override
     public void startPolling() {
-        super.startPolling();
         cloudProxyNodePoller = new CloudProxyNodePoller(this);
         cloudProxyNodePoller.start();
     }
 
     @Override
     public void stopPolling() {
-        super.stopPolling();
         cloudProxyNodePoller.interrupt();
     }
 
     @Override
     public void teardown() {
-        super.teardown();
         stopPolling();
     }
 
