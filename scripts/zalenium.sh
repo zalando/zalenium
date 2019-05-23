@@ -440,7 +440,7 @@ StartUp()
 
     if [ ! -z ${GRID_USER} ] && [ ! -z ${GRID_PASSWORD} ]; then
         echo "Enabling basic auth via startup script..."
-        htpasswd -bc /home/seluser/.htpasswd ${GRID_USER} ${GRID_PASSWORD}
+        htpasswd -bc /home/seluser/.htpasswd "${GRID_USER}" "${GRID_PASSWORD}"
     fi
 
     # In nginx.conf, Replace {{contextPath}} with value of APPEND_CONTEXT_PATH
