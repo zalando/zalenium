@@ -245,39 +245,46 @@ public class SwarmContainerClient implements ContainerClient {
     }
 
     private TaskSpec buildTaskSpec(ContainerSpec containerSpec) {
-        final RestartPolicy restartPolicy = RestartPolicy.builder()
-                .condition("on-failure")
-                .build();
+        try {
+            final RestartPolicy restartPolicy = RestartPolicy.builder()
+                    .condition("on-failure")
+                    .build();
+            String hostname = SwarmUtilities.getHubHostname();
+            final List<String> placementList = new ArrayList<>();
 
-        final List<String> placementList = new ArrayList<>();
+            placementList.add("node.hostname != " + hostname);
 
-        placementList.add("node.role==worker");
+            final Placement placement = Placement.create(placementList);
 
-        final Placement placement = Placement.create(placementList);
 
-        Resources.Builder resourceBuilder = Resources.builder();
-        String cpuLimit = getSeleniumContainerCpuLimit();
-        String memLimit = getSeleniumContainerMemoryLimit();
+            Resources.Builder resourceBuilder = Resources.builder();
+            String cpuLimit = getSeleniumContainerCpuLimit();
+            String memLimit = getSeleniumContainerMemoryLimit();
 
-        if (!Strings.isNullOrEmpty(cpuLimit)) {
-            resourceBuilder.nanoCpus(Long.valueOf(cpuLimit));
+            if (!Strings.isNullOrEmpty(cpuLimit)) {
+                resourceBuilder.nanoCpus(Long.valueOf(cpuLimit));
+            }
+
+            if (!Strings.isNullOrEmpty(memLimit)) {
+                resourceBuilder.memoryBytes(Long.valueOf(memLimit));
+            }
+
+            ResourceRequirements resourceRequirements = ResourceRequirements.builder()
+                    .limits(resourceBuilder.build())
+                    .build();
+
+            final TaskSpec.Builder taskSpecBuilder = TaskSpec.builder()
+                    .resources(resourceRequirements)
+                    .restartPolicy(restartPolicy)
+                    .placement(placement)
+                    .containerSpec(containerSpec);
+
+            return taskSpecBuilder.build();
+        } catch (DockerException | InterruptedException e) {
+            e.printStackTrace();
         }
 
-        if (!Strings.isNullOrEmpty(memLimit)) {
-            resourceBuilder.memoryBytes(Long.valueOf(memLimit));
-        }
-
-        ResourceRequirements resourceRequirements = ResourceRequirements.builder()
-                .limits(resourceBuilder.build())
-                .build();
-
-        final TaskSpec.Builder taskSpecBuilder = TaskSpec.builder()
-                .resources(resourceRequirements)
-                .restartPolicy(restartPolicy)
-                .placement(placement)
-                .containerSpec(containerSpec);
-
-        return taskSpecBuilder.build();
+        return null;
     }
 
     private ServiceSpec buildServiceSpec(TaskSpec taskSpec, String nodePort, String noVncPort) {
