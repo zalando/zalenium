@@ -11,20 +11,21 @@ Setup a [docker swarm](https://docs.docker.com/get-started/part4/) with at least
 
 #### Constellations
 
-* _(Preferred)_ One manager and multiple workers. The hub will run on the manager and the 
-created containers will run on the workers.
+* One manager and multiple workers. The hub will run on the manager and the 
+created browser containers will run on the workers.
 * A high available docker swarm with multiple managers. The manager that runs the hub will 
-not run any created container.
+not run any created browser container.
 
-_Info:_ Currently we do not support running created containers on the same node as the hub
-is running because of communication problems, which we hope to fix soon.
+_Info:_ Currently we do not support running created browser containers on the same node as
+the hub. Running the browser containers and the hub on the same node leads to communication
+problems, which we hope to fix soon.
 
 #### Images
 
-Pull required images:
+Pull images:
 {% highlight shell %}
-docker pull elgalu/selenium
 docker pull dosel/zalenium
+docker pull elgalu/selenium
 {% endhighlight %}
 
 
@@ -73,11 +74,11 @@ networks:
 
 _Info:_ It is important to give the service that runs the zalenium hub the label
 `"de.zalando.gridRole=hub"`. This helps to identify the node which runs the hub
-and created containers will not deployed on this node, which would cause communication
-problems between the hub and the created containers.
+and created browser containers will not be deployed on this node, which would cause
+communication problems between the hub and the created browser containers.
 
-Video recording is currently not supported, but we hope to re-enable this feature
-with docker swarm.
+Video recording and logs are currently not supported, but we hope to re-enable this
+feature with docker swarm.
 
 #### Network
 
@@ -94,7 +95,7 @@ will have the name `"STACK_zalenium"`, which we passed to `"--swarmOverlayNetwor
 
 __Synchronized docker operations__
 
-Docker operations run in synchronized blocks to prevent stale containers remain forever.
+Docker operations run in synchronized blocks to prevent stale browser containers remain forever.
 
 see also:
 - [eclipse-ee4j/jersey#3772](https://github.com/eclipse-ee4j/jersey/issues/3772)
@@ -102,11 +103,12 @@ see also:
 
 __One service per test session__
 
-For each test session we deploy a new service that will create a container to run tests.
+For each test session we deploy a new service that will create a browser container to run tests.
 
-Working with one service and adapt the number of replicas do not work because we can't
-control which containers will be removed when decreasing replicas. It can and will happen
-that docker will remove a container with a running test to fulfill number of replicas.
+Working with one service and adapt the number of replicas does not work because we can't
+control which browser containers will be removed when decreasing replicas. It can and
+will happen that docker will remove a browser container with a running test to fulfill
+number of replicas.
 
 
 
