@@ -17,7 +17,7 @@
 This is a Selenium Grid extension to scale your local grid dynamically with docker containers. It uses
 [docker-selenium](https://github.com/elgalu/docker-selenium) to run your tests in Firefox and Chrome locally, if you
 need a different browser, your tests can get redirected to a cloud testing provider ([Sauce Labs](https://saucelabs.com/), 
-[BrowserStack](https://www.browserstack.com/), [TestingBot](https://testingbot.com/), [CrossBrowserTesting](https://crossbrowsertesting.com/)). Zalenium also works out of the box
+[BrowserStack](https://www.browserstack.com/), [TestingBot](https://testingbot.com/), [CrossBrowserTesting](https://crossbrowsertesting.com/), [LambdaTest](https://www.lambdatest.com/)). Zalenium also works out of the box
 in [Kubernetes](https://zalando.github.io/zalenium/#kubernetes).
 
 Zalenium's maintainers add new features regularly. We invite you to test it, report bugs, suggest any ideas you may
@@ -38,7 +38,7 @@ on a node created from scratch and disposed after the test completes.
 
 If you need a capability that cannot be fulfilled by [docker-selenium](https://github.com/elgalu/docker-selenium),
 the test gets redirected to a cloud testing provider ([Sauce Labs](https://saucelabs.com/),
-[BrowserStack](https://www.browserstack.com/), [TestingBot](https://testingbot.com/), [CrossBrowserTesting](https://crossbrowsertesting.com/)).
+[BrowserStack](https://www.browserstack.com/), [TestingBot](https://testingbot.com/), [CrossBrowserTesting](https://crossbrowsertesting.com/), [LambdaTest](https://www.lambdatest.com/)).
 
 Zalenium's main goal is: to allow anyone to have a disposable and flexible Selenium Grid infrastructure.
 

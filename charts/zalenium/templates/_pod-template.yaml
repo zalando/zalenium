@@ -142,6 +142,14 @@ spec:
         - name: TESTINGBOT_SECRET
           value: {{ .Values.hub.testingBotSecret | quote }}
         {{- end }}
+        {{- if .Values.hub.lambdaTestEnabled }}
+        - name: LT_ENABLED
+          value: {{ .Values.hub.lambdaTestEnabled | quote }}
+        - name: LT_USERNAME
+          value: {{ .Values.hub.lambdaUsername | quote }}
+        - name: LT_ACCESS_KEY
+          value: {{ .Values.hub.lambdaAccessKey | quote }}
+        {{- end }}
         {{- range $key, $val := .Values.hub.env }}
         - name: {{ $key | quote }}
           value: {{ $val | quote }}
