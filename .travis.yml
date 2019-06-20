@@ -34,6 +34,12 @@ jobs:
         - docker pull elgalu/selenium
         - travis_retry ./run_integration_tests.sh testingBot
 
+    - env: step=lambdaTest
+      if: type = pull_request
+      script:
+        - docker pull elgalu/selenium
+        - travis_retry ./run_integration_tests.sh lambdaTest
+
     - env: step=dockerCompose
       if: type = pull_request
       script:

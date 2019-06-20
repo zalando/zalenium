@@ -22,6 +22,7 @@ public class TestInformation {
     private static final String ZALENIUM_PROXY_NAME = "Zalenium";
     private static final String SAUCE_LABS_PROXY_NAME = "SauceLabs";
     private static final String BROWSER_STACK_PROXY_NAME = "BrowserStack";
+    private static final String LAMBDA_TEST_PROXY_NAME = "LambdaTest";
     private static final CommonProxyUtilities commonProxyUtilities = new CommonProxyUtilities();
     private String seleniumSessionId;
     private String testName;
@@ -156,6 +157,8 @@ public class TestInformation {
             seleniumLogFileName = fileName.concat("selenium-server.log");
         } else if (BROWSER_STACK_PROXY_NAME.equalsIgnoreCase(proxyName)){
             seleniumLogFileName = fileName.concat("selenium.log");
+        } else if (LAMBDA_TEST_PROXY_NAME.equalsIgnoreCase(proxyName)){
+            seleniumLogFileName = fileName.concat("selenium.log");
         } else {
             seleniumLogFileName = fileName.concat("not_implemented.log");
         }
@@ -176,6 +179,8 @@ public class TestInformation {
             browserDriverLogFileName = fileName.concat("log.json");
         } else if (BROWSER_STACK_PROXY_NAME.equalsIgnoreCase(proxyName)){
             browserDriverLogFileName = fileName.concat("browserstack.log");
+        }  else if (LAMBDA_TEST_PROXY_NAME.equalsIgnoreCase(proxyName)){
+            browserDriverLogFileName = fileName.concat("lambdatest.log");
         } else {
             browserDriverLogFileName = fileName.concat("not_implemented.log");
         }
