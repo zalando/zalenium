@@ -108,27 +108,6 @@ public class SwarmUtilities {
         return null;
     }
 
-    public static synchronized Task getTaskByContainerLabel(String labelKey, String labelValue) throws DockerException, InterruptedException {
-        List<Task> tasks = dockerClient.listTasks();
-
-        for (Task task : CollectionUtils.emptyIfNull(tasks)) {
-            ContainerStatus containerStatus = task.status().containerStatus();
-
-            if (containerStatus != null) {
-                ContainerInfo containerInfo = dockerClient.inspectContainer(containerStatus.containerId());
-                ImmutableMap<String, String> labels = containerInfo.config().labels();
-                boolean hasLabel = labels != null && labels.containsKey(labelKey);
-                boolean labelHasValue = labels != null && labels.get(labelKey).equals(labelValue);
-
-                if (hasLabel && labelHasValue) {
-                    return task;
-                }
-            }
-        }
-
-        return null;
-    }
-
     public static synchronized Task getTaskByServiceId(String serviceId) throws DockerException, InterruptedException {
         String serviceName = dockerClient.inspectService(serviceId).spec().name();
         Task.Criteria criteria = Task.Criteria.builder().serviceName(serviceName).build();
@@ -168,22 +147,6 @@ public class SwarmUtilities {
         }
 
         return ipAddress;
-    }
-
-
-    public static synchronized String getHubHostname () throws DockerException, InterruptedException {
-        String hubLabelKey = "de.zalando.gridRole";
-        String hubLabelValue = "hub";
-        Task task = getTaskByContainerLabel(hubLabelKey, hubLabelValue);
-
-        if (task != null) {
-            String nodeId = task.nodeId();
-            NodeInfo nodeInfo = dockerClient.inspectNode(nodeId);
-
-            return nodeInfo.description().hostname();
-        }
-
-        return null;
     }
 
     public static boolean isSwarmActive() {
