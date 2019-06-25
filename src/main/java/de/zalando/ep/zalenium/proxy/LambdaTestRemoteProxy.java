@@ -96,7 +96,7 @@ public class LambdaTestRemoteProxy extends CloudTestingRemoteProxy {
 
   @Override
   public TestInformation getTestInformation(String seleniumSessionId) {
-    String lambdaTestTestUrl = "https://stage-api.lambdatest.com/automation/api/v1/zalenium/%s";
+    String lambdaTestTestUrl = "https://api.lambdatest.com/automation/api/v1/zalenium/%s";
     lambdaTestTestUrl = String.format(lambdaTestTestUrl, seleniumSessionId);
 
     JsonObject testData = getCommonProxyUtilities().readJSONFromUrl(lambdaTestTestUrl, LT_USERNAME, LT_ACCESS_KEY)
