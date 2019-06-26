@@ -32,6 +32,7 @@ public class SwarmContainerClient implements ContainerClient {
 
     private static final String ZALENIUM_SELENIUM_CONTAINER_CPU_LIMIT = "ZALENIUM_SELENIUM_CONTAINER_CPU_LIMIT";
     private static final String ZALENIUM_SELENIUM_CONTAINER_MEMORY_LIMIT = "ZALENIUM_SELENIUM_CONTAINER_MEMORY_LIMIT";
+    private static final String SWARM_RUN_TESTS_ONLY_ON_WORKERS = "SWARM_RUN_TESTS_ONLY_ON_WORKERS";
 
     private static final String SWARM_EXEC_IMAGE = "datagridsys/skopos-plugin-swarm-exec:latest";
 
@@ -269,6 +270,12 @@ public class SwarmContainerClient implements ContainerClient {
                 .resources(resourceRequirements)
                 .restartPolicy(restartPolicy)
                 .containerSpec(containerSpec);
+
+        if ("1".equals(env.getEnvVariable(SWARM_RUN_TESTS_ONLY_ON_WORKERS))) {
+            final List<String> placementList = new ArrayList<>();
+            placementList.add("node.role==worker");
+            taskSpecBuilder.placement(Placement.create(placementList));
+        }
 
         return taskSpecBuilder.build();
     }
