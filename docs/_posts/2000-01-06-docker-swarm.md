@@ -90,6 +90,10 @@ Make sure passing the network name with its stack name as prefix.
 In our example we named our network "zalenium" and the stack was named "STACK" so the network
 will have the name `"STACK_zalenium"`, which we passed to `"--swarmOverlayNetwork"`.
 
+#### Options
+
+If you want browser containers only deployed on workers set `SWARM_RUN_TESTS_ONLY_ON_WORKERS=1`
+as environment variable.
 
 ### Technical Information
 
@@ -109,6 +113,15 @@ Working with one service and adapt the number of replicas does not work because 
 control which browser containers will be removed when decreasing replicas. It can and
 will happen that docker will remove a browser container with a running test to fulfill
 number of replicas.
+
+
+### Known Errors
+
+Executed tests run into following forwarding errors:
+- `was terminated due to FORWARDING_TO_NODE_FAILED`
+- `cannot forward the request unexpected end of stream on Connection`
+The docker swarm seems to be overloaded. Try to reduce `--maxDockerSeleniumContainers` to unload
+your docker swarm system. A good value is the number of all cpu cores available in the docker swarm.
 
 
 
