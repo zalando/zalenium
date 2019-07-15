@@ -1,15 +1,19 @@
 package de.zalando.ep.zalenium.servlet;
 
-import de.zalando.ep.zalenium.proxy.DockerSeleniumRemoteProxy;
-import de.zalando.ep.zalenium.registry.ZaleniumRegistry;
-import de.zalando.ep.zalenium.util.TestUtils;
-import de.zalando.ep.zalenium.util.ZaleniumConfiguration;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import org.hamcrest.Matchers;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 import org.openqa.grid.common.RegistrationRequest;
 import org.openqa.grid.internal.ProxySet;
 import org.openqa.grid.internal.utils.configuration.GridHubConfiguration;
@@ -18,17 +22,19 @@ import org.openqa.selenium.Platform;
 import org.openqa.selenium.remote.BrowserType;
 import org.openqa.selenium.remote.CapabilityType;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
+import de.zalando.ep.zalenium.proxy.DockerSeleniumRemoteProxy;
+import de.zalando.ep.zalenium.registry.ZaleniumRegistry;
+import de.zalando.ep.zalenium.util.TestUtils;
+import de.zalando.ep.zalenium.util.ZaleniumConfiguration;
 
 public class GridStatusServletTest {
 
     private HttpServletRequest request;
+
     private HttpServletResponse response;
+
     private GridStatusServlet gridStatusServlet;
+
     private ZaleniumRegistry registry;
 
     @Before
@@ -40,6 +46,10 @@ public class GridStatusServletTest {
         gridStatusServlet = new GridStatusServlet(registry);
     }
 
+    /**
+     * Check when grid has full capacity status.
+     * @throws IOException
+     */
     @Test
     public void statusFullCapacity() throws IOException {
         Map<String, Object> requestedCapability = new HashMap<>();
@@ -61,6 +71,10 @@ public class GridStatusServletTest {
         }
     }
 
+    /**
+     * Check when grid has available status.
+     * @throws IOException
+     */
     @Test
     public void statusAvailable() throws IOException {
         Map<String, Object> requestedCapability = new HashMap<>();
@@ -82,6 +96,10 @@ public class GridStatusServletTest {
         }
     }
 
+    /**
+     * Check when grid has unavailable status.
+     * @throws IOException
+     */
     @Test
     public void statusUnavailable() throws IOException {
         try {
