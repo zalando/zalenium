@@ -23,6 +23,8 @@ public class ZaleniumConfiguration {
     @VisibleForTesting
     public static final String ZALENIUM_DESIRED_CONTAINERS = "ZALENIUM_DESIRED_CONTAINERS";
     @VisibleForTesting
+    public static final String ZALENIUM_SWARM_OVERLAY_NETWORK = "ZALENIUM_SWARM_OVERLAY_NETWORK";
+    @VisibleForTesting
     public static final String ZALENIUM_MAX_DOCKER_SELENIUM_CONTAINERS = "ZALENIUM_MAX_DOCKER_SELENIUM_CONTAINERS";
     private static final String WAIT_FOR_AVAILABLE_NODES = "WAIT_FOR_AVAILABLE_NODES";
     private static final String TIME_TO_WAIT_TO_START = "TIME_TO_WAIT_TO_START";
@@ -38,6 +40,7 @@ public class ZaleniumConfiguration {
     private static Environment env = defaultEnvironment;
     private static int desiredContainersOnStartup;
     private static int maxDockerSeleniumContainers;
+    private static String swarmOverlayNetwork;
     private static boolean waitForAvailableNodes;
     private static int timeToWaitToStart;
     private static int maxTimesToProcessRequest;
@@ -62,6 +65,9 @@ public class ZaleniumConfiguration {
         int maxDSContainers = env.getIntEnvVariable(ZALENIUM_MAX_DOCKER_SELENIUM_CONTAINERS,
                 DEFAULT_AMOUNT_DOCKER_SELENIUM_CONTAINERS_RUNNING);
         setMaxDockerSeleniumContainers(maxDSContainers);
+
+        String swarmOverlayNetwork = env.getStringEnvVariable(ZALENIUM_SWARM_OVERLAY_NETWORK, "");
+        setSwarmOverlayNetwork(swarmOverlayNetwork);
 
         ZALENIUM_RUNNING_LOCALLY = Boolean.valueOf(System.getProperty(ZALENIUM_RUNNING_LOCALLY_ENV_VAR));
 
@@ -149,6 +155,16 @@ public class ZaleniumConfiguration {
     public static void setMaxDockerSeleniumContainers(int maxDockerSeleniumContainers) {
         ZaleniumConfiguration.maxDockerSeleniumContainers = maxDockerSeleniumContainers < 0 ?
                 DEFAULT_AMOUNT_DOCKER_SELENIUM_CONTAINERS_RUNNING : maxDockerSeleniumContainers;
+    }
+
+    @VisibleForTesting
+    public static void setSwarmOverlayNetwork(String swarmOverlayNetwork) {
+        ZaleniumConfiguration.swarmOverlayNetwork = swarmOverlayNetwork;
+    }
+
+    @VisibleForTesting
+    public static String getSwarmOverlayNetwork() {
+        return swarmOverlayNetwork;
     }
 
     @VisibleForTesting

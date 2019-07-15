@@ -21,6 +21,7 @@ services:
             --sauceLabsEnabled false
             --browserStackEnabled false
             --testingBotEnabled false
+            --cbtEnabled false
             --startTunnel false
     extra_hosts:
       - "google.co.jp:127.0.0.1"

@@ -1,0 +1,27 @@
+version: "3.7"
+
+services:
+  zalenium:
+    image: dosel/zalenium
+    hostname: zalenium
+    deploy:
+      placement:
+        constraints:
+          - node.role == manager
+    labels:
+      - "de.zalando.gridRole=hub" # important for us to identify the node which runs zalenium hub
+    ports:
+      - "4444:4444"
+    networks:
+      - zalenium
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /tmp/videos:/home/seluser/videos
+    environment:
+      - PULL_SELENIUM_IMAGE=true
+    command: ["start", "--swarmOverlayNetwork", "STACK_zalenium", "--videoRecordingEnabled", "false"]
+
+networks:
+  zalenium:
+    driver: overlay
+    attachable: true

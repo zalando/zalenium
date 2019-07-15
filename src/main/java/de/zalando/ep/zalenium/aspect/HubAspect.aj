@@ -22,6 +22,7 @@ import de.zalando.ep.zalenium.servlet.VncAuthenticationServlet;
 import de.zalando.ep.zalenium.servlet.ZaleniumConsoleServlet;
 import de.zalando.ep.zalenium.servlet.ZaleniumResourceServlet;
 import de.zalando.ep.zalenium.servlet.GridStatusServlet;
+import de.zalando.ep.zalenium.servlet.SessionsServlet;
 import io.prometheus.client.exporter.MetricsServlet;
 import io.prometheus.client.filter.MetricsFilter;
 import io.prometheus.client.hotspot.DefaultExports;
@@ -84,6 +85,7 @@ privileged public aspect HubAspect {
         handler.addServlet(LivePreviewServlet.class, "/grid/admin/live");
         handler.addServlet(ZaleniumConsoleServlet.class, "/grid/console");
         handler.addServlet(GridStatusServlet.class, "/grid/status");
+        handler.addServlet(SessionsServlet.class, "/grid/sessions");
         handler.addServlet(ZaleniumResourceServlet.class, "/resources/*");
         handler.addServlet(DashboardCleanupServlet.class, "/dashboard/cleanup");
         handler.addServlet(DashboardInformationServlet.class, "/dashboard/information");

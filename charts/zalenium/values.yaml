@@ -11,8 +11,15 @@ hub:
   ## ref: http://kubernetes.io/docs/user-guide/images/#pre-pulling-images
   pullPolicy: "IfNotPresent"
 
+  ## Specify secrets to pull images from private repositories
+  ## ref: https://kubernetes.io/docs/concepts/containers/images/#specifying-imagepullsecrets-on-a-pod
+  #imagePullSecret: "secret1"
+
   ## The port which the hub listens on
   port: 4444
+
+  ## Timeout for probe Hub liveness via HTTP request on Hub console
+  livenessTimeout: 1
 
   ## Timeout for probe Hub readiness via HTTP request on Hub console
   readinessTimeout: 1
@@ -41,6 +48,9 @@ hub:
   ## ref: https://kubernetes.io/docs/user-guide/services/
   serviceType: "NodePort"
 
+  ## Port on which K8s service is listening on. Zalenium WebUI will be available there.
+  svcPort: 80
+
   ## If serviceType is LoadBalancer:
   ##   Add list of IPs allowed to connect to the service
   ## ref: https://kubernetes.io/docs/concepts/services-networking/service/
@@ -56,6 +66,7 @@ hub:
   desiredContainers: 2
   maxDockerSeleniumContainers: 10
   videoRecordingEnabled: true
+  # the limits/requests below are for Selenium pods (containers)
   cpuRequest: 250m
   cpuLimit: 1000m
   memRequest: 500Mi
@@ -85,7 +96,7 @@ hub:
   testingBotSecret: blank
 
   ## Arbitrary environment variables
-  env: 
+  env:
     # FOO: BAR
 
   ## Use Openshift DeploymentConfig instead of Kubernetes Deployment
@@ -95,6 +106,12 @@ hub:
       enabled: false
       triggers:
         - type: ConfigChange
+    route:
+      enabled: false
+      hostname:
+      tls:
+      #  termination: edge
+      #  insecureEdgeTerminationPolicy: Redirect
 
 ## Enable persistence using Persistent Volume Claims
 ## ref: http://kubernetes.io/docs/user-guide/persistent-volumes/
@@ -113,7 +130,7 @@ persistence:
     ##   GKE, AWS & OpenStack)
     ##
     # storageClass: "-"
-    accessMode: ReadWriteMany
+    accessMode: ReadWriteOnce
     size: 2Gi
   video:
     enabled: false
@@ -128,7 +145,7 @@ persistence:
     ##   GKE, AWS & OpenStack)
     ##
     # storageClass: "-"
-    accessMode: ReadWriteMany
+    accessMode: ReadWriteOnce
     size: 10Gi
 
 ingress:
@@ -139,8 +156,8 @@ ingress:
   # If your ingress host name is shared with multiple
   # applications, Enter a path starting with / (eg. /zalenium)
   # If your ingress host name is only for Zalenium,
-  # set the path as / (root)
-  path: /
+  # no need to set path
+  # path: /
   annotations:
     # kubernetes.io/ingress.class: "nginx"
     # kubernetes.io/tls-acme: "true"
@@ -163,10 +180,38 @@ nodeSelector:
   ## key: test
   ## value: test
 
-tolerations:
-  enabled: false
-  ## Set tolerations to run zalenium hub on nodes with taints
-  ## key: test
-  ## operator: Equal
-  ## value: test
-  ## effect: NoSchedule
+# Allow pods to run on nodes with taints
+# https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
+#
+# tolerations:
+# - key: "<key-name>"
+#   operator: "Equal"
+#   value: "<key-value>"
+#   effect: "NoSchedule"
+
+# More flexible way to manage pods' allocation
+# https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity
+#
+# affinity:
+#   # soft preference to go to dedicated nodes
+#   nodeAffinity:
+#     preferredDuringSchedulingIgnoredDuringExecution:
+#     - weight: 100
+#       preference:
+#         matchExpressions:
+#         - key: <key-name>
+#           operator: In
+#           values:
+#           - <key-value>
+#   # prefer not to start the pod on a node that's having another pod with specific labels
+#   podAntiAffinity:
+#     preferredDuringSchedulingIgnoredDuringExecution:
+#     - weight: 100
+#       podAffinityTerm:
+#         labelSelector:
+#           matchExpressions:
+#           - key: <key-name>
+#             operator: In
+#             values:
+#             - <key-value>
+#         topologyKey: "kubernetes.io/hostname"

@@ -107,6 +107,11 @@ public class BrowserStackRemoteProxy extends CloudTestingRemoteProxy {
                 String platformVersion = automation_session.get("os_version").getAsString();
                 String videoUrl = automation_session.get("video_url").getAsString();
                 List<String> logUrls = new ArrayList<>();
+                logUrls.add(automation_session.get("browser_console_logs_url").getAsString());
+
+                List<RemoteLogFile> remoteLogFiles = new ArrayList<>();
+                remoteLogFiles.add(new RemoteLogFile(automation_session.get("logs").getAsString(), "browserstack.log", true));
+                remoteLogFiles.add(new RemoteLogFile(automation_session.get("selenium_logs_url").getAsString(), "selenium.log", false));
                 if (videoUrl.startsWith("http")) {
                     return new TestInformation.TestInformationBuilder()
                         .withSeleniumSessionId(seleniumSessionId)
@@ -120,6 +125,7 @@ public class BrowserStackRemoteProxy extends CloudTestingRemoteProxy {
                         .withFileExtension(getVideoFileExtension())
                         .withVideoUrl(videoUrl)
                         .withLogUrls(logUrls)
+                        .withRemoteLogFiles(remoteLogFiles)
                         .withMetadata(getMetadata())
                         .build();
                 }

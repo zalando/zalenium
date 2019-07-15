@@ -6,7 +6,7 @@
 
     <groupId>de.zalando.ep</groupId>
     <artifactId>zalenium</artifactId>
-    <version>3.141.59h-SNAPSHOT</version>
+    <version>3.141.59s-SNAPSHOT</version>
     <name>Zalenium</name>
     <description>An on-demand, dynamic local Selenium Grid with an extension to a cloud testing platform.</description>
 
@@ -59,7 +59,7 @@
         <selenium-server.patch-level.version>59</selenium-server.patch-level.version>
         <!-- This needs to match what is in the Selenium Server pom file -->
         <jetty.version>9.4.12.v20180830</jetty.version>
-        <docker-client.version>8.14.3</docker-client.version>
+        <docker-client.version>8.15.0</docker-client.version>
         <kubernetes-client.version>4.1.0</kubernetes-client.version>
         <junit.version>4.12</junit.version>
         <mockito.version>2.23.0</mockito.version>
@@ -89,6 +89,7 @@
         <skip.failsafe.setup>false</skip.failsafe.setup>
         <integrationToTest>sauceLabs</integrationToTest>
         <httpmime.version>4.5.6</httpmime.version>
+        <junit.system-rules.version>1.19.0</junit.system-rules.version>
     </properties>
 
     <dependencies>
@@ -201,7 +202,6 @@
             <artifactId>jetty-server</artifactId>
             <scope>provided</scope>
             <version>${jetty.version}</version>
-
         </dependency>
         <dependency>
             <groupId>io.fabric8</groupId>
@@ -232,6 +232,11 @@
             <version>${httpmime.version}</version>
         </dependency>
         <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-collections4</artifactId>
+            <version>4.3</version>
+        </dependency>
+        <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <version>${junit.version}</version>
@@ -241,6 +246,12 @@
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
             <version>${mockito.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.github.stefanbirkner</groupId>
+            <artifactId>system-rules</artifactId>
+            <version>${junit.system-rules.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>

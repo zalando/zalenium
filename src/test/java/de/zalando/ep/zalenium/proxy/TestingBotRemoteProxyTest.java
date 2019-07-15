@@ -59,7 +59,6 @@ public class TestingBotRemoteProxyTest {
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
-    @SuppressWarnings("ConstantConditions")
     @Before
     public void setUp() throws IOException {
         try {
@@ -286,9 +285,6 @@ public class TestingBotRemoteProxyTest {
             File dashboard = new File(videosFolder, "dashboard.html");
             Assert.assertTrue(dashboard.exists());
             Assert.assertTrue(dashboard.isFile());
-            File testList = new File(videosFolder, "list.html");
-            Assert.assertTrue(testList.exists());
-            Assert.assertTrue(testList.isFile());
             File cssFolder = new File(videosFolder, "css");
             Assert.assertTrue(cssFolder.exists());
             Assert.assertTrue(cssFolder.isDirectory());
@@ -305,5 +301,4 @@ public class TestingBotRemoteProxyTest {
         Assert.assertEquals(".mp4", testingBotProxy.getVideoFileExtension());
         Assert.assertEquals("TestingBot", testingBotProxy.getProxyName());
     }
-
 }
