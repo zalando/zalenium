@@ -6,19 +6,6 @@ package de.zalando.ep.zalenium.servlet;
     The code here is based on the ConsoleServlet class from the Selenium Grid
  */
 
-import com.google.common.io.ByteStreams;
-import de.zalando.ep.zalenium.proxy.DockerSeleniumRemoteProxy;
-import de.zalando.ep.zalenium.servlet.renderer.LiveNodeHtmlRenderer;
-import de.zalando.ep.zalenium.servlet.renderer.TemplateRenderer;
-import de.zalando.ep.zalenium.util.Environment;
-
-import org.openqa.grid.internal.GridRegistry;
-import org.openqa.grid.internal.RemoteProxy;
-import org.openqa.grid.internal.utils.HtmlRenderer;
-import org.openqa.grid.web.servlet.RegistryBasedServlet;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -27,17 +14,35 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.openqa.grid.internal.GridRegistry;
+import org.openqa.grid.internal.RemoteProxy;
+import org.openqa.grid.internal.utils.HtmlRenderer;
+import org.openqa.grid.web.servlet.RegistryBasedServlet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.io.ByteStreams;
+
+import de.zalando.ep.zalenium.proxy.DockerSeleniumRemoteProxy;
+import de.zalando.ep.zalenium.servlet.renderer.LiveNodeHtmlRenderer;
+import de.zalando.ep.zalenium.servlet.renderer.TemplateRenderer;
+import de.zalando.ep.zalenium.util.Environment;
 
 public class LivePreviewServlet extends RegistryBasedServlet {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LivePreviewServlet.class.getName());
+
     private static final Environment env = new Environment();
+
     private static final String contextPath = env.getContextPath();
 
-    @SuppressWarnings("unused")
-    public LivePreviewServlet(){
+    private static final long serialVersionUID = 7426361115829970311L;
+
+    public LivePreviewServlet() {
         this(null);
     }
 
@@ -63,16 +68,18 @@ public class LivePreviewServlet extends RegistryBasedServlet {
         }
     }
 
-    @SuppressWarnings("WeakerAccess")
     protected void process(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
 
-
         String refresh = "1200";
         String testBuild = "";
+        boolean filterActiveSessions = false;
         try {
             refresh = Optional.ofNullable(request.getParameter("refresh")).orElse(refresh);
             testBuild = Optional.ofNullable(request.getParameter("build")).orElse(testBuild);
+            String only_active_sessions = Optional.ofNullable(request.getParameter("only_active_sessions"))
+                    .orElse(Boolean.FALSE.toString());
+            filterActiveSessions = Boolean.parseBoolean(only_active_sessions);
         } catch (Exception e) {
             LOGGER.debug(e.toString(), e);
         }
@@ -83,7 +90,8 @@ public class LivePreviewServlet extends RegistryBasedServlet {
                 DockerSeleniumRemoteProxy dockerSeleniumRemoteProxy = (DockerSeleniumRemoteProxy) proxy;
                 HtmlRenderer renderer = new LiveNodeHtmlRenderer(dockerSeleniumRemoteProxy);
                 // Render the nodes that are part of an specified test build
-                if (testBuild.isEmpty() || testBuild.equalsIgnoreCase(dockerSeleniumRemoteProxy.getTestBuild())) {
+                if ((testBuild.isEmpty() || testBuild.equalsIgnoreCase(dockerSeleniumRemoteProxy.getTestBuild()))
+                        && (!filterActiveSessions || proxy.isBusy())) {
                     nodes.add(renderer.renderSummary());
                 }
             }
