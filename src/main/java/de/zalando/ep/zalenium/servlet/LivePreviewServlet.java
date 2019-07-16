@@ -32,17 +32,15 @@ import de.zalando.ep.zalenium.servlet.renderer.LiveNodeHtmlRenderer;
 import de.zalando.ep.zalenium.servlet.renderer.TemplateRenderer;
 import de.zalando.ep.zalenium.util.Environment;
 
+
 public class LivePreviewServlet extends RegistryBasedServlet {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LivePreviewServlet.class.getName());
-
     private static final Environment env = new Environment();
-
     private static final String contextPath = env.getContextPath();
 
-    private static final long serialVersionUID = 7426361115829970311L;
-
-    public LivePreviewServlet() {
+    @SuppressWarnings("unused")
+    public LivePreviewServlet(){
         this(null);
     }
 
@@ -68,6 +66,7 @@ public class LivePreviewServlet extends RegistryBasedServlet {
         }
     }
 
+    @SuppressWarnings("WeakerAccess")
     protected void process(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
 
