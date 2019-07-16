@@ -182,7 +182,7 @@ function searchTestsList() {
         $(".list-group-item").each(function(){
             $(this).hide();
             const currentKeyword = $(this).text().toUpperCase() + $(this).data("browser").toUpperCase() +
-                $(this).data("platform").toUpperCase() + $(this).data("test-build").toUpperCase() +
+                $(this).data("platform").toUpperCase() + $(this).data("test-build").toString().toUpperCase() +
                 $(this).data("test-status").toUpperCase() + $(this).data("proxy-name").toUpperCase() +
                 $(this).data("time-zone").toUpperCase();
             let allTokensFound = true;
