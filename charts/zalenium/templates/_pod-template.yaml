@@ -117,6 +117,10 @@ spec:
         - name: CONTEXT_PATH
           value: {{ .Values.ingress.path | quote }}
         {{- end }}
+        {{- if .Values.ingress.maxBodySize }}
+        - name: NGINX_MAX_BODY_SIZE
+          value: {{ .Values.ingress.maxBodySize | quote }}
+        {{- end }}
         {{- if .Values.hub.sauceLabsEnabled }}
         - name: SAUCE_LABS_ENABLED
           value: {{ .Values.hub.sauceLabsEnabled | quote }}
