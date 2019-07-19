@@ -48,6 +48,15 @@ else
             ls -la ${VIDEOS_FOLDER}/zalenium*.mp4 || (echo "No Zalenium videos were generated." && exit 2)
         fi
     fi
+    if [ "${INTEGRATION_TO_TEST}" = lambdaTest ]; then
+        if [ -n "${LT_USERNAME}" ]; then
+            env "PATH=$PATH" mvn clean
+            mvn clean verify -Pintegration-test -DthreadCountProperty=2 -Dskip.surefire.tests=true -DintegrationToTest=${INTEGRATION_TO_TEST}
+            # Check for generated videos
+            ls -la ${VIDEOS_FOLDER}/lambdatest*.mp4 || (echo "No LambdaTest videos were downloaded." && exit 2)
+            ls -la ${VIDEOS_FOLDER}/zalenium*.mp4 || (echo "No Zalenium videos were generated." && exit 2)
+        fi
+    fi
     if [ "${INTEGRATION_TO_TEST}" = dockerCompose ]; then
         if [ -n "${SAUCE_USERNAME}" ]; then
             env "PATH=$PATH" mvn clean

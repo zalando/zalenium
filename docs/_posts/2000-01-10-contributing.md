@@ -88,8 +88,8 @@ running):
 {% endhighlight %}
 
 
-* Running the integration tests with Sauce Labs or BrowserStack or TestingBot or CrossBrowserTesting. You will need an account on any of those providers 
+* Running the integration tests with Sauce Labs or BrowserStack or TestingBot or CrossBrowserTesting or LambdaTest. You will need an account on any of those providers 
 to run them (they have free plans). 
 {% highlight shell %}
-    ./run_integration_tests.sh sauceLabs|browserStack|testingBot|crossBrowserTesting
+    ./run_integration_tests.sh sauceLabs|browserStack|testingBot|crossBrowserTesting|lambdaTest
 {% endhighlight %}

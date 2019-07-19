@@ -16,7 +16,7 @@ highlighter: rouge
 
 ### content configuration ###
 title:       "Zalenium - A flexible and scalable Selenium Grid."
-keywords:    "docker, selenium, selenium, grid, kubernetes, saucelabs, browserstack, testingbot"
+keywords:    "docker, selenium, selenium, grid, kubernetes, saucelabs, browserstack, testingbot, lambdatest"
 description: "Allows anyone to have a disposable, flexible, container based Selenium Grid infrastructure featuring video recording, live preview, basic auth & online/offline dashboards"
 source_link: "https://github.com/zalando/zalenium"
 favicon:     "zalando.ico"
