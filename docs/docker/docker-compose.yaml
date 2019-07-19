@@ -25,6 +25,7 @@ services:
             --browserStackEnabled false
             --testingBotEnabled false
             --cbtEnabled false
+            --lambdaTestEnabled false
             --startTunnel false
     environment:
       - HOST_UID
@@ -37,6 +38,8 @@ services:
       - TESTINGBOT_SECRET
       - CBT_USERNAME
       - CBT_AUTHKEY
+      - LT_USERNAME
+      - LT_ACCESS_KEY
 
   mock:
     image: elgalu/google_adwords_mock

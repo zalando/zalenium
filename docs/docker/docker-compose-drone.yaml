@@ -37,6 +37,7 @@ services:
             --browserStackEnabled false
             --testingBotEnabled false
             --cbtEnabled false
+            --lambdaTestEnabled false
             --startTunnel false
     environment:
       - BUILD_URL
@@ -48,6 +49,8 @@ services:
       - TESTINGBOT_SECRET
       - CBT_USERNAME
       - CBT_AUTHKEY
+      - LT_USERNAME
+      - LT_ACCESS_KEY
       # For OSX remember to include the docker version
       # allowed values are: 1.11 or 1.12 or 1.13
       # - DOCKER=1.11
