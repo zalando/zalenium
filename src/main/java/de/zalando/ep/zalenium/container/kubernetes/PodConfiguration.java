@@ -5,6 +5,7 @@ import io.fabric8.kubernetes.api.model.PodSecurityContext;
 import io.fabric8.kubernetes.api.model.HostAlias;
 import io.fabric8.kubernetes.api.model.LocalObjectReference;
 import io.fabric8.kubernetes.api.model.Quantity;
+import io.fabric8.kubernetes.api.model.SecurityContext;
 import io.fabric8.kubernetes.api.model.Toleration;
 import io.fabric8.kubernetes.api.model.Volume;
 import io.fabric8.kubernetes.api.model.VolumeMount;
@@ -34,6 +35,7 @@ public class PodConfiguration {
     private List<Toleration> tolerations;
     private OwnerReference ownerReference;
     private PodSecurityContext podSecurityContext;
+    private SecurityContext containerSecurityContext;
 
     public String getNodePort() {
         return nodePort;
@@ -137,4 +139,11 @@ public class PodConfiguration {
 		this.podSecurityContext = podSecurityContext;
 	}
 
+    public SecurityContext getContainerSecurityContext() {
+        return containerSecurityContext;
+    }
+
+    public void setContainerSecurityContext(SecurityContext containerSecurityContext) {
+        this.containerSecurityContext = containerSecurityContext;
+    }
 }

@@ -97,7 +97,7 @@ For performance reasons it could be a good idea to pull the selenium image, `elg
 especially since the image will need to be available on potentially any kubernetes node.
 
 <details>
-    <summary>For more deails about overriding the Selenium image, click here</summary>
+    <summary>For more details about overriding the Selenium image, click here</summary>
 
     <div class="container m-2 p-2">
         For example, in OpenShift there is a built in registry that can automatically pull the an image from an external registry

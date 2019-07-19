@@ -79,10 +79,13 @@ See Zalenium's [usage examples](https://github.com/zalando/zalenium/blob/master/
 | `hub.tag` | The zalenium hub image tag | `3` |
 | `hub.pullPolicy` | The pull policy for the hub image | `IfNotPresent` |
 | `hub.port` | The port the hub listens on | `4444` |
+| `hub.podSecurityContext` | Pod Security Context used by hub and selenium grids |  |
+| `hub.containerSecurityContext` | Container Security Context used by hub and selenium grids |  |
 | `hub.livenessTimeout` | Timeout for probe Hub liveness via HTTP request on Hub console | `1` |
 | `hub.readinessTimeout` | Timeout for probe Hub readiness via HTTP request on Hub console | `1` |
 | `hub.localVolumesRoot` | The root directory to store HostPath volumes (e.g. if running in minikube) | `/tmp` |
 | `hub.resources` | The resources for the hub container, defaults to minimum half a cpu and maximum 512 mb RAM | `{"limits":{"cpu":".5", "memory":"512Mi"}}` |
+| `hub.serviceAnnotations` | Annotations to be added to the service | `{}` |
 | `hub.serviceType` | The Service type | `NodePort` |
 | `hub.serviceSourceRanges` | The list of IPs allowed to connect to the service. Important - in command line you have to escape commas, e.g.: `{"10.10.0.0/24\,10.20.0.0/16"}` | `{"0.0.0.0/0"}` |
 | `hub.serviceSessionAffinity` | The session affinity for the hub service| `None` |
@@ -91,6 +94,7 @@ See Zalenium's [usage examples](https://github.com/zalando/zalenium/blob/master/
 | `hub.sauceLabsEnabled` | Enable SauceLabs | false |
 | `hub.browserStackEnabled` | Enable BrowserStack | false |
 | `hub.testingBotEnabled` | Enable TestingBot | false |
+| `hub.lambdaTestEnabled` | Enable LambdaTest | false |
 | `hub.videoRecordingEnabled` | Enable video recording | true |
 | `hub.cpuRequest` | CPU requested for browser pods.  The hub passes this value to the k8s API | 500m |
 | `hub.cpuLimit` | CPU limit for browser pods.  The hub passes this value to the k8s API | 1000m |
@@ -111,6 +115,8 @@ See Zalenium's [usage examples](https://github.com/zalando/zalenium/blob/master/
 | `hub.browserStackKey` | Credentials for browserstack | blank |
 | `hub.testingBotKey` | Credentials for testingbot | blank |
 | `hub.testingBotSecret` | Credentials for testingbot | blank |
+| `hub.lambdaUsername` | Username for lambdatest | blank |
+| `hub.lambdaAccessKey` | Access key for lambdatest | blank |
 | `hub.basicAuth.enabled` | Enables basic authentication | false |
 | `hub.basicAuth.username` | Username for basic authentication | zalenium |
 | `hub.basicAuth.password` | Password for basic authentication | password |

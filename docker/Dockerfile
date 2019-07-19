@@ -313,6 +313,21 @@ RUN cd /tmp \
   && mv cbt_tunnels-linux-x64 /usr/local/bin \
   && which cbt_tunnels-linux-x64
 
+# -----------------------#
+# LambdaTest Tunneling #
+# -----------------------#
+# https://www.lambdatest.com/support/docs/testing-locally-hosted-pages/
+# Layer size: medium: ~16 MB
+ENV LT_TUNNEL_URL="https://s3.amazonaws.com/lambda-tunnel" \
+    LT_TUNNEL_ZIP="LT_Linux.zip"
+RUN cd /tmp \
+  && wget -nv "${LT_TUNNEL_URL}/${LT_TUNNEL_ZIP}" \
+  && unzip "${LT_TUNNEL_ZIP}" \
+  && chmod 755 LT \
+  && rm "${LT_TUNNEL_ZIP}" \
+  && mv LT /usr/local/bin \
+  && which LT
+
 
 #===================================================
 # Run the following commands as non-privileged user
@@ -342,6 +357,8 @@ ENV ZAL_VER="${project.build.finalName}" \
     TESTINGBOT_WAIT_TIMEOUT="2m" \
     CBT_TUNNEL_ID="zalenium" \
     CBT_TUNNEL="false" \
+    LT_TUNNEL_ID="zalenium" \
+    LT_TUNNEL="false" \
     SELENIUM_HUB_PARAMS="" \
     SELENIUM_NODE_PARAMS="" \
     SELENIUM_CONTAINER_LABELS="" \
@@ -363,6 +380,8 @@ COPY zalenium.sh \
  wait-testingbot.sh \
  start-cbt.sh \
  wait-cbt.sh \
+ start-lambdatest.sh \
+ wait-lambdatest.sh \
  dashboard_template.html \
  zalando.ico \
  logging_info.properties \
@@ -383,6 +402,8 @@ RUN sudo chmod +x /home/seluser/zalenium.sh \
   && sudo chmod +x /home/seluser/wait-testingbot.sh \
   && sudo chmod +x /home/seluser/start-cbt.sh \
   && sudo chmod +x /home/seluser/wait-cbt.sh \
+  && sudo chmod +x /home/seluser/start-lambdatest.sh \
+  && sudo chmod +x /home/seluser/wait-lambdatest.sh \
   && sudo chmod +x /usr/bin/log \
   && sudo chmod +x /usr/bin/warn \
   && sudo chmod +x /usr/bin/error \
