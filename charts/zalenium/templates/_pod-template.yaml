@@ -4,11 +4,8 @@ metadata:
     {{- include "zalenium.labels" . | nindent 4 }}
   annotations:
 spec:
-  {{- if .Values.hub.securityContext.enabled }}
   securityContext:
-    fsGroup: {{ .Values.hub.securityContext.fsGroup }}
-    runAsUser: {{ .Values.hub.securityContext.runAsUser }}
-  {{- end }}
+    {{- toYaml .Values.hub.podSecurityContext | nindent 4 }}
   {{- if .Values.hub.pullSecrets }}
   imagePullSecrets:
     - name: {{ .Values.hub.imagePullSecret }}
@@ -42,6 +39,8 @@ spec:
     - name: {{ .Chart.Name }}
       image: "{{ .Values.hub.image }}:{{ .Values.hub.tag }}"
       imagePullPolicy: {{ .Values.hub.pullPolicy }}
+      securityContext:
+        {{- toYaml .Values.hub.containerSecurityContext | nindent 8 }}
       ports:
         - containerPort: {{ .Values.hub.port }}
           protocol: TCP
@@ -117,6 +116,10 @@ spec:
         {{- if .Values.ingress.path }}
         - name: CONTEXT_PATH
           value: {{ .Values.ingress.path | quote }}
+        {{- end }}
+        {{- if .Values.ingress.maxBodySize }}
+        - name: NGINX_MAX_BODY_SIZE
+          value: {{ .Values.ingress.maxBodySize | quote }}
         {{- end }}
         {{- if .Values.hub.sauceLabsEnabled }}
         - name: SAUCE_LABS_ENABLED

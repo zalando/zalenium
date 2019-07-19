@@ -32,6 +32,7 @@ public class SwarmContainerClient implements ContainerClient {
 
     private static final String ZALENIUM_SELENIUM_CONTAINER_CPU_LIMIT = "ZALENIUM_SELENIUM_CONTAINER_CPU_LIMIT";
     private static final String ZALENIUM_SELENIUM_CONTAINER_MEMORY_LIMIT = "ZALENIUM_SELENIUM_CONTAINER_MEMORY_LIMIT";
+    private static final String SWARM_RUN_TESTS_ONLY_ON_WORKERS = "SWARM_RUN_TESTS_ONLY_ON_WORKERS";
 
     private static final String SWARM_EXEC_IMAGE = "datagridsys/skopos-plugin-swarm-exec:latest";
 
@@ -245,46 +246,38 @@ public class SwarmContainerClient implements ContainerClient {
     }
 
     private TaskSpec buildTaskSpec(ContainerSpec containerSpec) {
-        try {
-            final RestartPolicy restartPolicy = RestartPolicy.builder()
-                    .condition("on-failure")
-                    .build();
-            String hostname = SwarmUtilities.getHubHostname();
-            final List<String> placementList = new ArrayList<>();
+        final RestartPolicy restartPolicy = RestartPolicy.builder()
+                .condition("on-failure")
+                .build();
 
-            placementList.add("node.hostname != " + hostname);
+        Resources.Builder resourceBuilder = Resources.builder();
+        String cpuLimit = getSeleniumContainerCpuLimit();
+        String memLimit = getSeleniumContainerMemoryLimit();
 
-            final Placement placement = Placement.create(placementList);
-
-
-            Resources.Builder resourceBuilder = Resources.builder();
-            String cpuLimit = getSeleniumContainerCpuLimit();
-            String memLimit = getSeleniumContainerMemoryLimit();
-
-            if (!Strings.isNullOrEmpty(cpuLimit)) {
-                resourceBuilder.nanoCpus(Long.valueOf(cpuLimit));
-            }
-
-            if (!Strings.isNullOrEmpty(memLimit)) {
-                resourceBuilder.memoryBytes(Long.valueOf(memLimit));
-            }
-
-            ResourceRequirements resourceRequirements = ResourceRequirements.builder()
-                    .limits(resourceBuilder.build())
-                    .build();
-
-            final TaskSpec.Builder taskSpecBuilder = TaskSpec.builder()
-                    .resources(resourceRequirements)
-                    .restartPolicy(restartPolicy)
-                    .placement(placement)
-                    .containerSpec(containerSpec);
-
-            return taskSpecBuilder.build();
-        } catch (DockerException | InterruptedException e) {
-            e.printStackTrace();
+        if (!Strings.isNullOrEmpty(cpuLimit)) {
+            resourceBuilder.nanoCpus(Long.valueOf(cpuLimit));
         }
 
-        return null;
+        if (!Strings.isNullOrEmpty(memLimit)) {
+            resourceBuilder.memoryBytes(Long.valueOf(memLimit));
+        }
+
+        ResourceRequirements resourceRequirements = ResourceRequirements.builder()
+                .limits(resourceBuilder.build())
+                .build();
+
+        final TaskSpec.Builder taskSpecBuilder = TaskSpec.builder()
+                .resources(resourceRequirements)
+                .restartPolicy(restartPolicy)
+                .containerSpec(containerSpec);
+
+        if ("1".equals(env.getEnvVariable(SWARM_RUN_TESTS_ONLY_ON_WORKERS))) {
+            final List<String> placementList = new ArrayList<>();
+            placementList.add("node.role==worker");
+            taskSpecBuilder.placement(Placement.create(placementList));
+        }
+
+        return taskSpecBuilder.build();
     }
 
     private ServiceSpec buildServiceSpec(TaskSpec taskSpec, String nodePort, String noVncPort) {
