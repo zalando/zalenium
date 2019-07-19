@@ -15,9 +15,9 @@ import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import de.zalando.ep.zalenium.container.swarm.SwarmUtilities;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
+import org.apache.commons.lang3.StringUtils;
 import org.openqa.grid.common.RegistrationRequest;
 import org.openqa.grid.common.exception.RemoteException;
 import org.openqa.grid.common.exception.RemoteNotReachableException;
@@ -47,6 +47,7 @@ import com.google.gson.JsonParser;
 import de.zalando.ep.zalenium.container.ContainerClient;
 import de.zalando.ep.zalenium.container.ContainerClientRegistration;
 import de.zalando.ep.zalenium.container.ContainerFactory;
+import de.zalando.ep.zalenium.container.swarm.SwarmUtilities;
 import de.zalando.ep.zalenium.dashboard.DashboardCollection;
 import de.zalando.ep.zalenium.dashboard.TestInformation;
 import de.zalando.ep.zalenium.matcher.DockerSeleniumCapabilityMatcher;
@@ -340,14 +341,14 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                     if ("zaleniumMessage".equalsIgnoreCase(cookieName)) {
                         String message = cookie.get("value").getAsString();
                         if (ContainerFactory.getIsKubernetes().get()) {
-                          // https://github.com/zalando/zalenium/issues/763
-                          message = message.replace("#","");
+                            // https://github.com/zalando/zalenium/issues/763
+                            message = message.replace("#","");
                         }
                         String messageCommand = String.format(" 'Zalenium', '%s', --icon=/home/seluser/images/message.png",
-                            message);
+                                message);
                         processContainerAction(DockerSeleniumContainerAction.CLEAN_NOTIFICATION, getContainerId());
                         processContainerAction(DockerSeleniumContainerAction.SEND_NOTIFICATION, messageCommand,
-                            getContainerId());
+                                getContainerId());
                     }
                     else if(CommonProxyUtilities.metadataCookieName.equalsIgnoreCase(cookieName)) {
                         JsonParser jsonParser = new JsonParser();
@@ -371,11 +372,11 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
             WebDriverRequest seleniumRequest = (WebDriverRequest) request;
             if (RequestType.START_SESSION.equals(seleniumRequest.getRequestType())) {
                 ExternalSessionKey externalKey = Optional.ofNullable(session.getExternalKey())
-                    .orElse(new ExternalSessionKey("[No external key present]"));
+                        .orElse(new ExternalSessionKey("[No external key present]"));
                 LOGGER.debug(String.format("Test session started with internal key %s and external key %s assigned to remote %s.",
-                              session.getInternalKey(),
-                              externalKey,
-                              getId()));
+                        session.getInternalKey(),
+                        externalKey,
+                        getId()));
                 LOGGER.debug("Test session started with internal key {} and external key {} assigned to remote.",
                         session.getInternalKey(), externalKey);
                 videoRecording(DockerSeleniumContainerAction.START_RECORDING);
@@ -532,7 +533,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     }
 
     public boolean isTimedOut() {
-    	return this.timedOut.get();
+        return this.timedOut.get();
     }
 
     /*
@@ -618,8 +619,8 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
 
     @VisibleForTesting
     void copyVideos(final String containerId) {
-        if (testInformation == null) {
-            // No tests run, nothing to copy and nothing to update.
+        if (testInformation == null || StringUtils.isEmpty(containerId)) {
+            // No tests run or container has been removed, nothing to copy and nothing to update.
             return;
         }
         String currentName = configureThreadName();
@@ -654,7 +655,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
             ga.trackException(e);
         } finally {
             if (!videoWasCopied) {
-        		testInformation.setVideoRecorded(false);
+                testInformation.setVideoRecorded(false);
             }
         }
         setThreadName(currentName);
@@ -667,8 +668,8 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
             return;
         }
 
-        if (testInformation == null) {
-            // No tests run, nothing to copy and nothing to update.
+        if (testInformation == null || StringUtils.isEmpty(containerId)) {
+            // No tests run or container has been removed, nothing to copy and nothing to update.
             return;
         }
         String currentName = configureThreadName();
