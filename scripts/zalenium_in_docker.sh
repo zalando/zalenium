@@ -139,6 +139,28 @@ StartUp()
               ${ZALENIUM_DOCKER_IMAGE} start --cbtEnabled true --startTunnel true
     fi
 
+    if [ "$INTEGRATION_TO_TEST" = lambdaTest ]; then
+        echo "Starting Zalenium in docker with LambdaTest..."
+        LT_USERNAME="${LT_USERNAME:=abc}"
+        LT_ACCESS_KEY="${LT_ACCESS_KEY:=abc}"
+
+        if [ "$LT_USERNAME" = abc ]; then
+            echo "LT_USERNAME environment variable is not set, cannot start LambdaTest node, exiting..."
+            exit 7
+        fi
+        if [ "$LT_ACCESS_KEY" = abc ]; then
+            echo "LT_ACCESS_KEY environment variable is not set, cannot start LambdaTest node, exiting..."
+            exit 6
+        fi
+
+        docker run -d -ti --name zalenium -p 4444:4444 \
+              ${HOST_OPTIONS} \
+              -e LT_USERNAME -e LT_ACCESS_KEY \
+              -v ${VIDEOS_FOLDER}:/home/seluser/videos \
+              -v /var/run/docker.sock:/var/run/docker.sock \
+              ${ZALENIUM_DOCKER_IMAGE} start --lambdaTestEnabled true --startTunnel true
+    fi
+
     if ! mtimeout --foreground "2m" bash -c WaitZaleniumStarted; then
         echo "Zalenium failed to start after 2 minutes, failing..."
         exit 8

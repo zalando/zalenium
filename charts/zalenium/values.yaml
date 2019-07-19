@@ -27,10 +27,17 @@ hub:
   ## Pod Security Context
   ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
   ## in case it is running outside openshift, this should fix this https://github.com/zalando/zalenium/issues/631
-  securityContext:
-    enabled: false
-    fsGroup: 0
-    runAsUser: 1001
+  podSecurityContext:
+    ## See all the options here https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#podsecuritycontext-v1-core
+    # fsGroup: 1000
+    # runAsUser: 1000
+    # runAsGroup: 1000
+
+  ## Container Security Context
+  containerSecurityContext:
+    ## See all the options here https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#securitycontext-v1-core
+    # capabilities: []
+    # privileged: false
 
   ## Configure resource requests and limits
   ## ref: http://kubernetes.io/docs/user-guide/compute-resources/
@@ -101,6 +108,9 @@ hub:
   testingBotEnabled: false
   testingBotKey: blank
   testingBotSecret: blank
+  lambdaTestEnabled: false
+  lambdaUsername: blank
+  lambdaAccessKey: blank
 
   ## Arbitrary environment variables
   env:
@@ -165,9 +175,10 @@ ingress:
   # If your ingress host name is only for Zalenium,
   # no need to set path
   # path: /
+  # maxBodySize: 300M
   annotations:
-    # kubernetes.io/ingress.class: "nginx"
-    # kubernetes.io/tls-acme: "true"
+  # kubernetes.io/ingress.class: "nginx"
+  # kubernetes.io/tls-acme: "true"
   ## For RBAC support:
 
 rbac:

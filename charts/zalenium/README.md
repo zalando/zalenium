@@ -79,6 +79,8 @@ See Zalenium's [usage examples](https://github.com/zalando/zalenium/blob/master/
 | `hub.tag` | The zalenium hub image tag | `3` |
 | `hub.pullPolicy` | The pull policy for the hub image | `IfNotPresent` |
 | `hub.port` | The port the hub listens on | `4444` |
+| `hub.podSecurityContext` | Pod Security Context used by hub and selenium grids |  |
+| `hub.containerSecurityContext` | Container Security Context used by hub and selenium grids |  |
 | `hub.livenessTimeout` | Timeout for probe Hub liveness via HTTP request on Hub console | `1` |
 | `hub.readinessTimeout` | Timeout for probe Hub readiness via HTTP request on Hub console | `1` |
 | `hub.localVolumesRoot` | The root directory to store HostPath volumes (e.g. if running in minikube) | `/tmp` |
@@ -92,6 +94,7 @@ See Zalenium's [usage examples](https://github.com/zalando/zalenium/blob/master/
 | `hub.sauceLabsEnabled` | Enable SauceLabs | false |
 | `hub.browserStackEnabled` | Enable BrowserStack | false |
 | `hub.testingBotEnabled` | Enable TestingBot | false |
+| `hub.lambdaTestEnabled` | Enable LambdaTest | false |
 | `hub.videoRecordingEnabled` | Enable video recording | true |
 | `hub.cpuRequest` | CPU requested for browser pods.  The hub passes this value to the k8s API | 500m |
 | `hub.cpuLimit` | CPU limit for browser pods.  The hub passes this value to the k8s API | 1000m |
@@ -112,6 +115,8 @@ See Zalenium's [usage examples](https://github.com/zalando/zalenium/blob/master/
 | `hub.browserStackKey` | Credentials for browserstack | blank |
 | `hub.testingBotKey` | Credentials for testingbot | blank |
 | `hub.testingBotSecret` | Credentials for testingbot | blank |
+| `hub.lambdaUsername` | Username for lambdatest | blank |
+| `hub.lambdaAccessKey` | Access key for lambdatest | blank |
 | `hub.basicAuth.enabled` | Enables basic authentication | false |
 | `hub.basicAuth.username` | Username for basic authentication | zalenium |
 | `hub.basicAuth.password` | Password for basic authentication | password |

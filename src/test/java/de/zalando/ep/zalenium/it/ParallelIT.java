@@ -30,7 +30,8 @@ public class ParallelIT  {
     private static final String browserStackIntegration = "browserStack";
     private static final String testingBotIntegration = "testingBot";
     private static final String crossBrowserTestingIntegration = "crossBrowserTesting";
-
+    private static final String lambdaTestIntegration = "lambdaTest";
+    
     // Zalenium setup variables
     private static final String ZALENIUM_HOST = System.getenv("ZALENIUM_GRID_HOST") != null ?
             System.getenv("ZALENIUM_GRID_HOST") : "localhost";
@@ -86,6 +87,12 @@ public class ParallelIT  {
             edgeCaps.setCapability("platform", "WIN10");
             safariCaps.setCapability("version", "11");
             safariCaps.setCapability("platform", "HIGH-SIERRA");
+        }
+        if (!Strings.isNullOrEmpty(integrationToTest) && lambdaTestIntegration.equalsIgnoreCase(integrationToTest)) {
+            edgeCaps.setCapability("version", "18.0");
+            edgeCaps.setCapability("platform", "Windows 10");
+            safariCaps.setCapability("version", "11.0");
+            safariCaps.setCapability("platform", "macOS High Sierra");
         }
         return new Object[] {safariCaps, edgeCaps, chromeCaps, firefoxCaps};
     }

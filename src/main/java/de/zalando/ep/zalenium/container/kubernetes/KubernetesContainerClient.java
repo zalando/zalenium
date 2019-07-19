@@ -4,6 +4,7 @@ import de.zalando.ep.zalenium.container.ContainerClient;
 import de.zalando.ep.zalenium.container.ContainerClientRegistration;
 import de.zalando.ep.zalenium.container.ContainerCreationStatus;
 import de.zalando.ep.zalenium.util.Environment;
+import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ContainerStateTerminated;
 import io.fabric8.kubernetes.api.model.ContainerStatus;
 import io.fabric8.kubernetes.api.model.DoneablePod;
@@ -14,6 +15,7 @@ import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodList;
 import io.fabric8.kubernetes.api.model.PodSecurityContext;
 import io.fabric8.kubernetes.api.model.Quantity;
+import io.fabric8.kubernetes.api.model.SecurityContext;
 import io.fabric8.kubernetes.api.model.Toleration;
 import io.fabric8.kubernetes.api.model.Volume;
 import io.fabric8.kubernetes.api.model.VolumeMount;
@@ -53,6 +55,7 @@ public class KubernetesContainerClient implements ContainerClient {
 
     private static final Logger logger = LoggerFactory.getLogger(KubernetesContainerClient.class.getName());
 
+    private static final String DEFAULT_ZALENIUM_CONTAINER_NAME = "zalenium";
     private static final String ZALENIUM_KUBERNETES_TOLERATIONS = "ZALENIUM_KUBERNETES_TOLERATIONS";
     private static final String ZALENIUM_KUBERNETES_NODE_SELECTOR = "ZALENIUM_KUBERNETES_NODE_SELECTOR";
 
@@ -71,7 +74,8 @@ public class KubernetesContainerClient implements ContainerClient {
     private List<Toleration> tolerations = new ArrayList<>();
     private String imagePullPolicy;
     private List<LocalObjectReference> imagePullSecrets;
-    private PodSecurityContext configuredSecurityContext;
+    private PodSecurityContext configuredPodSecurityContext;
+    private SecurityContext configuredContainerSecurityContext;
 
     private final Map<String, Quantity> seleniumPodLimits = new HashMap<>();
     private final Map<String, Quantity> seleniumPodRequests = new HashMap<>();
@@ -109,7 +113,8 @@ public class KubernetesContainerClient implements ContainerClient {
             discoverNodeSelector();
             discoverTolerations();
             discoverImagePullSecrets();
-            discoverSecurityContext();
+            discoverPodSecurityContext();
+            discoverContainerSecurityContext();
             buildResourceMaps();
 
             logger.info(String.format(
@@ -221,8 +226,17 @@ public class KubernetesContainerClient implements ContainerClient {
         return hostname;
     }
     
-    private void discoverSecurityContext() {
-    	configuredSecurityContext = zaleniumPod.getSpec().getSecurityContext();
+    private void discoverPodSecurityContext() {
+    	configuredPodSecurityContext = zaleniumPod.getSpec().getSecurityContext();
+    }
+
+    private void discoverContainerSecurityContext() {
+        configuredContainerSecurityContext = zaleniumPod.getSpec().getContainers()
+            .stream()
+            .filter(c -> DEFAULT_ZALENIUM_CONTAINER_NAME.equals(c.getName()))
+            .map(Container::getSecurityContext)
+            .findFirst()
+            .orElse(null);
     }
 
     @Override
@@ -353,7 +367,8 @@ public class KubernetesContainerClient implements ContainerClient {
         config.setPodLimits(seleniumPodLimits);
         config.setPodRequests(seleniumPodRequests);
         config.setOwner(zaleniumPod);
-        config.setPodSecurityContext(configuredSecurityContext);
+        config.setPodSecurityContext(configuredPodSecurityContext);
+        config.setContainerSecurityContext(configuredContainerSecurityContext);
 
         DoneablePod doneablePod = createDoneablePod.apply(config);
 
@@ -584,6 +599,7 @@ public class KubernetesContainerClient implements ContainerClient {
                         .withImage(config.getImage())
                         .withImagePullPolicy(config.getImagePullPolicy())
                         .addAllToEnv(config.getEnvVars())
+                        .withSecurityContext(config.getContainerSecurityContext())
                         .addNewVolumeMount()
                             .withName("dshm")
                             .withMountPath("/dev/shm")
