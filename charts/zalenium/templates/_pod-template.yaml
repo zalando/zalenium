@@ -3,6 +3,7 @@ metadata:
   labels:
     {{- include "zalenium.labels" . | nindent 4 }}
   annotations:
+    {{- toYaml .Values.hub.podAnnotations | nindent 4 }}
 spec:
   securityContext:
     {{- toYaml .Values.hub.podSecurityContext | nindent 4 }}

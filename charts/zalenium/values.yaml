@@ -15,6 +15,8 @@ hub:
   ## ref: https://kubernetes.io/docs/concepts/containers/images/#specifying-imagepullsecrets-on-a-pod
   #imagePullSecret: "secret1"
 
+  podAnnotations: {}
+
   ## The port which the hub listens on
   port: 4444
 
