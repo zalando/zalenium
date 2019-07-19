@@ -4,11 +4,8 @@ metadata:
     {{- include "zalenium.labels" . | nindent 4 }}
   annotations:
 spec:
-  {{- if .Values.hub.securityContext.enabled }}
   securityContext:
-    fsGroup: {{ .Values.hub.securityContext.fsGroup }}
-    runAsUser: {{ .Values.hub.securityContext.runAsUser }}
-  {{- end }}
+    {{- toYaml .Values.hub.podSecurityContext | nindent 4 }}
   {{- if .Values.hub.pullSecrets }}
   imagePullSecrets:
     - name: {{ .Values.hub.imagePullSecret }}
@@ -42,6 +39,8 @@ spec:
     - name: {{ .Chart.Name }}
       image: "{{ .Values.hub.image }}:{{ .Values.hub.tag }}"
       imagePullPolicy: {{ .Values.hub.pullPolicy }}
+      securityContext:
+        {{- toYaml .Values.hub.containerSecurityContext | nindent 8 }}
       ports:
         - containerPort: {{ .Values.hub.port }}
           protocol: TCP
@@ -145,6 +144,14 @@ spec:
           value: {{ .Values.hub.testingBotKey | quote }}
         - name: TESTINGBOT_SECRET
           value: {{ .Values.hub.testingBotSecret | quote }}
+        {{- end }}
+        {{- if .Values.hub.lambdaTestEnabled }}
+        - name: LT_ENABLED
+          value: {{ .Values.hub.lambdaTestEnabled | quote }}
+        - name: LT_USERNAME
+          value: {{ .Values.hub.lambdaUsername | quote }}
+        - name: LT_ACCESS_KEY
+          value: {{ .Values.hub.lambdaAccessKey | quote }}
         {{- end }}
         {{- range $key, $val := .Values.hub.env }}
         - name: {{ $key | quote }}
