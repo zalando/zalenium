@@ -68,6 +68,13 @@ hub:
   ## ref: https://kubernetes.io/docs/user-guide/services/
   serviceSessionAffinity: "None"
 
+  # Annotations to be added to the service.
+  ##
+  serviceAnnotations: {}
+  # Below we expose metrics to Prometheus.
+  #   prometheus.io/path: /metrics
+  #   prometheus.io/scrape: "true"
+
   ## Environment variables passed to Zalenium hub.
   ## https://github.com/zalando/zalenium/blob/master/docs/usage_examples.md
   desiredContainers: 2
