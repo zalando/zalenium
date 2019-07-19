@@ -5,6 +5,7 @@ import io.fabric8.kubernetes.api.model.HostAlias;
 import io.fabric8.kubernetes.api.model.LocalObjectReference;
 import io.fabric8.kubernetes.api.model.PodSecurityContext;
 import io.fabric8.kubernetes.api.model.Quantity;
+import io.fabric8.kubernetes.api.model.SecurityContext;
 import io.fabric8.kubernetes.api.model.Toleration;
 import io.fabric8.kubernetes.api.model.Volume;
 import io.fabric8.kubernetes.api.model.VolumeMount;
@@ -154,5 +155,12 @@ public class PodConfigurationTest {
         PodSecurityContext securityContext = mock(PodSecurityContext.class);
         podConfiguration.setPodSecurityContext(securityContext);
         assertThat(podConfiguration.getPodSecurityContext(), is(securityContext));
+    }
+
+    @Test
+    public void testSetContainerSecurityContext() {
+        SecurityContext securityContext = mock(SecurityContext.class);
+        podConfiguration.setContainerSecurityContext(securityContext);
+        assertThat(podConfiguration.getContainerSecurityContext(), is(securityContext));
     }
 }
