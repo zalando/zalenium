@@ -16,6 +16,6 @@ entries:
     sources:
     - https://github.com/zalando/zalenium
     urls:
-    - zalenium-3.141.59.tgz
+    - zalenium-3.141.59t.tgz
     version: 3.141.59
 generated: 2019-03-14T15:03:33.383116+11:00
