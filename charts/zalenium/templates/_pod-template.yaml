@@ -47,7 +47,7 @@ spec:
           protocol: TCP
       livenessProbe:
         httpGet:
-          path: {{ if .Values.ingress.path }}{{ .Values.ingress.path }}{{ end }}/grid/console
+          path: {{ if .Values.ingress.path }}{{ .Values.ingress.path }}{{ end }}/status
           port: {{ .Values.hub.port }}
           {{- if eq true .Values.hub.basicAuth.enabled }}
           httpHeaders:
@@ -59,7 +59,7 @@ spec:
         timeoutSeconds: {{ .Values.hub.livenessTimeout }}
       readinessProbe:
         httpGet:
-          path: {{ if .Values.ingress.path }}{{ .Values.ingress.path }}{{ end }}/grid/console
+          path: {{ if .Values.ingress.path }}{{ .Values.ingress.path }}{{ end }}/status
           port: {{ .Values.hub.port }}
           {{- if eq true .Values.hub.basicAuth.enabled }}
           httpHeaders:
