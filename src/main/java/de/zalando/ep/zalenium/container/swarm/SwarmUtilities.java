@@ -67,7 +67,7 @@ public class SwarmUtilities {
         for (Task task : tasks) {
             for (NetworkAttachment networkAttachment : CollectionUtils.emptyIfNull(task.networkAttachments())) {
                 for (String address : networkAttachment.addresses()) {
-                    if (address.startsWith(remoteUrl.getHost())) {
+                    if (address.split("/")[0].equals(remoteUrl.getHost())) {
                         return task.status().containerStatus();
                     }
                 }
