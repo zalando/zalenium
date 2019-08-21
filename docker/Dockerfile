@@ -248,6 +248,7 @@ RUN if [ "${kubernetesSlimVersion}" = "false" ]; then \
         && tar -xzvf docker.tgz \
         && mv docker/docker /usr/bin/docker-${DOCKER_VERSION} \
         && rm -rf docker/ && rm docker.tgz \
+        && ln -s /usr/bin/docker-${DOCKER_VERSION} /usr/bin/docker \
         && docker-${DOCKER_VERSION} --version | grep "${DOCKER_VERSION}"; \
     else \
         echo "Skipping adding Docker because of kubernetes slim mode"; \
