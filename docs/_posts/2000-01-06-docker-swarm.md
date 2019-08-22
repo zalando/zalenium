@@ -13,12 +13,8 @@ Setup a [docker swarm](https://docs.docker.com/get-started/part4/) with at least
 
 * One manager and multiple workers. The hub will run on the manager and the 
 created browser containers will run on the workers.
-* A high available docker swarm with multiple managers. The manager that runs the hub will 
-not run any created browser container.
+* A high available docker swarm with multiple managers.
 
-_Info:_ Currently we do not support running created browser containers on the same node as
-the hub. Running the browser containers and the hub on the same node leads to communication
-problems, which we hope to fix soon.
 
 #### Images
 
@@ -45,13 +41,12 @@ version: "3.7"
 services:
   zalenium:
     image: dosel/zalenium
+    user: seluser:<gid> # required when running in a swarm without sudo - use the <gid> of docker group of swarm
     hostname: zalenium
     deploy:
       placement:
         constraints:
             - node.role == manager
-    labels:
-        - "de.zalando.gridRole=hub" # important for us to identify the node which runs zalenium hub
     ports:
         - "4444:4444"
         - "8000:8000" # port for remote debugging zalenium code
@@ -71,11 +66,6 @@ networks:
         attachable: true
 
 {% endhighlight %}
-
-_Info:_ It is important to give the service that runs the zalenium hub the label
-`"de.zalando.gridRole=hub"`. This helps to identify the node which runs the hub
-and created browser containers will not be deployed on this node, which would cause
-communication problems between the hub and the created browser containers.
 
 Video recording and logs are currently not supported, but we hope to re-enable this
 feature with docker swarm.
