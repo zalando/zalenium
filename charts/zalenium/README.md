@@ -123,7 +123,8 @@ See Zalenium's [usage examples](https://github.com/zalando/zalenium/blob/master/
 | `hub.openshift.route.enabled`  | Set to true if you want to create a route for zalenium | false |
 | `hub.openshift.route.hostname` | If you want to have a specific hostname specify it here | blank |
 | `hub.openshift.route.tls` | Configures tls settings for OpenShift route. Set it to empty if you don't want it | edge termination + redirect |
-
+| `hub.openshift.route.tls` | Configures tls settings for OpenShift route. Set it to empty if you don't want it | edge termination + redirect |
+| `hostAliases` | Allow the modification of the hosts file inside a container | `[]` |
 
 Specify each parameter using the `--set key=value[,key=value]` argument to `helm install`. For example,
 
