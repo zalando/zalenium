@@ -167,6 +167,10 @@ spec:
           mountPath: /home/seluser/videos
         - name: {{ template "zalenium.fullname" . }}-data
           mountPath: /tmp/mounted
+{{- if .Values.hostAliases }}
+  hostAliases:
+{{ toYaml .Values.hostAliases | indent 4 }}
+{{- end }}
   serviceAccountName: {{ template "zalenium.serviceAccountName" . }}
   {{- if .Values.nodeSelector.enabled }}
   nodeSelector:
