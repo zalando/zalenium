@@ -235,3 +235,9 @@ nodeSelector:
 #             values:
 #             - <key-value>
 #         topologyKey: "kubernetes.io/hostname"
+## hostAliases allow the modification of the hosts file inside a container
+##
+hostAliases: []
+# - ip: "127.0.0.1"
+#   hostnames:
+#   - "cosbench.local"
