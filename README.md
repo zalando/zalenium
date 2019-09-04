@@ -96,7 +96,7 @@ started, please join the #zalenium channel on [Slack](https://seleniumhq.herokua
 * Try also our one line installer and starter for OSX/Linux (it will check for the latest images and ask for missing dependencies.)
 
   ```sh
-    curl -sSL https://raw.githubusercontent.com/dosel/t/i/p | bash -s start
+    curl -sSL https://raw.githubusercontent.com/antlong/t/i/p | bash -s start
   ```
 
 * More usage examples, parameters, configurations, video usage and one line starters can be seen [here](https://zalando.github.io/zalenium/#usage)
