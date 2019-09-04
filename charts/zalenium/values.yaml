@@ -168,14 +168,20 @@ persistence:
     size: 10Gi
 
 ingress:
-  enabled: true
-  tls: true
-  secretName: tls-cert
-  hostname: example.com
-  path: /zalenium
+  enabled: false
+  tls: false
+  # secretName: my-tls-cert # only needed if tls above is true
+  hostname: zalenium.foobar.com
+  # If your ingress host name is shared with multiple
+  # applications, Enter a path starting with / (eg. /zalenium)
+  # If your ingress host name is only for Zalenium,
+  # no need to set path
+  # path: /
+  # maxBodySize: 300M
   annotations:
-    kubernetes.io/ingress.class: "traefik"
-
+  # kubernetes.io/ingress.class: "nginx"
+  # kubernetes.io/tls-acme: "true"
+  ## For RBAC support:
 
 rbac:
   create: true
