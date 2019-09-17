@@ -127,11 +127,13 @@ public class DockeredSeleniumStarterTest {
         Assert.assertEquals(DockeredSeleniumStarter.DEFAULT_SCREEN_SIZE.getHeight(),
                 DockeredSeleniumStarter.getConfiguredScreenSize().getHeight());
         Assert.assertEquals(DockeredSeleniumStarter.DEFAULT_SCREEN_SIZE.getWidth(),
-            DockeredSeleniumStarter.getConfiguredScreenSize().getWidth());
+                DockeredSeleniumStarter.getConfiguredScreenSize().getWidth());
         Assert.assertEquals(DockeredSeleniumStarter.DEFAULT_TZ.getID(),
-            DockeredSeleniumStarter.getConfiguredTimeZone().getID());
+                DockeredSeleniumStarter.getConfiguredTimeZone().getID());
         Assert.assertEquals(DockeredSeleniumStarter.DEFAULT_SELENIUM_NODE_PARAMS,
-            DockeredSeleniumStarter.getSeleniumNodeParameters());
+                DockeredSeleniumStarter.getSeleniumNodeParameters());
+        Assert.assertEquals(DockeredSeleniumStarter.DEFAULT_SELENIUM_NODE_HOST,
+                DockeredSeleniumStarter.getSeleniumNodeHost());
     }
 
     @Test
@@ -157,15 +159,15 @@ public class DockeredSeleniumStarterTest {
         ZaleniumConfiguration.readConfigurationFromEnvVariables();
 
         Assert.assertEquals(ZaleniumConfiguration.DEFAULT_AMOUNT_DESIRED_CONTAINERS,
-            ZaleniumConfiguration.getDesiredContainersOnStartup());
+                ZaleniumConfiguration.getDesiredContainersOnStartup());
         Assert.assertEquals(ZaleniumConfiguration.DEFAULT_AMOUNT_DOCKER_SELENIUM_CONTAINERS_RUNNING,
-            ZaleniumConfiguration.getMaxDockerSeleniumContainers());
+                ZaleniumConfiguration.getMaxDockerSeleniumContainers());
         Assert.assertEquals(DockeredSeleniumStarter.DEFAULT_SCREEN_SIZE.getHeight(),
-            DockeredSeleniumStarter.getConfiguredScreenSize().getHeight());
+                DockeredSeleniumStarter.getConfiguredScreenSize().getHeight());
         Assert.assertEquals(DockeredSeleniumStarter.DEFAULT_SCREEN_SIZE.getWidth(),
-            DockeredSeleniumStarter.getConfiguredScreenSize().getWidth());
+                DockeredSeleniumStarter.getConfiguredScreenSize().getWidth());
         Assert.assertEquals(DockeredSeleniumStarter.DEFAULT_TZ.getID(),
-            DockeredSeleniumStarter.getConfiguredTimeZone().getID());
+                DockeredSeleniumStarter.getConfiguredTimeZone().getID());
     }
 
     @Test
@@ -178,6 +180,7 @@ public class DockeredSeleniumStarterTest {
         int screenHeight = 810;
         int browserTimeout = 1000;
         String seleniumNodeParams = "-debug";
+        String seleniumNodeHost = "0.0.0.0";
         TimeZone timeZone = TimeZone.getTimeZone("America/Montreal");
         when(environment.getEnvVariable(ZaleniumConfiguration.ZALENIUM_DESIRED_CONTAINERS))
                 .thenReturn(String.valueOf(amountOfDesiredContainers));
@@ -191,6 +194,8 @@ public class DockeredSeleniumStarterTest {
                 .thenReturn(timeZone.getID());
         when(environment.getEnvVariable(DockeredSeleniumStarter.SELENIUM_NODE_PARAMS))
                 .thenReturn(seleniumNodeParams);
+        when(environment.getEnvVariable(DockeredSeleniumStarter.SELENIUM_NODE_HOST))
+                .thenReturn(seleniumNodeHost);
         when(environment.getEnvVariable("SEL_BROWSER_TIMEOUT_SECS"))
                 .thenReturn(String.valueOf(browserTimeout));
         when(environment.getIntEnvVariable(any(String.class), any(Integer.class))).thenCallRealMethod();
@@ -206,6 +211,7 @@ public class DockeredSeleniumStarterTest {
         Assert.assertEquals(screenWidth, DockeredSeleniumStarter.getConfiguredScreenSize().getWidth());
         Assert.assertEquals(timeZone.getID(), DockeredSeleniumStarter.getConfiguredTimeZone().getID());
         Assert.assertEquals(seleniumNodeParams, DockeredSeleniumStarter.getSeleniumNodeParameters());
+        Assert.assertEquals(seleniumNodeHost, DockeredSeleniumStarter.getSeleniumNodeHost());
         Assert.assertEquals(browserTimeout, DockeredSeleniumStarter.getBrowserTimeout());
     }
 
@@ -222,17 +228,17 @@ public class DockeredSeleniumStarterTest {
         Assert.assertEquals(ZaleniumConfiguration.DEFAULT_AMOUNT_DESIRED_CONTAINERS,
                 ZaleniumConfiguration.getDesiredContainersOnStartup());
         Assert.assertEquals(ZaleniumConfiguration.DEFAULT_AMOUNT_DOCKER_SELENIUM_CONTAINERS_RUNNING,
-            ZaleniumConfiguration.getMaxDockerSeleniumContainers());
+                ZaleniumConfiguration.getMaxDockerSeleniumContainers());
         Assert.assertEquals(DockeredSeleniumStarter.DEFAULT_SCREEN_SIZE.getWidth(),
-            DockeredSeleniumStarter.getConfiguredScreenSize().getWidth());
+                DockeredSeleniumStarter.getConfiguredScreenSize().getWidth());
         Assert.assertEquals(DockeredSeleniumStarter.DEFAULT_SCREEN_SIZE.getHeight(),
-            DockeredSeleniumStarter.getConfiguredScreenSize().getHeight());
+                DockeredSeleniumStarter.getConfiguredScreenSize().getHeight());
         Assert.assertEquals(ZaleniumConfiguration.DEFAULT_TIME_TO_WAIT_TO_START,
-            ZaleniumConfiguration.getTimeToWaitToStart());
+                ZaleniumConfiguration.getTimeToWaitToStart());
         Assert.assertEquals(ZaleniumConfiguration.DEFAULT_TIMES_TO_PROCESS_REQUEST,
-            ZaleniumConfiguration.getMaxTimesToProcessRequest());
+                ZaleniumConfiguration.getMaxTimesToProcessRequest());
         Assert.assertEquals(ZaleniumConfiguration.DEFAULT_CHECK_CONTAINERS_INTERVAL,
-            ZaleniumConfiguration.getCheckContainersInterval());
+                ZaleniumConfiguration.getCheckContainersInterval());
         Assert.assertTrue(ZaleniumConfiguration.isWaitForAvailableNodes());
         Assert.assertEquals(DockeredSeleniumStarter.DEFAULT_SEL_BROWSER_TIMEOUT_SECS,
                 DockeredSeleniumStarter.getBrowserTimeout());
