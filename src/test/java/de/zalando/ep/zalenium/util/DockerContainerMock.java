@@ -6,7 +6,6 @@ import static de.zalando.ep.zalenium.proxy.DockerSeleniumRemoteProxy.DockerSelen
 import static de.zalando.ep.zalenium.proxy.DockerSeleniumRemoteProxy.DockerSeleniumContainerAction.SEND_NOTIFICATION;
 import static de.zalando.ep.zalenium.proxy.DockerSeleniumRemoteProxy.DockerSeleniumContainerAction.START_RECORDING;
 import static de.zalando.ep.zalenium.proxy.DockerSeleniumRemoteProxy.DockerSeleniumContainerAction.STOP_RECORDING;
-import static de.zalando.ep.zalenium.proxy.DockerSeleniumRemoteProxy.DockerSeleniumContainerAction.TRANSFER_LOGS;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -150,7 +149,6 @@ public class DockerContainerMock {
 
             String[] startVideo = {"bash", "-c", START_RECORDING.getContainerAction()};
             String[] stopVideo = {"bash", "-c", STOP_RECORDING.getContainerAction()};
-            String[] transferLogs = {"bash", "-c", TRANSFER_LOGS.getContainerAction()};
             String[] cleanupContainer = {"bash", "-c", CLEANUP_CONTAINER.getContainerAction()};
             String[] sendNotificationCompleted = {"bash", "-c",
                     SEND_NOTIFICATION.getContainerAction().concat(COMPLETED.getTestNotificationMessage())};
@@ -160,9 +158,6 @@ public class DockerContainerMock {
                     DockerClient.ExecCreateParam.attachStderr(), DockerClient.ExecCreateParam.attachStdin()))
                     .thenReturn(execCreation);
             when(dockerClient.execCreate(containerId, stopVideo, DockerClient.ExecCreateParam.attachStdout(),
-                    DockerClient.ExecCreateParam.attachStderr(), DockerClient.ExecCreateParam.attachStdin()))
-                    .thenReturn(execCreation);
-            when(dockerClient.execCreate(containerId, transferLogs, DockerClient.ExecCreateParam.attachStdout(),
                     DockerClient.ExecCreateParam.attachStderr(), DockerClient.ExecCreateParam.attachStdin()))
                     .thenReturn(execCreation);
             when(dockerClient.execCreate(containerId, cleanupContainer, DockerClient.ExecCreateParam.attachStdout(),
