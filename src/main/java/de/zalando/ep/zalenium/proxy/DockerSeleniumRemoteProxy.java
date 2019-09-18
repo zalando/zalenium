@@ -611,9 +611,6 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
             if (DockerSeleniumContainerAction.STOP_RECORDING == action) {
                 copyVideos(containerId);
             }
-            if (DockerSeleniumContainerAction.TRANSFER_LOGS == action) {
-                copyLogs(containerId);
-            }
         }
     }
 
@@ -755,7 +752,6 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                         testInformation.getTestStatus().getTestNotificationMessage(), getContainerId());
             }
             videoRecording(DockerSeleniumContainerAction.STOP_RECORDING);
-            processContainerAction(DockerSeleniumContainerAction.TRANSFER_LOGS, getContainerId());
             processContainerAction(DockerSeleniumContainerAction.CLEANUP_CONTAINER, getContainerId());
 
             if (testInformation != null && keepVideoAndLogs()) {
@@ -824,7 +820,6 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     public enum DockerSeleniumContainerAction {
         START_RECORDING("start-video", false),
         STOP_RECORDING("stop-video", true),
-        TRANSFER_LOGS("transfer-logs.sh", true),
         CLEANUP_CONTAINER("cleanup-container.sh", true),
         SEND_NOTIFICATION("notify", true),
         CLEAN_NOTIFICATION("killall --ignore-case --quiet --regexp \"xfce4-notifyd.*\"", true);
