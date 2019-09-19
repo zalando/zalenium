@@ -164,7 +164,8 @@ public class SwarmContainerClient implements ContainerClient {
 
     private void startSwarmExecContainer(Task task, String[] command, String containerId) throws DockerException, InterruptedException {
         String taskId = task.id();
-        List<String> parsedCommand = new ArrayList<>();
+        List<String> parsedCmd = new ArrayList<>();
+        String [] splittedCmd = (command[2].replace("notify 'Zalenium'", "notify, Zalenium")).split(",");
         List<String> binds = new ArrayList<>();
 
         binds.add("/var/run/docker.sock:/var/run/docker.sock");
@@ -175,9 +176,9 @@ public class SwarmContainerClient implements ContainerClient {
 
         HostConfig hostConfig = hostConfigBuilder.build();
 
-        parsedCommand.add("task-exec");
-        parsedCommand.add(taskId);
-        parsedCommand.addAll(Arrays.asList(command[2].split(",")));
+        parsedCmd.add("task-exec");
+        parsedCmd.add(taskId);
+        parsedCmd.addAll(Arrays.asList(splittedCmd));
 
         logger.debug("Executing command: {} - on Container: {}",
                 Arrays.toString(command),
@@ -186,7 +187,7 @@ public class SwarmContainerClient implements ContainerClient {
         ContainerConfig containerConfig = ContainerConfig.builder()
                 .image(SWARM_EXEC_IMAGE)
                 .hostConfig(hostConfig)
-                .cmd(parsedCommand)
+                .cmd(parsedCmd)
                 .build();
 
         SwarmUtilities.startContainer(containerConfig);
