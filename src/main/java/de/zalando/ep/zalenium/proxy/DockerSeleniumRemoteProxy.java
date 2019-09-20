@@ -604,8 +604,10 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     @VisibleForTesting
     void processContainerAction(final DockerSeleniumContainerAction action, final String commandParameters,
                                 final String containerId) {
-        final String[] command = { "bash", "-c", action.getContainerAction().concat(commandParameters)};
-        containerClient.executeCommand(containerId, command, action.isWaitForExecution());
+        if (DockerSeleniumContainerAction.TRANSFER_LOGS != action) {
+            final String[] command = { "bash", "-c", action.getContainerAction().concat(commandParameters)};
+            containerClient.executeCommand(containerId, command, action.isWaitForExecution());
+        }
 
         if (keepVideoAndLogs()) {
             if (DockerSeleniumContainerAction.STOP_RECORDING == action) {
