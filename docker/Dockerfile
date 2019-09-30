@@ -366,7 +366,7 @@ ENV ZAL_VER="${project.build.finalName}" \
     SELENIUM_WAIT_FOR_CONTAINER="true"
 
 COPY entry.sh log warn error /usr/bin/
-COPY nginx.conf /home/seluser/
+COPY nginx.conf error.html /home/seluser/
 COPY css/ /home/seluser/css/
 COPY js/ /home/seluser/js/
 COPY img/ /home/seluser/img/

@@ -489,6 +489,7 @@ StartUp()
     # In nginx.conf, Replace {{contextPath}} with value of APPEND_CONTEXT_PATH
     sed -i.bak "s~{{contextPath}}~${CONTEXT_PATH}~" /home/seluser/nginx.conf
     sed -i.bak "s~{{nginxMaxBodySize}}~${NGINX_MAX_BODY_SIZE}~" /home/seluser/nginx.conf
+    sed -i.bak "s~{{zaleniumVersion}}~${project.version}~" /home/seluser/error.html
 
     echo "Starting Nginx reverse proxy..."
     nginx -c /home/seluser/nginx.conf

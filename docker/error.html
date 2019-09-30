@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Zalenium - <!--# echo var="status" default="" -->
+  <!--# if expr="$status_text" -->
+    - <!--# echo var="status_text" -->
+  <!--# endif -->
+  </title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    h1 { text-align: center; }
+    address { text-align: center; }
+  </style>
+</head>
+<body>
+  <h1><!--# echo var="status" -->
+  <!--# if expr="$status_text" -->
+    - <!--# echo var="status_text" -->
+  <!--# endif -->
+  </h1>
+<hr>
+<address>nginx/<!--# echo var="nginx_version" --> - Zalenium {{zaleniumVersion}}</address>
+</body>
+</html>
