@@ -263,7 +263,9 @@ public class DockeredSeleniumStarter {
         // Check and configure time zone capabilities when they have been passed in the test config.
         TimeZone timeZone = getConfiguredTimeZoneFromCapabilities(requestedCapability);
 
-        ContainerCreationStatus containerCreationStatus = startDockerSeleniumContainer(timeZone, screenSize);
+        String extraHosts = getConfiguredExtraHostsFromCapabilities(requestedCapability);
+
+        ContainerCreationStatus containerCreationStatus = startDockerSeleniumContainer(timeZone, screenSize, extraHosts);
         if (containerCreationStatus.isCreated()) {
             LOGGER.debug("Created container {} with dimensions {} and tz {}.",
                     containerCreationStatus.getContainerName(), screenSize, timeZone);
@@ -289,7 +291,7 @@ public class DockeredSeleniumStarter {
         return hubIpAddress;
     }
 
-    public ContainerCreationStatus startDockerSeleniumContainer(final TimeZone timeZone, final Dimension screenSize) {
+    public ContainerCreationStatus startDockerSeleniumContainer(final TimeZone timeZone, final Dimension screenSize, final String extraHosts) {
 
         TimeZone effectiveTimeZone = ObjectUtils.defaultIfNull(timeZone, DEFAULT_TZ);
         Dimension effectiveScreenSize = ObjectUtils.defaultIfNull(screenSize, DEFAULT_SCREEN_SIZE);
@@ -305,13 +307,13 @@ public class DockeredSeleniumStarter {
         if (containerClient instanceof DockerContainerClient || containerClient instanceof SwarmContainerClient) {
             containerPort = findFreePortInRange();
         }
-        Map<String, String> envVars = buildEnvVars(effectiveTimeZone, effectiveScreenSize, hostIpAddress, sendAnonymousUsageInfo,
+        Map<String, String> envVars = buildEnvVars(effectiveTimeZone, effectiveScreenSize, extraHosts, hostIpAddress, sendAnonymousUsageInfo,
                 nodePolling, nodeRegisterCycle, seleniumNodeParams, seleniumNodeHost, containerPort);
 
         return containerClient.createContainer(getContainerName(), latestImage, envVars, String.valueOf(containerPort));
     }
 
-    private Map<String, String> buildEnvVars(TimeZone timeZone, Dimension screenSize, String hostIpAddress,
+    private Map<String, String> buildEnvVars(TimeZone timeZone, Dimension screenSize, String extraHosts, String hostIpAddress,
                                              boolean sendAnonymousUsageInfo, String nodePolling, String nodeRegisterCycle,
                                              String seleniumNodeParams, String seleniumNodeHost, int containerPort) {
         final int noVncPort = containerPort + NO_VNC_PORT_GAP;
@@ -342,6 +344,7 @@ public class DockeredSeleniumStarter {
         envVars.put("CHROME", "false");
         envVars.put("FIREFOX", "false");
         envVars.put("SEL_BROWSER_TIMEOUT_SECS", String.valueOf(getBrowserTimeout()));
+        envVars.put("EXTRA_HOSTS", extraHosts);
         if (ZALENIUM_RUNNING_LOCALLY) {
             envVars.put("SELENIUM_NODE_PARAMS", String.format("-remoteHost http://%s:%s", hostIpAddress, containerPort));
         } else {
@@ -417,6 +420,22 @@ public class DockeredSeleniumStarter {
         }
 
         return timeZone;
+    }
+
+    /*
+    This method will search for a extraHosts capability to be passed when creating a docker-selenium node.
+    */
+    private String getConfiguredExtraHostsFromCapabilities(Map<String, Object> requestedCapability) {
+        String extraHosts = "";
+        List<String> extraHostsCapabilities = Arrays.asList(ZaleniumCapabilityType.EXTRA_HOSTS_NO_PREFIX,
+                ZaleniumCapabilityType.EXTRA_HOSTS);
+        for (String extraHostsCapability : extraHostsCapabilities) {
+            if (requestedCapability.containsKey(extraHostsCapability)) {
+                extraHosts = requestedCapability.get(extraHostsCapability).toString();
+            }
+        }
+
+        return extraHosts;
     }
 
     /*

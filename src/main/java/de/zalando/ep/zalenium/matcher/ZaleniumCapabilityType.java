@@ -20,4 +20,6 @@ public interface ZaleniumCapabilityType {
     String RECORD_VIDEO = CUSTOM_CAPABILITY_PREFIX.concat(RECORD_VIDEO_NO_PREFIX);
     String TIME_ZONE_NO_PREFIX = "tz";
     String TIME_ZONE = CUSTOM_CAPABILITY_PREFIX.concat(TIME_ZONE_NO_PREFIX);
+    String EXTRA_HOSTS_NO_PREFIX = "extraHosts";
+    String EXTRA_HOSTS = CUSTOM_CAPABILITY_PREFIX.concat(EXTRA_HOSTS_NO_PREFIX);
 }

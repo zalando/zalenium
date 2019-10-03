@@ -122,7 +122,7 @@ public class AutoStartProxySetTest {
         DockeredSeleniumStarter starter = Mockito.mock(DockeredSeleniumStarter.class);
         ContainerCreationStatus containerCreationStatus = new ContainerCreationStatus(true, "name", "id", "40000");
         Mockito.when(starter.startDockerSeleniumContainer(Mockito.any())).thenCallRealMethod();
-        Mockito.when(starter.startDockerSeleniumContainer(Mockito.any(), Mockito.any())).thenReturn(containerCreationStatus);
+        Mockito.when(starter.startDockerSeleniumContainer(Mockito.any(), Mockito.any(), "")).thenReturn(containerCreationStatus);
 
         Map<String, Object> supportedCapability = new HashMap<>();
         supportedCapability.put(CapabilityType.BROWSER_NAME, BrowserType.FIREFOX);
@@ -139,7 +139,7 @@ public class AutoStartProxySetTest {
 
         // And a request should have been made to start a proxy.
         Mockito.verify(starter, Mockito.timeout(1000)).startDockerSeleniumContainer(DockeredSeleniumStarter.DEFAULT_TZ,
-                DockeredSeleniumStarter.DEFAULT_SCREEN_SIZE);
+                DockeredSeleniumStarter.DEFAULT_SCREEN_SIZE, "");
     }
 
     @Test
@@ -150,7 +150,7 @@ public class AutoStartProxySetTest {
         DockeredSeleniumStarter starter = Mockito.mock(DockeredSeleniumStarter.class);
         ContainerCreationStatus containerCreationStatus = new ContainerCreationStatus(true, "name", "id", "40000");
         Mockito.when(starter.startDockerSeleniumContainer(Mockito.any())).thenCallRealMethod();
-        Mockito.when(starter.startDockerSeleniumContainer(Mockito.any(), Mockito.any())).thenReturn(containerCreationStatus);
+        Mockito.when(starter.startDockerSeleniumContainer(Mockito.any(), Mockito.any(), "")).thenReturn(containerCreationStatus);
 
         Map<String, Object> supportedCapability = new HashMap<>();
         supportedCapability.put(CapabilityType.BROWSER_NAME, BrowserType.FIREFOX);
@@ -167,7 +167,7 @@ public class AutoStartProxySetTest {
 
         // And a request should have been made to start a proxy.
         Mockito.verify(starter, Mockito.timeout(1000)).startDockerSeleniumContainer(DockeredSeleniumStarter.DEFAULT_TZ,
-                DockeredSeleniumStarter.DEFAULT_SCREEN_SIZE);
+                DockeredSeleniumStarter.DEFAULT_SCREEN_SIZE, "");
     }
 
     @Test
@@ -288,7 +288,7 @@ public class AutoStartProxySetTest {
         ContainerCreationStatus containerCreationStatus = new ContainerCreationStatus(true, "name", "container_id",
                 "40000");
         Mockito.when(starter.startDockerSeleniumContainer(Mockito.any())).thenReturn(containerCreationStatus);
-        
+
         AutoStartProxySet autoStartProxySet = new AutoStartProxySet(false, 0, 5, 1000, false, starter, clock, 30, 30000);
 
         autoStartProxySet.getNewSession(Collections.emptyMap());

@@ -304,6 +304,10 @@ public class DockerContainerClient implements ContainerClient {
         String networkMode = getZaleniumNetwork(zaleniumContainerName);
 
         List<String> extraHosts = new ArrayList<>();
+        String extraHostsFromVars = envVars.get("EXTRA_HOSTS");
+        if (!extraHostsFromVars.isEmpty()) {
+            extraHosts.addAll(Arrays.asList(extraHostsFromVars.split(";")));
+        }
 
         // Allows "--net=host" work. Only supported for Linux.
         if (DOCKER_NETWORK_HOST_MODE_NAME.equalsIgnoreCase(networkMode)) {
