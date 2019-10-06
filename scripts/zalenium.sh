@@ -83,7 +83,7 @@ WaitSeleniumHub()
     # Other option is to wait for certain text at
     #  logs/stdout.zalenium.hub.log
     while ! curl -sSL "http://localhost:4444${CONTEXT_PATH}/wd/hub/status" 2>&1 \
-            | jq -r '.status' 2>&1 | grep "0" >/dev/null; do
+            | jq -r '.status' 2>/dev/null | grep "0" >/dev/null; do
         echo -n '.'
         sleep 0.2
     done
