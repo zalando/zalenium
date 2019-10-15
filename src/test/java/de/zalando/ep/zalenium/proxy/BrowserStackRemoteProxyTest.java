@@ -175,7 +175,7 @@ public class BrowserStackRemoteProxyTest {
             TestUtils.ensureRequiredInputFilesExist(temporaryFolder);
             CommonProxyUtilities commonProxyUtilities = TestUtils.mockCommonProxyUtilitiesForDashboardTesting(temporaryFolder);
             Environment env = new Environment();
-            String mockTestInformationUrl = "https://www.browserstack.com/automate/sessions/77e51cead8e6e37b0a0feb0dfa69325b2c4acf97.json";
+            String mockTestInformationUrl = "https://api.browserstack.com/automate/sessions/77e51cead8e6e37b0a0feb0dfa69325b2c4acf97.json";
             when(commonProxyUtilities.readJSONFromUrl(mockTestInformationUrl,
                     env.getStringEnvVariable("BROWSER_STACK_USER", ""),
                     env.getStringEnvVariable("BROWSER_STACK_KEY", ""))).thenReturn(informationSample);
