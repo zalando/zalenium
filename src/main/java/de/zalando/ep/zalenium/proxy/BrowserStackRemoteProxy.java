@@ -20,7 +20,7 @@ import org.slf4j.LoggerFactory;
 public class BrowserStackRemoteProxy extends CloudTestingRemoteProxy {
 
     private static final String BROWSER_STACK_URL = getEnv().getStringEnvVariable("BROWSER_STACK_URL", "http://hub-cloud.browserstack.com:80");
-    private static final String BROWSER_STACK_ACCOUNT_INFO = "https://www.browserstack.com/automate/plan.json";
+    private static final String BROWSER_STACK_ACCOUNT_INFO = "https://api.browserstack.com/automate/plan.json";
     private static final Logger logger = LoggerFactory.getLogger(BrowserStackRemoteProxy.class.getName());
     private static final String BROWSER_STACK_USER = getEnv().getStringEnvVariable("BROWSER_STACK_USER", "");
     private static final String BROWSER_STACK_KEY = getEnv().getStringEnvVariable("BROWSER_STACK_KEY", "");
@@ -85,7 +85,7 @@ public class BrowserStackRemoteProxy extends CloudTestingRemoteProxy {
     @Override
     public TestInformation getTestInformation(String seleniumSessionId) {
         // https://BS_USER:BS_KEY@www.browserstack.com/automate/sessions/SELENIUM_SESSION_ID.json
-        String browserStackBaseTestUrl = "https://www.browserstack.com/automate/sessions/";
+        String browserStackBaseTestUrl = "https://api.browserstack.com/automate/sessions/";
         String browserStackTestUrl = browserStackBaseTestUrl + String.format("%s.json", seleniumSessionId);
         for (int i = 0; i < 5; i++) {
             try {
