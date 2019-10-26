@@ -27,4 +27,6 @@ public interface ContainerClient {
     boolean isReady(ContainerCreationStatus container);
     
     boolean isTerminated(ContainerCreationStatus container);
+
+    String getContainerIdByIp(String host);
 }

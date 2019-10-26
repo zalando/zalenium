@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import de.zalando.ep.zalenium.container.swarm.SwarmUtilities;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.lang3.StringUtils;
@@ -66,7 +67,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     @VisibleForTesting
     public static final String ZALENIUM_MAX_TEST_SESSIONS = "ZALENIUM_MAX_TEST_SESSIONS";
     @VisibleForTesting
-    public static final long DEFAULT_MAX_TEST_IDLE_TIME_SECS = 90L;
+    public static final long DEFAULT_MAX_TEST_IDLE_TIME_SECS = 300L;
     @VisibleForTesting
     public static final String ZALENIUM_VIDEO_RECORDING_ENABLED = "ZALENIUM_VIDEO_RECORDING_ENABLED";
     @VisibleForTesting
@@ -451,30 +452,54 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         return getAmountOfExecutedTests() >= maxTestSessions;
     }
 
+    public boolean shutdownIfLimitReached() {
+        String currentName = configureThreadName();
+        boolean condition = isTestSessionLimitReached() && !isBusy();
+        if (condition) {
+            String msg = String.format("Exceded more than %s test sessions "
+                    + "in node %s", maxTestSessions, this.getContainerId());
+            LOGGER.debug(msg);
+            timeout(msg, ShutdownType.MAX_TEST_SESSIONS_REACHED);
+        }       
+        setThreadName(currentName);
+        return condition;
+    }
+
     public boolean shutdownIfIdle() {
         String currentName = configureThreadName();
-        boolean testIdle = isTestIdle();
-        boolean testSessionLimitReached = isTestSessionLimitReached();
-        boolean isShutdownIfIdle = testIdle || (testSessionLimitReached && !isBusy());
-        if (isShutdownIfIdle) {
-            LOGGER.debug("Proxy is idle.");
-            timeout("proxy being idle after test.", (testSessionLimitReached ?
-                    ShutdownType.MAX_TEST_SESSIONS_REACHED : ShutdownType.IDLE));
+        boolean condition = isTestIdleMoreThan(900) && !isCleaningUp() && !isBusy();
+        if (condition) {
+            String msg = String.format("Node %s has been idle for %s seconds. "
+                    + "Shutdown", this.getContainerId(), 900);
+            LOGGER.debug(msg);
+            timeout(msg, ShutdownType.IDLE);
         }
         setThreadName(currentName);
-        return isShutdownIfIdle;
+        return condition;
     }
+
 
     public boolean shutdownIfStale() {
         String currentName = configureThreadName();
-        if (isBusy() && isTestIdle() && !isCleaningUp()) {
-            LOGGER.debug("No test activity been recorded recently, proxy is stale.");
-            timeout("proxy being stuck | stale during a test.", ShutdownType.STALE);
+        boolean condition = isTestIdle() && !isCleaningUp() && isBusy();
+        if (condition) {
+            String msg = String.format("Test did not see a new command "
+                    + "for %s seconds. Timing out", getMaxTestIdleTimeSecs());
+            LOGGER.debug(msg);
+            timeout(msg, ShutdownType.STALE);
+        }
             setThreadName(currentName);
-            return true;
-        } else if (isTestSessionLimitReached() && !isBusy()) {
-            LOGGER.debug("Proxy has reached max test sessions.");
-            timeout("proxy has reached max test sessions.", ShutdownType.MAX_TEST_SESSIONS_REACHED);
+        return condition;
+    }    
+
+    public boolean shutdownIfCorrupt(String containerId) {
+        String currentName = configureThreadName();
+        String host = getRemoteHost().getHost();
+        String containerIdByIp = this.containerClient.getContainerIdByIp(host);
+        if (containerIdByIp == null || ! containerIdByIp.equals(containerId)) {
+            LOGGER.warn("{} has the containerId {} but {} was expected.",
+                    host, containerIdByIp, containerId);
+            timeout("proxy is corrupted.", ShutdownType.CORRUPTED);
             setThreadName(currentName);
             return true;
         }
@@ -487,7 +512,10 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
      */
     @VisibleForTesting
     public synchronized boolean isTestIdle() {
+        return isTestIdleMoreThan(getMaxTestIdleTimeSecs());
+    }
 
+    private boolean isTestIdleMoreThan(long seconds) {
         if (this.timedOut.get()) {
             return true;
         } else {
@@ -495,9 +523,9 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
 
             long timeSinceUsed = System.currentTimeMillis() - timeLastUsed;
 
-            if (timeSinceUsed > (getMaxTestIdleTimeSecs() * 1000L)) {
+            if (timeSinceUsed > (seconds * 1000L)) {
                 LOGGER.debug("No test activity, proxy has has been idle {} which is more than {}", timeSinceUsed,
-                        getMaxTestIdleTimeSecs() * 1000L);
+                        seconds * 1000L);
                 return true;
             } else {
                 return false;
@@ -522,7 +550,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
             }
 
             if (!this.timedOut.getAndSet(true)) {
-                LOGGER.debug("Shutting down node due to {}", reason);
+                LOGGER.info("Shutting down node due to {}", reason);
                 shutDown = true;
             }
         }
@@ -796,6 +824,8 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         containerClient.stopContainer(getContainerId());
 
         addNewEvent(new RemoteUnregisterException(shutdownReason));
+        
+        LOGGER.info("shutdownNode {} ", this.toString());
         setThreadName(currentName);
     }
 
@@ -851,7 +881,8 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     public enum ShutdownType {
         STALE,
         IDLE,
-        MAX_TEST_SESSIONS_REACHED
+        MAX_TEST_SESSIONS_REACHED,
+        CORRUPTED
     }
 
 

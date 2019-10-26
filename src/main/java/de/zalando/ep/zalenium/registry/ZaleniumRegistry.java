@@ -1,5 +1,6 @@
 package de.zalando.ep.zalenium.registry;
 
+import de.zalando.ep.zalenium.matcher.ZaleniumCapabilityType;
 import de.zalando.ep.zalenium.prometheus.ContainerStatusCollectorExports;
 import de.zalando.ep.zalenium.prometheus.TestSessionCollectorExports;
 import net.jcip.annotations.ThreadSafe;
@@ -34,6 +35,7 @@ import io.prometheus.client.Histogram;
 import java.net.URL;
 import java.time.Clock;
 import java.time.Duration;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -145,6 +147,13 @@ public class ZaleniumRegistry extends BaseGridRegistry implements GridRegistry {
     }
 
     public void start() {
+    	Thread.setDefaultUncaughtExceptionHandler(new UncaughtExceptionHandler() {
+			@Override
+			public void uncaughtException(Thread t, Throwable e) {
+	            LOG.error(String.format("UncaughtException in Thread %s", t.getName()), e);
+			}
+		});
+
         matcherThread.start();
 
         // freynaud : TODO
@@ -167,6 +176,7 @@ public class ZaleniumRegistry extends BaseGridRegistry implements GridRegistry {
      * @param reason  the reason for termination
      */
     public void terminate(final TestSession session, final SessionTerminationReason reason) {
+    	try {
         // Thread safety reviewed
         String remoteName = "";
         if (session.getSlot().getProxy() instanceof DockerSeleniumRemoteProxy) {
@@ -176,6 +186,9 @@ public class ZaleniumRegistry extends BaseGridRegistry implements GridRegistry {
         ExternalSessionKey externalKey = Optional.ofNullable(session.getExternalKey()).orElse(new ExternalSessionKey("No external key was assigned"));
         new Thread(() -> _release(session.getSlot(), reason), "Terminate Test Session int id: ["
                 + internalKey + "] ext id: [" + externalKey + "] container: [" + remoteName + "]").start();
+    	} catch(Exception e) {
+    		LOG.error("Unexpected exception when try to terminate session", e);
+    	}
     }
 
     /**
@@ -251,8 +264,24 @@ public class ZaleniumRegistry extends BaseGridRegistry implements GridRegistry {
         try {
             lock.lock();
             Map<String, Object> requestedCapabilities = handler.getRequest().getDesiredCapabilities();
-            proxies.verifyAbilityToHandleDesiredCapabilities(requestedCapabilities);
+
+            //Prefix custom capabilities and truncate them when they are longer than 250 characters
+            for(String capability :  Arrays.asList("name" , "zal:name", "build", "zal:build")) {
+                if (requestedCapabilities.containsKey(capability)) {
+                        String oldVal = (String) requestedCapabilities.get(capability);
+                        String newVal = (oldVal==null) ? oldVal : oldVal.substring(0, Math.min(oldVal.length(), 250));
+                        requestedCapabilities.remove(capability);
+                        String newCapability = (capability.startsWith("zal:") ? "" : "zal:" ) + capability;
+                        requestedCapabilities.put(newCapability, newVal);
+                        if (oldVal.length() > 250) {
+                            LOG.debug("Truncate capability {} from {} to {}", capability, oldVal, newVal);
+                        }
+                }
+            }
             requestedCapabilities.forEach((k, v) -> MDC.put(k,v.toString()));
+
+            lock.lock();
+            proxies.verifyAbilityToHandleDesiredCapabilities(requestedCapabilities);
             LOG.info("Adding sessionRequest for " + requestedCapabilities.toString());
             newSessionQueue.add(handler);
             seleniumTestSessionsWaiting.inc();
@@ -356,6 +385,7 @@ public class ZaleniumRegistry extends BaseGridRegistry implements GridRegistry {
             if (proxy instanceof DockerSeleniumRemoteProxy) {
                 if (proxies.contains(proxy)) {
                     LOG.debug("Proxy '{}' is already registered.", proxy);
+                    proxy.teardown();
                     return;
                 }
             } else {
@@ -364,6 +394,7 @@ public class ZaleniumRegistry extends BaseGridRegistry implements GridRegistry {
 
             if (registeringProxies.contains(proxy)) {
                 LOG.debug("Proxy '{}' is already queued for registration.", proxy);
+                proxy.teardown();
                 return;
             }
 
@@ -495,9 +526,11 @@ public class ZaleniumRegistry extends BaseGridRegistry implements GridRegistry {
         int maxTries = 3;
         for (int i = 1; i <= maxTries; i++) {
             try {
+                LOG.debug("getHttpClient {}, {}, {}", url, connectionTimeout, readTimeout);
+
                 HttpClient client = httpClientFactory.builder()
-                                        .connectionTimeout(Duration.ofSeconds(connectionTimeout))
-                                        .readTimeout(Duration.ofSeconds(readTimeout))
+                                        .connectionTimeout(Duration.ofMillis(connectionTimeout))
+                                        .readTimeout(Duration.ofMillis(readTimeout))
                                         .createClient(url);
                 if (i > 1) {
                     LOG.warn("Successfully created HttpClient for url {}, after attempt #{}", url, i);

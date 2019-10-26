@@ -476,5 +476,11 @@ public class SwarmContainerClient implements ContainerClient {
             return false;
         }
     }
+
+    @Override
+    public String getContainerIdByIp(String host) {
+        // TODO Auto-generated method stub
+        return null;
+    }
 }
 

@@ -11,6 +11,7 @@ import java.util.TimeZone;
 
 import com.spotify.docker.client.messages.ContainerInfo;
 import de.zalando.ep.zalenium.container.DockerContainerClient;
+import de.zalando.ep.zalenium.container.kubernetes.KubernetesContainerClient;
 import de.zalando.ep.zalenium.container.swarm.SwarmContainerClient;
 import de.zalando.ep.zalenium.container.swarm.SwarmUtilities;
 import org.apache.commons.lang3.ObjectUtils;
@@ -30,6 +31,9 @@ import de.zalando.ep.zalenium.container.ContainerCreationStatus;
 import de.zalando.ep.zalenium.container.ContainerFactory;
 import de.zalando.ep.zalenium.matcher.ZaleniumCapabilityType;
 import de.zalando.ep.zalenium.util.Environment;
+import io.fabric8.kubernetes.api.model.PodStatus;
+import io.fabric8.kubernetes.client.KubernetesClient;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -359,6 +363,16 @@ public class DockeredSeleniumStarter {
 
     public boolean containerHasStarted(ContainerCreationStatus creationStatus) {
         return containerClient.isReady(creationStatus);
+    }
+    
+    public PodStatus getPodStatus(ContainerCreationStatus creationStatus) {
+        if (containerClient instanceof KubernetesContainerClient) {
+            KubernetesContainerClient client =  (KubernetesContainerClient) containerClient;
+            return client.getPodStatus(creationStatus);
+        } else {
+            LOGGER.debug("Container is not KubernetesContainerClient");
+            return null;
+        }
     }
 
     public boolean containerHasFinished(ContainerCreationStatus creationStatus) {
