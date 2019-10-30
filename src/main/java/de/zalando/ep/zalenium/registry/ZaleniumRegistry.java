@@ -262,7 +262,6 @@ public class ZaleniumRegistry extends BaseGridRegistry implements GridRegistry {
      */
     public void addNewSessionRequest(RequestHandler handler) {
         try {
-            lock.lock();
             Map<String, Object> requestedCapabilities = handler.getRequest().getDesiredCapabilities();
 
             //Prefix custom capabilities and truncate them when they are longer than 250 characters
