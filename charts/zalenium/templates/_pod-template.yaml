@@ -5,6 +5,10 @@ metadata:
   annotations:
     {{- toYaml .Values.hub.podAnnotations | nindent 4 }}
 spec:
+  {{- if (.Values.hub.schedulerName) }}
+  schedulerName: {{ .Values.hub.schedulerName }}
+  {{- end}}
+
   securityContext:
     {{- toYaml .Values.hub.podSecurityContext | nindent 4 }}
   {{- if .Values.hub.pullSecrets }}

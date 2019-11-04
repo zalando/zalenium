@@ -12,6 +12,7 @@ import io.fabric8.kubernetes.api.model.EnvVar;
 import io.fabric8.kubernetes.api.model.HostAlias;
 import io.fabric8.kubernetes.api.model.LocalObjectReference;
 import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.api.model.PodFluent;
 import io.fabric8.kubernetes.api.model.PodList;
 import io.fabric8.kubernetes.api.model.PodSecurityContext;
 import io.fabric8.kubernetes.api.model.Quantity;
@@ -73,6 +74,7 @@ public class KubernetesContainerClient implements ContainerClient {
     private Map<String, String> nodeSelector = new HashMap<>();
     private List<Toleration> tolerations = new ArrayList<>();
     private String imagePullPolicy;
+    private String schedulerName;
     private List<LocalObjectReference> imagePullSecrets;
     private PodSecurityContext configuredPodSecurityContext;
     private SecurityContext configuredContainerSecurityContext;
@@ -114,6 +116,7 @@ public class KubernetesContainerClient implements ContainerClient {
             discoverTolerations();
             discoverImagePullSecrets();
             discoverPodSecurityContext();
+            discoverSchedulerName();
             discoverContainerSecurityContext();
             buildResourceMaps();
 
@@ -187,6 +190,10 @@ public class KubernetesContainerClient implements ContainerClient {
         }
     }
 
+    private void discoverSchedulerName() {
+        schedulerName = zaleniumPod.getSpec().getSchedulerName();
+    }
+
     private void discoverImagePullSecrets() {
         List<LocalObjectReference> configuredPullSecrets = zaleniumPod.getSpec().getImagePullSecrets();
         if (!configuredPullSecrets.isEmpty()) {
@@ -225,7 +232,7 @@ public class KubernetesContainerClient implements ContainerClient {
 
         return hostname;
     }
-    
+
     private void discoverPodSecurityContext() {
     	configuredPodSecurityContext = zaleniumPod.getSpec().getSecurityContext();
     }
@@ -367,6 +374,7 @@ public class KubernetesContainerClient implements ContainerClient {
         config.setPodLimits(seleniumPodLimits);
         config.setPodRequests(seleniumPodRequests);
         config.setOwner(zaleniumPod);
+        config.setSchedulerName(schedulerName);
         config.setPodSecurityContext(configuredPodSecurityContext);
         config.setContainerSecurityContext(configuredContainerSecurityContext);
 
@@ -576,7 +584,8 @@ public class KubernetesContainerClient implements ContainerClient {
     }
 
     public static DoneablePod createDoneablePodDefaultImpl(PodConfiguration config) {
-        DoneablePod doneablePod = config.getClient().pods()
+
+        PodFluent.SpecNested<DoneablePod> doneablePodSpecNested = config.getClient().pods()
                 .createNew()
                 .withNewMetadata()
                     .withGenerateName(config.getContainerIdPrefix())
@@ -623,8 +632,13 @@ public class KubernetesContainerClient implements ContainerClient {
                         .endReadinessProbe()
                     .endContainer()
                     .withRestartPolicy("Never")
-                    .withImagePullSecrets(config.getImagePullSecrets())
-                .endSpec();
+                    .withImagePullSecrets(config.getImagePullSecrets());
+
+        if(config.getSchedulerName() != null) {
+            doneablePodSpecNested = doneablePodSpecNested.withSchedulerName(config.getSchedulerName());
+        }
+
+        DoneablePod doneablePod = doneablePodSpecNested.endSpec();
 
         // Add the shared folders if available
         for (Map.Entry<VolumeMount, Volume> entry : config.getMountedSharedFoldersMap().entrySet()) {

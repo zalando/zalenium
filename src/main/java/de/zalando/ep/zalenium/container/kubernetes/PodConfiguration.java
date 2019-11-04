@@ -36,6 +36,7 @@ public class PodConfiguration {
     private OwnerReference ownerReference;
     private PodSecurityContext podSecurityContext;
     private SecurityContext containerSecurityContext;
+    private String schedulerName;
 
     public String getNodePort() {
         return nodePort;
@@ -145,5 +146,13 @@ public class PodConfiguration {
 
     public void setContainerSecurityContext(SecurityContext containerSecurityContext) {
         this.containerSecurityContext = containerSecurityContext;
+    }
+
+    public String getSchedulerName() {
+        return schedulerName;
+    }
+
+    public void setSchedulerName(String schedulerName) {
+        this.schedulerName = schedulerName;
     }
 }
