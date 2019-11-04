@@ -93,6 +93,7 @@ hub:
   seleniumImageName: "elgalu/selenium"
   maxTestSessions: 1
   newSessionsWaitTimeout: 600000
+  maxTestIdleTimeSecs: 90
   debugEnabled: false
   keepOnlyFailedTests: false
   retentionPeriod: 3

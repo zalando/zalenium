@@ -102,6 +102,8 @@ spec:
           value: {{ .Values.hub.screenHeight | quote }}
         - name: MAX_TEST_SESSIONS
           value: {{ .Values.hub.maxTestSessions | quote }}
+        - name: MAX_TEST_IDLE_TIME_SECS
+          value: {{ .Values.hub.maxTestIdleTimeSecs| quote }}
         - name: NEW_SESSION_WAIT_TIMEOUT
           value: {{ .Values.hub.newSessionsWaitTimeout | quote }}
         - name: DEBUG_ENABLED

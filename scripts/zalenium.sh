@@ -3,6 +3,7 @@
 CONTAINER_NAME="zalenium"
 SELENIUM_IMAGE_NAME=${SELENIUM_IMAGE_NAME:-"elgalu/selenium"}
 MAX_TEST_SESSIONS=${MAX_TEST_SESSIONS:-1}
+MAX_TEST_IDLE_TIME_SECS=${MAX_TEST_IDLE_TIME_SECS:-90}
 DESIRED_CONTAINERS=${DESIRED_CONTAINERS:-2}
 MAX_DOCKER_SELENIUM_CONTAINERS=${MAX_DOCKER_SELENIUM_CONTAINERS:-10}
 SWARM_OVERLAY_NETWORK=${SWARM_OVERLAY_NETWORK:-""}
@@ -433,6 +434,7 @@ StartUp()
     export ZALENIUM_CONTAINER_NAME=${CONTAINER_NAME}
     export ZALENIUM_SELENIUM_IMAGE_NAME=${SELENIUM_IMAGE_NAME}
     export ZALENIUM_MAX_TEST_SESSIONS=${MAX_TEST_SESSIONS}
+    export ZALENIUM_MAX_TEST_IDLE_TIME_SECS=${MAX_TEST_IDLE_TIME_SECS}
     export ZALENIUM_KEEP_ONLY_FAILED_TESTS=${KEEP_ONLY_FAILED_TESTS}
     export ZALENIUM_RETENTION_PERIOD=${RETENTION_PERIOD}
     export ZALENIUM_NODE_PARAMS=${SELENIUM_NODE_PARAMS}
@@ -708,7 +710,7 @@ StartUp()
         # Gathering the options used to start Zalenium, in order to learn about the used options
         ZALENIUM_START_COMMAND="zalenium.sh --desiredContainers $DESIRED_CONTAINERS
             --maxDockerSeleniumContainers $MAX_DOCKER_SELENIUM_CONTAINERS --maxTestSessions $MAX_TEST_SESSIONS
-            --swarmOverlayNetwork $SWARM_OVERLAY_NETWORK
+            --maxTestIdleTimeSecs $MAX_TEST_IDLE_TIME_SECS --swarmOverlayNetwork $SWARM_OVERLAY_NETWORK
             --sauceLabsEnabled $SAUCE_LABS_ENABLED --browserStackEnabled $BROWSER_STACK_ENABLED
             --testingBotEnabled $TESTINGBOT_ENABLED --cbtEnabled $CBT_ENABLED
             --lambdaTestEnabled $LT_ENABLED
@@ -939,6 +941,7 @@ function usage()
     echo -e "\t --gridUser -> allows you to specify a user to enable basic auth protection, --gridPassword must be provided also."
     echo -e "\t --gridPassword -> allows you to specify a password to enable basic auth protection, --gridUser must be provided also."
     echo -e "\t --maxTestSessions -> max amount of tests executed per container, defaults to '1'."
+    echo -e "\t --maxTestIdleTimeSecs-> Time without activity in the session creation or between commands before shuting down the node by inactivity, defaults to '90'."
     echo -e "\t --keepOnlyFailedTests -> Keeps only videos of failed tests (you need to send a cookie). Defaults to 'false'"
  	echo -e "\t --retentionPeriod -> Number of day's a testentry should be kept in dashboard before cleanup. Defaults to 3"
     echo ""
@@ -1035,6 +1038,9 @@ case ${SCRIPT_ACTION} in
                     ;;
                 --maxTestSessions)
                     MAX_TEST_SESSIONS=${VALUE}
+                    ;;
+                --maxTestIdleTimeSecs)
+                    MAX_TEST_IDLE_TIME_SECS=${VALUE}
                     ;;
                 --keepOnlyFailedTests)
                     KEEP_ONLY_FAILED_TESTS=${VALUE}
