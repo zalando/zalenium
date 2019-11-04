@@ -4,8 +4,6 @@ import de.zalando.ep.zalenium.container.ContainerClient;
 import de.zalando.ep.zalenium.container.ContainerClientRegistration;
 import de.zalando.ep.zalenium.container.ContainerCreationStatus;
 import de.zalando.ep.zalenium.util.Environment;
-import io.fabric8.kubernetes.api.model.BaseKubernetesListFluent.KubernetesClusterRoleItemsNested;
-import io.fabric8.kubernetes.api.model.ContainerStateRunning;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ContainerStateTerminated;
 import io.fabric8.kubernetes.api.model.ContainerStatus;
@@ -17,7 +15,6 @@ import io.fabric8.kubernetes.api.model.LocalObjectReference;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodList;
 import io.fabric8.kubernetes.api.model.PodSecurityContext;
-import io.fabric8.kubernetes.api.model.PodStatus;
 import io.fabric8.kubernetes.api.model.Quantity;
 import io.fabric8.kubernetes.api.model.SecurityContext;
 import io.fabric8.kubernetes.api.model.Toleration;
@@ -419,16 +416,6 @@ public class KubernetesContainerClient implements ContainerClient {
         }
     }
 
-    public PodStatus getPodStatus(ContainerCreationStatus container) {
-        Pod pod = client.pods().withName(container.getContainerName()).get();
-        if (pod == null) {
-            logger.debug("Pod not found {}", container);
-            return null;
-        } else {
-            return pod.getStatus();
-        }
-    }   
-
     public String getContainerIdByIp(String PodIP) {
         for(Pod pod : client.pods().list().getItems()) {
             if (PodIP != null && PodIP.equals(pod.getStatus().getPodIP())) {
@@ -475,18 +462,20 @@ public class KubernetesContainerClient implements ContainerClient {
         for (Pod pod : list.getItems()) {
 
             if (podIpAddress.equals(pod.getStatus().getPodIP())) {
-                if ("Running".equals(pod.getStatus().getPhase())) {
+                String podPhase = pod.getStatus().getPhase();
+                if ("Running".equalsIgnoreCase(podPhase)) {
                 containerId = pod.getMetadata().getName();
                 currentPod = pod;
                 break;
                 } else {
-                    logger.warn("Pod {} ip duplicated", pod.getMetadata().getName());
+                    logger.warn("Pod {} is in {} phase instead of Running phase.",
+                            pod.getMetadata().getName(), podPhase);
                 }
             }
         }
 
         if (containerId == null) {
-            throw new IllegalStateException("Unable to locate pod by ip address, registration will fail");
+            throw new IllegalStateException("Unable to locate pod by ip address, registration will fail. " + remoteHost); 
         }
         ContainerClientRegistration registration = new ContainerClientRegistration();
 
@@ -639,14 +628,6 @@ public class KubernetesContainerClient implements ContainerClient {
                         .endResources()
                         // Add a readiness health check so that we can know when the selenium pod is ready to accept requests
                         // so then we can initiate a registration.
-                        .withNewLivenessProbe()
-                            .withInitialDelaySeconds(30)
-                            .withTimeoutSeconds(5)
-                            .withNewHttpGet()
-                                .withPath("/wd/hub/status")
-                                .withPort(new IntOrString(40000))
-                            .endHttpGet()
-                        .endLivenessProbe()
                         .withNewReadinessProbe()
                             .withInitialDelaySeconds(5)
                             .withFailureThreshold(2)

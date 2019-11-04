@@ -5,7 +5,6 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -34,7 +33,6 @@ import de.vandermeer.skb.interfaces.transformers.textformat.TextAlignment;
 import de.zalando.ep.zalenium.container.ContainerCreationStatus;
 import de.zalando.ep.zalenium.dashboard.Dashboard;
 import de.zalando.ep.zalenium.matcher.ZaleniumCapabilityMatcher;
-import io.fabric8.kubernetes.api.model.PodStatus;
 import net.jcip.annotations.ThreadSafe;
 
 /**
@@ -80,7 +78,7 @@ public class AutoStartProxySet extends ProxySet implements Iterable<RemoteProxy>
     private static final ExecutorService EXECUTOR_SERVICE = Executors.newFixedThreadPool(5);
 
 
-    private final Map<ContainerCreationStatus, ContainerStatus> startedContainers = new TrackedConcurrentHashMap<>();
+    private final Map<ContainerCreationStatus, ContainerStatus> startedContainers = new ConcurrentHashMap<>();
 
     private final DockeredSeleniumStarter starter;
 
@@ -421,7 +419,6 @@ public class AutoStartProxySet extends ProxySet implements Iterable<RemoteProxy>
                         }
                     } else {
                         // Only need to check containers that haven't yet started.
-                        PodStatus status = starter.getPodStatus(creationStatus);
                         if (starter.containerHasStarted(creationStatus) && super.contains(p)) {
                             long started = clock.millis();
                             containerStatus.setTimeStarted(Optional.of(started));
@@ -447,13 +444,6 @@ public class AutoStartProxySet extends ProxySet implements Iterable<RemoteProxy>
                                         }
                                     }
                                 }
-                                
-                                boolean isReady = status.getConditions().stream()
-                                        .filter(condition -> condition.getType().equals("Ready"))
-                                        .map(condition -> condition.getStatus().equals("True"))
-                                        .findFirst()
-                                        .orElse(false);
-                                LOGGER.debug("{} - node status: {}, isReady:{}", containerStatus, status, isReady);
                                 
                                 container.getValue().getProxy().ifPresent(p2 -> p2.teardown());
                                 starter.stopContainer(creationStatus.getContainerId());
@@ -643,36 +633,5 @@ public class AutoStartProxySet extends ProxySet implements Iterable<RemoteProxy>
         }
 
     }
-
-}
-
-class TrackedConcurrentHashMap<K, V> extends ConcurrentHashMap<K, V> {
-    private static final Logger LOGGER = LoggerFactory.getLogger(TrackedConcurrentHashMap.class.getName());
-
-    @Override
-    public V remove(Object key) {
-        StringBuilder stackTrace = new StringBuilder();
-        Arrays.asList(Thread.currentThread().getStackTrace())
-            .forEach( (val) -> stackTrace.append(val));
-
-        LOGGER.info(String.format("TRACK: Remove proxy %s\n%s",
-                key.toString(),
-                stackTrace.toString()));
-        
-        return super.remove(key);
-    }
-    @Override
-    public boolean remove(Object key, Object value) {
-        StringBuilder stackTrace = new StringBuilder();
-        Arrays.asList(Thread.currentThread().getStackTrace())
-            .forEach( (val) -> stackTrace.append(val));
-
-        LOGGER.info(String.format("TRACK: Remove proxy %s\n%s",
-                key.toString(),
-                stackTrace.toString()));
-        
-        return super.remove(key, value);
-    }
-  
     
 }

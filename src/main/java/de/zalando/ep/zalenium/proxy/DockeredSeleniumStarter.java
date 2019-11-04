@@ -365,16 +365,6 @@ public class DockeredSeleniumStarter {
         return containerClient.isReady(creationStatus);
     }
     
-    public PodStatus getPodStatus(ContainerCreationStatus creationStatus) {
-        if (containerClient instanceof KubernetesContainerClient) {
-            KubernetesContainerClient client =  (KubernetesContainerClient) containerClient;
-            return client.getPodStatus(creationStatus);
-        } else {
-            LOGGER.debug("Container is not KubernetesContainerClient");
-            return null;
-        }
-    }
-
     public boolean containerHasFinished(ContainerCreationStatus creationStatus) {
         return containerClient.isTerminated(creationStatus);
     }

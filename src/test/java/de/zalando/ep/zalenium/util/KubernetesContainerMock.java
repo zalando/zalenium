@@ -128,7 +128,7 @@ public class KubernetesContainerMock {
                 .build();
         dockerSeleniumPod.setSpec(dockerSeleniumPodSpec);
 
-        PodStatus dockerSeleniumPodStatus = new PodStatusBuilder().withPodIP("localhost").build();
+        PodStatus dockerSeleniumPodStatus = new PodStatusBuilder().withPodIP("localhost").withPhase("Running").build();
         dockerSeleniumPod.setStatus(dockerSeleniumPodStatus);
 
         server.expect()

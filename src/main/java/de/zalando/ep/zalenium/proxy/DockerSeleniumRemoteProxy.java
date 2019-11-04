@@ -67,7 +67,9 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     @VisibleForTesting
     public static final String ZALENIUM_MAX_TEST_SESSIONS = "ZALENIUM_MAX_TEST_SESSIONS";
     @VisibleForTesting
-    public static final long DEFAULT_MAX_TEST_IDLE_TIME_SECS = 300L;
+    public static final String ZALENIUM_MAX_TEST_IDLE_TIME_SECS = "ZALENIUM_MAX_TEST_IDLE_TIME_SECS";
+    @VisibleForTesting
+    public static final int DEFAULT_MAX_TEST_IDLE_TIME_SECS = 90;
     @VisibleForTesting
     public static final String ZALENIUM_VIDEO_RECORDING_ENABLED = "ZALENIUM_VIDEO_RECORDING_ENABLED";
     @VisibleForTesting
@@ -81,6 +83,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     private static final Environment defaultEnvironment = new Environment();
     private static final ExecutorService EXECUTOR_SERVICE = Executors.newFixedThreadPool(5);
     private static int maxTestSessions;
+    private static int defaultMaxTestIdleTimeSecs;
     private static boolean keepOnlyFailedTests;
     private static boolean videoRecordingEnabledGlobal;
     private static long proxyCleanUpTimeout;
@@ -125,6 +128,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         setVideoRecordingEnabledGlobal(videoEnabled);
 
         maxTestSessions = env.getIntEnvVariable(ZALENIUM_MAX_TEST_SESSIONS, DEFAULT_MAX_TEST_SESSIONS);
+        defaultMaxTestIdleTimeSecs = env.getIntEnvVariable(ZALENIUM_MAX_TEST_IDLE_TIME_SECS, DEFAULT_MAX_TEST_IDLE_TIME_SECS);
         keepOnlyFailedTests = env.getBooleanEnvVariable(ZALENIUM_KEEP_ONLY_FAILED_TESTS,
                 DEFAULT_KEEP_ONLY_FAILED_TESTS);
 
@@ -303,15 +307,15 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     private long getConfiguredIdleTimeout(Map<String, Object> requestedCapability) {
         long configuredIdleTimeout;
         try {
-            Object idleTimeout = requestedCapability.getOrDefault(ZaleniumCapabilityType.IDLE_TIMEOUT, DEFAULT_MAX_TEST_IDLE_TIME_SECS);
+            Object idleTimeout = requestedCapability.getOrDefault(ZaleniumCapabilityType.IDLE_TIMEOUT, defaultMaxTestIdleTimeSecs);
             configuredIdleTimeout = Long.valueOf(String.valueOf(idleTimeout));
         } catch (Exception e) {
-            configuredIdleTimeout = DEFAULT_MAX_TEST_IDLE_TIME_SECS;
+            configuredIdleTimeout = defaultMaxTestIdleTimeSecs;
             LOGGER.warn(e.toString());
             LOGGER.debug(e.toString(), e);
         }
         if (configuredIdleTimeout <= 0) {
-            configuredIdleTimeout = DEFAULT_MAX_TEST_IDLE_TIME_SECS;
+            configuredIdleTimeout = defaultMaxTestIdleTimeSecs;
         }
         return configuredIdleTimeout;
     }
@@ -613,7 +617,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         if (maxTestIdleTimeSecs > 0) {
             return maxTestIdleTimeSecs;
         }
-        return DEFAULT_MAX_TEST_IDLE_TIME_SECS;
+        return defaultMaxTestIdleTimeSecs;
     }
 
     protected String getContainerId() {
@@ -775,6 +779,8 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     }
 
     private void cleanupNode(boolean willShutdown) {
+        long startTime = System.currentTimeMillis();
+
         // This basically means that the node is cleaning up and will receive a new request soon
         // willShutdown == true => there won't be a next session
         this.setCleaningMarker(!willShutdown);
@@ -792,6 +798,10 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                 DashboardCollection.updateDashboard(testInformation);
             }
         } finally {
+            long endTime = System.currentTimeMillis();
+            LOGGER.debug("cleanupNode took {} seconds", 
+                    (endTime - startTime) / 1000);
+            
             this.unsetCleaningMarker();
         }
     }

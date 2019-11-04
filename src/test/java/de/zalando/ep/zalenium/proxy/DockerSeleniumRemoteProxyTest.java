@@ -234,6 +234,27 @@ public class DockerSeleniumRemoteProxyTest {
     }
 
     @Test
+    public void testIdleTimeoutUsesEnvValueWhenEnvIsPresent() {
+        try {
+            Environment environment = mock(Environment.class, withSettings().useConstructor());
+            when(environment.getIntEnvVariable(DockerSeleniumRemoteProxy.ZALENIUM_MAX_TEST_IDLE_TIME_SECS,
+                    DockerSeleniumRemoteProxy.DEFAULT_MAX_TEST_IDLE_TIME_SECS))
+                    .thenReturn(301);
+            when(environment.getIntEnvVariable(DockerSeleniumRemoteProxy.ZALENIUM_MAX_TEST_SESSIONS, 1))
+            .thenReturn(1);          
+            DockerSeleniumRemoteProxy.setEnv(environment);
+            DockerSeleniumRemoteProxy.readEnvVars();
+            
+            Map<String, Object> requestedCapability = getCapabilitySupportedByDockerSelenium();
+            TestSession newSession = proxy.getNewSession(requestedCapability);
+            Assert.assertNotNull(newSession);
+            Assert.assertEquals(proxy.getMaxTestIdleTimeSecs(), 301);
+        } finally {
+            DockerSeleniumRemoteProxy.restoreEnvironment();
+        }
+    }
+
+    @Test
     public void testIdleTimeoutUsesDefaultValueWhenCapabilityHasNegativeValue() {
         Map<String, Object> requestedCapability = getCapabilitySupportedByDockerSelenium();
         requestedCapability.put("idleTimeout", -20L);
