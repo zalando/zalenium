@@ -73,6 +73,10 @@ hub:
   # Annotations to be added to the service.
   ##
   serviceAnnotations: {}
+
+  # This enables using a custom scheduler for both hub and browser pods
+  #schedulerName: null
+
   # Below we expose metrics to Prometheus.
   #   prometheus.io/path: /metrics
   #   prometheus.io/scrape: "true"
