@@ -103,6 +103,7 @@ public class KubernetesContainerMock {
                 .withVolumes(videosVolume, generalVolume)
                 .withHostAliases(hostAlias)
                 .withNodeSelector(nodeSelector)
+                .withSchedulerName("custom-scheduler")
                 .build();
         zaleniumPod.setSpec(zaleniumPodSpec);
 

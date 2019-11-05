@@ -163,4 +163,12 @@ public class PodConfigurationTest {
         podConfiguration.setContainerSecurityContext(securityContext);
         assertThat(podConfiguration.getContainerSecurityContext(), is(securityContext));
     }
+
+    @Test
+    public void testSetSchedulerName() {
+        final String schedulerName = "custom-scheduler";
+        podConfiguration.setSchedulerName(schedulerName);
+        assertThat(podConfiguration.getSchedulerName(), is(schedulerName));
+    }
+
 }
