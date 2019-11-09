@@ -239,6 +239,8 @@ public class TestInformation {
     public JsonObject getMetadata() { return this.metadata;}
     public void setMetadata(JsonObject metadata) { this.metadata = metadata;}
 
+    public void setTestName(String name) { this.testName = name;}
+
     public boolean equals(Object obj) {
         if (obj == null) return false;
         if (obj == this) return true;

@@ -102,6 +102,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     private long cleanupStartedTime = 0;
     private AtomicBoolean timedOut = new AtomicBoolean(false);
     private long timeRegistered = System.currentTimeMillis();
+    private boolean stopRecordingByCookie = false;
 
     public DockerSeleniumRemoteProxy(RegistrationRequest request, GridRegistry registry) {
         super(request, registry);
@@ -349,6 +350,27 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                         processContainerAction(DockerSeleniumContainerAction.CLEAN_NOTIFICATION, getContainerId());
                         processContainerAction(DockerSeleniumContainerAction.SEND_NOTIFICATION, messageCommand,
                                 getContainerId());
+                    }
+                    if ("zaleniumVideo".equalsIgnoreCase(cookieName)) {
+                        boolean recordVideo = Boolean.parseBoolean(cookie.get("value").getAsString());
+                        if (recordVideo && !isVideoRecordingEnabled()) {
+                            setVideoRecordingEnabledSession(true);
+                            testInformation.setVideoRecorded(true);
+                            stopRecordingByCookie = false;
+                            videoRecording(DockerSeleniumContainerAction.START_RECORDING);
+                        } else if (!recordVideo && isVideoRecordingEnabled()){
+                            stopRecordingByCookie = true;
+                            videoRecording(DockerSeleniumContainerAction.STOP_RECORDING);
+                            setVideoRecordingEnabledSession(false);
+                            testInformation.setVideoRecorded(false);
+                        }
+                    }
+                    if ("zaleniumTestName".equalsIgnoreCase(cookieName)) {
+                        String newTestName = cookie.get("value").getAsString();
+                        if (!newTestName.isEmpty()) {
+                            testName = newTestName;
+                            testInformation.setTestName(testName);
+                        }
                     }
                     else if(CommonProxyUtilities.metadataCookieName.equalsIgnoreCase(cookieName)) {
                         JsonParser jsonParser = new JsonParser();
@@ -612,6 +634,9 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         if (keepVideoAndLogs()) {
             if (DockerSeleniumContainerAction.STOP_RECORDING == action) {
                 copyVideos(containerId);
+                if (stopRecordingByCookie) {
+                    DashboardCollection.updateDashboard(testInformation);
+                }
             }
             if (DockerSeleniumContainerAction.TRANSFER_LOGS == action) {
                 copyLogs(containerId);
@@ -640,6 +665,17 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                         testInformation.getFileName()));
                 if (!Files.exists(Paths.get(testInformation.getVideoFolderPath()))) {
                     Files.createDirectories(Paths.get(testInformation.getVideoFolderPath()));
+                }
+
+                //For multiple recording in one session, add '_{count}' to the test name
+                int count = 1;
+                while (Files.exists(videoFile)) {
+                    testName = testInformation.getTestName().substring(0, testInformation.getTestName().length() - 2) + "_" + count;
+                    testInformation.setTestName(testName);
+                    testInformation.setFileExtension(fileExtension);
+                    videoFile = Paths.get(String.format("%s/%s", testInformation.getVideoFolderPath(),
+                            testInformation.getFileName()));
+                    count++;
                 }
                 Files.copy(tarStream, videoFile);
                 CommonProxyUtilities.setFilePermissions(videoFile);
@@ -769,8 +805,8 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     }
 
     private boolean keepVideoAndLogs() {
-        return !keepOnlyFailedTests || TestInformation.TestStatus.FAILED.equals(testInformation.getTestStatus())
-                || TestInformation.TestStatus.TIMEOUT.equals(testInformation.getTestStatus());
+        return isVideoRecordingEnabled() && (!keepOnlyFailedTests || TestInformation.TestStatus.FAILED.equals(testInformation.getTestStatus())
+                || TestInformation.TestStatus.TIMEOUT.equals(testInformation.getTestStatus()));
     }
 
     public void shutdownNode(ShutdownType shutdownType) {
