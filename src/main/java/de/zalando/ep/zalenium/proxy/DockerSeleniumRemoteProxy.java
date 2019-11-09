@@ -104,6 +104,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     private long cleanupStartedTime = 0;
     private AtomicBoolean timedOut = new AtomicBoolean(false);
     private long timeRegistered = System.currentTimeMillis();
+    private boolean stopRecordingByCookie = false;
 
     public DockerSeleniumRemoteProxy(RegistrationRequest request, GridRegistry registry) {
         super(request, registry);
@@ -323,6 +324,27 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                         processContainerAction(DockerSeleniumContainerAction.CLEAN_NOTIFICATION, getContainerId());
                         processContainerAction(DockerSeleniumContainerAction.SEND_NOTIFICATION, messageCommand,
                                 getContainerId());
+                    }
+                    if ("zaleniumVideo".equalsIgnoreCase(cookieName)) {
+                        boolean recordVideo = Boolean.parseBoolean(cookie.get("value").getAsString());
+                        if (recordVideo && !isVideoRecordingEnabled()) {
+                            setVideoRecordingEnabledSession(true);
+                            testInformation.setVideoRecorded(true);
+                            stopRecordingByCookie = false;
+                            videoRecording(DockerSeleniumContainerAction.START_RECORDING);
+                        } else if (!recordVideo && isVideoRecordingEnabled()){
+                            stopRecordingByCookie = true;
+                            videoRecording(DockerSeleniumContainerAction.STOP_RECORDING);
+                            setVideoRecordingEnabledSession(false);
+                            testInformation.setVideoRecorded(false);
+                        }
+                    }
+                    if ("zaleniumTestName".equalsIgnoreCase(cookieName)) {
+                        String newTestName = cookie.get("value").getAsString();
+                        if (!newTestName.isEmpty()) {
+                            testName = newTestName;
+                            testInformation.setTestName(testName);
+                        }
                     }
                     else if(CommonProxyUtilities.metadataCookieName.equalsIgnoreCase(cookieName)) {
                         JsonParser jsonParser = new JsonParser();
@@ -632,6 +654,9 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         if (keepVideoAndLogs()) {
             if (DockerSeleniumContainerAction.STOP_RECORDING == action) {
                 copyVideos(containerId);
+                if (stopRecordingByCookie) {
+                    DashboardCollection.updateDashboard(testInformation);
+                }
             }
             if (DockerSeleniumContainerAction.TRANSFER_LOGS == action) {
                 copyLogs(containerId);
@@ -658,9 +683,18 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                 if (!Files.exists(videoFile.getParent())) {
                     Files.createDirectories(videoFile.getParent());
                 }
+
+                //For multiple recording in one session, add '_{count}' to the test name
+                if (Files.exists(videoFile)) {
+                    testInformation.setTestName(testName + "_" + testInformation.getFileCount());
+                    testInformation.buildVideoFileName();
+                    videoFile = Paths.get(String.format("%s/%s", testInformation.getVideoFolderPath(),
+                            testInformation.getFileName()));
+                }
                 Files.copy(entry.get(), videoFile);
                 CommonProxyUtilities.setFilePermissions(videoFile);
                 videoWasCopied = true;
+                testInformation.setFileCount(testInformation.getFileCount() + 1);
                 LOGGER.debug("Video file copied to: {}/{}", testInformation.getVideoFolderPath(), testInformation.getFileName());
             }
         } catch (IOException e) {
@@ -763,22 +797,25 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     private void cleanupNode(boolean willShutdown) {
         // This basically means that the node is cleaning up and will receive a new request soon
         // willShutdown == true => there won't be a next session
-        this.setCleaningMarker(!willShutdown);
+        if (!isCleaningUp()) {
+            this.setCleaningMarker(!willShutdown);
 
-        try {
-            if (testInformation != null) {
-                processContainerAction(DockerSeleniumContainerAction.SEND_NOTIFICATION,
+            try {
+                if (testInformation != null) {
+                    processContainerAction(DockerSeleniumContainerAction.SEND_NOTIFICATION,
                         testInformation.getTestStatus().getTestNotificationMessage(), getContainerId());
-            }
-            videoRecording(DockerSeleniumContainerAction.STOP_RECORDING);
-            processContainerAction(DockerSeleniumContainerAction.TRANSFER_LOGS, getContainerId());
-            processContainerAction(DockerSeleniumContainerAction.CLEANUP_CONTAINER, getContainerId());
+                }
+                videoRecording(DockerSeleniumContainerAction.STOP_RECORDING);
+                processContainerAction(DockerSeleniumContainerAction.TRANSFER_LOGS, getContainerId());
+                processContainerAction(DockerSeleniumContainerAction.CLEANUP_CONTAINER,
+                    getContainerId());
 
-            if (testInformation != null && keepVideoAndLogs()) {
-                DashboardCollection.updateDashboard(testInformation);
+                if (testInformation != null && keepVideoAndLogs()) {
+                    DashboardCollection.updateDashboard(testInformation);
+                }
+            } finally {
+                this.unsetCleaningMarker();
             }
-        } finally {
-            this.unsetCleaningMarker();
         }
     }
 

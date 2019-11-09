@@ -557,6 +557,76 @@ public class DockerSeleniumRemoteProxyTest {
       Assert.assertFalse(proxy.isVideoRecordingEnabled());
     }
 
+    @Test
+    public void videoRecordingStopAndStartViaCookie() {
+        Map<String, Object> requestedCapability = getCapabilitySupportedByDockerSelenium();
+        requestedCapability.put("recordVideo", true);
+
+        DockerSeleniumRemoteProxy spyProxy = spy(proxy);
+
+        // Start pulling thread
+        spyProxy.startPolling();
+
+        // Get a test session
+        TestSession newSession = spyProxy.getNewSession(requestedCapability);
+        Assert.assertNotNull(newSession);
+
+        // Set cookie. Start with turning video recording off
+        WebDriverRequest request = mock(WebDriverRequest.class);
+        HttpServletResponse response = mock(HttpServletResponse.class);
+        when(request.getMethod()).thenReturn("POST");
+        when(request.getRequestType()).thenReturn(RequestType.REGULAR);
+        when(request.getPathInfo()).thenReturn("/cookie");
+        when(request.getBody()).thenReturn("{\"cookie\": {\"name\": \"zaleniumVideo\", \"value\": false}}");
+        spyProxy.beforeCommand(newSession, request, response);
+
+        // Assert video recording is stopped
+        String containerId = spyProxy.getContainerId();
+        verify(spyProxy, times(1))
+                .videoRecording(DockerSeleniumRemoteProxy.DockerSeleniumContainerAction.STOP_RECORDING);
+        verify(spyProxy, times(1))
+                .processContainerAction(DockerSeleniumRemoteProxy.DockerSeleniumContainerAction.STOP_RECORDING, containerId);
+        verify(spyProxy, times(1))
+                .copyVideos(containerId);
+
+        // Turn the recording back on
+        when(request.getBody()).thenReturn("{\"cookie\": {\"name\": \"zaleniumVideo\", \"value\": true}}");
+        spyProxy.beforeCommand(newSession, request, response);
+
+        // Assert video recording is stopped
+        verify(spyProxy, times(1))
+                .videoRecording(DockerSeleniumRemoteProxy.DockerSeleniumContainerAction.START_RECORDING);
+        verify(spyProxy, times(1))
+                .processContainerAction(DockerSeleniumRemoteProxy.DockerSeleniumContainerAction.START_RECORDING, containerId);
+    }
+
+    @Test
+    public void setTestNameViaCookie() {
+        String testName = "Test";
+
+        Map<String, Object> requestedCapability = getCapabilitySupportedByDockerSelenium();
+
+        DockerSeleniumRemoteProxy spyProxy = spy(proxy);
+
+        // Start pulling thread
+        spyProxy.startPolling();
+
+        // Get a test session
+        TestSession newSession = spyProxy.getNewSession(requestedCapability);
+        Assert.assertNotNull(newSession);
+
+        // Set cookie. Start with turning video recording off
+        WebDriverRequest request = mock(WebDriverRequest.class);
+        HttpServletResponse response = mock(HttpServletResponse.class);
+        when(request.getMethod()).thenReturn("POST");
+        when(request.getRequestType()).thenReturn(RequestType.REGULAR);
+        when(request.getPathInfo()).thenReturn("/cookie");
+        when(request.getBody()).thenReturn("{\"cookie\": {\"name\": \"zaleniumTestName\", \"value\": \"" + testName + "\"}}");
+        spyProxy.beforeCommand(newSession, request, response);
+
+        Assert.assertEquals(spyProxy.getTestName(), testName);
+    }
+
     private Map<String, Object> getCapabilitySupportedByDockerSelenium() {
         Map<String, Object> requestedCapability = new HashMap<>();
         requestedCapability.put(CapabilityType.BROWSER_NAME, BrowserType.CHROME);
