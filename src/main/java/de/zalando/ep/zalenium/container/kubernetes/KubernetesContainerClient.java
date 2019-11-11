@@ -40,6 +40,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -60,6 +61,8 @@ public class KubernetesContainerClient implements ContainerClient {
     private static final String DEFAULT_ZALENIUM_CONTAINER_NAME = "zalenium";
     private static final String ZALENIUM_KUBERNETES_TOLERATIONS = "ZALENIUM_KUBERNETES_TOLERATIONS";
     private static final String ZALENIUM_KUBERNETES_NODE_SELECTOR = "ZALENIUM_KUBERNETES_NODE_SELECTOR";
+    private static final int DEFAULT_ZALENIUM_PODLIST_CACHE_SECONDS = 10;
+    private static final String ZALENIUM_PODLIST_CACHE_SECONDS = "ZALENIUM_PODLIST_CACHE_SECONDS";
 
     private KubernetesClient client;
 
@@ -86,6 +89,10 @@ public class KubernetesContainerClient implements ContainerClient {
 
     private final Function<PodConfiguration, DoneablePod> createDoneablePod;
 
+    private Map<String, Pod> cachedPodList = new ConcurrentHashMap<>(2000);
+    private long cachedPodListLastUpdated = 0;
+    private int cachePodListTime = DEFAULT_ZALENIUM_PODLIST_CACHE_SECONDS * 1000;
+
     public KubernetesContainerClient(Environment environment,
                                      Function<PodConfiguration, DoneablePod> createDoneablePod,
                                      KubernetesClient client) {
@@ -109,6 +116,8 @@ public class KubernetesContainerClient implements ContainerClient {
             createdByZaleniumMap = new HashMap<>();
             createdByZaleniumMap.put("createdBy", appName);
             zaleniumAppName = appName;
+
+            cachePodListTime = environment.getIntEnvVariable(ZALENIUM_PODLIST_CACHE_SECONDS, DEFAULT_ZALENIUM_PODLIST_CACHE_SECONDS) * 1000;
 
             discoverFolderMounts();
             discoverHostAliases();
@@ -377,6 +386,7 @@ public class KubernetesContainerClient implements ContainerClient {
         // Create the container
         Pod createdPod = doneablePod.done();
         String containerName = createdPod.getMetadata() == null ? containerIdPrefix : createdPod.getMetadata().getName();
+        cachedPodList.put(containerName, createdPod);
         return new ContainerCreationStatus(true, containerName, containerName, nodePort);
     }
 
@@ -391,7 +401,7 @@ public class KubernetesContainerClient implements ContainerClient {
 
     @Override
     public String getContainerIp(String containerName) {
-        Pod pod = client.pods().withName(containerName).get();
+        Pod pod = getCachedPodWithName(containerName);
         if (pod != null) {
             String podIP = pod.getStatus().getPodIP();
             logger.debug(String.format("Pod %s, IP -> %s", containerName, podIP));
@@ -403,7 +413,7 @@ public class KubernetesContainerClient implements ContainerClient {
     }
 
     public boolean isReady(ContainerCreationStatus container) {
-        Pod pod = client.pods().withName(container.getContainerName()).get();
+        Pod pod = getCachedPodWithName(container.getContainerName());
         if (pod == null) {
             return false;
         }
@@ -417,9 +427,13 @@ public class KubernetesContainerClient implements ContainerClient {
     }
 
     public String getContainerIdByIp(String PodIP) {
-        for(Pod pod : client.pods().list().getItems()) {
+        for(Pod pod : cachedPodList.values()) {
             if (PodIP != null && PodIP.equals(pod.getStatus().getPodIP())) {
+                String phase = pod.getStatus().getPhase();
+                if ("Running".equalsIgnoreCase(phase)
+                        || "Pending".equalsIgnoreCase(phase)) {
                 return pod.getMetadata().getName();
+                }
             }
         }
         logger.debug("Pod not found by Ip {}", PodIP);
@@ -427,7 +441,7 @@ public class KubernetesContainerClient implements ContainerClient {
     }   
 
     public boolean isTerminated(ContainerCreationStatus container) {
-        Pod pod = client.pods().withName(container.getContainerName()).get();
+        Pod pod = getCachedPodWithName(container.getContainerName());
         if (pod == null) {
             logger.info("Container {} has no pod - terminal.", container);
             return true;
@@ -495,6 +509,34 @@ public class KubernetesContainerClient implements ContainerClient {
         registration.setContainerId(containerId);
 
         return registration;
+    }
+
+    private Pod getCachedPodWithName(String name) {
+        long now = System.currentTimeMillis();
+        synchronized(this) {
+            if (now - cachedPodListLastUpdated > cachePodListTime) {
+                Map<String, Pod> newCachedPodList = new ConcurrentHashMap<>(2000);
+                for(Pod pod : client.pods().withLabels(createdByZaleniumMap).list().getItems()) {
+                    newCachedPodList.put(pod.getMetadata().getName(), pod);
+                }
+                cachedPodList = newCachedPodList;
+                cachedPodListLastUpdated = System.currentTimeMillis();
+                logger.info("cachedPodList updated in {} msg. Updated {} pods.",
+                        cachedPodListLastUpdated - now,
+                        cachedPodList.size());
+            }
+        }
+        Pod pod = cachedPodList.get(name);
+        if (pod == null) {
+            logger.warn("Pod {} was not in the cache", name);
+            pod = client.pods().withName(name).get();
+            cachedPodList.put(name, pod);
+        }
+        long time = System.currentTimeMillis() - now;
+        if (time > 10) {
+            logger.warn("getCachedPodWithName took more than 10 msg, {}", time);
+        }
+        return pod;
     }
 
     @SuppressWarnings("WeakerAccess")

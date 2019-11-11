@@ -15,7 +15,6 @@ import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import de.zalando.ep.zalenium.container.swarm.SwarmUtilities;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.lang3.StringUtils;
@@ -500,7 +499,9 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         String currentName = configureThreadName();
         String host = getRemoteHost().getHost();
         String containerIdByIp = this.containerClient.getContainerIdByIp(host);
-        if (containerIdByIp == null || ! containerIdByIp.equals(containerId)) {
+        if (containerIdByIp != null
+                && ! "null".contentEquals(containerId)
+                && ! containerIdByIp.equals(containerId)) {
             LOGGER.warn("{} has the containerId {} but {} was expected.",
                     host, containerIdByIp, containerId);
             timeout("proxy is corrupted.", ShutdownType.CORRUPTED);

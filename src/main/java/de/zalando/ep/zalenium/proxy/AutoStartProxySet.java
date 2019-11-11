@@ -37,13 +37,13 @@ import net.jcip.annotations.ThreadSafe;
 
 /**
  * Automatically starts remote proxies in response to demand for test sessions.
- * 
+ *
  * On startup, will start a configurable minimum number of proxies, and will
  * attempt to maintain that minimum.
- * 
+ *
  * Monitors the state of containers to automatically remove proxies from the set
  * as the containers are shutdown.
- * 
+ *
  * Generally, the lifecycle of a container is:
  * <ol>
  * <li>a new proxy is requested. The container is started and added to the
@@ -58,7 +58,7 @@ import net.jcip.annotations.ThreadSafe;
  * container and it will be removed from the set.</li>
  * <li>the container stops and is removed from the map.</li>
  * </ol>
- * 
+ *
  * In some cases, a stopping container's proxy may re-register with the grid so
  * care is taken to ensure that:
  * <ul>
@@ -72,11 +72,10 @@ import net.jcip.annotations.ThreadSafe;
 public class AutoStartProxySet extends ProxySet implements Iterable<RemoteProxy> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AutoStartProxySet.class.getName());
-    
+
     private static final Logger STATUS_LOGGER = LoggerFactory.getLogger(LOGGER.getName() + ".Status");
 
-    private static final ExecutorService EXECUTOR_SERVICE = Executors.newFixedThreadPool(5);
-
+    private static final ExecutorService EXECUTOR_SERVICE = Executors.newFixedThreadPool(4);
 
     private final Map<ContainerCreationStatus, ContainerStatus> startedContainers = new ConcurrentHashMap<>();
 
@@ -156,7 +155,7 @@ public class AutoStartProxySet extends ProxySet implements Iterable<RemoteProxy>
 
     /**
      * Creates a new session (if possible) on a proxy.
-     * 
+     *
      * If no session can be created, returns null and requests the creation of a new
      * proxy.
      */
@@ -257,21 +256,21 @@ public class AutoStartProxySet extends ProxySet implements Iterable<RemoteProxy>
             }
         }
         return super.remove(proxy);
-    }   
+    }
 
     /**
      * If possible, starts a new proxy that can satisfy the requested capabilities.
-     * 
+     *
      * If too many proxies are already running, then a new proxy will not be
      * started.
-     * 
+     *
      * If the request has been made previously, then a new proxy will not be
      * started.
-     * 
+     *
      * If a proxy that would otherwise be able to service the request is currently
      * cleaning up and will be available shortly, then a new proxy will not be
      * started.
-     * 
+     *
      * @param desiredCapabilities
      *            capabilities of the proxy to be started.
      */
@@ -288,14 +287,14 @@ public class AutoStartProxySet extends ProxySet implements Iterable<RemoteProxy>
             }
 
             EXECUTOR_SERVICE.execute(() -> this.startNewRequest(desiredCapabilities));
-                       
+
         } catch(Exception e) {
             LOGGER.error("Failed starting new Session.", e);
         }
     }
 
 
-    private synchronized void startNewRequest(Map<String, Object> desiredCapabilities) { 
+    private synchronized void startNewRequest(Map<String, Object> desiredCapabilities) {
         try {
             LOGGER.info("Process new capabilities request {}", desiredCapabilities);
 
@@ -329,33 +328,31 @@ public class AutoStartProxySet extends ProxySet implements Iterable<RemoteProxy>
 
         ContainerStatus containerStatus = null;
 
-        synchronized(this.registerLock) {
-            for (Entry<ContainerCreationStatus, ContainerStatus> container : this.startedContainers.entrySet()) {
-                if (Objects.equals(container.getKey().getContainerName(), containerId)
-                        || Objects.equals(container.getKey().getContainerId(), containerId)) {
-                    container.getValue().setProxy(Optional.of(proxy));
-                    containerStatus = container.getValue();
-                    containerStatus.setTimeStarted(Optional.of(clock.millis()));
-                    
-                    break;
-                }
+        for (Entry<ContainerCreationStatus, ContainerStatus> container : this.startedContainers.entrySet()) {
+            if (Objects.equals(container.getKey().getContainerName(), containerId)
+                    || Objects.equals(container.getKey().getContainerId(), containerId)) {
+                container.getValue().setProxy(Optional.of(proxy));
+                containerStatus = container.getValue();
+                containerStatus.setTimeStarted(Optional.of(clock.millis()));
+
+                break;
             }
-    
-            if (containerStatus == null) {
-                LOGGER.warn(
-                        "Registered (or re-registered) a container {} {} that is not tracked by the pool, marking down.",
-                        containerId, proxy);
-                proxy.markDown();
-                return false;
-            } else if (containerStatus.isShuttingDown()) {
-                LOGGER.warn("Registered (or re-registered) a container {} {} that is shutting down, marking down.",
-                        containerId, proxy);
-                proxy.markDown();
-                return false;
-            } else {
-                LOGGER.debug("Registered a container {} {}.", containerId, proxy);
-                return true;
-            }
+        }
+
+        if (containerStatus == null) {
+            LOGGER.warn(
+                    "Registered (or re-registered) a container {} {} that is not tracked by the pool, marking down.",
+                    containerId, proxy);
+            proxy.markDown();
+            return false;
+        } else if (containerStatus.isShuttingDown()) {
+            LOGGER.warn("Registered (or re-registered) a container {} {} that is shutting down, marking down.",
+                    containerId, proxy);
+            proxy.markDown();
+            return false;
+        } else {
+            LOGGER.debug("Registered a container {} {}.", containerId, proxy);
+            return true;
         }
     }
 
@@ -365,22 +362,22 @@ public class AutoStartProxySet extends ProxySet implements Iterable<RemoteProxy>
     private void checkContainers() {
         synchronized(registerLock) {
             LOGGER.debug("Checking {} containers. - {}", startedContainers.size(), super.size());
-    
+
             for (Entry<ContainerCreationStatus, ContainerStatus> container : this.startedContainers.entrySet()) {
                 ContainerCreationStatus creationStatus = container.getKey();
                 ContainerStatus containerStatus = container.getValue();
                 DockerSeleniumRemoteProxy p = containerStatus.getProxy().orElse(null);
-                
+
                 if (containerStatus.isShuttingDown()) {
                     continue;
                 }
-                
+
                 // Shutting down proxies that are done when there are more pods that the minimum defined:
                 // : cannot accept more tests or have an idle test
                 // (without counting the already terminating proxies).
-                if (p != null && this.startedContainers.size() > this.minContainers 
+                if (p != null && this.startedContainers.size() > this.minContainers
                         && super.contains(p)) {
-                    if (p.shutdownIfStale() || p.shutdownIfLimitReached() 
+                    if (p.shutdownIfStale() || p.shutdownIfLimitReached()
                             || p.shutdownIfIdle()) {
                         containerStatus.setShuttingDown(true);
                         LOGGER.debug("{} proxy is idle or stale and will be removed.", p.getContainerId());
@@ -388,7 +385,7 @@ public class AutoStartProxySet extends ProxySet implements Iterable<RemoteProxy>
                         continue;
                     }
                 }
-                
+
                 if (starter.containerHasFinished(creationStatus)) { //Doesn't exist Pod or Pod is in Terminated State
                  // Removing from the tracked set the ones that were already shutdown
                     String reason = String.format("Proxy %s is terminated. Removing from tracked set.",
@@ -430,7 +427,7 @@ public class AutoStartProxySet extends ProxySet implements Iterable<RemoteProxy>
                             if (timeWaitingToStart > this.timeToWaitToStart) {
                                 LOGGER.warn("Waited {} for {} to start, which is longer than {}.", timeWaitingToStart,
                                         containerStatus, this.timeToWaitToStart);
-    
+
                                 Iterable<RemoteProxy> proxies = () -> super.iterator();
                                 for(RemoteProxy proxy : proxies) {
                                     if (proxy instanceof DockerSeleniumRemoteProxy) {
@@ -444,7 +441,7 @@ public class AutoStartProxySet extends ProxySet implements Iterable<RemoteProxy>
                                         }
                                     }
                                 }
-                                
+
                                 container.getValue().getProxy().ifPresent(p2 -> p2.teardown());
                                 starter.stopContainer(creationStatus.getContainerId());
                                 this.startedContainers.remove(creationStatus);
@@ -453,7 +450,7 @@ public class AutoStartProxySet extends ProxySet implements Iterable<RemoteProxy>
                     }
                 }
             }
-    
+
             // Creating proxies when needed
             if (startedContainers.size() < this.minContainers) {
                 if (this.minContainers > this.maxContainers) {
@@ -570,7 +567,7 @@ public class AutoStartProxySet extends ProxySet implements Iterable<RemoteProxy>
         LocalDateTime date = Instant.ofEpochMilli(epochMillis).atZone(ZoneId.systemDefault()).toLocalDateTime();
         return formatter.format(date);
     }
-    
+
     public Map<ContainerCreationStatus, ContainerStatus> getStartedContainers() {
         return Collections.unmodifiableMap(startedContainers);
     }
@@ -633,5 +630,5 @@ public class AutoStartProxySet extends ProxySet implements Iterable<RemoteProxy>
         }
 
     }
-    
+
 }
