@@ -470,10 +470,10 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
 
     public boolean shutdownIfIdle() {
         String currentName = configureThreadName();
-        boolean condition = isTestIdleMoreThan(900) && !isCleaningUp() && !isBusy();
+        boolean condition = isTestIdleMoreThan(600) && !isCleaningUp() && !isBusy();
         if (condition) {
             String msg = String.format("Node %s has been idle for %s seconds. "
-                    + "Shutdown", this.getContainerId(), 900);
+                    + "Shutdown", this.getContainerId(), 600);
             LOGGER.debug(msg);
             timeout(msg, ShutdownType.IDLE);
         }

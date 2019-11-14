@@ -469,11 +469,13 @@ public class KubernetesContainerClient implements ContainerClient {
         String podIpAddress = remoteHost.getHost();
 
         // The only way to lookup a pod name by IP address is by looking at all pods in the namespace it seems.
-        PodList list = client.pods().withLabels(createdByZaleniumMap).list();
+        // We reduced the resiterCycle to 1-10 seconds and change it to use a cache
+        // to avoid overload kubernetes
+        refreshCachedPodList();
 
         String containerId = null;
         Pod currentPod = null;
-        for (Pod pod : list.getItems()) {
+        for (Pod pod : cachedPodList.values()) {
 
             if (podIpAddress.equals(pod.getStatus().getPodIP())) {
                 String podPhase = pod.getStatus().getPhase();
@@ -511,7 +513,7 @@ public class KubernetesContainerClient implements ContainerClient {
         return registration;
     }
 
-    private Pod getCachedPodWithName(String name) {
+    private void refreshCachedPodList() {
         long now = System.currentTimeMillis();
         synchronized(this) {
             if (now - cachedPodListLastUpdated > cachePodListTime) {
@@ -526,6 +528,11 @@ public class KubernetesContainerClient implements ContainerClient {
                         cachedPodList.size());
             }
         }
+    }
+
+    private Pod getCachedPodWithName(String name) {
+        long now = System.currentTimeMillis();
+        refreshCachedPodList();
         Pod pod = cachedPodList.get(name);
         if (pod == null) {
             logger.warn("Pod {} was not in the cache", name);

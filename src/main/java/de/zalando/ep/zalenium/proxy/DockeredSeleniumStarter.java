@@ -300,7 +300,7 @@ public class DockeredSeleniumStarter {
 
         String hostIpAddress = getHubIpAddress();
         String nodePolling = String.valueOf(RandomUtils.nextInt(90, 120) * 1000);
-        String nodeRegisterCycle = String.valueOf(RandomUtils.nextInt(60, 90) * 1000);
+        String nodeRegisterCycle = String.valueOf(RandomUtils.nextInt(1000, 10000));
         String seleniumNodeParams = getSeleniumNodeParameters();
         String seleniumNodeHost = getSeleniumNodeHost();
         String latestImage = getLatestDownloadedImage(getDockerSeleniumImageName());
