@@ -76,6 +76,18 @@ spec:
           value: {{ .Values.hub.memRequest | quote }}
         - name: ZALENIUM_KUBERNETES_MEMORY_LIMIT
           value: {{ .Values.hub.memLimit | quote }}
+        {{- if .Values.hub.seleniumNodeHost }}
+        - name: SELENIUM_NODE_HOST
+          value: {{ .Values.hub.seleniumNodeHost | quote }}
+        {{- end }}
+        {{- if .Values.hub.seleniumNodeSelector }}
+        - name: ZALENIUM_KUBERNETES_NODE_SELECTOR
+          value: {{ .Values.hub.seleniumNodeSelector | quote }}
+        {{- end }}
+        {{- if .Values.hub.seleniumTolerations }}
+        - name: ZALENIUM_KUBERNETES_TOLERATIONS
+          value: {{ .Values.hub.seleniumTolerations | quote }}
+        {{- end }}
         {{- if .Values.hub.basicAuth.enabled }}
         - name: GRID_USER
           valueFrom:
@@ -158,6 +170,10 @@ spec:
         - name: {{ $key | quote }}
           value: {{ $val | quote }}
         {{ end }}
+        {{- if .Values.hub.timeToWaitToStart }}
+        - name: TIME_TO_WAIT_TO_START
+          value: {{ .Values.hub.timeToWaitToStart | quote }}
+        {{- end }}
       args:
         - start
       resources:
