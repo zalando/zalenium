@@ -214,6 +214,7 @@ public class TestInformation {
 
         this.testNameNoExtension = this.testFileNameTemplate
                 .replace("{proxyName}", this.proxyName.toLowerCase())
+                .replace("{seleniumSessionId}", this.seleniumSessionId)
                 .replace("{testName}", getTestName())
                 .replace("{browser}", this.browser)
                 .replace("{platform}", this.platform)

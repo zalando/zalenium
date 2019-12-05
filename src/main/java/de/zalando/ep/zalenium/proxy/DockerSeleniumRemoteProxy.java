@@ -252,42 +252,13 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         }
 
         LOGGER.debug("Creating session for {}", requestedCapability);
-        String browserName = requestedCapability.get(CapabilityType.BROWSER_NAME).toString();
-        testName = getCapability(requestedCapability, ZaleniumCapabilityType.TEST_NAME, "");
-        String seleniumSessionId = newSession.getExternalKey() != null ?
-                newSession.getExternalKey().getKey() :
-                newSession.getInternalKey();
-        if (testName.isEmpty()) {
-            testName = seleniumSessionId;
-        }
-        testBuild = getCapability(requestedCapability, ZaleniumCapabilityType.BUILD_NAME, "");
-        if (requestedCapability.containsKey(ZaleniumCapabilityType.RECORD_VIDEO)) {
-            boolean videoRecording = Boolean.parseBoolean(getCapability(requestedCapability, ZaleniumCapabilityType.RECORD_VIDEO, "true"));
-            setVideoRecordingEnabledSession(videoRecording);
-        }
-        String testFileNameTemplate = getCapability(requestedCapability, ZaleniumCapabilityType.TEST_FILE_NAME_TEMPLATE, "");
-        String screenResolution = getCapability(newSession.getSlot().getCapabilities(), ZaleniumCapabilityType.SCREEN_RESOLUTION, "N/A");
-        String browserVersion = getCapability(newSession.getSlot().getCapabilities(), CapabilityType.VERSION, "");
-        String timeZone = getCapability(newSession.getSlot().getCapabilities(), ZaleniumCapabilityType.TIME_ZONE, "N/A");
-        testInformation = new TestInformation.TestInformationBuilder()
-                .withTestName(testName)
-                .withSeleniumSessionId(seleniumSessionId)
-                .withProxyName("Zalenium")
-                .withBrowser(browserName)
-                .withBrowserVersion(browserVersion)
-                .withPlatform(Platform.LINUX.name())
-                .withScreenDimension(screenResolution)
-                .withTimeZone(timeZone)
-                .withTestFileNameTemplate(testFileNameTemplate)
-                .withBuild(testBuild)
-                .withTestStatus(TestInformation.TestStatus.COMPLETED)
-                .build();
-        testInformation.setVideoRecorded(isVideoRecordingEnabled());
+
         maxTestIdleTimeSecs = getConfiguredIdleTimeout(requestedCapability);
 
         lastCommandTime = System.currentTimeMillis();
 
         setThreadName(currentName);
+        ensureTestInformation(newSession);
         return newSession;
     }
 
@@ -318,6 +289,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     @Override
     public void beforeCommand(TestSession session, HttpServletRequest request, HttpServletResponse response) {
         String currentName = configureThreadName();
+        ensureTestInformation(session);
         super.beforeCommand(session, request, response);
         LOGGER.debug("lastCommand: {} - executing...", request.getMethod(), request.getPathInfo());
         if (request instanceof WebDriverRequest && "POST".equalsIgnoreCase(request.getMethod())) {
@@ -384,6 +356,52 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         }
         this.lastCommandTime = System.currentTimeMillis();
         setThreadName(currentName);
+    }
+
+    private void ensureTestInformation(TestSession session) {
+        String seleniumSessionId = session.getExternalKey() != null ?
+                session.getExternalKey().getKey() :
+                session.getInternalKey();
+
+        if(testInformation != null && testInformation.getSeleniumSessionId().equals(seleniumSessionId)) {
+            return;
+        }
+        Map<String, Object> requestedCapability = session.getRequestedCapabilities();
+
+        LOGGER.info("External ssid {} internal {} ", session.getExternalKey(), session.getInternalKey());
+
+
+        String browserName = requestedCapability.get(CapabilityType.BROWSER_NAME).toString();
+        testName = getCapability(requestedCapability, ZaleniumCapabilityType.TEST_NAME, "");
+
+        if (testName.isEmpty()) {
+            testName = seleniumSessionId;
+        }
+        testBuild = getCapability(requestedCapability, ZaleniumCapabilityType.BUILD_NAME, "");
+        if (requestedCapability.containsKey(ZaleniumCapabilityType.RECORD_VIDEO)) {
+            boolean videoRecording = Boolean.parseBoolean(getCapability(requestedCapability, ZaleniumCapabilityType.RECORD_VIDEO, "true"));
+            setVideoRecordingEnabledSession(videoRecording);
+        }
+        String testFileNameTemplate = getCapability(requestedCapability, ZaleniumCapabilityType.TEST_FILE_NAME_TEMPLATE, "");
+        String screenResolution = getCapability(session.getSlot().getCapabilities(), ZaleniumCapabilityType.SCREEN_RESOLUTION, "N/A");
+        String browserVersion = getCapability(session.getSlot().getCapabilities(), CapabilityType.VERSION, "");
+        String timeZone = getCapability(session.getSlot().getCapabilities(), ZaleniumCapabilityType.TIME_ZONE, "N/A");
+        testInformation = new TestInformation.TestInformationBuilder()
+                .withTestName(testName)
+                .withSeleniumSessionId(seleniumSessionId)
+                .withProxyName("Zalenium")
+                .withBrowser(browserName)
+                .withBrowserVersion(browserVersion)
+                .withPlatform(Platform.LINUX.name())
+                .withScreenDimension(screenResolution)
+                .withTimeZone(timeZone)
+                .withTestFileNameTemplate(testFileNameTemplate)
+                .withBuild(testBuild)
+                .withTestStatus(TestInformation.TestStatus.COMPLETED)
+                .build();
+        testInformation.setVideoRecorded(isVideoRecordingEnabled());
+
+        super.beforeSession(session);
     }
 
     @Override
