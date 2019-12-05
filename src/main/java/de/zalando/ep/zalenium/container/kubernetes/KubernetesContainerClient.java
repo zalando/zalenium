@@ -197,10 +197,9 @@ public class KubernetesContainerClient implements ContainerClient {
     private void discoverFolderMounts() {
         List<VolumeMount> volumeMounts = zaleniumPod.getSpec().getContainers().get(0).getVolumeMounts();
 
-        List<VolumeMount> validMounts = new ArrayList<>();
-        volumeMounts.stream()
-                .filter(volumeMount -> !Arrays.asList(PROTECTED_NODE_MOUNT_POINTS).contains(volumeMount.getMountPath()))
-                .forEach(validMounts::add);
+        List<VolumeMount> validMounts = volumeMounts.stream()
+                .filter(volumeMount -> !Arrays.asList(PROTECTED_NODE_MOUNT_POINTS).stream().anyMatch(path -> volumeMount.getMountPath().startsWith(path)))
+                .collect(Collectors.toList());
 
         // Look through the volume mounts to see if the shared folder is mounted
         if (!validMounts.isEmpty()) {

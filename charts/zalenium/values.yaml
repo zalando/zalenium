@@ -167,6 +167,11 @@ persistence:
     accessMode: ReadWriteOnce
     size: 10Gi
 
+    ## Set this if you want only to use a volume to persist videos for an specific
+    ## build name. Note they will not show in the dashboard after restarts, but the
+    ## videos and logs will remain there.
+    folder: ""
+
 ingress:
   enabled: false
   tls: false
