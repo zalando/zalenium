@@ -1,7 +1,6 @@
 package de.zalando.ep.zalenium.container;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -20,6 +19,9 @@ import com.spotify.docker.client.DefaultDockerClient;
 import com.spotify.docker.client.DockerClient;
 import com.spotify.docker.client.LogStream;
 import com.spotify.docker.client.messages.PortBinding;
+import de.zalando.ep.zalenium.streams.InputStreamGroupIterator;
+import de.zalando.ep.zalenium.streams.TarInputStreamGroupWrapper;
+import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.slf4j.Logger;
@@ -214,9 +216,9 @@ public class DockerContainerClient implements ContainerClient {
         }
     }
 
-    public InputStream copyFiles(String containerId, String folderName) {
+    public InputStreamGroupIterator copyFiles(String containerId, String folderName) {
         try {
-            return dockerClient.archiveContainer(containerId, folderName);
+            return new TarInputStreamGroupWrapper(new TarArchiveInputStream(dockerClient.archiveContainer(containerId, folderName)));
         } catch (DockerException | InterruptedException e) {
             logger.warn(nodeId + " Something happened while copying the folder " + folderName + ", " +
                     "most of the time it is an issue while closing the input/output stream, which is usually OK.", e);

@@ -15,6 +15,8 @@ import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import de.zalando.ep.zalenium.streams.InputStreamDescriptor;
+import de.zalando.ep.zalenium.streams.InputStreamGroupIterator;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.lang3.StringUtils;
@@ -645,21 +647,18 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
         }
         String currentName = configureThreadName();
         boolean videoWasCopied = false;
-        TarArchiveInputStream tarStream = new TarArchiveInputStream(containerClient.copyFiles(containerId, "/videos/"));
+        InputStreamGroupIterator tarStream = containerClient.copyFiles(containerId, "/videos/");
         try {
-            TarArchiveEntry entry;
-            while ((entry = tarStream.getNextTarEntry()) != null) {
-                if (entry.isDirectory()) {
-                    continue;
-                }
-                String fileExtension = entry.getName().substring(entry.getName().lastIndexOf('.'));
+            InputStreamDescriptor entry;
+            while ((entry = tarStream.next()) != null) {
+                String fileExtension = entry.name().substring(entry.name().lastIndexOf('.'));
                 testInformation.setFileExtension(fileExtension);
                 Path videoFile = Paths.get(String.format("%s/%s", testInformation.getVideoFolderPath(),
                         testInformation.getFileName()));
                 if (!Files.exists(videoFile.getParent())) {
                     Files.createDirectories(videoFile.getParent());
                 }
-                Files.copy(tarStream, videoFile);
+                Files.copy(entry.get(), videoFile);
                 CommonProxyUtilities.setFilePermissions(videoFile);
                 videoWasCopied = true;
                 LOGGER.debug("Video file copied to: {}/{}", testInformation.getVideoFolderPath(), testInformation.getFileName());
@@ -693,21 +692,18 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
             return;
         }
         String currentName = configureThreadName();
-        TarArchiveInputStream tarStream = new TarArchiveInputStream(containerClient.copyFiles(containerId, "/var/log/cont/"));
+        InputStreamGroupIterator tarStream = containerClient.copyFiles(containerId, "/var/log/cont/");
         try {
-            TarArchiveEntry entry;
-            while ((entry = tarStream.getNextTarEntry()) != null) {
-                if (entry.isDirectory()) {
-                    continue;
-                }
+            InputStreamDescriptor entry;
+            while ((entry = tarStream.next()) != null) {
                 if (!Files.exists(Paths.get(testInformation.getLogsFolderPath()))) {
                     Path directories = Files.createDirectories(Paths.get(testInformation.getLogsFolderPath()));
                     CommonProxyUtilities.setFilePermissions(directories);
                     CommonProxyUtilities.setFilePermissions(directories.getParent());
                 }
-                String fileName = entry.getName().replace("cont/", "");
+                String fileName = entry.name().replace("cont/", "");
                 Path logFile = Paths.get(String.format("%s/%s", testInformation.getLogsFolderPath(), fileName));
-                Files.copy(tarStream, logFile);
+                Files.copy(entry.get(), logFile);
                 CommonProxyUtilities.setFilePermissions(logFile);
             }
             LOGGER.debug("Logs copied to: {}", testInformation.getLogsFolderPath());
