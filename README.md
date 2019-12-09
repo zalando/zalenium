@@ -12,7 +12,12 @@
 
 
 
+# :exclamation: Current project status: Looking for active maintainers
+### Zalenium is currently on maintenance mode, no new features are being implemented and bugs are fixed via PRs sent by community. The current maintainers only have time to review PRs and do releases. 
+### Additionally, due to the changes being implemented on the upstream Selenium Grid 4.x, it is unlikely that Zalenium can be upgraded with the current resources. If this is to be achieved, more active maintainers are needed.
+### If you are interested in supporting the project, please create a GitHub issue expressing your interest.
 
+--- 
 
 This is a Selenium Grid extension to scale your local grid dynamically with docker containers. It uses
 [docker-selenium](https://github.com/elgalu/docker-selenium) to run your tests in Firefox and Chrome locally, if you
