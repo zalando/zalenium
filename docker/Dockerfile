@@ -2,9 +2,9 @@
 # Find latest images at https://hub.docker.com/r/library/ubuntu/
 # Layer size: big: ~130 MB
 
-FROM ubuntu:xenial-20181113
+FROM ubuntu:xenial-20191024
 ENV UBUNTU_FLAVOR="xenial" \
-    UBUNTU_DATE="20181113"
+    UBUNTU_DATE="20191024"
 ARG UBUNTU_MIRROR=http://archive.ubuntu.com/ubuntu
 
 #== Ubuntu flavors - common
