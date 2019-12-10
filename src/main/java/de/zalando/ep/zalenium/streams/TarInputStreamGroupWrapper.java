@@ -9,24 +9,21 @@ public class TarInputStreamGroupWrapper implements InputStreamGroupIterator{
 
     private final TarArchiveInputStream stream;
     private TarArchiveEntry currentTarEntry;
-    private boolean started = false;
 
     public TarInputStreamGroupWrapper(TarArchiveInputStream stream) {
         if(stream == null) {
             throw new RuntimeException("Stream cannot be null");
         }
-
         this.stream = stream;
     }
 
     @Override
     public InputStreamDescriptor next() throws IOException {
-        while(!started || (currentTarEntry != null && currentTarEntry.isDirectory())) {
-            started = true;
+        do {
             currentTarEntry = stream.getNextTarEntry();
-        }
+        } while(currentTarEntry != null && currentTarEntry.isDirectory());
+
         return currentTarEntry == null ? null : new DefaultInputStreamDescriptor(stream, currentTarEntry.getName());
     }
-
 
 }
