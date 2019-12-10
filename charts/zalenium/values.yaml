@@ -75,6 +75,12 @@ hub:
   serviceAnnotations: {}
 
   # This enables using a custom scheduler for both hub and browser pods
+  # This could be useful to have a cost effective pod distribution with
+  # warmmed up browsers in k8s nodes by using a custom scheduler
+  # (i.e. by deploying a new one in your cluster) configured with
+  # MostRequestedPriority (https://kubernetes.io/docs/concepts/scheduling/)
+  # so that nodes tend to take all resources in nodes instead of flooding
+  # the nodes, easing downscaling.
   #schedulerName: null
 
   # Below we expose metrics to Prometheus.
