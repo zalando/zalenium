@@ -1,5 +1,7 @@
 package de.zalando.ep.zalenium.it;
 
+import org.openqa.selenium.By;
+import org.openqa.selenium.Cookie;
 import org.openqa.selenium.Platform;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.net.NetworkUtils;
@@ -17,7 +19,9 @@ import org.testng.util.Strings;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.concurrent.TimeUnit;
 
+import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.CoreMatchers.containsString;
 
@@ -185,6 +189,39 @@ public class ParallelIT  {
 
         // Assert that the title is the expected one
         assertThat(getWebDriver().getTitle(), containsString("Internet"));
+    }
+
+    @Test(dataProvider = "browsersAndPlatformsForLivePreview")
+    public void splitVideoRecordingOfOneSessionIntoMultipleFiles(DesiredCapabilities desiredCapabilities) {
+
+        NetworkUtils networkUtils = new NetworkUtils();
+        String hostIpAddress = networkUtils.getIp4NonLoopbackAddressOfThisMachine().getHostAddress();
+
+        // Reset dashboard
+        getWebDriver().get(String.format("http://%s:%s/dashboard", hostIpAddress, ZALENIUM_PORT));
+        getWebDriver().manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
+        getWebDriver().findElement(By.id("resetButton")).click();
+        getWebDriver().findElement(By.id("resetModalConfirm")).click();
+
+        // Go to first page
+        getWebDriver().get("https://the-internet.herokuapp.com/");
+
+        // Stop the video
+        Cookie stopCookie = new Cookie("zaleniumVideo", "false");
+        getWebDriver().manage().addCookie(stopCookie);
+
+        // Restart the video
+        Cookie startCookie = new Cookie("zaleniumVideo", "true");
+        getWebDriver().manage().addCookie(startCookie);
+
+        // Stop the video again
+        Cookie stopCookie1 = new Cookie("zaleniumVideo", "false");
+        getWebDriver().manage().addCookie(stopCookie1);
+
+        // Go to the dashboard
+        getWebDriver().get(String.format("http://%s:%s/dashboard", hostIpAddress, ZALENIUM_PORT));
+
+        assertThat(getWebDriver().findElements(By.cssSelector(("a.list-group-item-action"))).size(), is(2));
     }
 
 }
