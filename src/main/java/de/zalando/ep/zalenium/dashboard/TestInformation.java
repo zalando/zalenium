@@ -214,12 +214,13 @@ public class TestInformation {
 
         this.testNameNoExtension = this.testFileNameTemplate
                 .replace("{proxyName}", this.proxyName.toLowerCase())
+                .replace("{seleniumSessionId}", this.seleniumSessionId)
                 .replace("{testName}", getTestName())
                 .replace("{browser}", this.browser)
                 .replace("{platform}", this.platform)
                 .replace("{timestamp}", commonProxyUtilities.getDateAndTimeFormatted(this.timestamp))
                 .replace("{testStatus}", getTestStatus().toString())
-                .replaceAll("[^a-zA-Z0-9]", "_");
+                .replaceAll("[^a-zA-Z0-9/\\-]", "_");
 
         this.fileName = FILE_NAME_TEMPLATE.replace("{fileName}", testNameNoExtension)
                 .replace("{fileExtension}", fileExtension);

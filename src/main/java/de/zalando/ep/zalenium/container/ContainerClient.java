@@ -1,6 +1,7 @@
 package de.zalando.ep.zalenium.container;
 
-import java.io.InputStream;
+import de.zalando.ep.zalenium.streams.InputStreamGroupIterator;
+
 import java.net.URL;
 import java.util.Map;
 
@@ -10,7 +11,7 @@ public interface ContainerClient {
 
     ContainerClientRegistration registerNode(String zaleniumContainerName, URL remoteHost);
 
-    InputStream copyFiles(String containerId, String folderName);
+    InputStreamGroupIterator copyFiles(String containerId, String folderName);
 
     void stopContainer(String containerId);
 
