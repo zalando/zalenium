@@ -41,10 +41,7 @@ After starting Minikube locally, follow these steps:
 {% highlight shell %}
     cd zalenium
     kubectl create namespace zalenium
-    helm init --client-only
-    helm template --name zalenium \
-        --set hub.serviceType=NodePort \
-        charts/zalenium | kubectl -n zalenium apply -f -
+    helm create zalenium --namespace zalenium charts/zalenium
 {% endhighlight %}
 
 * Go to the Minikube dashboard and check the deployment, also open the Grid Console
