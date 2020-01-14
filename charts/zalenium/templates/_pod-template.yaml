@@ -11,7 +11,7 @@ spec:
 
   securityContext:
     {{- toYaml .Values.hub.podSecurityContext | nindent 4 }}
-  {{- if .Values.hub.pullSecrets }}
+  {{- if .Values.hub.imagePullSecret }}
   imagePullSecrets:
     - name: {{ .Values.hub.imagePullSecret }}
   {{- end}}
