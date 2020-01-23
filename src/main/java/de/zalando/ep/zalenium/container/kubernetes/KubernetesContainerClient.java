@@ -220,7 +220,7 @@ public class KubernetesContainerClient implements ContainerClient {
                         .filter(volume -> validMount.getName().equalsIgnoreCase(volume.getName()))
                         .findFirst()
                         .ifPresent(volume -> {
-                            if(nodeSharedArtifactsMount == null) {
+                            if(nodeSharedArtifactsMount == null && volume.getEmptyDir() == null && volume.getName().endsWith("-data")) {
                                 nodeSharedArtifactsMount = validMount;
                             }
                             mountedSharedFoldersMap.put(validMount, volume);
