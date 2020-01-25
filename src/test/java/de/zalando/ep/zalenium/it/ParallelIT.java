@@ -194,7 +194,7 @@ public class ParallelIT  {
     }
 
     @Test(dataProvider = "browsersAndPlatformsForLivePreview")
-    public void splitVideoRecordingOfOneSessionIntoMultipleFiles(DesiredCapabilities desiredCapabilities) {
+    public void splitVideoRecordingOfOneSessionIntoMultipleFiles(DesiredCapabilities desiredCapabilities) throws InterruptedException {
 
         NetworkUtils networkUtils = new NetworkUtils();
         String hostIpAddress = networkUtils.getIp4NonLoopbackAddressOfThisMachine().getHostAddress();
@@ -222,6 +222,9 @@ public class ParallelIT  {
 
         // Go to the dashboard
         getWebDriver().get(String.format("http://%s:%s/dashboard", hostIpAddress, ZALENIUM_PORT));
+        System.out.println(getWebDriver().getCurrentUrl());
+        Thread.sleep(1000 * 10);
+        System.out.println(getWebDriver().getPageSource());
 
         //Wait for elements
         new WebDriverWait(getWebDriver(), 60).until(
