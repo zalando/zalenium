@@ -8,6 +8,8 @@ import org.openqa.selenium.net.NetworkUtils;
 import org.openqa.selenium.remote.BrowserType;
 import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.remote.RemoteWebDriver;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
@@ -35,7 +37,7 @@ public class ParallelIT  {
     private static final String testingBotIntegration = "testingBot";
     private static final String crossBrowserTestingIntegration = "crossBrowserTesting";
     private static final String lambdaTestIntegration = "lambdaTest";
-    
+
     // Zalenium setup variables
     private static final String ZALENIUM_HOST = System.getenv("ZALENIUM_GRID_HOST") != null ?
             System.getenv("ZALENIUM_GRID_HOST") : "localhost";
@@ -220,6 +222,10 @@ public class ParallelIT  {
 
         // Go to the dashboard
         getWebDriver().get(String.format("http://%s:%s/dashboard", hostIpAddress, ZALENIUM_PORT));
+
+        //Wait for elements
+        new WebDriverWait(getWebDriver(), 60).until(
+            ExpectedConditions.numberOfElementsToBe(By.cssSelector("a.list-group-item-action"), 2));
 
         assertThat(getWebDriver().findElements(By.cssSelector(("a.list-group-item-action"))).size(), is(2));
     }
