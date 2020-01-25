@@ -201,7 +201,7 @@ public class ParallelIT  {
 
         // Reset dashboard
         getWebDriver().get(String.format("http://%s:%s/dashboard", hostIpAddress, ZALENIUM_PORT));
-        getWebDriver().manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
+//        getWebDriver().manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
         getWebDriver().findElement(By.id("resetButton")).click();
         getWebDriver().findElement(By.id("resetModalConfirm")).click();
 
