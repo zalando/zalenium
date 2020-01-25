@@ -10,6 +10,7 @@ import de.zalando.ep.zalenium.container.ContainerClient;
 import de.zalando.ep.zalenium.container.ContainerClientRegistration;
 import de.zalando.ep.zalenium.container.ContainerCreationStatus;
 import de.zalando.ep.zalenium.proxy.DockeredSeleniumStarter;
+import de.zalando.ep.zalenium.streams.InputStreamGroupIterator;
 import de.zalando.ep.zalenium.util.Environment;
 import de.zalando.ep.zalenium.util.GoogleAnalyticsApi;
 import de.zalando.ep.zalenium.util.ZaleniumConfiguration;
@@ -20,7 +21,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
@@ -124,7 +124,7 @@ public class SwarmContainerClient implements ContainerClient {
         }
     }
 
-    public InputStream copyFiles(String containerId, String folderName) {
+    public InputStreamGroupIterator copyFiles(String containerId, String folderName) {
         // TODO: Implement behaviour
         return null;
     }

@@ -3,6 +3,9 @@ package de.zalando.ep.zalenium.container.kubernetes;
 import de.zalando.ep.zalenium.container.ContainerClient;
 import de.zalando.ep.zalenium.container.ContainerClientRegistration;
 import de.zalando.ep.zalenium.container.ContainerCreationStatus;
+import de.zalando.ep.zalenium.streams.InputStreamGroupIterator;
+import de.zalando.ep.zalenium.streams.MapInputStreamAdapter;
+import de.zalando.ep.zalenium.streams.TarInputStreamGroupWrapper;
 import de.zalando.ep.zalenium.util.Environment;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ContainerStateTerminated;
@@ -12,6 +15,7 @@ import io.fabric8.kubernetes.api.model.EnvVar;
 import io.fabric8.kubernetes.api.model.HostAlias;
 import io.fabric8.kubernetes.api.model.LocalObjectReference;
 import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.api.model.PodFluent;
 import io.fabric8.kubernetes.api.model.PodList;
 import io.fabric8.kubernetes.api.model.PodSecurityContext;
 import io.fabric8.kubernetes.api.model.Quantity;
@@ -23,21 +27,20 @@ import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.ExecListener;
 import io.fabric8.kubernetes.client.dsl.ExecWatch;
 import okhttp3.Response;
+import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayOutputStream;
-import java.io.InputStream;
+import java.io.IOException;
+import java.io.File;
 import java.net.InetAddress;
 import java.net.URL;
 import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -69,10 +72,12 @@ public class KubernetesContainerClient implements ContainerClient {
     private Map<String, String> appLabelMap;
 
     private Map<VolumeMount, Volume> mountedSharedFoldersMap = new HashMap<>();
+    private VolumeMount nodeSharedArtifactsMount;
     private List<HostAlias> hostAliases = new ArrayList<>();
     private Map<String, String> nodeSelector = new HashMap<>();
     private List<Toleration> tolerations = new ArrayList<>();
     private String imagePullPolicy;
+    private String schedulerName;
     private List<LocalObjectReference> imagePullSecrets;
     private PodSecurityContext configuredPodSecurityContext;
     private SecurityContext configuredContainerSecurityContext;
@@ -114,6 +119,7 @@ public class KubernetesContainerClient implements ContainerClient {
             discoverTolerations();
             discoverImagePullSecrets();
             discoverPodSecurityContext();
+            discoverSchedulerName();
             discoverContainerSecurityContext();
             buildResourceMaps();
 
@@ -187,6 +193,10 @@ public class KubernetesContainerClient implements ContainerClient {
         }
     }
 
+    private void discoverSchedulerName() {
+        schedulerName = zaleniumPod.getSpec().getSchedulerName();
+    }
+
     private void discoverImagePullSecrets() {
         List<LocalObjectReference> configuredPullSecrets = zaleniumPod.getSpec().getImagePullSecrets();
         if (!configuredPullSecrets.isEmpty()) {
@@ -209,7 +219,12 @@ public class KubernetesContainerClient implements ContainerClient {
                 volumes.stream()
                         .filter(volume -> validMount.getName().equalsIgnoreCase(volume.getName()))
                         .findFirst()
-                        .ifPresent(volume -> mountedSharedFoldersMap.put(validMount, volume));
+                        .ifPresent(volume -> {
+                            if(nodeSharedArtifactsMount == null) {
+                                nodeSharedArtifactsMount = validMount;
+                            }
+                            mountedSharedFoldersMap.put(validMount, volume);
+                        });
             }
         }
     }
@@ -225,7 +240,7 @@ public class KubernetesContainerClient implements ContainerClient {
 
         return hostname;
     }
-    
+
     private void discoverPodSecurityContext() {
     	configuredPodSecurityContext = zaleniumPod.getSpec().getSecurityContext();
     }
@@ -251,10 +266,44 @@ public class KubernetesContainerClient implements ContainerClient {
      * Unfortunately due to the fact that any error handling happens on another thread, if the tar command fails the
      * InputStream will simply be empty and it will close. It won't propagate an Exception to the reader of the
      * InputStream.
+     * @return
      */
     @Override
-    public InputStream copyFiles(String containerId, String folderName) {
+    public InputStreamGroupIterator copyFiles(String containerId, String folderName) {
+        if(nodeSharedArtifactsMount != null) {
+            return copyFilesFromSharedVolume(containerId, folderName);
+        } else {
+            return copyFilesThroughCommands(containerId, folderName);
+        }
+    }
 
+    private InputStreamGroupIterator copyFilesFromSharedVolume(String containerId, String folderName) {
+        Map<String, File> streams = new HashMap<>();
+
+        Optional<String> oWorkDir = client.pods().withName(containerId).get()
+                .getSpec().getContainers().get(0).getEnv()
+                .stream()
+                .filter(env -> env.getName().equals("SHARED_DIR"))
+                .map(env -> env.getValue())
+                .findFirst();
+
+        if(!oWorkDir.isPresent()) {
+            throw new RuntimeException("SHARED_DIR not present in pod" + containerId);
+        }
+        String workDir = oWorkDir.get();
+
+        File dir = new File(workDir + folderName);
+        File[] directoryListing = dir.listFiles();
+        for(File f : directoryListing) {
+            if(f.getName().endsWith(".log") || f.getName().endsWith(".mp4")) {
+                streams.put(f.getName(), f);
+            }
+        }
+
+        return new MapInputStreamAdapter(streams);
+    }
+
+    private InputStreamGroupIterator copyFilesThroughCommands(String containerId, String folderName) {
         ByteArrayOutputStream stderr = new ByteArrayOutputStream();
         String[] command = new String[] { "tar", "-C", folderName, "-c", "." };
         CopyFilesExecListener listener = new CopyFilesExecListener(stderr, command, containerId);
@@ -269,7 +318,7 @@ public class KubernetesContainerClient implements ContainerClient {
         // Let's wait until it is connected before proceeding.
         listener.waitForInputStreamToConnect();
 
-        return exec.getOutput();
+        return new TarInputStreamGroupWrapper(new TarArchiveInputStream(exec.getOutput()));
     }
 
     @Override
@@ -345,6 +394,22 @@ public class KubernetesContainerClient implements ContainerClient {
                                             .map(e -> new EnvVar(e.getKey(), e.getValue(), null))
                                             .collect(Collectors.toList());
 
+        if(nodeSharedArtifactsMount != null) {
+            String workDir = nodeSharedArtifactsMount.getMountPath() + "/" + UUID.randomUUID().toString();
+            flattenedEnvVars.add(new EnvVar("SHARED_DIR", workDir, null));
+            flattenedEnvVars.add(new EnvVar("VIDEOS_DIR", workDir + "/videos", null));
+            flattenedEnvVars.add(new EnvVar("LOGS_DIR", workDir + "/var/log/cont", null));
+            if (!Files.exists(Paths.get(workDir))) {
+                try {
+                    Files.createDirectories(Paths.get(workDir));
+                    Files.createDirectories(Paths.get(workDir + "/videos"));
+                    Files.createDirectories(Paths.get(workDir + "/var/log/cont"));
+                } catch (IOException e) {
+                    logger.error("Error creating folder {}", workDir, e);
+                }
+            }
+        }
+
         Map<String, String> podSelector = new HashMap<>();
 
         PodConfiguration config = new PodConfiguration();
@@ -367,6 +432,7 @@ public class KubernetesContainerClient implements ContainerClient {
         config.setPodLimits(seleniumPodLimits);
         config.setPodRequests(seleniumPodRequests);
         config.setOwner(zaleniumPod);
+        config.setSchedulerName(schedulerName);
         config.setPodSecurityContext(configuredPodSecurityContext);
         config.setContainerSecurityContext(configuredContainerSecurityContext);
 
@@ -576,7 +642,8 @@ public class KubernetesContainerClient implements ContainerClient {
     }
 
     public static DoneablePod createDoneablePodDefaultImpl(PodConfiguration config) {
-        DoneablePod doneablePod = config.getClient().pods()
+
+        PodFluent.SpecNested<DoneablePod> doneablePodSpecNested = config.getClient().pods()
                 .createNew()
                 .withNewMetadata()
                     .withGenerateName(config.getContainerIdPrefix())
@@ -623,8 +690,13 @@ public class KubernetesContainerClient implements ContainerClient {
                         .endReadinessProbe()
                     .endContainer()
                     .withRestartPolicy("Never")
-                    .withImagePullSecrets(config.getImagePullSecrets())
-                .endSpec();
+                    .withImagePullSecrets(config.getImagePullSecrets());
+
+        if(config.getSchedulerName() != null) {
+            doneablePodSpecNested = doneablePodSpecNested.withSchedulerName(config.getSchedulerName());
+        }
+
+        DoneablePod doneablePod = doneablePodSpecNested.endSpec();
 
         // Add the shared folders if available
         for (Map.Entry<VolumeMount, Volume> entry : config.getMountedSharedFoldersMap().entrySet()) {
