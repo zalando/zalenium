@@ -803,22 +803,25 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
     private void cleanupNode(boolean willShutdown) {
         // This basically means that the node is cleaning up and will receive a new request soon
         // willShutdown == true => there won't be a next session
-        this.setCleaningMarker(!willShutdown);
+        if (!isCleaningUp()) {
+            this.setCleaningMarker(!willShutdown);
 
-        try {
-            if (testInformation != null) {
-                processContainerAction(DockerSeleniumContainerAction.SEND_NOTIFICATION,
+            try {
+                if (testInformation != null) {
+                    processContainerAction(DockerSeleniumContainerAction.SEND_NOTIFICATION,
                         testInformation.getTestStatus().getTestNotificationMessage(), getContainerId());
-            }
-            videoRecording(DockerSeleniumContainerAction.STOP_RECORDING);
-            processContainerAction(DockerSeleniumContainerAction.TRANSFER_LOGS, getContainerId());
-            processContainerAction(DockerSeleniumContainerAction.CLEANUP_CONTAINER, getContainerId());
+                }
+                videoRecording(DockerSeleniumContainerAction.STOP_RECORDING);
+                processContainerAction(DockerSeleniumContainerAction.TRANSFER_LOGS, getContainerId());
+                processContainerAction(DockerSeleniumContainerAction.CLEANUP_CONTAINER,
+                    getContainerId());
 
-            if (testInformation != null && keepVideoAndLogs()) {
-                DashboardCollection.updateDashboard(testInformation);
+                if (testInformation != null && keepVideoAndLogs()) {
+                    DashboardCollection.updateDashboard(testInformation);
+                }
+            } finally {
+                this.unsetCleaningMarker();
             }
-        } finally {
-            this.unsetCleaningMarker();
         }
     }
 

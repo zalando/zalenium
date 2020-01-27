@@ -208,26 +208,19 @@ public class ParallelIT  {
         // Go to first page
         getWebDriver().get("https://the-internet.herokuapp.com/");
 
+        // Set test name
+        String testName = desiredCapabilities.getBrowserName() + "_splitVideoTest";
+        Cookie nameCookie = new Cookie("zaleniumTestName", testName);
+        getWebDriver().manage().addCookie(nameCookie);
+
         // Stop the video
         Cookie stopCookie = new Cookie("zaleniumVideo", "false");
         getWebDriver().manage().addCookie(stopCookie);
 
-        // Restart the video
-        Cookie startCookie = new Cookie("zaleniumVideo", "true");
-        getWebDriver().manage().addCookie(startCookie);
-
-        // Stop the video again
-        Cookie stopCookie1 = new Cookie("zaleniumVideo", "false");
-        getWebDriver().manage().addCookie(stopCookie1);
-
         // Go to the dashboard
         getWebDriver().get(String.format("http://%s:%s/dashboard", hostIpAddress, ZALENIUM_PORT));
 
-        //Wait for elements
-        new WebDriverWait(getWebDriver(), 60).until(
-            ExpectedConditions.numberOfElementsToBe(By.cssSelector("a.list-group-item-action"), 2));
-
-        assertThat(getWebDriver().findElements(By.cssSelector(("a.list-group-item-action"))).size(), is(2));
+        assertThat(getWebDriver().findElements(By.xpath("//small[text()='" + testName + "']")).size(), is(1));
     }
 
 }
