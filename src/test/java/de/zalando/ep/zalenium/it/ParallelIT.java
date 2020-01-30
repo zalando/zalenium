@@ -1,11 +1,15 @@
 package de.zalando.ep.zalenium.it;
 
+import org.openqa.selenium.By;
+import org.openqa.selenium.Cookie;
 import org.openqa.selenium.Platform;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.net.NetworkUtils;
 import org.openqa.selenium.remote.BrowserType;
 import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.remote.RemoteWebDriver;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
@@ -17,7 +21,9 @@ import org.testng.util.Strings;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.concurrent.TimeUnit;
 
+import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.CoreMatchers.containsString;
 
@@ -31,7 +37,7 @@ public class ParallelIT  {
     private static final String testingBotIntegration = "testingBot";
     private static final String crossBrowserTestingIntegration = "crossBrowserTesting";
     private static final String lambdaTestIntegration = "lambdaTest";
-    
+
     // Zalenium setup variables
     private static final String ZALENIUM_HOST = System.getenv("ZALENIUM_GRID_HOST") != null ?
             System.getenv("ZALENIUM_GRID_HOST") : "localhost";
@@ -185,6 +191,36 @@ public class ParallelIT  {
 
         // Assert that the title is the expected one
         assertThat(getWebDriver().getTitle(), containsString("Internet"));
+    }
+
+    @Test(dataProvider = "browsersAndPlatformsForLivePreview")
+    public void splitVideoRecordingOfOneSessionIntoMultipleFiles(DesiredCapabilities desiredCapabilities) {
+
+        NetworkUtils networkUtils = new NetworkUtils();
+        String hostIpAddress = networkUtils.getIp4NonLoopbackAddressOfThisMachine().getHostAddress();
+
+        // Reset dashboard
+        getWebDriver().get(String.format("http://%s:%s/dashboard", hostIpAddress, ZALENIUM_PORT));
+        getWebDriver().manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
+        getWebDriver().findElement(By.id("resetButton")).click();
+        getWebDriver().findElement(By.id("resetModalConfirm")).click();
+
+        // Go to first page
+        getWebDriver().get("https://the-internet.herokuapp.com/");
+
+        // Set test name
+        String testName = desiredCapabilities.getBrowserName() + "_splitVideoTest";
+        Cookie nameCookie = new Cookie("zaleniumTestName", testName);
+        getWebDriver().manage().addCookie(nameCookie);
+
+        // Stop the video
+        Cookie stopCookie = new Cookie("zaleniumVideo", "false");
+        getWebDriver().manage().addCookie(stopCookie);
+
+        // Go to the dashboard
+        getWebDriver().get(String.format("http://%s:%s/dashboard", hostIpAddress, ZALENIUM_PORT));
+
+        assertThat(getWebDriver().findElements(By.xpath("//small[text()='" + testName + "']")).size(), is(1));
     }
 
 }
