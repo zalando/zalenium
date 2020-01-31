@@ -61,6 +61,10 @@ public class TestInformation {
         this.videoRecorded = videoRecorded;
     }
 
+    public String getTestNameNoExtension() {
+        return testNameNoExtension;
+    }
+
     public String getVideoFolderPath() {
         return videoFolderPath;
     }
