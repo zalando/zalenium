@@ -31,7 +31,7 @@ public class ParallelIT  {
     private static final String testingBotIntegration = "testingBot";
     private static final String crossBrowserTestingIntegration = "crossBrowserTesting";
     private static final String lambdaTestIntegration = "lambdaTest";
-    
+
     // Zalenium setup variables
     private static final String ZALENIUM_HOST = System.getenv("ZALENIUM_GRID_HOST") != null ?
             System.getenv("ZALENIUM_GRID_HOST") : "localhost";
@@ -183,7 +183,7 @@ public class ParallelIT  {
         // Go to the homepage
         getWebDriver().get("https://the-internet.herokuapp.com/");
 
-        // Assert that the title is the expected one
+        // Assert that the titleDockerSeleniumRemoteProxy is the expected one
         assertThat(getWebDriver().getTitle(), containsString("Internet"));
     }
 

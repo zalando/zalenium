@@ -1,9 +1,11 @@
 package de.zalando.ep.zalenium.proxy;
 
 import java.io.IOException;
+import java.nio.file.CopyOption;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -658,7 +660,7 @@ public class DockerSeleniumRemoteProxy extends DefaultRemoteProxy {
                 if (!Files.exists(videoFile.getParent())) {
                     Files.createDirectories(videoFile.getParent());
                 }
-                Files.copy(entry.get(), videoFile);
+                Files.copy(entry.get(), videoFile, StandardCopyOption.REPLACE_EXISTING);
                 CommonProxyUtilities.setFilePermissions(videoFile);
                 videoWasCopied = true;
                 LOGGER.debug("Video file copied to: {}/{}", testInformation.getVideoFolderPath(), testInformation.getFileName());
