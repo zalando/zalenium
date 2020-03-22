@@ -189,7 +189,7 @@ public class ParallelIT  {
         // Go to the homepage
         getWebDriver().get("https://the-internet.herokuapp.com/");
 
-        // Assert that the title is the expected one
+        // Assert that the titleDockerSeleniumRemoteProxy is the expected one
         assertThat(getWebDriver().getTitle(), containsString("Internet"));
     }
 

@@ -38,7 +38,7 @@ public class RemoteLogDashboard extends RemoteDashboard {
             uploadFile.stream = new FileInputStream(Paths.get(testInformation.getVideoFolderPath(),
                     testInformation.getSeleniumLogFileName()).toString());
         }
-        uploadFile.fileName = testInformation.getBrowserDriverLogFileName();
+        uploadFile.fileName = testInformation.getTestNameNoExtension()+".log";
         fields.add(uploadFile);
 
         this.setupMetadata(testInformation).addProperty("Type", "logfile");
