@@ -192,7 +192,7 @@ public class ParallelIT  {
     }
 
     @SuppressWarnings("groupsTestNG")
-    @Test(dataProvider = "browsersAndPlatformsForLivePreview", groups = {"minikube"})
+    @Test(dataProvider = "browsersAndPlatformsForLivePreview", groups = {"minikube", "videoSplit"})
     public void splitVideoRecordingOfOneSessionIntoMultipleFiles(DesiredCapabilities desiredCapabilities) {
 
         // Go to first page
@@ -226,12 +226,8 @@ public class ParallelIT  {
         getWebDriver().manage().addCookie(stopCookie);
 
         // Go to the dashboard
-        NetworkUtils networkUtils = new NetworkUtils();
-        String hostIpAddress = ZALENIUM_HOST.equalsIgnoreCase("localhost") ?
-                networkUtils.getIp4NonLoopbackAddressOfThisMachine().getHostAddress() :
-                ZALENIUM_HOST;
 
-        getWebDriver().get(String.format("http://%s:%s/dashboard", hostIpAddress, ZALENIUM_PORT));
+        getWebDriver().get(String.format("http://%s:%s/dashboard", ZALENIUM_HOST, ZALENIUM_PORT));
 
         assertThat(getWebDriver().findElements(By.xpath("//small[text()='" + testName + "']")).size(), is(1));
         assertThat(getWebDriver().findElements(By.xpath("//small[text()='" + testName + "_1']")).size(), is(1));
