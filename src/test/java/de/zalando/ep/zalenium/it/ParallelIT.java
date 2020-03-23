@@ -226,6 +226,11 @@ public class ParallelIT  {
         getWebDriver().manage().addCookie(stopCookie);
 
         // Go to the dashboard
+        NetworkUtils networkUtils = new NetworkUtils();
+        String hostIpAddress = ZALENIUM_HOST.equalsIgnoreCase("localhost") ?
+                networkUtils.getIp4NonLoopbackAddressOfThisMachine().getHostAddress() :
+                ZALENIUM_HOST;
+
         getWebDriver().get(String.format("http://%s:%s/dashboard", ZALENIUM_HOST, ZALENIUM_PORT));
 
         assertThat(getWebDriver().findElements(By.xpath("//small[text()='" + testName + "']")).size(), is(1));
