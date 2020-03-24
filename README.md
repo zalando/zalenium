@@ -11,10 +11,13 @@
 [![Slack](https://img.shields.io/badge/chat-on%20slack-red.svg?logo=slack)](https://seleniumhq.herokuapp.com)
 
 
-# :exclamation: Current project status: Looking for active maintainers
-### Zalenium is currently on maintenance mode, no new features are being implemented and bugs are fixed via PRs sent by community. The current maintainers only have time to review PRs and do releases. 
-### Additionally, due to the changes being implemented on the upstream Selenium Grid 4.x, it is unlikely that Zalenium can be upgraded with the current resources. If this is to be achieved, more active maintainers are needed.
-### If you are interested in supporting the project, please create a GitHub issue expressing your interest.
+# :exclamation: This project is not being developed anymore. We will only reply to issues and to questions in the Zalenium Slack channel.  
+## The last Zalenium release was [3.141.59z](https://github.com/zalando/zalenium/releases/tag/3.141.59z)
+### From now on, we will spend our time just replying to new issues and answering questions at the Zalenium Slack channel. 
+### Unfortunately, no new maintainers were found and this project won't be developed anymore.
+### The most relevant features from Zalenium are being/will be implemented in the upstream Grid 4.x, keep an eye on https://github.com/seleniumhq/docker-selenium/. You could migrate to this project in the near future.
+### We want to truly thank all of our users for making this a great project, helping us spread the word and improve the testing community ❤️ This project was made for the community and by the community!
+
 
 --- 
 
