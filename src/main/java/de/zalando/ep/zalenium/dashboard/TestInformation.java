@@ -34,6 +34,7 @@ public class TestInformation {
     private String platform;
     private String platformVersion;
     private String fileName;
+    private int fileCount = 0;
     private String fileExtension;
     private String videoUrl;
     private List<String> logUrls;
@@ -111,6 +112,10 @@ public class TestInformation {
 
     public String getFileName() {
         return fileName;
+    }
+
+    public int getFileCount() {
+        return fileCount;
     }
 
     public List<String> getLogUrls() {
@@ -243,6 +248,12 @@ public class TestInformation {
 
     public JsonObject getMetadata() { return this.metadata;}
     public void setMetadata(JsonObject metadata) { this.metadata = metadata;}
+
+    public void setTestName(String name) { this.testName = name;}
+
+    public void setFileCount(int fileCount) {
+        this.fileCount = fileCount;
+    }
 
     public boolean equals(Object obj) {
         if (obj == null) return false;
