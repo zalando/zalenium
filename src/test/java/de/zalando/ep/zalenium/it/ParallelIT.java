@@ -8,8 +8,6 @@ import org.openqa.selenium.net.NetworkUtils;
 import org.openqa.selenium.remote.BrowserType;
 import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.remote.RemoteWebDriver;
-import org.openqa.selenium.support.ui.ExpectedConditions;
-import org.openqa.selenium.support.ui.WebDriverWait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
@@ -154,7 +152,8 @@ public class ParallelIT  {
         return webDriver.get();
     }
 
-    @Test(dataProvider = "browsersAndPlatformsForLivePreview")
+    @SuppressWarnings("groupsTestNG")
+    @Test(dataProvider = "browsersAndPlatformsForLivePreview", groups = "normal")
     public void checkIframeLinksForLivePreviewWithMachineIp(DesiredCapabilities desiredCapabilities) {
 
         NetworkUtils networkUtils = new NetworkUtils();
@@ -171,8 +170,8 @@ public class ParallelIT  {
         assertThat(pageSource, containsString("view_only=false"));
     }
 
-
-    @Test(dataProvider = "browsersAndPlatforms")
+    @SuppressWarnings("groupsTestNG")
+    @Test(dataProvider = "browsersAndPlatforms", groups = "normal")
     public void loadGooglePageAndCheckTitle(DesiredCapabilities desiredCapabilities) {
 
         // Go to the homepage
