@@ -15,7 +15,7 @@ else
     if [ "${INTEGRATION_TO_TEST}" = sauceLabs ]; then
         if [ -n "${SAUCE_USERNAME}" ]; then
             env "PATH=$PATH" mvn clean
-            mvn clean verify -Pintegration-test -DthreadCountProperty=2 -Dskip.surefire.tests=true -DintegrationToTest=${INTEGRATION_TO_TEST}
+            mvn clean verify -Pintegration-test -DthreadCountProperty=2 -Dskip.surefire.tests=true -Dgroups=normal -DintegrationToTest=${INTEGRATION_TO_TEST}
             # Check for generated videos
             ls -la ${VIDEOS_FOLDER}/saucelabs*.mp4 || (echo "No Sauce Labs videos were downloaded." && exit 2)
             ls -la ${VIDEOS_FOLDER}/zalenium*.mp4 || (echo "No Zalenium videos were generated." && exit 2)
@@ -24,7 +24,7 @@ else
     if [ "${INTEGRATION_TO_TEST}" = browserStack ]; then
         if [ -n "${BROWSER_STACK_USER}" ]; then
             env "PATH=$PATH" mvn clean
-            mvn clean verify -Pintegration-test -DthreadCountProperty=2 -Dskip.surefire.tests=true -DintegrationToTest=${INTEGRATION_TO_TEST}
+            mvn clean verify -Pintegration-test -DthreadCountProperty=2 -Dskip.surefire.tests=true -Dgroups=normal -DintegrationToTest=${INTEGRATION_TO_TEST}
             # Check for generated videos
             ls -la ${VIDEOS_FOLDER}/browserstack*.mp4 || (echo "No BrowserStack videos were downloaded." && exit 2)
             ls -la ${VIDEOS_FOLDER}/zalenium*.mp4 || (echo "No Zalenium videos were generated." && exit 2)
@@ -33,7 +33,7 @@ else
     if [ "${INTEGRATION_TO_TEST}" = testingBot ]; then
         if [ -n "${TESTINGBOT_KEY}" ]; then
             env "PATH=$PATH" mvn clean
-            mvn clean verify -Pintegration-test -DthreadCountProperty=2 -Dskip.surefire.tests=true -DintegrationToTest=${INTEGRATION_TO_TEST}
+            mvn clean verify -Pintegration-test -DthreadCountProperty=2 -Dskip.surefire.tests=true -Dgroups=normal -DintegrationToTest=${INTEGRATION_TO_TEST}
             # Check for generated videos
             ls -la ${VIDEOS_FOLDER}/testingbot*.mp4 || (echo "No TestingBot videos were downloaded." && exit 2)
             ls -la ${VIDEOS_FOLDER}/zalenium*.mp4 || (echo "No Zalenium videos were generated." && exit 2)
@@ -42,7 +42,7 @@ else
     if [ "${INTEGRATION_TO_TEST}" = crossBrowserTesting ]; then
         if [ -n "${CBT_USERNAME}" ]; then
             env "PATH=$PATH" mvn clean
-            mvn clean verify -Pintegration-test -DthreadCountProperty=2 -Dskip.surefire.tests=true -DintegrationToTest=${INTEGRATION_TO_TEST}
+            mvn clean verify -Pintegration-test -DthreadCountProperty=2 -Dskip.surefire.tests=true -Dgroups=normal -DintegrationToTest=${INTEGRATION_TO_TEST}
             # Check for generated videos
             ls -la ${VIDEOS_FOLDER}/crossbrowsertesting*.mp4 || (echo "No CBT videos were downloaded." && exit 2)
             ls -la ${VIDEOS_FOLDER}/zalenium*.mp4 || (echo "No Zalenium videos were generated." && exit 2)
@@ -51,7 +51,7 @@ else
     if [ "${INTEGRATION_TO_TEST}" = lambdaTest ]; then
         if [ -n "${LT_USERNAME}" ]; then
             env "PATH=$PATH" mvn clean
-            mvn clean verify -Pintegration-test -DthreadCountProperty=2 -Dskip.surefire.tests=true -DintegrationToTest=${INTEGRATION_TO_TEST}
+            mvn clean verify -Pintegration-test -DthreadCountProperty=2 -Dskip.surefire.tests=true -Dgroups=normal -DintegrationToTest=${INTEGRATION_TO_TEST}
             # Check for generated videos
             ls -la ${VIDEOS_FOLDER}/lambdatest*.mp4 || (echo "No LambdaTest videos were downloaded." && exit 2)
             ls -la ${VIDEOS_FOLDER}/zalenium*.mp4 || (echo "No Zalenium videos were generated." && exit 2)
@@ -64,7 +64,7 @@ else
             mkdir -p "${VIDEOS_FOLDER}"
             chmod +x target/zalenium_in_docker_compose.sh
             target/zalenium_in_docker_compose.sh start
-            mvn verify -Pintegration-test -DthreadCountProperty=2 -Dskip.surefire.tests=true -Dskip.failsafe.setup=true -DintegrationToTest=sauceLabs
+            mvn verify -Pintegration-test -DthreadCountProperty=2 -Dskip.surefire.tests=true -Dskip.failsafe.setup=true -Dgroups=normal -DintegrationToTest=sauceLabs
             # Check for generated videos
             ls -la ${VIDEOS_FOLDER}/saucelabs*.mp4 || (echo "No Sauce Labs videos were downloaded." && exit 2)
             ls -la ${VIDEOS_FOLDER}/zalenium*.mp4 || (echo "No Zalenium videos were generated." && exit 2)
