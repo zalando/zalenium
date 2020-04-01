@@ -49,7 +49,7 @@ spec:
       ports:
         - containerPort: {{ .Values.hub.port }}
           protocol: TCP
-      {{- if .Values.liveness.enabled }}
+      {{- if eq true .Values.hub.liveness.enabled  }}
       livenessProbe:
         httpGet:
           path: {{ if .Values.ingress.path }}{{ .Values.ingress.path }}{{ end }}/status
@@ -59,11 +59,11 @@ spec:
           - name: Authorization
             value: Basic {{ template "basicAuth.b64" . }}
           {{- end}}
-        initialDelaySeconds: 90
+        initialDelaySeconds: {{ .Values.hub.liveness.initialDelaySeconds }}
         periodSeconds: 5
-        timeoutSeconds: {{ .Values.hub.livenessTimeout }}
+        timeoutSeconds: {{ default .Values.hub.livenessTimeout .Values.hub.liveness.timeout }}
       {{- end}}
-      {{- if .Values.readiness.enabled }}
+      {{- if eq true .Values.hub.readiness.enabled }}
       readinessProbe:
         httpGet:
           path: {{ if .Values.ingress.path }}{{ .Values.ingress.path }}{{ end }}/status
@@ -73,7 +73,7 @@ spec:
           - name: Authorization
             value: Basic {{ template "basicAuth.b64" . }}
           {{- end}}
-        timeoutSeconds: {{ .Values.hub.readinessTimeout }}
+        timeoutSeconds: {{ default .Values.hub.readinessTimeout .Values.hub.readiness.timeout }}
       {{- end}}
       env:
         - name: ZALENIUM_KUBERNETES_CPU_REQUEST

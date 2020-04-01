@@ -21,10 +21,17 @@ hub:
   port: 4444
 
   ## Timeout for probe Hub liveness via HTTP request on Hub console
-  livenessTimeout: 1
+  #livenessTimeout: 1
+  liveness:
+    enabled: true
+    initialDelaySeconds: 180
+    timeout: 5
+  readiness:
+    enabled: true
+    timeout: 5
 
   ## Timeout for probe Hub readiness via HTTP request on Hub console
-  readinessTimeout: 1
+  #readinessTimeout: 1
 
   ## Pod Security Context
   ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
@@ -251,7 +258,3 @@ hostAliases: []
 # - ip: "127.0.0.1"
 #   hostnames:
 #   - "cosbench.local"
-liveness:
-  enable: true
-readiness:
-  enable: true
