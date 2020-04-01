@@ -1,0 +1,3 @@
+[submodule "charts/zalenium"]
+	path = charts/zalenium
+	url = git@github.com:caherrera/zalenium-helm-chart.git
