@@ -16,6 +16,7 @@ die () {
 # Required params
 [ -z "${TESTINGBOT_KEY}" ] && die "Required env var TESTINGBOT_KEY"
 [ -z "${TESTINGBOT_SECRET}" ] && die "Required env var TESTINGBOT_SECRET"
+[ -z "${TESTINGBOT_TUNNEL_ID}" ] && die "Required env var TESTINGBOT_TUNNEL_ID"
 [ -z "${TESTINGBOT_TUNNEL_OPTS}" ] && die "Required env var TESTINGBOT_TUNNEL_OPTS"
 
 # Wait for this process dependencies
@@ -26,6 +27,7 @@ die () {
 java -jar /usr/local/bin/testingbot-tunnel.jar \
   ${TESTINGBOT_KEY} \
   ${TESTINGBOT_SECRET} \
+  --tunnel-identifier "${TESTINGBOT_TUNNEL_ID}" \
   --se-port 4447 ${TESTINGBOT_TUNNEL_OPTS} > ${TESTINGBOT_LOG_FILE} 2>&1 &
 TESTINGBOT_TUNNEL_PID=$!
 
