@@ -391,6 +391,8 @@ COPY zalenium.sh \
  /home/seluser/
 COPY scm-source.json /
 
+RUN mkdir /home/seluser/videos
+
 #-----------------#
 # Fix perms again #
 #-----------------#

@@ -184,7 +184,7 @@ spec:
         {{- toYaml .Values.hub.resources | nindent 8 }}
       volumeMounts:
         - name: {{ template "zalenium.fullname" . }}-videos
-          mountPath: /home/seluser/videos
+          mountPath: /home/seluser/videos{{ .Values.persistence.video.folder }}
         - name: {{ template "zalenium.fullname" . }}-data
           mountPath: /tmp/mounted
 {{- if .Values.hostAliases }}
