@@ -113,32 +113,36 @@ public class Dashboard implements DashboardInterface {
             File dashboardHtml = new File(getLocalVideosPath(), DASHBOARD_FILE);
             setupDashboardFile(dashboardHtml);
 
-            File zalandoIco = new File(getLocalVideosPath(), ZALANDO_ICO);
-            if (!zalandoIco.exists()) {
-                FileUtils.copyFile(new File(getCurrentLocalPath(), ZALANDO_ICO), zalandoIco);
-                CommonProxyUtilities.setFilePermissions(zalandoIco.toPath());
-            }
-
-            File cssFolder = new File(getLocalVideosPath() + CSS_FOLDER);
-            File jsFolder = new File(getLocalVideosPath() + JS_FOLDER);
-            File imgFolder = new File(getLocalVideosPath() + IMG_FOLDER);
-
-            if (!cssFolder.exists()) {
-                FileUtils.copyDirectory(new File(getCurrentLocalPath() + CSS_FOLDER), cssFolder);
-                CommonProxyUtilities.setFilePermissions(cssFolder.toPath());
-            }
-            if (!jsFolder.exists()) {
-                FileUtils.copyDirectory(new File(getCurrentLocalPath() + JS_FOLDER), jsFolder);
-                CommonProxyUtilities.setFilePermissions(jsFolder.toPath());
-            }
-            if (!imgFolder.exists()) {
-                FileUtils.copyDirectory(new File(getCurrentLocalPath() + IMG_FOLDER), imgFolder);
-                CommonProxyUtilities.setFilePermissions(imgFolder.toPath());
-            }
+            ensureStaticResourcesExists();
             saveTestInformation(testInformation);
         } catch (IOException e) {
             LOGGER.warn("Error while updating the dashboard.", e);
         }
+    }
+
+    private void ensureStaticResourcesExists() throws IOException {
+      File zalandoIco = new File(getLocalVideosPath(), ZALANDO_ICO);
+      if (!zalandoIco.exists()) {
+          FileUtils.copyFile(new File(getCurrentLocalPath(), ZALANDO_ICO), zalandoIco);
+          CommonProxyUtilities.setFilePermissions(zalandoIco.toPath());
+      }
+
+      File cssFolder = new File(getLocalVideosPath() + CSS_FOLDER);
+      File jsFolder = new File(getLocalVideosPath() + JS_FOLDER);
+      File imgFolder = new File(getLocalVideosPath() + IMG_FOLDER);
+
+      if (!cssFolder.exists()) {
+          FileUtils.copyDirectory(new File(getCurrentLocalPath() + CSS_FOLDER), cssFolder);
+          CommonProxyUtilities.setFilePermissions(cssFolder.toPath());
+      }
+      if (!jsFolder.exists()) {
+          FileUtils.copyDirectory(new File(getCurrentLocalPath() + JS_FOLDER), jsFolder);
+          CommonProxyUtilities.setFilePermissions(jsFolder.toPath());
+      }
+      if (!imgFolder.exists()) {
+          FileUtils.copyDirectory(new File(getCurrentLocalPath() + IMG_FOLDER), imgFolder);
+          CommonProxyUtilities.setFilePermissions(imgFolder.toPath());
+      }
     }
 
     public synchronized void cleanupDashboard() throws IOException {
@@ -180,6 +184,7 @@ public class Dashboard implements DashboardInterface {
         }
 
         setupDashboardFile(dashboardHtml);
+        ensureStaticResourcesExists();
     }
 
     private void setupDashboardFile(File dashboardHtml) throws IOException {
