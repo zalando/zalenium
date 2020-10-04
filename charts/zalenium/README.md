@@ -81,6 +81,8 @@ See Zalenium's [usage examples](https://github.com/zalando/zalenium/blob/master/
 | `hub.port` | The port the hub listens on | `4444` |
 | `hub.podSecurityContext` | Pod Security Context used by hub and selenium grids |  |
 | `hub.containerSecurityContext` | Container Security Context used by hub and selenium grids |  |
+| `hub.livenessInitialDelaySeconds` | Number of seconds after the container has started before first liveness probe | 90 |
+| `hub.livenessPeriodSeconds` | How often (in seconds) to perform the probe | 5 |
 | `hub.livenessTimeout` | Timeout for probe Hub liveness via HTTP request on Hub console | `1` |
 | `hub.readinessTimeout` | Timeout for probe Hub readiness via HTTP request on Hub console | `1` |
 | `hub.localVolumesRoot` | The root directory to store HostPath volumes (e.g. if running in minikube) | `/tmp` |
