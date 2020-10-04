@@ -20,6 +20,12 @@ hub:
   ## The port which the hub listens on
   port: 4444
 
+  ## Number of seconds after the container has started before first liveness probe
+  livenessInitialDelaySeconds: 90
+
+  ## How often (in seconds) to perform the probe
+  livenessPeriodSeconds: 5
+
   ## Timeout for probe Hub liveness via HTTP request on Hub console
   livenessTimeout: 1
 

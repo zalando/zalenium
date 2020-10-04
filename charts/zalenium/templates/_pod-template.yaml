@@ -58,8 +58,8 @@ spec:
           - name: Authorization
             value: Basic {{ template "basicAuth.b64" . }}
           {{- end}}
-        initialDelaySeconds: 90
-        periodSeconds: 5
+        initialDelaySeconds: {{ .Values.hub.livenessInitialDelaySeconds }}
+        periodSeconds: {{ .Values.hub.livenessPeriodSeconds }}
         timeoutSeconds: {{ .Values.hub.livenessTimeout }}
       readinessProbe:
         httpGet:
