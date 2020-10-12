@@ -61,7 +61,7 @@
         <jetty.version>9.4.12.v20180830</jetty.version>
         <docker-client.version>8.15.0</docker-client.version>
         <kubernetes-client.version>4.1.0</kubernetes-client.version>
-        <junit.version>4.12</junit.version>
+        <junit.version>4.13.1</junit.version>
         <mockito.version>2.23.0</mockito.version>
         <awaitility.version>3.1.2</awaitility.version>
         <testng.version>6.14.3</testng.version>
