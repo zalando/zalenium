@@ -13,12 +13,12 @@ cat scm-source.json
 if [ "$TRAVIS_PULL_REQUEST" = "false" ] && [ -n "${TRAVIS_TAG}" ] && [ "${TRAVIS_TAG}" != "latest" ]; then
 	echo "Building image..."
 	mvn clean package -Pbuild-docker-image -DskipTests=true
-	echo "Starting to push Zalenium image..."
+	echo "Starting to push Slim-Zalenium image..."
 	docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
     echo "Logged in to docker with user '${DOCKER_USERNAME}'"
     echo "docker tag and docker push using TRAVIS_TAG=${TRAVIS_TAG}"
-    docker tag zalenium:${TRAVIS_TAG} dosel/zalenium:${TRAVIS_TAG}
-    docker push dosel/zalenium:${TRAVIS_TAG} | tee docker_push.log
+    docker tag zalenium:${TRAVIS_TAG} xuanzhaopeng/slim-zalenium:${TRAVIS_TAG}
+    docker push xuanzhaopeng/slim-zalenium:${TRAVIS_TAG} | tee docker_push.log
     if [[ "${TRAVIS_TAG}" == "3."* ]]; then
         echo "Marking image with Selenium 3 as as zalenium:3 and latest..."
         docker tag zalenium:${TRAVIS_TAG} dosel/zalenium:3

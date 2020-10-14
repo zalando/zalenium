@@ -3,22 +3,6 @@
 
 </p>
 
-[![Build Status](https://travis-ci.org/zalando/zalenium.svg?branch=master)](https://travis-ci.org/zalando/zalenium)
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/c719a14f5537488b8fb95d70e27acd5f)](https://www.codacy.com/app/diemol_zalenium/zalenium?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=zalando/zalenium&amp;utm_campaign=Badge_Grade)
-[![codecov](https://codecov.io/gh/zalando/zalenium/branch/master/graph/badge.svg)](https://codecov.io/gh/zalando/zalenium)
-[![GitHub release](https://img.shields.io/github/release/zalando/zalenium.svg)](https://github.com/zalando/zalenium/releases)
-[![Docker Pulls](https://img.shields.io/docker/pulls/dosel/zalenium.svg)](https://hub.docker.com/r/dosel/zalenium/tags/)
-[![Slack](https://img.shields.io/badge/chat-on%20slack-red.svg?logo=slack)](https://seleniumhq.herokuapp.com)
-
-
-# :exclamation: This project is not being developed anymore. We will only reply to issues and to questions in the Zalenium Slack channel.  
-## The last Zalenium release was [3.141.59z](https://github.com/zalando/zalenium/releases/tag/3.141.59z)
-### From now on, we will spend our time just replying to new issues and answering questions at the Zalenium Slack channel. 
-### Unfortunately, no new maintainers were found and this project won't be developed anymore.
-### The most relevant features from Zalenium are being/will be implemented in the upstream Grid 4.x, keep an eye on https://github.com/seleniumhq/docker-selenium/. You could migrate to this project in the near future.
-### We want to truly thank all of our users for making this a great project, helping us spread the word and improve the testing community ❤️ This project was made for the community and by the community!
-
-
 --- 
 
 
