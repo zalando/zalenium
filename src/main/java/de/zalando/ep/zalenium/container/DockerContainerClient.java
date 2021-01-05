@@ -543,10 +543,11 @@ public class DockerContainerClient implements ContainerClient {
     @Override
     public void initialiseContainerEnvironment() {
         if (!environmentInitialised.getAndSet(true)) {
+            logger.info("About to init environment without Docker");
             // Delete any leftover containers from a previous time
-            deleteSeleniumContainers();
+            // deleteSeleniumContainers();
             // Register a shutdown hook to cleanup pods
-            Runtime.getRuntime().addShutdownHook(new Thread(this::deleteSeleniumContainers, "DockerContainerClient shutdown hook"));
+            // Runtime.getRuntime().addShutdownHook(new Thread(this::deleteSeleniumContainers, "DockerContainerClient shutdown hook"));
         }
     }
 

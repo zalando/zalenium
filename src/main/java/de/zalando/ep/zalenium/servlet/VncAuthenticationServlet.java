@@ -3,6 +3,8 @@ package de.zalando.ep.zalenium.servlet;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Optional;
+
+import org.openqa.grid.selenium.proxy.DefaultRemoteProxy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.regex.Matcher;
@@ -89,13 +91,18 @@ public class VncAuthenticationServlet extends RegistryBasedServlet {
         
         // Find the first docker selenium remote proxies that matches the host and port, if so return 200, otherwise 403 forbidden
         Integer httpCode = StreamSupport.stream(getRegistry().getAllProxies().spliterator(), false)
-        .filter(proxy -> proxy instanceof DockerSeleniumRemoteProxy)
-        .map(proxy -> ((DockerSeleniumRemoteProxy)proxy).getRegistration())
-        .filter(reg -> host.equals(Optional.of(reg.getIpAddress())) && port.equals(Optional.of(reg.getNoVncPort().toString())))
+        .filter(proxy -> proxy instanceof DefaultRemoteProxy)
+        .map(proxy -> ((DefaultRemoteProxy)proxy).getRemoteHost())
+        .filter(remoteHost -> {
+            LOGGER.info(String.format("VNC validation: Request: %s:%s , Actual: %s:6080", host.get(), port.get(), remoteHost.getHost() ));
+            return host.equals(Optional.of(remoteHost.getHost())) && port.equals(Optional.of("6080"));
+        })
         .findAny()
         .map(x -> AUTHORISED)
         .orElse(UNAUTHORISED);
-        
+
+        LOGGER.info("VNC Auth with code: " + httpCode);
+
         response.setStatus(httpCode);
     }
     

@@ -18,9 +18,11 @@ import java.util.Optional;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import de.zalando.ep.zalenium.servlet.renderer.DefaultLiveNodeHtmlRenderer;
 import org.openqa.grid.internal.GridRegistry;
 import org.openqa.grid.internal.RemoteProxy;
 import org.openqa.grid.internal.utils.HtmlRenderer;
+import org.openqa.grid.selenium.proxy.DefaultRemoteProxy;
 import org.openqa.grid.web.servlet.RegistryBasedServlet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -93,6 +95,10 @@ public class LivePreviewServlet extends RegistryBasedServlet {
                         && (!filterActiveSessions || proxy.isBusy())) {
                     nodes.add(renderer.renderSummary());
                 }
+            } else if (proxy instanceof DefaultRemoteProxy) {
+                DefaultRemoteProxy defaultSeleniumRemoteProxy = (DefaultRemoteProxy) proxy;
+                HtmlRenderer renderer = new DefaultLiveNodeHtmlRenderer(defaultSeleniumRemoteProxy);
+                nodes.add(renderer.renderSummary());
             }
         }
 
