@@ -260,7 +260,7 @@ RUN if [ "${kubernetesSlimVersion}" = "false" ]; then \
 # ------------------------#
 # https://docs.saucelabs.com/reference/sauce-connect/
 # Layer size: medium: ~13 MB
-ENV SAUCE_CONN_VER="sc-4.5.3-linux" \
+ENV SAUCE_CONN_VER="sc-4.6.5-linux" \
     SAUCE_CONN_DOWN_URL="https://saucelabs.com/downloads"
 RUN cd /tmp \
   && wget -nv "${SAUCE_CONN_DOWN_URL}/${SAUCE_CONN_VER}.tar.gz" \
