@@ -14,31 +14,31 @@ jobs:
       if: type = pull_request
       script:
       - docker pull elgalu/selenium
-      - travis_retry ./run_integration_tests.sh sauceLabs
+      - ./run_integration_tests.sh sauceLabs
 
     - env: step=browserStack
       if: type = pull_request
       script:
         - docker pull elgalu/selenium
-        - travis_retry ./run_integration_tests.sh browserStack
+        - ./run_integration_tests.sh browserStack
 
     - env: step=crossBrowserTesting
       if: type = pull_request
       script:
         - docker pull elgalu/selenium
-        - travis_retry ./run_integration_tests.sh crossBrowserTesting
+        - ./run_integration_tests.sh crossBrowserTesting
 
     - env: step=testingBot
       if: type = pull_request
       script:
         - docker pull elgalu/selenium
-        - travis_retry ./run_integration_tests.sh testingBot
+        - ./run_integration_tests.sh testingBot
 
     - env: step=lambdaTest
       if: type = pull_request
       script:
         - docker pull elgalu/selenium
-        - travis_retry ./run_integration_tests.sh lambdaTest
+        - ./run_integration_tests.sh lambdaTest
 
     - env: step=dockerCompose
       if: type = pull_request
@@ -47,7 +47,7 @@ jobs:
       - curl -L https://github.com/docker/compose/releases/download/1.21.0/docker-compose-`uname -s`-`uname -m` > docker-compose
       - chmod +x docker-compose
       - sudo mv docker-compose /usr/local/bin
-      - travis_retry ./run_integration_tests.sh dockerCompose
+      - ./run_integration_tests.sh dockerCompose
 
     - env: step=unitTests
       script:
@@ -64,7 +64,7 @@ jobs:
       if: type = pull_request
       script:
       - docker pull elgalu/selenium
-      - travis_retry ./kubernetes/minikube-ci-initialize.sh
+      - ./kubernetes/minikube-ci-initialize.sh
       - mvn clean package -Pbuild-docker-image -DskipTests=true
       - cd target && docker build -t dosel/zalenium:latest . && cd ..
       - ./kubernetes/start-zalenium-in-minikube.sh
@@ -75,3 +75,7 @@ jobs:
       script:
       - ./gen-scm-source.sh
       - ./push_image.sh
+
+cache:
+  directories:
+  - $HOME/.m2
