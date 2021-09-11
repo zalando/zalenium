@@ -263,7 +263,9 @@ public class DockerContainerClient implements ContainerClient {
     public String getLatestDownloadedImage(String imageName) {
         List<Image> images;
         try {
-            images = dockerClient.listImages(DockerClient.ListImagesParam.byName(imageName));
+            images = dockerClient.listImages(DockerClient.ListImagesParam.allImages())
+                    .stream().filter(image -> image.repoTags().stream().anyMatch(i -> i.contains(imageName)))
+                    .collect(Collectors.toList());
             if (images.isEmpty()) {
                 logger.error(nodeId + " A downloaded docker-selenium image was not found!");
                 return imageName;
